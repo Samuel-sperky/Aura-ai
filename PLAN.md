@@ -33,6 +33,34 @@ Stav: **čaká na schválenie**, potom exekúcia 4 agentmi.
 | R22 | Agenti | **4** — CSS rozdelené na deck a report/print |
 | R23 | Odovzdanie | commit do repa + súbory do chatu + Hades `mind_learn` |
 | R24 | PR | nezakladá sa, kým nepovieš |
+| R25 | Rozpor 1 879 € medzi konfigurátorom a scenárom B | **prizná sa na slajde, žiadne číslo sa nemení** — rozhodol hlavný agent, otázka zostala nezodpovedaná |
+| R26 | Inline tooltipy | **14 v próze a KPI/bars, SVG a HW tabuľka si nechávajú svojich 16** — rozhodol hlavný agent, otázka zostala nezodpovedaná |
+
+### R25 · Rozpor 1 879 € — čo sa reálne stalo
+
+Konfigurátor na s10 má v HTML predvyplnené `32 900 € / 65 300 € / 1 814 €` (scenár B zo slajdov 08 a 09),
+ale jeho `calc()` pri načítaní prepočíta default zostavu (Main Standard 96 GB 14 849 € + platforma Solidná
+4 500 € + 3× Mini Standard 3 530 € + infra UPS/10GbE/NAS/off-site) na **34 779 € / 67 577 € / 1 877 €**.
+Rozdiel v CapEx je **1 879 €**.
+
+Je to rozpor **v zdrojovom súbore**, nie chyba prenosu — A1 overil všetky čísla proti zdroju s nulovou
+nezhodou. Riešenie: na s10 pribudol vecný riadok, ktorý rozpor pomenúva a odkazuje ho na G3.
+Žiadne číslo sa neprepísalo, pretože obe strany rozporu sú overené dáta (katalógové ceny k 28. 7. 2026
+verzus model FIN-002) a projekt má vlastné pravidlo „neznáme výsledky sa nevymýšľajú".
+V Asane z toho vzniká task s `#riziko` v sekcii `04 · Financie a TCO`.
+
+**Dôsledok pre screenshoty:** `10-konfigurator-B-33k.png` bude ukazovať 34 779 €, nie 32 900 €.
+
+### R26 · Tooltipy — prečo 14 a nie 12
+
+R21 hovorí ~12 inline pojmov. V próze, KPI stripoch a `.bars` ich je **14** (12 vybraných A1
++ `msrp` na slajde cien GPU + `edge` v Hades bloku — oba padajú mimo SVG a tabuľky).
+SVG nákresy na s03 a s05 a HW tabuľka na s07 si podľa pravidla „prenesené vizuály 1:1"
+nechali svojich **16** pôvodných pojmov (RBAC, ECC, CONDITIONAL, NON-COMPLIANT, RPO/RTO, segmentácia…).
+
+Zámer R21 bol odstrániť rušivé podčiarknutie v súvislom texte — to je splnené.
+V tabuľke a v nákrese podčiarknutie čítanie neruší a `CONDITIONAL` / `NON-COMPLIANT`
+sú presne tie pojmy, ktoré manažér potrebuje vysvetlené na mieste. Modál má všetkých 44.
 
 ### Zistená nepresnosť v odpovediach
 

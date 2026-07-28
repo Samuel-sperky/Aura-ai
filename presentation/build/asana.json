@@ -1,11 +1,11 @@
 {
   "_meta": {
     "vlastnik": "A4",
-    "urcene_pre": "hlavny agent — jedno volanie create_project (sekcie sa dajú vytvoriť len pri zakladaní projektu), potom create_tasks a subtasky",
+    "urcene_pre": "hlavny agent — jedno volanie create_project (sekcie sa dajú vytvoriť len pri zakladaní projektu), potom tasky a subtasky",
     "pravidlo": "vzdy plain-text notes, nikdy html_notes — Asana MCP padá na html_notes s diakritikou",
     "cisla": "verbatim z presentation/build/_source-v2_1.html, stav overenia 28. 7. 2026, ceny s DPH ak nie je uvedené inak",
-    "do_asany_md": "neexistoval v čase písania — subtasky sú postavené priamo zo zdrojového HTML",
-    "pocty": { "sekcie": 6, "tasky": 14, "subtasky": 57 }
+    "zdroj_subtaskov": "build/do-asany.md od A1 (odrážky VYPUSTENÉ ZO SLAJDU) + _source-v2_1.html",
+    "pocty": { "sekcie": 6, "tasky": 14, "subtasky": 56 }
   },
 
   "project": {
@@ -15,7 +15,7 @@
     "privacy_setting": "public_to_workspace",
     "default_view": "board",
     "owner": "me",
-    "notes": "Obsah prezentácie „Aura AI — vlastné AI jadro\" rozobraný na tasky, aby sa dal komentovať po častiach ešte pred schválením investície.\n\n1 task = 1 slajd (S01 až S13). Subtasky = jednotlivé tvrdenia a čísla z toho slajdu.\nPopis každého slajdového tasku má štyri pevné riadky: ČO SLAJD TVRDÍ, ZDROJ ČÍSEL, ČO CHÝBA DO BRÁNY, SCREENSHOT.\n\nStav čísel: 28. 7. 2026, ceny s DPH ak nie je uvedené inak. Nič sa neprepočítava ani nezaokrúhľuje.\nTermíny brán v tomto projekte: G1 dňa 7. 8. 2026, G2 dňa 28. 8. 2026, G3 dňa 11. 9. 2026.\n\nProjekt je samostatný a neodkazuje na pôvodný Asana projekt AuraAI — ten zostáva nedotknutý ako auditný zdroj.\n\nZačnite taskom ZAČNI TU."
+    "notes": "Obsah prezentácie „Aura AI — vlastné AI jadro\" rozobraný na tasky, aby sa dal komentovať po častiach ešte pred schválením investície.\n\n1 task = 1 slajd (S01 až S13). Subtasky = jednotlivé tvrdenia a čísla z toho slajdu, vrátane tých, ktoré sa na slajd nezmestili.\nPopis každého slajdového tasku má štyri pevné riadky: ČO SLAJD TVRDÍ, ZDROJ ČÍSEL, ČO CHÝBA DO BRÁNY, SCREENSHOT.\n\nStav čísel: 28. 7. 2026, ceny s DPH ak nie je uvedené inak. Nič sa neprepočítava ani nezaokrúhľuje.\nTermíny brán v tomto projekte: G1 dňa 7. 8. 2026, G2 dňa 28. 8. 2026, G3 dňa 11. 9. 2026.\n\nProjekt je samostatný a neodkazuje na pôvodný Asana projekt AuraAI — ten zostáva nedotknutý ako auditný zdroj.\n\nZačnite taskom ZAČNI TU."
   },
 
   "sections": [
@@ -30,22 +30,22 @@
         {
           "name": "S01 · Vlastné AI jadro — naše dáta zostanú doma #rozhodnutie #cislo",
           "assignee": "me",
-          "notes": "ČO SLAJD TVRDÍ: Staviame vlastné AI jadro — 1× Main PC ako Aura Core, 3× Mini PC ako izolovaní workeri, lokálny 70B model, obrazové a video úlohy a najviac 10 súbežných workflowov. Cloud zostáva, ale za kontrolovanou hranicou.\nZDROJ ČÍSEL: Asana baseline AuraAI, stav k 28. 7. 2026 — 26 týždňov do 31. 1. 2027, 11 brán G1–G11, 67 úloh a 168 subtaskov, 3 scenáre investície, 3 otvorené blokátory.\nČO CHÝBA DO BRÁNY: nič nové — toto je rámec, ktorý sa uzatvára schválením charteru v bráne G1 dňa 7. 8. 2026.\nSCREENSHOT: 01-hero-dark.png"
+          "notes": "ČO SLAJD TVRDÍ: Projekt postaví 1× Main PC ako Aura Core a 3× Mini PC ako izolovaných workerov s lokálnym 70B modelom a najviac 10 súbežnými workflowmi. Cloud zostáva, ale za kontrolovanou hranicou.\nZDROJ ČÍSEL: projektová baseline, stav k 28. 7. 2026 — 26 týždňov do 31. 1. 2027, 11 brán G1–G11, 67 úloh, 168 subtaskov, 3 scenáre, 3 otvorené blokátory.\nČO CHÝBA DO BRÁNY: nič nové — toto je rámec, ktorý sa uzatvára schválením charteru v bráne G1 dňa 7. 8. 2026.\nSCREENSHOT: 01-hero-dark.png"
         },
         {
           "name": "S02 · Ako AI používame už dnes — MCP a Hades #hotove",
           "assignee": "me",
-          "notes": "ČO SLAJD TVRDÍ: Nezačíname od nuly. Beží vrstva MCP nástrojov a Hades — vlastný MCP server, ktorý drží pamäť o skilloch, projektoch a rozhodnutiach a učí sa z každej relácie. Táto baseline aj katalóg automatizácií vznikli priamo cez MCP. Dnes to celé beží na cudzích modeloch a cudzej infraštruktúre — projekt presúva overenú praxu za bezpečnú hranicu.\nZDROJ ČÍSEL: Hades mind_overview k 28. 7. 2026 — 675 uzlov, 2 049 spojení, 5 oblastí znalostí, 12 MCP serverov, 0 uzlov na revíziu.\nČO CHÝBA DO BRÁNY: doplniť dnešný mesačný výdaj na AI služby ako základnú líniu porovnania (dnes nie je v Asane) a určiť, ktoré tri workflowy prejdú na lokálne jadro ako prvé — vstup do pilotného charteru.\nSCREENSHOT: 02-ai-dnes-dark.png"
+          "notes": "ČO SLAJD TVRDÍ: Nezačíname od nuly — vrstva MCP nástrojov a Hades už bežia. Zápis z porady je konkrétny workflow, v ktorom je človek pred každým zápisom a hranica pred cloudom. Investícia presúva overenú praxu za bezpečnú hranicu, nezavádza nový nápad.\nZDROJ ČÍSEL: Hades pamäť — 675 uzlov, 2 049 spojení, 5 oblastí znalostí, 12 MCP serverov. Projektová baseline — 11 sekcií, 67 úloh, 168 subtaskov, 126 automatizácií. Stav k 28. 7. 2026.\nČO CHÝBA DO BRÁNY: dnešný mesačný výdaj na AI služby nie je nikde vyčíslený — bez neho nemá porovnanie nákladov na S09 základnú líniu. Určiť aj, ktoré tri workflowy prejdú na lokálne jadro ako prvé.\nSCREENSHOT: 02-ai-dnes-dark.png"
         },
         {
           "name": "S03 · Jedno jadro, tri izolované ruky #brana",
           "assignee": "me",
-          "notes": "ČO SLAJD TVRDÍ: Aura Core drží modely a orchestráciu, traja workeri robia ťažkú prácu oddelene, restricted dáta neprekročia prerušovanú čiaru bez schválenia. Workeri sú vymeniteľní — keď jeden padne, workflow sa presmeruje. Cloud je doplnok a jadro funguje aj keď je vypnutý.\nZDROJ ČÍSEL: charter projektu — 1× Main PC, 3× Mini PC, 70B model, najviac 10 súbežných workflowov.\nČO CHÝBA DO BRÁNY: ARC-001 — architektúra sa uzatvára v bráne G4 dňa 18. 9. 2026 spoločne so SEC-001, DATA-001, RES-001 a NET-001.\nSCREENSHOT: 03-architektura-dark.png"
+          "notes": "ČO SLAJD TVRDÍ: Aura Core drží modely, frontu a RAG index. Workeri robia ťažkú prácu oddelene a bez prístupu k tajomstvám. Restricted dáta neprekročia prerušovanú čiaru bez schválenia a jadro funguje aj s vypnutým cloudom.\nZDROJ ČÍSEL: charter — 1× Main PC, 3× Mini PC, 70B model, najviac 10 súbežných workflowov. Bez cenových údajov.\nČO CHÝBA DO BRÁNY: segmentácia, RBAC, secrets store a audit sú zatiaľ nákres — dôkaz uzatvára brána G4 dňa 18. 9. 2026 (ARC-001, SEC-001, NET-001).\nSCREENSHOT: 03-architektura-dark.png"
         },
         {
           "name": "S04 · Pred a po — prepnite stav #rozhodnutie #brana",
           "assignee": "me",
-          "notes": "ČO SLAJD TVRDÍ: Ten istý nákres v dvoch stavoch. Dnes prechádza hranicu všetko a jadro beží na cudzej infraštruktúre bez lokálnej alternatívy. Po G10 beží 70B lokálne na 96 GB, workeri sú izolovaní, každý zápis prejde frontou schválení a audit sa nedá prepísať. Mení sa hranica — z dohody sa stáva technické opatrenie.\nZDROJ ČÍSEL: interaktívny nákres — 6 klikateľných prvkov, Hades 675 uzlov a 2 049 spojení, 96 GB VRAM v cieľovom stave.\nČO CHÝBA DO BRÁNY: cieľový obrázok platí len ak 70B, obraz, video, 10 workflowov, offline a DR prejdú testami. Dôkazy: ARC-001, TEST-LLM-001, DATA-001, REQ-003, SEC-001, NET-001, INT-GOV-001, HADES-001 až 007.\nSCREENSHOT: 04-predapo-dark.png · 04-predapo-dnes.png · 04-predapo-ciel.png"
+          "notes": "ČO SLAJD TVRDÍ: Medzi dnešným a cieľovým stavom sa presúva jediný prvok — výpočtové jadro. MCP vrstva, Hades, Asana, Drive a Calendar zostávajú; mení sa, kde beží model a kde končia dáta. Hranica prestáva byť dohodou a stáva sa technickým opatrením.\nZDROJ ČÍSEL: 675 uzlov Hades, 96 GB VRAM, 70B lokálne, 3 izolovaní workeri, 10 workflowov. Register úloh: REQ-001, DATA-001, REQ-003, HADES-001 až 007, ARC-001, TEST-LLM-001, SEC-001, NET-001, INT-GOV-001, REQ-004, TEST-OFFLINE-001.\nČO CHÝBA DO BRÁNY: celý pravý stĺpec nákresu je akceptačné kritérium, nie stav — dôkaz je až po bráne G7 dňa 27. 11. 2026.\nSCREENSHOT: 04-predapo-dark.png · 04-predapo-dnes.png · 04-predapo-ciel.png"
         }
       ]
     },
@@ -55,7 +55,7 @@
         {
           "name": "S05 · Bezpečnosť a hranica dát — štyri zóny #riziko #brana",
           "assignee": "me",
-          "notes": "ČO SLAJD TVRDÍ: Štyri zóny, jedno pravidlo — nič neprejde bez stopy. Používatelia, jadro, workeri a dáta, vonkajší svet. Offline režim nie je havária, je to testovaný stav: cloud sa bezpečne pozastaví, lokálne jadro pracuje ďalej a po obnove sa nič nezduplikuje.\nZDROJ ČÍSEL: 4 zóny, 3 roly least privilege, 3× segment a 3× identita, 1 nemazateľný audit log; TEST-OFFLINE-001.\nČO CHÝBA DO BRÁNY: ARC-001, SEC-001, DATA-001, RES-001 a NET-001 sa uzatvárajú spoločne v bráne G4 dňa 18. 9. 2026. Offline test musí ukázať aj bezpečné obnovenie, nielen prežitie — bez toho G7 neprejde.\nSCREENSHOT: 05-bezpecnost-dark.png"
+          "notes": "ČO SLAJD TVRDÍ: Štyri zóny — používatelia, jadro, workeri a dáta, vonkajší svet — s jedným pravidlom: nič neprejde bez stopy. Offline režim nie je havária, je to testovaný stav: jadro pracuje ďalej, zápisy čakajú vo fronte a po obnove sa prehrajú bez duplikátov.\nZDROJ ČÍSEL: 4 zóny, 3 roly · least privilege, 3× segment · 3× identita, 1 nemazateľný audit log. Úlohy ARC-001, SEC-001, DATA-001, RES-001 a NET-001 sa uzatvárajú v bráne G4 dňa 18. 9. 2026, offline dôkaz pred G7.\nČO CHÝBA DO BRÁNY: dôkaz neexistuje ani pre jednu zónu — TEST-OFFLINE-001 aj TEST-SEC-DR-001 sú pred G7. RPO a RTO sú v nákrese len ako pojem, konkrétne hodnoty v zdroji nie sú.\nSCREENSHOT: 05-bezpecnost-dark.png"
         }
       ]
     },
@@ -66,13 +66,13 @@
           "name": "S06 · Pamäť je nedostatkový tovar — ceny +55 % #cislo #riziko",
           "assignee": "me",
           "due_on": "2026-09-11",
-          "notes": "ČO SLAJD TVRDÍ: Pamäť je nedostatkový tovar a ceny GPU sa za 16 mesiacov zdvojnásobili. Nie je to pozadie, je to hlavný finančný fakt projektu — rovnaká konfigurácia stojí dnes výrazne viac než pri uvedení a rastie ďalej. Čakanie nie je bezplatné, ale ani panika nie je plán.\nZDROJ ČÍSEL: VideoCardz (12. 6. 2026), Thunder Compute cenový prehľad (7/2026), TechTimes (11. 7. 2026), TrendForce via tech-insider, Liliputing (3/2026). Kurz USD/EUR sa neuvádza — porovnáva sa v mene zdroja.\nČO CHÝBA DO BRÁNY: FIN-001 — dve nezávislé cenové kontroly s dátumom ku každému kandidátovi, platnosť ponuky ako súčasť rozhodnutia a benchmark pred nákupom, nie po ňom. Termín G3 dňa 11. 9. 2026.\nSCREENSHOT: 06-trh-ceny-dark.png"
+          "notes": "ČO SLAJD TVRDÍ: Ceny GPU sa za 16 mesiacov zdvojnásobili a rastú ďalej, takže načasovanie je súčasť investičného rozhodnutia. Čakanie nie je bezplatné, ale ani panika nie je plán — odpoveďou je FIN-001.\nZDROJ ČÍSEL: VideoCardz (12. 6. 2026), Thunder Compute cenový prehľad (7/2026), TechTimes (11. 7. 2026), TrendForce via tech-insider, Liliputing (3/2026). Kurz USD/EUR sa zámerne neuvádza — porovnáva sa v mene zdroja.\nČO CHÝBA DO BRÁNY: FIN-001 — dve nezávislé cenové kontroly s dátumom, platnosť ponuky a benchmark pred nákupom. Čísla v $ nie sú priamo porovnateľné s € cenami na S07, pred G3 treba prepočet s kurzom a dátumom.\nSCREENSHOT: 06-trh-ceny-dark.png"
         },
         {
           "name": "S07 · Hardware — čo sme posúdili a čo prešlo #cislo #brana",
           "assignee": "me",
           "due_on": "2026-09-11",
-          "notes": "ČO SLAJD TVRDÍ: O rýchlosti 70B nerozhodujú TOPS, ale priepustnosť pamäti. 96 GB je bezpečná zóna, 128 GB unified je pasca na papieri s 6× nižšou priepustnosťou, 32 GB na 70B nesadne ani na RTX 5090. Šesť oficiálnych variantov plus päť alternatív mimo hlavného radu — s cenami a verdiktom vopred.\nZDROJ ČÍSEL: Alza.sk, HP Store PL, buyzero.de, eBay.de, Amazon EU, Geizhals DE, Alza.cz — overené 28. 7. 2026, s DPH. Priepustnosti podľa špecifikácií výrobcu, tokeny za sekundu podľa technickej FAQ buyzero.de.\nČO CHÝBA DO BRÁNY: druhá cenová kontrola ku každému kandidátovi, platnosť ponuky, dodacia lehota a záruka — obsah registra FIN-001. Nič z uvedeného nie je záväzná ponuka, to je úloha PROC-001 pred G5.\nSCREENSHOT: 07-hardware-dark.png"
+          "notes": "ČO SLAJD TVRDÍ: O rýchlosti 70B nerozhodujú TOPS, ale priepustnosť pamäti. 96 GB je bezpečná zóna, 128 GB unified je pasca na papieri a Main Basic so 48 GB zostáva CONDITIONAL, kým nie je benchmark. Šesť oficiálnych variantov plus päť alternatív, s cenami a verdiktom vopred.\nZDROJ ČÍSEL: Alza.sk, HP Store PL, buyzero.de, eBay.de, Amazon EU, Geizhals DE, Alza.cz — overené 28. 7. 2026, s DPH. Priepustnosti podľa špecifikácií výrobcu, tokeny za sekundu podľa technickej FAQ buyzero.de.\nČO CHÝBA DO BRÁNY: druhá cenová kontrola ku každému kandidátovi, platnosť ponuky, dodacia lehota a záruka — register FIN-001. Nič z tabuľky nie je záväzná ponuka, to je PROC-001 pred G5.\nSCREENSHOT: 07-hardware-dark.png"
         }
       ]
     },
@@ -83,18 +83,18 @@
           "name": "S08 · Tri scenáre CapEx: 17 · 33 · 54 tisíc € #cislo #rozhodnutie",
           "assignee": "me",
           "due_on": "2026-09-11",
-          "notes": "ČO SLAJD TVRDÍ: Tri scenáre CapEx — 17, 33 a 54 tisíc €. Rozdiel medzi scenármi je takmer celý v jednej položke, v grafickej karte jadra. Zložené z overených katalógových cien plus platforma a infraštruktúra ako budgetary blok.\nZDROJ ČÍSEL: overené listingy 6 269 € / 14 849 € / 4 700 € / ~3 530 € s dátumom 28. 7. 2026; platforma 3 500–6 000 € a infra blok 3 500–4 500 € sú budgetary.\nČO CHÝBA DO BRÁNY: reálne ponuky na platformu a infraštruktúru do G3 dňa 11. 9. 2026. Main Standard je dnes na Alze nedostupný — dodacia lehota je súčasťou rozhodnutia, nie detail. RAM a SSD zdražujú spolu s GPU.\nSCREENSHOT: 08-capex-dark.png"
+          "notes": "ČO SLAJD TVRDÍ: Rozdiel medzi tromi scenármi je takmer celý v jednej položke — v grafickej karte jadra. Ceny GPU a mini PC sú overené, platforma a infraštruktúra sú budgetary blok.\nZDROJ ČÍSEL: A · Basic ~16 900 €, B · Standard ~32 900 € (odporúčaný), C · Premium ~54 300 €. Overené 6 269 € / 14 849 € / 4 700 € / ~3 530 € z listingov s dátumom 28. 7. 2026. Budgetary: platforma 3 500–6 000 €, infra blok 3 500–4 500 €.\nČO CHÝBA DO BRÁNY: do G3 treba reálne ponuky na platformu aj infra blok. Main Standard je na Alze nedostupný — dodacia lehota patrí do rozhodnutia, nie do poznámky.\nSCREENSHOT: 08-capex-dark.png"
         },
         {
           "name": "S09 · TCO na 3 roky — a prečo prenájom nie je alternatíva #cislo",
           "assignee": "me",
           "due_on": "2026-09-11",
-          "notes": "ČO SLAJD TVRDÍ: Celkové náklady vlastníctva na tri roky sú 45 958 € (A), 65 296 € (B) a 90 838 € (C). Je to model, nie ponuka — všetky vstupy sú viditeľné, aby sa dali spochybniť. Prenájom GPU v cloude je na papieri lacnejší, ale rieši výpočet, nie hranicu spracovania: osobné, účtovné a obmedzené údaje tam nesmú ísť.\nZDROJ ČÍSEL: vstupy modelu — 0,20 €/kWh, priemerný príkon 350 / 500 / 780 W, 12 h denne, 250 dní ročne, cloud 150 €/mesiac, licencie 80 €/mesiac nad dnešný stav; prenájom 2,35 $/h podľa marketplace Spheron (7/2026).\nČO CHÝBA DO BRÁNY: FIN-002 — vzorcový XLSX ako zdroj pravdy namiesto slajdu. Do RAID registra doplniť zostatkovú hodnotu hardwaru po 3 rokoch a náklad na neúspešný benchmark.\nSCREENSHOT: 09-tco-dark.png"
+          "notes": "ČO SLAJD TVRDÍ: Trojročné TCO je 45 958 € / 65 296 € / 90 838 € podľa scenára. Prenájom GPU v cloude je na papieri lacnejší, ale rieši výpočet, nie hranicu spracovania — a cloud API platíme aj tak.\nZDROJ ČÍSEL: model s viditeľnými vstupmi — 0,20 €/kWh, príkon 350 / 500 / 780 W, 12 h denne, 250 dní ročne, cloud 150 €/mesiac, licencie 80 €/mesiac, implementácia 12 000 €, školenie 1 500 €, podpora 2 400 / 3 600 / 4 800 €, rezerva 10 %. Prenájom 2,35 $/h on-demand (Spheron 7/2026).\nČO CHÝBA DO BRÁNY: TCO je model, nie ponuka — zdrojom pravdy má byť vzorcový XLSX v úlohe FIN-002, ktorý zatiaľ neexistuje. Chýba základná línia dnešného mesačného výdaja na AI služby.\nSCREENSHOT: 09-tco-dark.png"
         },
         {
           "name": "S10 · Poskladajte si zostavu — konfigurátor #cislo",
           "assignee": "me",
-          "notes": "ČO SLAJD TVRDÍ: Zostavu si možno poskladať z overených cien a hneď vidieť CapEx, TCO na 3 roky, priemer na mesiac aj upozornenia o zhode s charterom. Vstupy modelu sa dajú prestaviť a všetko sa prepočíta okamžite. Je to nástroj na rozhovor, nie zdroj pravdy.\nZDROJ ČÍSEL: Alza.sk, HP Store PL, buyzero.de — overené 28. 7. 2026, s DPH. Platforma, NAS, UPS a sieť sú budgetary bloky. Spotreba je odhad priemerného príkonu, nie meranie.\nČO CHÝBA DO BRÁNY: do G3 musia budgetary bloky nahradiť reálne ponuky. Po G6 prepíše spotrebu TEST-HW-001. Zdrojom pravdy zostáva vzorcový XLSX v úlohe FIN-002.\nSCREENSHOT: 10-konfigurator-dark.png · 10-konfigurator-A-17k.png · 10-konfigurator-B-33k.png · 10-konfigurator-C-54k.png"
+          "notes": "ČO SLAJD TVRDÍ: Konfigurátor je nástroj na rozhovor, nie zdroj pravdy — každá voľba okamžite prepočíta CapEx, TCO a mesačný priemer a vypíše upozornenia o zhode s charterom.\nZDROJ ČÍSEL: ceny v tlačidlách — GPU 6 269 / 14 849 / 29 698 / 3 999 / 8 421 / ~7 500 €, platforma 3 500 / 4 500 / 6 000 €, Mini 1 150 / 3 530 / 4 700 / 3 794 €, infra UPS 900 €, 10GbE 700 €, NAS 2 700 €, off-site 540 € / 3 r. Overené 28. 7. 2026, s DPH.\nČO CHÝBA DO BRÁNY: platforma, NAS, UPS a sieť sú budgetary bloky — do G3 ich musia nahradiť reálne ponuky. Spotreba je odhad priemerného príkonu, po G6 ju prepíše TEST-HW-001. Zdrojom pravdy zostáva FIN-002.\nSCREENSHOT: 10-konfigurator-dark.png · 10-konfigurator-A-17k.png · 10-konfigurator-B-33k.png · 10-konfigurator-C-54k.png"
         }
       ]
     },
@@ -105,13 +105,13 @@
           "name": "S11 · 26 týždňov, 11 brán, žiadne skratky #brana",
           "assignee": "me",
           "due_on": "2026-08-28",
-          "notes": "ČO SLAJD TVRDÍ: 26 týždňov, 11 brán, žiadne skratky. Brána nie je termín ani porada — je to rozhodnutie s pripojenými dôkazmi. Bez dôkazu a bez uzavretých P0/P1 sa brána neotvorí a nasledujúca fáza nezačne.\nZDROJ ČÍSEL: harmonogram od 28. 7. 2026 do 31. 1. 2027, desať fáz 00 až 09, brány G1–G11; G1 dňa 7. 8., G2 dňa 28. 8., G3 dňa 11. 9., G5 dňa 25. 9. 2026.\nČO CHÝBA DO BRÁNY: G2 dňa 28. 8. 2026 — zmraziť požiadavky: používatelia, workloady, klasifikácia dát, local/cloud hranica a SLO. Vlastné odhady zrelosti treba nahradiť metrikami z REQ-005 s prahom, spôsobom merania a frekvenciou.\nSCREENSHOT: 11-harmonogram-dark.png"
+          "notes": "ČO SLAJD TVRDÍ: Bez pripojeného dôkazu a bez uzavretých P0/P1 sa brána neotvorí a nasledujúca fáza nezačne. Najbližšie štyri brány sú G1 dňa 7. 8., G2 dňa 28. 8., G3 dňa 11. 9. a G5 dňa 25. 9.\nZDROJ ČÍSEL: harmonogram od 28. 7. 2026 do 31. 1. 2027, 10 fáz (00 audit a charter až 09 RAID priebežne), 11 brán G1–G11. Termíny na slajde: 7. 8., 28. 8., 11. 9., 25. 9.\nČO CHÝBA DO BRÁNY: dátumy G4 a G6–G11 na slajde nie sú, v decku sú rozptýlené (G4 18. 9. 2026, G7 27. 11., G10 22. 1. 2027). Do G2 treba nahradiť odhady zrelosti metrikami z REQ-005 s prahom, spôsobom merania a frekvenciou.\nSCREENSHOT: 11-harmonogram-dark.png"
         },
         {
           "name": "S12 · Od testov k rolloutu #brana #riziko",
           "assignee": "me",
           "due_on": "2026-08-28",
-          "notes": "ČO SLAJD TVRDÍ: Medzi nami a pilotom je šesť testov, 16.–27. novembra. Každý má test report, surové metriky a schválený výsledok — je to jediná cesta k G7. Potom pilot a rollout po vlnách 10 %, 30 %, 60 % a 100 %, každá vlna s výstupným kritériom a možnosťou vrátiť sa.\nZDROJ ČÍSEL: harmonogram validácie a rolloutu — 6 testov 16.–27. 11., brána G7 dňa 27. 11., pilot 30. 11. — 18. 12., celá firma 22. 1. 2027 (G10); dnes 0 testov s dôkazom.\nČO CHÝBA DO BRÁNY: všetkých šesť testov — 70B, obraz, video, 10 súbežných workflowov, offline a bezpečnosť s DR. Neznáme výsledky sa nevymýšľajú: test bez dôkazu sa neuzatvára ani keď je termín.\nSCREENSHOT: 12-testy-rollout-dark.png"
+          "notes": "ČO SLAJD TVRDÍ: Šesť testov medzi nami a pilotom (16.–27. 11.), potom pilot a rollout po vlnách s možnosťou zastaviť. Dnes má dôkaz 0 testov a brána G7 je 27. 11.\nZDROJ ČÍSEL: testy 16.–18. 11., 16.–20. 11., 18.–23. 11., 20.–24. 11., 23.–25. 11., 23.–27. 11. Pilot 30. 11. — 18. 12. Pilotná skupina 16.–20. 11., školenie 23.–27. 11., akceptácia 7.–18. 12., rollout a launch 4.–22. 1. Vlny 10 % → 30 % → 60 % → 100 %, celá firma 22. 1. 2027, G10.\nČO CHÝBA DO BRÁNY: všetkých šesť testov — 0 z nich má dnes dôkaz. Neznáme výsledky sa nevymýšľajú, test bez dôkazu sa neuzatvára ani keď je termín.\nSCREENSHOT: 12-testy-rollout-dark.png"
         }
       ]
     },
@@ -122,7 +122,7 @@
           "name": "S13 · Najbližších 45 dní rozhodne o celej investícii #rozhodnutie #brana",
           "assignee": "me",
           "due_on": "2026-08-07",
-          "notes": "ČO SLAJD TVRDÍ: Najbližších 45 dní rozhodne o celej investícii — G1 do 7. 8., G2 do 28. 8., G3 do 11. 9. Baseline stojí, ale tri veci držia projekt v žltej: povolenie na Drive upload, chýbajúca formálna EU B2B ponuka na Main Premium pred G5 a technické brány pred G7. Z toho vyplývajú dve rozhodnutia na dnes a jedna otázka pre tím.\nZDROJ ČÍSEL: register 30 rozhodnutí a päť priebežných registrov RAID, ktoré bežia od 27. 7. 2026 do konca projektu; riziká hodnotené skóre 5×5.\nČO CHÝBA DO BRÁNY: dve rozhodnutia na dnes — povolenie nahrať interné artefakty na Drive a zadanie formálnej B2B ponuky na Main Premium. Bez prvého sa G1 dňa 7. 8. 2026 posunie, bez druhého G3 rozhoduje z dvoch možností namiesto troch.\nSCREENSHOT: 13-rozhodnutia-dark.png"
+          "notes": "ČO SLAJD TVRDÍ: Baseline stojí, v žltej ju držia tri veci — Drive upload, chýbajúca formálna B2B ponuka na Main Premium pred G5 a technické brány pred G7. Na dnes sú dve rozhodnutia a jedna otázka pre tím.\nZDROJ ČÍSEL: G1 do 7. 8. (audit, register 30 rozhodnutí, charter), G2 do 28. 8., G3 do 11. 9. Ceny Alza.sk, HP Store PL, buyzero.de overené 28. 7. 2026, s DPH. Trhový kontext VideoCardz, Thunder Compute, TechTimes, TrendForce, Liliputing (6–7/2026).\nČO CHÝBA DO BRÁNY: bez povolenia Drive uploadu nemajú dôkazy k bránam spoločné miesto a G1 sa posunie. Bez formálnej EU B2B ponuky na Main Premium nie je scenár C porovnateľný a G3 rozhoduje z dvoch možností namiesto troch.\nSCREENSHOT: 13-rozhodnutia-dark.png"
         }
       ]
     }
@@ -130,87 +130,88 @@
 
   "subtasks": {
     "S01 · Vlastné AI jadro — naše dáta zostanú doma #rozhodnutie #cislo": [
-      "26 týždňov · do 31. 1. 2027",
-      "11 brán G1–G11 · 67 úloh · 168 subtaskov",
-      "3 scenáre investície · 3 otvorené blokátory",
-      "1× Main PC ako Aura Core, 3× Mini PC ako izolovaní workeri, najviac 10 súbežných workflowov"
+      "26 týždňov · do 31. 1. 2027 · 11 brán G1–G11",
+      "67 úloh a 168 subtaskov v baseline",
+      "1× Main PC + 3× Mini PC · 70B lokálne · max 10 súbežných workflowov",
+      "Overiť pred G1: „3 otvorené blokátory\" v hero = tri veci v žltej na S13"
     ],
     "S02 · Ako AI používame už dnes — MCP a Hades #hotove": [
-      "Hades: 675 uzlov · 2 049 spojení · 5 oblastí znalostí · 0 uzlov na revíziu",
-      "12 MCP serverov pripojených dnes",
-      "Oblasti pamäti: Vývoj 248 · Biznis 154 · Marketing 143 · Osobné 91 · Dizajn 35",
-      "Asana baseline (11 sekcií, 67 úloh, 168 subtaskov) aj katalóg 126 automatizácií vznikli priamo cez MCP",
-      "Zápis z porady je jeden z 10 workflowov: nahrávka → prepis na Mini 2 offline → 70B extrakcia → schválenie človekom → úlohy do Asany a eventy do Calendara; bez kliknutia sa nezapíše"
+      "Hades: 675 uzlov · 2 049 spojení · 0 uzlov na revíziu · 12 MCP serverov",
+      "5 oblastí znalostí: Vývoj 248 · Biznis 154 · Marketing 143 · Osobné 91 · Dizajn 35",
+      "Baseline (11 sekcií, 67 úloh, 168 subtaskov) a katalóg 126 automatizácií vznikli cez MCP",
+      "Vypustené karty MCP praxe: Canva a Figma · Ahrefs, M365, Zapier · Reporting z porád",
+      "Chýba dnešný mesačný výdaj na AI služby — bez neho nemá S09 základnú líniu"
     ],
     "S03 · Jedno jadro, tri izolované ruky #brana": [
-      "Main PC = Aura Core: 70B model, orchestrácia, RAG index, fronta úloh",
+      "Aura Core drží 70B model, orchestráciu, RAG index a frontu úloh",
       "Mini 1 obraz a video · Mini 2 dokumenty a RAG · Mini 3 dávky a integrácie",
-      "RBAC, audit a secrets zostávajú na jadre — workeri nemajú prístup k tajomstvám ani k celému dátovému jazeru",
-      "Cloud AI API len pre neobmedzené dáta, vypnuteľné bez pádu jadra; Asana, Drive a Calendar zapisujú so schválením"
+      "Workeri nemajú prístup k secrets ani k celému dátovému jazeru",
+      "Cloud AI API len pre neobmedzené dáta — vypnuteľné bez pádu jadra"
     ],
     "S04 · Pred a po — prepnite stav #rozhodnutie #brana": [
-      "Dnes: každý prompt s citlivým obsahom ide k cudziemu modelu — VŠETKO PRECHÁDZA hranicu a nikto nevie presne povedať, čo už odišlo",
-      "Cieľ: Main PC s 96 GB VRAM, 70B lokálne, tri izolovaní workeri, fronta schválení a nemazateľný audit (ARC-001 · TEST-LLM-001)",
-      "Hades dnes beží lokálne, ale chat endpoint volá cudzí model a von je vystavený cez verejný tunel — presúva sa na Aura Core, prístup zvonku len cez VPN (HADES-001 až 007)",
-      "Hranica dnes existuje len ako dohoda a dobrá vôľa; cieľ je technické opatrenie — segmentácia, minimálne scope tokenov, fail-closed a audit každého prechodu (SEC-001 · NET-001)"
+      "Dnes: osobné a účtovné dáta opúšťajú firmu pri každom prompte",
+      "Cieľ: 70B lokálne na 96 GB VRAM, 3 izolovaní workeri, fronta schválení, nemazateľný audit",
+      "Hades dnes: chat endpoint volá cudzí model, von cez verejný tunel (HADES-001 až 007)",
+      "Z vypadnutého slajdu: 9 rozmerov s dôkazmi od TEST-LLM-001 po RAID-CHANGE-001"
     ],
     "S05 · Bezpečnosť a hranica dát — štyri zóny #riziko #brana": [
-      "Zóna 1 používatelia: SSO a RBAC role, VPN pre vzdialený prístup, 3 roly · least privilege, lockout a audit prihlásení",
-      "Zóna 2 jadro: modely a orchestrácia, secrets store, nemazateľný audit log, fronta schválení — každý zápis s vedľajším účinkom čaká na človeka",
-      "Zóna 3 workeri a dáta: 3× segment a 3× identita, šifrovanie v pokoji, NAS + off-site kópia, RPO a RTO definované, retencia podľa triedy dát, RAG provenance",
-      "Zóna 4 vonkajší svet: tokeny s minimálnym scope, otestovaná revokácia, firewall toky menovite, zákaz obmedzených dát von bez výslovnej výnimky",
-      "Offline režim: 70B, obraz a video aj RAG nad NAS bežia ďalej, zápisy do Asany, Drive a Calendara čakajú vo fronte a prehrajú sa idempotentne — TEST-OFFLINE-001, dôkaz pred G7"
+      "Zóna 1: SSO a RBAC, VPN, 3 roly · least privilege, lockout a audit prihlásení",
+      "Zóna 2: secrets store, nemazateľný audit log, fronta schválení pred každým zápisom",
+      "Zóna 3: 3× segment a 3× identita, šifrovanie v pokoji, NAS + off-site kópia",
+      "Zóna 4: minimálny scope tokenov, otestovaná revokácia, zákaz obmedzených dát von",
+      "Doplniť konkrétne hodnoty RPO a RTO do RES-001 — v zdroji sú len ako pojem"
     ],
     "S06 · Pamäť je nedostatkový tovar — ceny +55 % #cislo #riziko": [
-      "RTX 5090 32 GB: MSRP 1 999 $ pri uvedení (1/2025) → 4 329 $ na Amazone 11. 7. 2026",
-      "RTX PRO 6000 96 GB: MSRP 8 565 $ (3/2025) → 13 250 $ na NVIDIA marketplace (7/2026) = +55 % za 16 mesiacov",
-      "Dôvod je nedostatok pamäti GDDR7 — karta s najväčšou VRAM na trhu je na to najcitlivejšia",
-      "TrendForce: karty RTX 50 so 16 GB a viac vzrástli o 15–20 %, širší nárast u AMD aj NVIDIA je 10–15 %",
-      "GEEKOM A9 Mega s 128 GB mal stáť 2 099 $, predáva sa za 3 199 $ — ďalší výrobcovia hlásia zdraženie ďalšej dávky"
+      "RTX 5090 32 GB: 1 999 $ MSRP (1/2025) → 4 329 $ (Amazon, 11. 7. 2026)",
+      "RTX PRO 6000 96 GB: 8 565 $ MSRP (3/2025) → 13 250 $ (7/2026) = +55 % za 16 mesiacov",
+      "TrendForce +15–20 % na RTX 50 so 16 GB a viac; GEEKOM A9 Mega 2 099 $ → 3 199 $",
+      "Doplniť do FIN-001 prepočet USD cien na € s kurzom a dátumom"
     ],
     "S07 · Hardware — čo sme posúdili a čo prešlo #cislo #brana": [
-      "Main Basic: RTX PRO 5000 Blackwell, 48 GB GDDR7 ECC, 1 344 GB/s, 6 269 € s DPH (5 096,75 € bez DPH), Alza.sk 3 ks — zostáva CONDITIONAL, 48 GB bez benchmarku",
-      "Main Standard: RTX PRO 6000 Blackwell Workstation, 96 GB, ~1 790 GB/s, 14 849 € (12 072,36 € bez DPH) — na Alze nedostupné",
-      "Main Premium: 2× RTX PRO 6000 alebo Server Edition, 192 GB, 1 597 GB/s, ~29 700 € — potrebná ponuka; Server Edition samostatne 14 649 €, pasív potrebuje šasi s núteným prúdením",
-      "Mini Standard HP Z2 Mini G1a: 128 GB unified, ~256 GB/s, ~3 530 € (14 999 zł pri kurze 4,25 zł/€) a Mini Premium ASUS Ascent GX10 / DGX Spark: 128 GB, 273 GB/s, 4 700 € (4 TB verzia 6 350 €), dodanie 4–6 týždňov — obaja kandidáti",
-      "96 GB FP8 — 70B sa zmestí na jednu kartu vrátane rezervy na kontext; 128 GB unified má 6× nižšiu priepustnosť; 32 GB na 70B nesadne ani na RTX 5090 (1 792 GB/s, ~3 999 €); Mini Basic 32 GB LPDDR5X ~120 GB/s, ~1 000–1 300 € do 70B testov nevstupuje",
-      "Sekundárny trh: Server Edition 96 GB za 8 421 € na eBay.de (−42 % oproti novej) = úspora 6 228 € na kartu, pri dvoch 12 456 €, ale záruka od predajcu a bez vrátenia; Mac Studio M3 Ultra 819 GB/s od 5 100 € je mimo charteru; GMKtec EVO-X2 3 794 € sa neodporúča"
+      "Main Basic 48 GB · 1 344 GB/s · 6 269 € — CONDITIONAL, 48 GB bez benchmarku",
+      "Main Standard 96 GB · ~1 790 GB/s · 14 849 € — na Alze nedostupné",
+      "Main Premium 192 GB · 1 597 GB/s · ~29 700 €; Server Edition samostatne 14 649 €",
+      "Mini Standard 128 GB · ~256 GB/s · ~3 530 € (14 999 zł) a DGX Spark 273 GB/s · 4 700 €",
+      "96 GB FP8 sa zmestí s rezervou na kontext · 128 GB unified má 6× nižšiu priepustnosť · 32 GB na 70B nesadne",
+      "Sekundárny trh 8 421 € (−42 %) = úspora 6 228 € na kartu, ale záruka od predajcu"
     ],
     "S08 · Tri scenáre CapEx: 17 · 33 · 54 tisíc € #cislo #rozhodnutie": [
       "A · Basic: 48 GB jadro + 3× Mini Basic = ~16 900 €",
       "B · Standard (odporúčaný): 96 GB jadro + 3× Mini Standard = ~32 900 €",
       "C · Premium: 192 GB jadro + 3× DGX Spark = ~54 300 €",
-      "Budgetary bloky: platforma Main (CPU, doska, 128 GB RAM, 2× NVMe, 1000 W zdroj, skriňa, chladenie) 3 500–6 000 € a infra blok 3 500–4 500 € — do G3 treba reálne ponuky"
+      "Doplniť rozpad segmentov stack grafu v € — na slajde sú len percentá šírky"
     ],
     "S09 · TCO na 3 roky — a prečo prenájom nie je alternatíva #cislo": [
       "Celkom 3 roky: A 45 958 € · B 65 296 € · C 90 838 €",
-      "Priemer na mesiac: A 1 277 € · B 1 814 € · C 2 523 €",
-      "Položky modelu: CapEx 16 900 / 32 900 / 54 300 · energia 700 / 1 080 / 1 700 · cloud AI API 5 400 · prírastkové licencie 2 880 · implementácia 12 000 · školenie 1 500 · podpora a náhradné diely 2 400 / 3 600 / 4 800 · rezerva 10 % 4 178 / 5 936 / 8 258",
-      "Prenájom 1× RTX PRO 6000: 2,35 $/h · 3 000 h ročne · 3 roky = ~21 150 $; spot od 0,84 $/h, ale kapacita je odoberateľná kedykoľvek — porovnateľné len pri workloadoch bez restricted dát (REQ-004)",
-      "V modeli zámerne nie je: zostatková hodnota hardwaru po 3 rokoch, náklad na neúspešný benchmark a rozšírenie o štvrtý worker"
+      "Priemer na mesiac: 1 277 € / 1 814 € / 2 523 €",
+      "Prenájom 2,35 $/h · 3 000 h ročne · 3 roky = ~21 150 $; spot od 0,84 $/h bez garancie",
+      "Chýba FIN-002 (vzorcový XLSX) aj zostatková hodnota hardwaru po 3 rokoch"
     ],
     "S10 · Poskladajte si zostavu — konfigurátor #cislo": [
-      "Jadro na výber: Basic 48 GB 6 269 € · Standard 96 GB 14 849 € · Premium 2× 96 GB 29 698 € · RTX 5090 32 GB 3 999 € · Server Edition zo sekundárneho trhu 8 421 € · Mac Studio 256 GB ~7 500 €",
-      "Platforma: úsporná 3 500 € · solidná 4 500 € · pre 2 karty 6 000 €. Worker: Basic 32 GB 1 150 € · Standard 128 GB 3 530 € · DGX Spark 4 700 € · GMKtec EVO-X2 3 794 €",
-      "Infraštruktúra: UPS 900 € · 10GbE sieť 700 € · NAS a disky 2 700 € · off-site kópia 540 € / 3 roky",
-      "Vstupy modelu v základnom nastavení: 0,20 €/kWh · 2 500 hodín prevádzky ročne · cloud 150 €/mesiac · licencie 80 €/mesiac · implementácia 12 000 € · rezerva 10 %"
+      "Jadro: 6 269 / 14 849 / 29 698 / 3 999 / 8 421 / ~7 500 €",
+      "Platforma 3 500 / 4 500 / 6 000 € · worker 1 150 / 3 530 / 4 700 / 3 794 €",
+      "Infra: UPS 900 € · 10GbE 700 € · NAS 2 700 € · off-site 540 € / 3 roky",
+      "Predvyplnené 32 900 € a 65 300 € sú čísla zo S08, nie výstup cenového modelu — zjednotiť pred G3"
     ],
     "S11 · 26 týždňov, 11 brán, žiadne skratky #brana": [
-      "G1 dňa 7. 8. audit a charter · G2 dňa 28. 8. požiadavky zmrazené · G3 dňa 11. 9. výber hardwaru · G5 dňa 25. 9. schválenie investície",
-      "Desať fáz: 00 audit a charter · 01 požiadavky · 02 hardware a TCO · 03 architektúra · 04 nákup a build · 05 integrácie · 06 validácia · 07 pilot a rollout · 08 prevádzka a BAU · 09 RAID priebežne",
-      "Bez pripojeného dôkazu a bez uzavretých P0/P1 sa brána neotvorí a nasledujúca fáza nezačne"
+      "G1 7. 8. · G2 28. 8. · G3 11. 9. · G5 25. 9. 2026",
+      "10 fáz od 00 audit a charter po 09 RAID priebežne",
+      "Doplniť dátumy G4 a G6–G11 — slajd ukazuje len 4 z 11 brán",
+      "Odhady zrelosti 30 → 95 %, 15 → 80 %, 45 → 100 %, 50 → 90 % nahradiť metrikami z REQ-005"
     ],
     "S12 · Od testov k rolloutu #brana #riziko": [
-      "Šesť testov: HW benchmark a stabilita 16.–18. 11. · lokálny 70B model 16.–20. 11. · obraz a video 18.–23. 11. · 10 súbežných workflowov 20.–24. 11. · offline a cloud-degraded 23.–25. 11. · bezpečnosť a DR 23.–27. 11.",
+      "Šesť testov 16.–27. 11.: HW, 70B, obraz a video, 10 workflowov, offline, bezpečnosť a DR",
       "Dnes 0 testov s dôkazom — brána G7 je 27. 11.",
-      "Pilot 30. 11. — 18. 12. na vybranej skupine so stop conditions; pilotná skupina 16.–20. 11., školenie 23.–27. 11., akceptácia pilotu 7.–18. 12. bez otvorených P0/P1",
-      "Rollout po vlnách 10 % → 30 % → 60 % → 100 % celá firma 22. 1. 2027 (G10, rollback nacvičený pred finálnym schválením, nie po ňom); každá vlna má výstupné kritérium a pri jeho nesplnení sa vracia"
+      "Pilot 30. 11. — 18. 12. so stop conditions, akceptácia 7.–18. 12. bez otvorených P0/P1",
+      "Vlny 10 % → 30 % → 60 % → 100 %, celá firma 22. 1. 2027 (G10)",
+      "Doplniť plánovaný počet ľudí v pilote — v zdroji nie je nikde"
     ],
     "S13 · Najbližších 45 dní rozhodne o celej investícii #rozhodnutie #brana": [
-      "Rozhodnutie na dnes č. 1: povolenie nahrať interné artefakty na Drive — inak nemajú dôkazy k bránam spoločné miesto a G1 sa posunie",
-      "Rozhodnutie na dnes č. 2: zadať formálnu B2B ponuku na Main Premium — bez nej scenár C nie je porovnateľný a G3 rozhoduje z dvoch možností namiesto troch",
-      "Otázka pre tím: ktoré tri workflowy zo súčasnej MCP praxe majú prejsť na lokálne jadro ako prvé — vstup do pilotného charteru",
-      "Riziká: cena hardwaru ďalej rastie (vysoké) · dostupnosť 96 GB karty (vysoké) · 70B nesplní prah na 48 GB (stredné) · interná kapacita na 26 týždňov (stredné) · únik obmedzených dát von (nízke)"
+      "Rozhodnutie na dnes č. 1: povolenie nahrať interné artefakty na Drive",
+      "Rozhodnutie na dnes č. 2: zadať formálnu B2B ponuku na Main Premium",
+      "Otázka pre tím: ktoré tri workflowy prejdú na lokálne jadro ako prvé",
+      "Riziká: cena HW a dostupnosť 96 GB karty vysoké · 70B na 48 GB a kapacita stredné · únik nízke",
+      "Päť registrov RAID so skóre 5×5 beží od 27. 7. 2026 do konca projektu"
     ]
   }
 }

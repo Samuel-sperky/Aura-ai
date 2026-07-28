@@ -6,7 +6,7 @@
  *                  Formát: kluc: ['Titulok','Text'].
  *                  Modál slovníčka zobrazuje všetky okrem `help` (zoradené podľa titulku, locale 'sk').
  *
- * AURA_TT_INLINE — presne 12 kľúčov, ktoré smú byť v texte slajdov podčiarknuté ako
+ * AURA_TT_INLINE — 14 kľúčov (R21 hovorí ~12), ktoré smú byť v texte slajdov podčiarknuté ako
  *                  <span class="tt" data-t="kluc" tabindex="0">. Zvyšné pojmy žijú len v slovníčku.
  *                  Výnimka (rozhodnutie A1): vizuály prenesené zo zdroja 1:1 — SVG grafy,
  *                  tabuľka na s07, .bars na s06/s09 a .kpi strip na s02 — si nechávajú svoje
@@ -74,5 +74,9 @@ window.AURA_TT_INLINE = [
   'gate',   /* s11 ld — brány */
   'p0',     /* s11 ld, s12 karta Bezpečnosť a DR — P0/P1 */
   'rag',    /* s03 box Jadro rozhoduje — RAG index */
-  'mcp'     /* s02 h2 — MCP */
+  'mcp',    /* s02 h2 — MCP */
+  /* +2 doplnené hlavným agentom: oba padajú mimo SVG a tabuľky, takže patria
+     do deklarovaného zoznamu, nie do výnimky pre prenesené vizuály. */
+  'msrp',   /* s06 .bars — MSRP verzus reálna cena je pointa celého slajdu */
+  'edge'    /* s02 .kpi strip — uzly a spojenia v Hades pamäti */
 ];

@@ -413,7 +413,6 @@ input:focus-visible,button:focus-visible,select:focus-visible,a:focus-visible,
     background-size:30px 100%,30px 100%,13px 100%,13px 100%;
     background-attachment:local,local,scroll,scroll;
   }
-  .ix{--sc:var(--paper)}
   .tw table{min-width:520px}
   th,td{padding:7px 8px}
   .gt svg,.gt table{min-width:560px}
@@ -424,8 +423,9 @@ input:focus-visible,button:focus-visible,select:focus-visible,a:focus-visible,
   .bar .vl{font-size:10px}
   .lgd{font-size:9px;gap:7px}
 
-  /* nákres — vlastný vodorovný scroll, aby text v SVG zostal čitateľný */
-  .ix{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  /* nákres — vlastný vodorovný scroll, aby text v SVG zostal čitateľný;
+     .ix leží priamo na papieri, takže hint sa kryje --paper, nie --card */
+  .ix{overflow-x:auto;-webkit-overflow-scrolling:touch;--sc:var(--paper)}
   .ix svg{min-width:560px}
   .dp{min-height:150px}
 

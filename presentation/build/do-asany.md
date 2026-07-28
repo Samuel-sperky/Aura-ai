@@ -157,7 +157,8 @@ VYPUSTENÉ ZO SLAJDU:
 - Nedotknuté — konfigurátor, všetkých 17 `id`, `.flg` a tiny prenesené 1:1 #hotove
 - 14 textov upozornení (CONDITIONAL, Dostupnosť, Chýba ponuka, NON-COMPLIANT na 70B, Sekundárny trh, Mimo charteru, Drahší než HP, Nekompatibilné, NON-COMPLIANT Mini, Mimo charteru počet, Nad charter, Bez záloh, Bez off-site, Bez UPS, Bez 10GbE, Bez otvorených nálezov) nie sú v `body.html` — A2 ich prebral do `deck.js` zo zdroja, riadky 1562–1577 #rozhodnutie
 - Cenník `P` a váhy `W` / `SUP` v `deck.js` musia zostať zhodné s cenami v `<small>` tlačidiel — pri zmene ceny meniť na dvoch miestach #riziko
-- Overiť, že default zostava (std / solid / std / 3 / celá infra) dáva presne 32 900 € a 65 300 € ako je predvyplnené v `#oCap` a `#oTco` #cislo
+- **Rozpor v zdroji: default zostava konfigurátora dáva 34 779 € CapEx, nie 32 900 € zo scenára B.** Predvyplnené hodnoty v `#oCap` / `#oTco` / `#oMon` (32 900 € / 65 300 € / 1 814 €) sú čísla scenára B zo s08 a s09, ale `calc()` ich pri načítaní prepíše na 34 779 € / 67 577 € / 1 877 €. Rozdiel 1 879 € vzniká tým, že scenár B v CapEx grafe nepočíta s off-site kópiou 540 € a má iný infra blok než 4 840 €, ktoré si konfigurátor sčíta zo štyroch predzapnutých položiek. A1 čísla nemenil (pravidlo nemennosti), ale pred G3 to treba zladiť — inak manažér porovná s08 a s10 a nájde nezhodu. #cislo #riziko #rozhodnutie
+- Screenshot `10-konfigurator-B-33k` bude po načítaní ukazovať 34 779 €, nie 33 tisíc — buď premenovať PNG, alebo zladiť čísla podľa predchádzajúcej odrážky #cislo
 
 ---
 
@@ -254,3 +255,12 @@ Nie sú to subtasky — sú to konflikty a rozhodnutia, ktoré A1 nemohol vyrie�
    nie je verbatim zo zdroja (zdroj má 21) — zmena je vynútená R03 a akceptačným kritériom č. 1.
 7. **REQ-005** sa v `body.html` nikde nevyskytuje — bol len na vypadnutom slajde 1155. Ak má
    zostať v decku, najbližšie miesto je ld na s05 alebo tiny na s12.
+8. **Smoke test prebehol.** `body.html` + hlavička a skripty zo zdroja v headless Chromium:
+   `#ct` = `01 / 13`, 13 sekcií, 5 SVG, 36 elementov s `data-t`, 43 položiek v modáli slovníčka
+   (44 mínus `help`), všetkých 13 slajdov v dark aj light, 6 hotspotov nákresu + prepnutie na
+   `data-st="tg"` + `cld`, 12 volieb konfigurátora a všetkých 6 sliderov na krajných hodnotách.
+   Žiadny `pageerror`, nikde `NaN` ani `undefined`. Jediná konzolová chyba je zablokovaný
+   Google Fonts CDN v sandboxe. Skript testu je dočasný, nie je súčasťou odovzdávky — finálnu
+   verifikáciu robí A4 v `shoot.mjs`.
+9. **Rozpor 32 900 € vs 34 779 €** medzi s08/s09 a defaultom konfigurátora na s10 — detail je
+   v sekcii s10 vyššie. Je to nezhoda v zdroji, nie chyba prenosu. Odblokovať pred G3.

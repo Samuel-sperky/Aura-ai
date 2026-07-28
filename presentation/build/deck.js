@@ -207,6 +207,7 @@ function tipShow(el){
   l=Math.max(10,Math.min(l,window.innerWidth-w-10));
   var t=r.bottom+9;
   if(t+h>window.innerHeight-10){t=r.top-h-9}
+  t=Math.min(t,window.innerHeight-h-10);   /* aj keď je cieľ pod ohybom slajdu */
   if(t<10){t=10}
   tip.style.left=l+'px';tip.style.top=t+'px';
 }
