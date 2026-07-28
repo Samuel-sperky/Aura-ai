@@ -21,7 +21,7 @@ PLAN.md                       plán prerobenia a register rozhodnutí
 
 - 26 = 13 slajdov × `dark` a `light`
 - 5 = stavové zábery: nákres Pred/Po v dvoch stavoch (`04-predapo-dnes`, `04-predapo-ciel`)
-  a konfigurátor v troch scenároch (`10-konfigurator-A-17k`, `-B-33k`, `-C-54k`)
+  a konfigurátor v troch scenároch (`10-konfigurator-A`, `-B`, `-C`)
 
 Všetky zábery sú z **deck** režimu. Dokumentový režim sa neschraňuje (PLAN.md R09).
 
@@ -67,9 +67,9 @@ Na obrazovke sa prezentácia ukazuje v dark režime, preto majú tasky v popise 
 | `09-tco-light.png` | 09 — svetlá verzia (tlač) | 04 · Financie a TCO | S09 · TCO na 3 roky — a prečo prenájom nie je alternatíva #cislo |
 | `10-konfigurator-dark.png` | 10 Poskladajte si zostavu | 04 · Financie a TCO | S10 · Poskladajte si zostavu — konfigurátor #cislo |
 | `10-konfigurator-light.png` | 10 — svetlá verzia (tlač) | 04 · Financie a TCO | S10 · Poskladajte si zostavu — konfigurátor #cislo |
-| `10-konfigurator-A-17k.png` | 10 **scenár A** — 48 GB jadro + 3× Mini Basic | 04 · Financie a TCO | S10 · Poskladajte si zostavu — konfigurátor #cislo |
-| `10-konfigurator-B-33k.png` | 10 **scenár B** — 96 GB jadro + 3× Mini Standard | 04 · Financie a TCO | S10 · Poskladajte si zostavu — konfigurátor #cislo |
-| `10-konfigurator-C-54k.png` | 10 **scenár C** — 192 GB jadro + 3× DGX Spark | 04 · Financie a TCO | S10 · Poskladajte si zostavu — konfigurátor #cislo |
+| `10-konfigurator-A.png` | 10 **scenár A** — RTX 5090 32 GB + 3× Mini Standard → `#oCap` 23 929 € | 04 · Financie a TCO | S10 · Poskladajte si zostavu — konfigurátor #cislo |
+| `10-konfigurator-B.png` | 10 **scenár B** — RTX PRO 6000 96 GB + 3× Mini Standard → `#oCap` 34 779 € | 04 · Financie a TCO | S10 · Poskladajte si zostavu — konfigurátor #cislo |
+| `10-konfigurator-C.png` | 10 **scenár C** — 2× 96 GB + platforma pre 2 karty + 4× DGX Spark → `#oCap` 59 338 € | 04 · Financie a TCO | S10 · Poskladajte si zostavu — konfigurátor #cislo |
 | `11-harmonogram-dark.png` | 11 26 týždňov, 11 brán, žiadne skratky | 05 · Brány a testy | S11 · 26 týždňov, 11 brán, žiadne skratky #brana |
 | `11-harmonogram-light.png` | 11 — svetlá verzia (tlač) | 05 · Brány a testy | S11 · 26 týždňov, 11 brán, žiadne skratky #brana |
 | `12-testy-rollout-dark.png` | 12 Od testov k rolloutu | 05 · Brány a testy | S12 · Od testov k rolloutu #brana #riziko |
@@ -83,8 +83,9 @@ Na obrazovke sa prezentácia ukazuje v dark režime, preto majú tasky v popise 
 
 ## Poznámka k názvom scenárov konfigurátora
 
-Prípona `-17k`, `-33k`, `-54k` je **označenie scenára z slajdu 08** („Tri scenáre CapEx: 17 · 33 · 54 tisíc €"),
-nie odčítaná hodnota z konfigurátora. Konfigurátor má vlastný infra blok 4 840 € (UPS 900 + 10GbE 700 +
+Súbory sa volajú len `-A`, `-B`, `-C` — **bez čísla**. Pôvodne mali niesť príponu `-17k`, `-33k`, `-54k`
+podľa hlavičky slajdu 08, ale konfigurátor pri tých zostavách vydá 23 929 €, 34 779 € a 59 338 €.
+Prípona s iným číslom, než aké je na obrázku vidieť, by klamala, preto padla. Konfigurátor má vlastný infra blok 4 840 € (UPS 900 + 10GbE 700 +
 NAS 2 700 + off-site 540), kým stack na slajde 08 počíta s ~3 500 €, takže `#oCap` vydá:
 
 | Scenár | Zostava v konfigurátore | `#oCap` | Hlavička slajdu 08 |
