@@ -1,0 +1,474 @@
+/* ==========================================================================
+   AURA AI · deck.css
+   Vlastník: A2. Kompletné CSS pre DECK režim (navigácia, slajdy, komponenty,
+   grafy, nákres, konfigurátor, tooltipy, slovníček, stavy, responzív 390 px).
+   Dokumentový režim a pravidlá pre tlač patria výhradne do report.css (A3) —
+   v tomto súbore nie je ani jedno z nich.
+   ========================================================================== */
+
+/* ------------------------------------------------------------------
+   1 · DIZAJNOVÉ TOKENY — CONTRACT.md §3 (finálne hodnoty, nie zdroj)
+   ------------------------------------------------------------------ */
+:root{
+  --teal:#05bcc4; --teal-2:#03797e; --teal-3:#7fd0d4;
+  --gold:#d8b878; --gold-t:#c9a869;
+  --paper:#0e1413; --card:#131b1a; --card-2:#1b2523; --line:#22302e;
+  --ink:#e8f0ef; --ink-2:#b9c9c7; --ink-3:#829896;
+  --good:#3fbf7f; --amber:#e8a33d; --red:#e0554e; --violet:#8b7fd4;
+  --mono:'JetBrains Mono',ui-monospace,monospace;
+  --disp:'Playfair Display',Georgia,serif;
+  --body:'Inter',system-ui,sans-serif;
+
+  /* Derivované aliasy — NIE nové farby, len smer tienenia podľa témy.
+     Oba sa v oboch témach rozvinú na hodnotu, ktorá už v tokenoch je:
+     --shade   = tmavá plocha (dark: --card, light: --ink → rovnaká hodnota)
+     --on-teal = takmer biely text na plnom teal-2 (dark: --ink, light: --card) */
+  --shade:var(--card);
+  --on-teal:var(--ink);
+}
+:root[data-theme="light"]{
+  --paper:#f8f4f7; --card:#fffdfe; --card-2:#ece6ea; --line:#e2dae0;
+  --ink:#131b1a; --ink-2:#3b4a48; --ink-3:#667574; --gold-t:#8a6417;
+  --shade:var(--ink);
+  --on-teal:var(--card);
+}
+
+/* ------------------------------------------------------------------
+   2 · BÁZA
+   ------------------------------------------------------------------ */
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  background:var(--paper);color:var(--ink);font-family:var(--body);
+  font-size:16px;line-height:1.5;overflow:hidden;-webkit-font-smoothing:antialiased;
+  position:relative; /* aby .s{position:absolute;inset:0} fungovalo aj bez #deck */
+}
+svg{display:block;max-width:100%;height:auto}
+text{font-family:var(--body)}
+
+/* ------------------------------------------------------------------
+   3 · CHROME — rail, top, dots, nav, counter
+   ------------------------------------------------------------------ */
+#rail{position:fixed;top:0;left:0;right:0;height:2px;background:var(--line);z-index:80}
+#rail i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--teal-2),var(--teal));transition:width .5s cubic-bezier(.16,1,.3,1);box-shadow:0 0 12px color-mix(in srgb,var(--teal) 55%,transparent)}
+
+#top{position:fixed;top:14px;left:24px;right:24px;display:flex;align-items:center;gap:12px;z-index:80;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3)}
+#top .cr{color:var(--gold);font-size:14px;letter-spacing:0}
+#top .sp{flex:1}
+#st{color:var(--amber);display:flex;align-items:center;gap:6px;white-space:nowrap}
+#st b{width:6px;height:6px;border-radius:9px;background:var(--amber);animation:ping 2.6s infinite}
+@keyframes ping{
+  0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--amber) 45%,transparent)}
+  70%,100%{box-shadow:0 0 0 8px transparent}
+}
+
+.pill{border:1px solid var(--line);background:var(--card);color:var(--ink-2);border-radius:99px;padding:5px 11px;font:inherit;font-size:10px;letter-spacing:.12em;cursor:pointer;text-transform:uppercase}
+.pill:hover{border-color:var(--teal-2);color:var(--ink)}
+.pill[aria-pressed="true"],.pill[aria-current="true"]{border-color:var(--teal);color:var(--ink);background:color-mix(in srgb,var(--teal) 10%,var(--card))}
+
+#dots{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);display:flex;gap:5px;z-index:80;max-width:70vw;flex-wrap:wrap;justify-content:center}
+/* transition je vymenovaný, aby sa nikdy neanimoval focus outline */
+#dots span{width:6px;height:6px;border-radius:9px;background:var(--line);cursor:pointer;transition:background .3s,width .3s}
+#dots span:hover{background:var(--ink-3)}
+#dots span.on,#dots span[aria-current="true"]{background:var(--teal);width:20px}
+
+#nav{position:fixed;bottom:14px;right:24px;display:flex;gap:7px;z-index:80}
+#ct{position:fixed;bottom:18px;left:24px;z-index:80;font-family:var(--mono);font-size:10.5px;color:var(--ink-3)}
+#ct b{color:var(--teal)}
+
+/* ------------------------------------------------------------------
+   4 · SLAJDY A TYPOGRAFIA
+   ------------------------------------------------------------------ */
+#deck{height:100%;position:relative;z-index:1}
+.s{position:absolute;inset:0;display:none;z-index:1;padding:56px 24px 56px;overflow-y:auto;overflow-x:hidden;scrollbar-width:thin}
+.s.on{display:block}
+.wr{max-width:1120px;margin:0 auto;min-height:100%;display:flex;flex-direction:column;justify-content:center}
+.eb{font-family:var(--mono);font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--teal);margin-bottom:10px}
+.eb s{text-decoration:none;color:var(--gold-t);margin:0 6px}
+h1{font-family:var(--disp);font-weight:500;font-size:clamp(28px,5vw,58px);line-height:1.04;letter-spacing:-.02em}
+h2{font-family:var(--disp);font-weight:500;font-size:clamp(21px,3.1vw,34px);line-height:1.12;letter-spacing:-.01em}
+.sub{color:var(--ink-2);font-size:clamp(13px,1.4vw,16px);max-width:64ch;margin-top:12px}
+.ld{font-size:12.5px;color:var(--ink-2);max-width:78ch;margin:8px 0 20px}
+hr.r{border:0;border-top:1px solid var(--line);margin:18px 0}
+.tiny{font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;color:var(--ink-3);margin-top:14px;line-height:1.7}
+.tiny a{color:var(--ink-3)}
+.mono{font-family:var(--mono)!important}
+.svl{font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:.1em;text-transform:uppercase}
+.vl,.kpi b,.out .big,td.n,.rw output{font-variant-numeric:tabular-nums}
+
+/* reveal */
+.an{opacity:0;transform:translateY(14px)}
+.s.on .an{animation:rise .6s cubic-bezier(.16,1,.3,1) forwards}
+@keyframes rise{to{opacity:1;transform:none}}
+
+/* prechody slajdov */
+.s.on{animation:sIn .55s cubic-bezier(.16,1,.3,1)}
+.s.leave{display:block;pointer-events:none;z-index:0;animation:sOut .4s ease forwards}
+@keyframes sIn{from{opacity:0;transform:translateX(26px) scale(.992)}to{opacity:1;transform:none}}
+@keyframes sOut{from{opacity:1;transform:none}to{opacity:0;transform:translateX(-30px) scale(.99)}}
+.s.leave .an,.s.leave .nd{animation:none}
+
+/* word stagger v nadpisoch */
+.wm{display:inline-block;opacity:0;transform:translateY(.55em)}
+.s.on .wm{animation:wpop .62s cubic-bezier(.16,1,.3,1) forwards;animation-delay:var(--wd,0ms)}
+@keyframes wpop{to{opacity:1;transform:none}}
+
+/* ------------------------------------------------------------------
+   5 · MRIEŽKY
+   ------------------------------------------------------------------ */
+.g{display:grid;gap:10px}
+.g>*{min-width:0}
+.split>*{min-width:0}
+.g2{grid-template-columns:repeat(2,1fr)}
+.g3{grid-template-columns:repeat(3,1fr)}
+.g4{grid-template-columns:repeat(4,1fr)}
+.g5{grid-template-columns:repeat(5,1fr)}
+.g6{grid-template-columns:repeat(6,1fr)}
+.split{display:grid;grid-template-columns:1.35fr 1fr;gap:20px;align-items:center}
+
+/* ------------------------------------------------------------------
+   6 · KARTY A KPI
+   ------------------------------------------------------------------ */
+.c{position:relative;background:var(--card);border:1px solid var(--line);border-left:2px solid transparent;border-radius:11px;padding:13px 15px;transition:border-color .26s,transform .26s}
+.c:hover{border-left-color:var(--teal);transform:translateY(-2px)}
+.c.gd:hover{border-left-color:var(--gold)}
+.c.am:hover{border-left-color:var(--amber)}
+.c h3{font-size:13px;font-weight:600;margin-bottom:4px;letter-spacing:-.01em}
+.c p{font-size:11.5px;color:var(--ink-2);line-height:1.5}
+.c .tg{font-family:var(--mono);font-size:9px;letter-spacing:.12em;color:var(--teal);text-transform:uppercase;display:block;margin-bottom:6px}
+.c .tg.gd{color:var(--gold-t)}
+.c .tg.am{color:var(--amber)}
+.c .tg.rd{color:var(--red)}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:13px 15px}
+.kpi b{display:block;font-family:var(--disp);font-size:clamp(22px,3.2vw,34px);font-weight:600;line-height:1;color:var(--teal)}
+.kpi b.gd{color:var(--gold-t)}
+.kpi b.am{color:var(--amber)}
+.kpi small{display:block;font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-3);margin-top:7px;line-height:1.5}
+
+/* ------------------------------------------------------------------
+   7 · CALLOUT BOXY
+   ------------------------------------------------------------------ */
+.box{border-radius:11px;padding:13px 15px;border:1px solid var(--line);background:var(--card)}
+.box h3{font-size:12.5px;margin-bottom:4px}
+.box p{font-size:11.5px;color:var(--ink-2)}
+.box.ok{background:color-mix(in srgb,var(--teal) 7%,var(--card));border-color:color-mix(in srgb,var(--teal) 28%,var(--line))}
+.box.ok h3{color:var(--teal)}
+.box.w{background:color-mix(in srgb,var(--amber) 8%,var(--card));border-color:color-mix(in srgb,var(--amber) 30%,var(--line))}
+.box.w h3{color:var(--amber)}
+.box.bad{background:color-mix(in srgb,var(--red) 8%,var(--card));border-color:color-mix(in srgb,var(--red) 30%,var(--line))}
+.box.bad h3{color:var(--red)}
+
+/* ------------------------------------------------------------------
+   8 · TABUĽKY
+   ------------------------------------------------------------------ */
+table{width:100%;border-collapse:collapse;font-size:11.5px}
+th,td{text-align:left;padding:8px 9px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);font-weight:500;white-space:nowrap}
+td.n{font-family:var(--mono);text-align:right;white-space:nowrap}
+tbody tr{transition:background .2s}
+tbody tr:hover{background:var(--card-2)}
+tbody tr[aria-current="true"]{background:var(--card-2);box-shadow:inset 2px 0 0 var(--teal)}
+th[role="button"],th[tabindex],tbody tr[tabindex]{cursor:pointer}
+th[aria-sort]{color:var(--teal)}
+.tw{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--line);border-radius:11px;background:var(--card)}
+.badge{font-family:var(--mono);font-size:8.5px;letter-spacing:.1em;padding:2px 6px;border-radius:4px;text-transform:uppercase;white-space:nowrap}
+.badge.ok{background:color-mix(in srgb,var(--teal) 18%,transparent);color:var(--teal)}
+.badge.cond{background:color-mix(in srgb,var(--amber) 18%,transparent);color:var(--amber)}
+.badge.no{background:color-mix(in srgb,var(--red) 18%,transparent);color:var(--red)}
+.badge.q{background:color-mix(in srgb,var(--violet) 20%,transparent);color:var(--violet)}
+
+/* ------------------------------------------------------------------
+   9 · PRÚŽKOVÉ GRAFY
+   ------------------------------------------------------------------ */
+.bars{display:flex;flex-direction:column;gap:9px}
+.bar{display:grid;grid-template-columns:150px 1fr 86px;gap:10px;align-items:center;font-size:11.5px}
+.bar .lb{color:var(--ink-2);font-size:11px;line-height:1.3}
+.bar .tr{height:16px;background:var(--card-2);border-radius:4px;overflow:hidden;border:1px solid var(--line)}
+.bar .tr i{display:block;height:100%;width:0;border-radius:3px;background:linear-gradient(90deg,var(--teal-2),var(--teal))}
+.bar .tr i.gd{background:linear-gradient(90deg,color-mix(in srgb,var(--gold) 58%,var(--shade)),var(--gold))}
+.bar .tr i.am{background:linear-gradient(90deg,color-mix(in srgb,var(--amber) 60%,var(--shade)),var(--amber))}
+.bar .tr i.rd{background:linear-gradient(90deg,color-mix(in srgb,var(--red) 58%,var(--shade)),var(--red))}
+.bar .vl{font-family:var(--mono);font-size:11px;text-align:right;color:var(--ink)}
+.s.on .bar .tr i{animation:grow 1s cubic-bezier(.16,1,.3,1) forwards}
+@keyframes grow{to{width:var(--w)}}
+
+/* stohované prúžky */
+.stack{display:flex;height:22px;border-radius:5px;overflow:hidden;border:1px solid var(--line);background:var(--card-2)}
+.stack i{height:100%;width:0;transition:none}
+.s.on .stack i{animation:grow 1.05s cubic-bezier(.16,1,.3,1) forwards}
+.lgd{display:flex;flex-wrap:wrap;gap:9px;margin-top:10px;font-size:10px;color:var(--ink-2);font-family:var(--mono);letter-spacing:.04em}
+.lgd span{display:flex;align-items:center;gap:5px}
+.lgd i{width:9px;height:9px;border-radius:2px;flex:none}
+
+/* SVG animácie */
+.s.on .nd{animation:pop .55s cubic-bezier(.16,1,.3,1) forwards;opacity:0}
+@keyframes pop{to{opacity:1}}
+.s.on .ln{stroke-dasharray:var(--l,300);stroke-dashoffset:var(--l,300);animation:draw .85s ease forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+.s.on .fl{animation:flow 2.4s linear infinite}
+@keyframes flow{to{stroke-dashoffset:-40}}
+.tpulse{animation:tp 2.2s ease-in-out infinite}
+@keyframes tp{0%,100%{opacity:1}50%{opacity:.35}}
+
+/* gantt */
+.gt{border:1px solid var(--line);border-radius:11px;background:var(--card);padding:12px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+
+/* ------------------------------------------------------------------
+   10 · AMBIENTNÉ POZADIE
+   ------------------------------------------------------------------ */
+#amb{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+#amb i{position:absolute;width:56vmax;height:56vmax;border-radius:50%;filter:blur(90px);opacity:.16}
+#amb i:first-child{background:radial-gradient(circle,var(--teal-2),transparent 62%);top:-22vmax;right:-14vmax;animation:drift1 26s ease-in-out infinite alternate}
+#amb i:last-child{background:radial-gradient(circle,color-mix(in srgb,var(--gold) 58%,var(--shade)),transparent 62%);bottom:-26vmax;left:-16vmax;animation:drift2 32s ease-in-out infinite alternate}
+:root[data-theme="light"] #amb i{opacity:.1}
+@keyframes drift1{to{transform:translate(-9vmax,7vmax) scale(1.12)}}
+@keyframes drift2{to{transform:translate(8vmax,-6vmax) scale(1.08)}}
+#deck,#top,#rail,#dots,#nav,#ct{position-anchor:none}
+
+/* ------------------------------------------------------------------
+   11 · SEGMENTOVANÝ PREPÍNAČ
+   ------------------------------------------------------------------ */
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:99px;background:var(--card);padding:3px;gap:2px}
+.seg button{font:inherit;font-size:11px;letter-spacing:.06em;text-transform:uppercase;border:0;background:none;
+  color:var(--ink-2);padding:6px 15px;border-radius:99px;cursor:pointer;font-family:var(--mono);
+  transition:color .2s,background-color .2s}
+.seg button:hover{color:var(--ink)}
+.seg button[aria-pressed="true"],.seg button[aria-current="true"]{background:var(--teal-2);color:var(--on-teal)}
+
+/* ------------------------------------------------------------------
+   12 · INTERAKTÍVNY NÁKRES (#ixd) + DETAIL PANEL (.dp)
+   ------------------------------------------------------------------ */
+.ix .s-now,.ix .s-tg{transition:opacity .45s ease}
+.ix[data-st="now"] .s-tg,.ix[data-st="tg"] .s-now{opacity:0;pointer-events:none}
+.ix .hot{cursor:pointer}
+.ix .hot rect{transition:stroke .2s,filter .2s}
+.ix .hot:hover rect,.ix .hot[aria-current="true"] rect{stroke:var(--teal);stroke-width:2}
+.ix .hot:focus-visible{outline:none}
+.ix .hot:focus-visible rect{stroke:var(--teal);stroke-width:2.4}
+
+.dp{background:var(--card);border:1px solid var(--line);border-left:2px solid var(--teal);border-radius:11px;padding:14px 16px;min-height:220px}
+.dp h4{font-size:13.5px;margin-bottom:8px}
+.dp .dr{display:grid;grid-template-columns:62px 1fr;gap:8px;padding:7px 0;border-top:1px solid var(--line);font-size:11.5px}
+.dp .dr:first-of-type{border-top:0}
+.dp .dr span:first-child{font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);padding-top:2px}
+.dp .dr .nowv{color:var(--red)}
+.dp .dr .tgv{color:var(--teal)}
+.dp .dr .ev{font-family:var(--mono);font-size:10.5px;color:var(--gold-t)}
+.dp .hint{font-size:10.5px;color:var(--ink-3);margin-top:10px;font-family:var(--mono)}
+.dp p{font-size:11.5px;color:var(--ink-2);line-height:1.5}
+/* prázdny stav: nič nevybrané (aj po prepnutí stavu nákresu) */
+.dp[data-empty="true"]{border-left-color:var(--line);background:color-mix(in srgb,var(--card-2) 55%,var(--card))}
+.dp[data-empty="true"] h4{color:var(--ink-2);font-family:var(--body);font-weight:500}
+
+/* ------------------------------------------------------------------
+   13 · KONFIGURÁTOR
+   ------------------------------------------------------------------ */
+.cfg{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+/* rovnaká poistka ako .g>* a .split>* — bez nej si stĺpec vynúti min-content
+   šírku a obsah konfigurátora pretečie na úzkych displejoch */
+.cfg>*{min-width:0}
+.fld{margin-bottom:12px}
+.fld>label{display:block;font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);margin-bottom:6px}
+.opts{display:flex;gap:6px;flex-wrap:wrap}
+.opts button{font:inherit;font-size:11px;border:1px solid var(--line);background:var(--card);color:var(--ink-2);
+  border-radius:8px;padding:8px 11px;cursor:pointer;text-align:left;line-height:1.3;
+  transition:border-color .18s,background-color .18s,color .18s}
+.opts button small{display:block;font-family:var(--mono);font-size:9.5px;color:var(--ink-3);margin-top:3px}
+.opts button:hover{border-color:var(--teal-2);color:var(--ink)}
+.opts button[aria-pressed="true"],.opts button[aria-current="true"]{border-color:var(--teal);background:color-mix(in srgb,var(--teal) 10%,var(--card));color:var(--ink)}
+.opts button[aria-pressed="true"] small,.opts button[aria-current="true"] small{color:var(--teal)}
+/* tri deti (label · range · output) potrebujú tri stĺpce — v zdroji boli
+   definované len dva, takže slider mal 78 px a hodnota padala na druhý riadok */
+.rw{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(90px,1fr) 66px;gap:9px;align-items:center;margin-bottom:9px}
+.rw label{font-size:11px;color:var(--ink-2)}
+.rw input[type=range]{width:100%;accent-color:var(--teal);background:none}
+.rw output{font-family:var(--mono);font-size:11px;text-align:right;color:var(--teal)}
+.out{background:var(--card-2);border:1px solid var(--line);border-radius:11px;padding:14px 16px}
+.out .big{font-family:var(--disp);font-size:clamp(26px,3.6vw,38px);font-weight:600;color:var(--teal);line-height:1}
+.out .big.am{color:var(--amber)}
+.out .sm{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin-top:6px}
+.lin{display:flex;justify-content:space-between;gap:10px;font-size:11.5px;padding:5px 0;border-bottom:1px solid var(--line)}
+.lin:last-child{border-bottom:0}
+/* len priamy potomok — inak selektor zachytí aj vnorenú poznámku .nt
+   a tá by ako nowrap vytlačila cenu mimo riadok */
+.lin>span:last-child{font-family:var(--mono);white-space:nowrap}
+.lin .nt{font-family:var(--mono);color:var(--ink-3);font-size:10px;white-space:normal}
+.lin.tot{border-top:1px solid var(--teal-2);border-bottom:0;margin-top:4px;padding-top:8px;font-weight:600}
+.flg{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.flg div{font-size:11px;padding:8px 10px;border-radius:8px;line-height:1.45}
+.flg .f-w{background:color-mix(in srgb,var(--amber) 10%,var(--card));border:1px solid color-mix(in srgb,var(--amber) 32%,var(--line));color:var(--ink)}
+.flg .f-b{background:color-mix(in srgb,var(--red) 10%,var(--card));border:1px solid color-mix(in srgb,var(--red) 32%,var(--line));color:var(--ink)}
+.flg .f-o{background:color-mix(in srgb,var(--teal) 8%,var(--card));border:1px solid color-mix(in srgb,var(--teal) 28%,var(--line));color:var(--ink)}
+.flg b{color:var(--amber)}
+.flg .f-b b{color:var(--red)}
+.flg .f-o b{color:var(--teal)}
+
+/* ------------------------------------------------------------------
+   14 · TOOLTIPY
+   ------------------------------------------------------------------ */
+.tt{border-bottom:1px dotted var(--teal);cursor:help}
+svg text.tt{text-decoration:underline;text-decoration-style:dotted;text-decoration-thickness:.6px;text-underline-offset:2.5px;cursor:help}
+#tip{position:fixed;z-index:200;max-width:300px;background:var(--card);border:1px solid var(--teal-2);
+  border-radius:9px;padding:10px 12px;box-shadow:0 10px 34px color-mix(in srgb,var(--shade) 55%,transparent);
+  opacity:0;visibility:hidden;transition:opacity .16s;pointer-events:none}
+#tip.on{opacity:1;visibility:visible}
+#tip b{display:block;font-size:11.5px;color:var(--teal);margin-bottom:4px;font-weight:600}
+#tip p{font-size:11.5px;color:var(--ink-2);line-height:1.5}
+
+/* ------------------------------------------------------------------
+   15 · SLOVNÍČEK (#gv)
+   ------------------------------------------------------------------ */
+#gv{position:fixed;inset:0;z-index:190;background:color-mix(in srgb,var(--paper) 92%,transparent);
+  backdrop-filter:blur(6px);display:none;overflow-y:auto;padding:64px 24px 40px}
+#gv.on{display:block}
+#gv .gw{max-width:1000px;margin:0 auto}
+#gv h2{margin-bottom:6px}
+#gv .gg{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:16px}
+#gv .gi{background:var(--card);border:1px solid var(--line);border-left:2px solid var(--teal-2);border-radius:9px;padding:11px 13px}
+#gv .gi b{display:block;font-size:12px;margin-bottom:3px}
+#gv .gi p{font-size:11px;color:var(--ink-2);line-height:1.5}
+#gx{position:fixed;top:14px;right:24px;z-index:195}
+
+/* ------------------------------------------------------------------
+   16 · FOCUS-VISIBLE — každý klikateľný / fokusovateľný prvok
+   ------------------------------------------------------------------ */
+.pill:focus-visible,
+#gl:focus-visible,#gx:focus-visible,#th:focus-visible,
+#nav button:focus-visible,
+.seg button:focus-visible,
+.opts button:focus-visible,
+#dots span:focus-visible,
+.tt:focus-visible,
+[data-t]:focus-visible,
+[tabindex="0"]:focus-visible,
+[tabindex]:not([tabindex="-1"]):focus-visible,
+.dp:focus-visible,
+.tw:focus-visible,
+.gt:focus-visible,
+.ix:focus-visible,
+th[role="button"]:focus-visible,th[tabindex]:focus-visible,th[aria-sort]:focus-visible,
+tbody tr[tabindex]:focus-visible,
+.rw input[type=range]:focus-visible,
+input:focus-visible,button:focus-visible,select:focus-visible,a:focus-visible,
+[role="button"]:focus-visible{outline:2px solid var(--teal);outline-offset:2px;border-radius:3px}
+/* v SVG je viditeľný fokus riešený stroke-om na <rect> (pozri §12) */
+.ix .hot:focus-visible,.ix .hot[tabindex="0"]:focus-visible{outline:none;border-radius:0}
+/* fallback pre prehliadače bez :focus-visible sa nerieši — Chromium/PDF ho má */
+
+/* ------------------------------------------------------------------
+   17 · RESPONZÍV
+   ------------------------------------------------------------------ */
+@media(max-width:900px){
+  .split{grid-template-columns:1fr}
+  .g4,.g5,.g6{grid-template-columns:1fr 1fr}
+  .cfg{grid-template-columns:1fr}
+}
+@media(max-width:860px){#gv .gg{grid-template-columns:1fr 1fr}}
+@media(max-width:620px){
+  .bar{grid-template-columns:96px 1fr 70px}
+  .bar .lb{font-size:10px}
+}
+@media(max-width:600px){.g2,.g3,.g4,.g5,.g6{grid-template-columns:1fr}}
+@media(max-width:560px){#gv .gg{grid-template-columns:1fr}}
+
+/* --- 390 px (iPhone) — cieľ: body nikdy nemá horizontálny scroll --- */
+@media(max-width:430px){
+  /* slajd */
+  .s{padding:44px 14px 60px}
+  .wr{justify-content:flex-start;padding-top:4px}
+  h1{font-size:clamp(24px,7.4vw,58px)}
+  h2{font-size:clamp(19px,5.6vw,34px)}
+  .sub{font-size:13px}
+  .ld{font-size:12px;margin-bottom:14px}
+  .g{gap:8px}
+  .split{gap:14px;align-items:start}
+  .kpi b{font-size:clamp(20px,7vw,34px)}
+  .c,.box,.kpi,.out,.dp{padding:11px 12px}
+
+  /* horná lišta — skrátená do jedného riadku, dlhý titulok sa skryje */
+  #top{top:10px;left:12px;right:12px;gap:8px;font-size:9px;letter-spacing:.1em;flex-wrap:wrap;row-gap:6px}
+  #top>span:not(.cr):not(.sp):not(#st){display:none}
+  #st{font-size:9px;letter-spacing:.08em}
+  .pill{padding:5px 9px;font-size:9px;letter-spacing:.08em}
+  #gx{top:10px;right:12px}
+
+  /* dolná lišta — dots nad počítadlom a navigáciou */
+  #dots{bottom:32px;gap:4px;row-gap:4px;max-width:88vw}
+  #dots span{width:5px;height:5px}
+  #dots span.on,#dots span[aria-current="true"]{width:14px}
+  #ct{bottom:9px;left:12px;font-size:9.5px}
+  #nav{bottom:6px;right:12px;gap:5px}
+
+  /* vodorovný scroll vnútri obalu + viditeľný hint na hranách:
+     tieň na okraji zmizne, keď je obsah doscrollovaný na kraj */
+  .tw,.gt,.ix{
+    --sc:var(--card);
+    background-image:
+      linear-gradient(to right,var(--sc),color-mix(in srgb,var(--sc) 0%,transparent)),
+      linear-gradient(to left,var(--sc),color-mix(in srgb,var(--sc) 0%,transparent)),
+      linear-gradient(to right,color-mix(in srgb,var(--shade) 45%,transparent),transparent),
+      linear-gradient(to left,color-mix(in srgb,var(--shade) 45%,transparent),transparent);
+    background-position:0 0,100% 0,0 0,100% 0;
+    background-repeat:no-repeat;
+    background-size:30px 100%,30px 100%,13px 100%,13px 100%;
+    background-attachment:local,local,scroll,scroll;
+  }
+  .ix{--sc:var(--paper)}
+  .tw table{min-width:520px}
+  th,td{padding:7px 8px}
+  .gt svg,.gt table{min-width:560px}
+
+  /* prúžky */
+  .bar{grid-template-columns:84px 1fr 62px;gap:8px}
+  .bar .lb{font-size:9.5px}
+  .bar .vl{font-size:10px}
+  .lgd{font-size:9px;gap:7px}
+
+  /* nákres — vlastný vodorovný scroll, aby text v SVG zostal čitateľný */
+  .ix{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .ix svg{min-width:560px}
+  .dp{min-height:150px}
+
+  /* konfigurátor — jeden stĺpec, label nad slider */
+  .cfg{gap:12px}
+  .cfg .opts{display:grid;grid-template-columns:1fr;gap:5px}
+  .cfg .opts[data-grp="cnt"]{grid-template-columns:repeat(4,1fr)}
+  .cfg .opts button{text-align:left}
+  .out .big{font-size:clamp(22px,7vw,38px)}
+  .rw{grid-template-columns:1fr 62px;column-gap:8px;row-gap:3px;margin-bottom:12px}
+  .rw label{grid-column:1/-1}
+  .lin{font-size:11px}
+
+  /* slovníček */
+  #gv{padding:56px 14px 32px}
+  #tip{max-width:calc(100vw - 24px)}
+
+  /* prechod slajdov bez posunu do strany — inak transform translateX
+     nafúkne rozsah scrollu a body by na okamih malo horizontálny scroll */
+  .s.on{animation:sInM .45s cubic-bezier(.16,1,.3,1)}
+  .s.leave{animation:sOutM .3s ease forwards}
+}
+@keyframes sInM{from{opacity:0}to{opacity:1}}
+@keyframes sOutM{from{opacity:1}to{opacity:0}}
+
+/* ------------------------------------------------------------------
+   18 · PREFERS-REDUCED-MOTION — vypína animácie aj scroll-behavior
+   ------------------------------------------------------------------ */
+@media (prefers-reduced-motion: reduce){
+  html,body,.s,#gv{scroll-behavior:auto!important}
+  *,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+  .an,.s.on .an{opacity:1!important;transform:none!important;animation:none!important}
+  .wm,.s.on .wm{opacity:1!important;transform:none!important;animation:none!important}
+  .bar .tr i,.s.on .bar .tr i{width:var(--w)!important;transition:none!important;animation:none!important}
+  .stack i,.s.on .stack i{width:var(--w)!important;transition:none!important;animation:none!important}
+  .s.on{animation:none!important}
+  .s.leave{display:none!important;animation:none!important}
+  .ln,.s.on .ln{stroke-dasharray:none!important;stroke-dashoffset:0!important;animation:none!important}
+  .nd,.s.on .nd{opacity:1!important;animation:none!important}
+  .fl,.s.on .fl{animation:none!important}
+  .tpulse{animation:none!important;opacity:1!important}
+  #st b{animation:none!important;box-shadow:none!important}
+  #amb i{animation:none!important}
+  #rail i{transition:none!important}
+  .c:hover{transform:none!important}
+}

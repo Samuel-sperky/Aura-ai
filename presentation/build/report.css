@@ -1,0 +1,250 @@
+/* ============================================================================
+   report.css — A3 · doc (report) režim + tlač
+   Aura AI · interná AI infraštruktúra
+
+   Načítava sa PO deck.css. Preto sa deck pravidlá prepisujú výhradne
+   ŠPECIFICITOU (prefix html[data-mode="doc"]), nikdy nie !important.
+   Výnimka: @media print — tam je !important zámerný, aby tlač vyzerala
+   rovnako z deck aj z doc režimu.
+
+   V tomto súbore nie je ani jeden selektor mimo:
+     · html[data-mode="doc"] …
+     · @media print { … }
+   Žiadny :root, žiadne globálne pravidlo, žiadna zmena deck režimu.
+
+   Závislosti na deck.css: keyframes `rise`, `grow`, `pop`, `draw`
+   (rovnaké, aké deck používa pre .s.on — tu ich riadi .s.rv
+   z IntersectionObservera v mode.js).
+   ============================================================================ */
+
+
+/* ==========================================================================
+   1 · DOC REŽIM — scrollovaný dokument
+   ========================================================================== */
+
+/* --- scroll kontejner: dokument scrolluje na root elemente ---------------- */
+html[data-mode="doc"]{height:auto;overflow-y:auto;scroll-behavior:smooth}
+html[data-mode="doc"] body{height:auto;min-height:100%;overflow:auto}
+html[data-mode="doc"] #deck{height:auto}
+
+/* --- sekcie: všetky viditeľné, tečú za sebou ----------------------------- */
+html[data-mode="doc"] .s{
+  position:static;inset:auto;display:block;overflow:visible;
+  padding:52px 24px;border-top:1px solid var(--line);
+  scroll-margin-top:60px}
+html[data-mode="doc"] .s:first-child{border-top:0}
+/* posledná sekcia nesmie skončiť pod fixným #ct */
+html[data-mode="doc"] .s:last-child{padding-bottom:92px}
+
+/* obsah tečie od hora, nie vertikálne centrovaný; max-width zostáva 1120px */
+html[data-mode="doc"] .wr{min-height:0;justify-content:flex-start}
+
+/* --- chrome ------------------------------------------------------------- */
+html[data-mode="doc"] #dots,
+html[data-mode="doc"] #nav{display:none}
+
+/* V decku sedí #top v prázdnom okraji slajdu, v dokumente mu text podteká.
+   Preto sa z neho stáva plná lišta — #rail (2 px) zostáva nad ňou. */
+html[data-mode="doc"] #top{
+  top:2px;left:0;right:0;padding:11px 24px;
+  background:color-mix(in srgb,var(--paper) 90%,transparent);
+  backdrop-filter:blur(7px);
+  border-bottom:1px solid var(--line)}
+
+/* #rail zostáva na svojom mieste — v doc režime ukazuje scroll pozíciu
+   (šírku dopočítava mode.js) */
+
+/* #ct zostáva — ukazuje aktuálnu sekciu a jej názov (obsah rieši mode.js);
+   nad tečúcim textom potrebuje čitateľný podklad */
+html[data-mode="doc"] #ct{
+  max-width:calc(100vw - 48px);white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis;
+  padding:5px 11px;border:1px solid var(--line);border-radius:99px;
+  background:color-mix(in srgb,var(--paper) 88%,transparent);
+  backdrop-filter:blur(6px)}
+html[data-mode="doc"] #ct .ctn{color:var(--ink-2)}
+
+/* --- prechody slajdov vypnuté ------------------------------------------- */
+html[data-mode="doc"] .s.on{animation:none;z-index:auto}
+html[data-mode="doc"] .s.leave{display:block;animation:none;pointer-events:auto;z-index:auto}
+html[data-mode="doc"] .s.leave .an,
+html[data-mode="doc"] .s.leave .nd{animation:none}
+
+/* --- word-stagger v dokumente ruší čítanie ------------------------------ */
+html[data-mode="doc"] .wm{animation:none;opacity:1;transform:none}
+html[data-mode="doc"] .s.on .wm{animation:none;opacity:1;transform:none}
+
+/* --- reveal: riadi .rv z IntersectionObservera, nie .s.on --------------- */
+html[data-mode="doc"] .s .an{opacity:0;transform:translateY(16px);animation:none}
+html[data-mode="doc"] .s.on .an{animation:none}
+html[data-mode="doc"] .s .bar .tr i,
+html[data-mode="doc"] .s .stack i{width:0;animation:none}
+html[data-mode="doc"] .s.on .bar .tr i,
+html[data-mode="doc"] .s.on .stack i{animation:none}
+html[data-mode="doc"] .s .nd{animation:none}
+html[data-mode="doc"] .s.on .nd{opacity:1;animation:none}
+html[data-mode="doc"] .s .ln{stroke-dasharray:none;stroke-dashoffset:0;animation:none}
+html[data-mode="doc"] .s.on .ln{stroke-dasharray:none;stroke-dashoffset:0;animation:none}
+/* tečúce prerušované linky v dokumente nemajú zmysel */
+html[data-mode="doc"] .s .fl,
+html[data-mode="doc"] .s.on .fl{animation:none}
+
+/* .rv — sekcia vstúpila do viewportu (inline animation-delay zostáva v hre) */
+html[data-mode="doc"] .s.rv .an{animation:rise .55s cubic-bezier(.16,1,.3,1) forwards}
+html[data-mode="doc"] .s.rv .bar .tr i{animation:grow 1s cubic-bezier(.16,1,.3,1) forwards}
+html[data-mode="doc"] .s.rv .stack i{animation:grow 1.05s cubic-bezier(.16,1,.3,1) forwards}
+html[data-mode="doc"] .s.rv .nd{opacity:0;animation:pop .55s cubic-bezier(.16,1,.3,1) forwards}
+html[data-mode="doc"] .s.rv .ln{
+  stroke-dasharray:var(--l,300);stroke-dashoffset:var(--l,300);
+  animation:draw .85s ease forwards}
+
+
+/* --- doc režim na mobile (390 px trieda zariadení) ---------------------- */
+@media(max-width:430px){
+  html[data-mode="doc"] .s{padding:36px 14px}
+  /* prvá sekcia začína pod lištou #top, ktorá je na mobile dvojriadková */
+  html[data-mode="doc"] .s:first-child{padding-top:58px}
+  html[data-mode="doc"] .s:last-child{padding-bottom:76px}
+  html[data-mode="doc"] #top{padding:9px 14px}
+  html[data-mode="doc"] #ct{max-width:calc(100vw - 28px);left:14px}
+}
+
+/* --- reduced motion: reveal aj smooth scroll von ------------------------ */
+@media (prefers-reduced-motion: reduce){
+  html[data-mode="doc"]{scroll-behavior:auto}
+  html[data-mode="doc"] .s .an,
+  html[data-mode="doc"] .s.on .an,
+  html[data-mode="doc"] .s.rv .an{opacity:1;transform:none;animation:none}
+  html[data-mode="doc"] .s .wm,
+  html[data-mode="doc"] .s.rv .wm{opacity:1;transform:none;animation:none}
+  html[data-mode="doc"] .s .bar .tr i,
+  html[data-mode="doc"] .s.rv .bar .tr i,
+  html[data-mode="doc"] .s .stack i,
+  html[data-mode="doc"] .s.rv .stack i{width:var(--w);animation:none}
+  html[data-mode="doc"] .s .nd,
+  html[data-mode="doc"] .s.rv .nd{opacity:1;animation:none}
+  html[data-mode="doc"] .s .ln,
+  html[data-mode="doc"] .s.rv .ln{stroke-dasharray:none;stroke-dashoffset:0;animation:none}
+}
+
+
+/* ==========================================================================
+   2 · TLAČ — 1 sekcia = 1 strana A4 landscape, vynútená svetlá téma
+   ========================================================================== */
+
+@media print{
+
+  /* --- svetlá téma nezávisle od data-theme (CONTRACT §3, light hodnoty) --- */
+  :root,
+  :root[data-theme="dark"],
+  :root[data-theme="light"]{
+    --teal:#05bcc4; --teal-2:#03797e; --teal-3:#7fd0d4;
+    --gold:#d8b878; --gold-t:#8a6417;
+    --paper:#f8f4f7; --card:#fffdfe; --card-2:#ece6ea; --line:#e2dae0;
+    --ink:#131b1a; --ink-2:#3b4a48; --ink-3:#667574;
+    --good:#3fbf7f; --amber:#e8a33d; --red:#e0554e; --violet:#8b7fd4;
+  }
+
+  *{
+    -webkit-print-color-adjust:exact;print-color-adjust:exact;
+    box-shadow:none!important;text-shadow:none!important;
+    backdrop-filter:none!important}
+
+  html,body{
+    background:#fff!important;color:var(--ink)!important;
+    height:auto!important;min-height:0!important;overflow:visible!important}
+
+  /* Tlač na 95 %. A4 landscape je nižšia ako 16:9 plátno; najplnší slajd by
+     pri 100 % pretiekol na druhú stranu. Jedna hodnota drží celý dokument na
+     13 stranách aj keď obsah slajdu ešte o riadok narastie — presne to, čo
+     inak musí obsluha nastaviť v tlačovom dialógu ako „prispôsobiť strane“. */
+  html{zoom:.95}
+
+  /* --- chrome von ------------------------------------------------------- */
+  #top,#dots,#nav,#rail,#ct,#gv,#gx,#tip,#amb{display:none!important}
+
+  /* --- jedna sekcia = jedna strana -------------------------------------- */
+  #deck{height:auto!important;position:static!important;z-index:auto!important}
+  .s{
+    position:static!important;inset:auto!important;display:block!important;
+    overflow:visible!important;height:auto!important;min-height:auto!important;
+    padding:10mm!important;border-top:0!important;
+    opacity:1!important;transform:none!important;animation:none!important;
+    page-break-after:always;break-after:page;
+    page-break-inside:auto;break-inside:auto}
+  .s:last-child{page-break-after:auto;break-after:auto}
+  .s.leave{display:none!important}
+  .wr{
+    max-width:100%!important;min-height:0!important;
+    display:block!important;margin:0!important}
+
+  /* --- žiadna animácia nesmie nechať obsah neviditeľný ------------------ */
+  .an,.wm{opacity:1!important;transform:none!important;animation:none!important}
+  .bar .tr i,.stack i{width:var(--w)!important;animation:none!important;transition:none!important}
+  .nd{opacity:1!important;animation:none!important}
+  .ln,.fl{
+    stroke-dasharray:none!important;stroke-dashoffset:0!important;
+    animation:none!important}
+
+  /* --- nič sa nesmie rozrezať na dvoje ---------------------------------- */
+  .c,.box,.kpi,.bar,table tr,.dp,.out{break-inside:avoid;page-break-inside:avoid}
+  .flg div,.lin,.lgd,.tw,.gt,.seg,.opts{break-inside:avoid;page-break-inside:avoid}
+  h1,h2,h3,.eb{break-after:avoid;page-break-after:avoid}
+
+  /* --- tabuľky sa nesmú odrezať ----------------------------------------- */
+  .tw{overflow:visible!important;overflow-x:visible!important;min-width:0!important}
+  .gt{overflow:visible!important;overflow-x:visible!important}
+  table{min-width:0!important;width:100%!important}
+  th{white-space:normal!important}
+
+  /* --- bodkované linky tooltipov na papieri nemajú zmysel --------------- */
+  .tt{text-decoration:none!important;border-bottom:0!important;cursor:auto!important}
+  svg text.tt{text-decoration:none!important}
+
+  /* --- interaktívne prvky: tlačia sa v aktuálnom stave ------------------ */
+  .c:hover,.opts button:hover{transform:none!important}
+  .dp{min-height:0!important}
+
+  /* --- typografia a rytmus pre papier ------------------------------------
+     Na plátne je meradlom vw (projektor), na A4 landscape je strana nižšia
+     ako 16:9 obrazovka. Bez utiahnutia by najplnšie sekcie (konfigurátor,
+     MCP prehľad) pretiekli na druhú stranu. Čísla ani texty sa nemenia. */
+  h1{font-size:40px!important;line-height:1.06!important}
+  h2{font-size:25px!important;line-height:1.14!important}
+  .sub{font-size:12.5px!important;margin-top:8px!important}
+  .ld{font-size:11px!important;margin:6px 0 12px!important}
+  .eb{margin-bottom:8px!important}
+  .kpi b{font-size:24px!important}
+  .out .big{font-size:26px!important}
+  .g{gap:8px!important}
+  .split{gap:14px!important}
+  .cfg{gap:12px!important}
+  .c,.box,.kpi,.out,.dp,.gt{padding:9px 11px!important}
+  hr.r{margin:11px 0!important}
+  .tiny{margin-top:9px!important;line-height:1.55!important}
+  .bars{gap:7px!important}
+  .bar .tr{height:14px!important}
+  th,td{padding:5px 7px!important}
+  .fld{margin-bottom:8px!important}
+  .rw{margin-bottom:6px!important}
+  .opts{gap:5px!important}
+  .opts button{padding:6px 9px!important}
+  .flg{gap:4px!important;margin-top:8px!important}
+  .flg div{padding:6px 8px!important}
+  .lin{padding:3px 0!important}
+  .dp .dr{padding:5px 0!important}
+  .dp .hint{margin-top:7px!important}
+  .lgd{margin-top:8px!important}
+  .seg button{padding:5px 12px!important}
+
+  /* Konfigurátor je najvyšší blok prezentácie a na A4 landscape by pretiekol
+     na druhú stranu. Na papieri (kde sa už nedá klikať) sa jeho dva zvislé
+     zoznamy — rozpad ceny a vstupy modelu — rozložia do dvoch stĺpcov.
+     Ak by sa štruktúra zmenila, :has() jednoducho nesedí a nič sa nerozbije. */
+  .out:has(> .lin){columns:2;column-gap:16px}
+  .lin > span:last-child{white-space:nowrap}
+  .out:has(> .rw){display:grid;grid-template-columns:1fr 1fr;gap:0 16px}
+  .out:has(> .rw) > label{grid-column:1 / -1}
+
+  @page{size:A4 landscape;margin:0}
+}
