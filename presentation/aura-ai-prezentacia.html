@@ -1,0 +1,2594 @@
+<!DOCTYPE html>
+<html lang="sk" data-theme="dark" data-mode="deck">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Aura AI — vlastné AI jadro. Investičné rozhodnutie, stav k 28. 7. 2026.">
+<title>Aura AI — Vlastné AI jadro | Investičné rozhodnutie</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* ===== deck.css (A2) ===== */
+/* ==========================================================================
+   AURA AI · deck.css
+   Vlastník: A2. Kompletné CSS pre DECK režim (navigácia, slajdy, komponenty,
+   grafy, nákres, konfigurátor, tooltipy, slovníček, stavy, responzív 390 px).
+   Dokumentový režim a pravidlá pre tlač patria výhradne do report.css (A3) —
+   v tomto súbore nie je ani jedno z nich.
+   ========================================================================== */
+
+/* ------------------------------------------------------------------
+   1 · DIZAJNOVÉ TOKENY — CONTRACT.md §3 (finálne hodnoty, nie zdroj)
+   ------------------------------------------------------------------ */
+:root{
+  --teal:#05bcc4; --teal-2:#03797e; --teal-3:#7fd0d4;
+  --gold:#d8b878; --gold-t:#c9a869;
+  --paper:#0e1413; --card:#131b1a; --card-2:#1b2523; --line:#22302e;
+  --ink:#e8f0ef; --ink-2:#b9c9c7; --ink-3:#829896;
+  --good:#3fbf7f; --amber:#e8a33d; --red:#e0554e; --violet:#8b7fd4;
+  --mono:'JetBrains Mono',ui-monospace,monospace;
+  --disp:'Playfair Display',Georgia,serif;
+  --body:'Inter',system-ui,sans-serif;
+
+  /* Derivované aliasy — NIE nové farby, len smer tienenia podľa témy.
+     Oba sa v oboch témach rozvinú na hodnotu, ktorá už v tokenoch je:
+     --shade   = tmavá plocha (dark: --card, light: --ink → rovnaká hodnota)
+     --on-teal = takmer biely text na plnom teal-2 (dark: --ink, light: --card) */
+  --shade:var(--card);
+  --on-teal:var(--ink);
+}
+:root[data-theme="light"]{
+  --paper:#f8f4f7; --card:#fffdfe; --card-2:#ece6ea; --line:#e2dae0;
+  --ink:#131b1a; --ink-2:#3b4a48; --ink-3:#667574; --gold-t:#8a6417;
+  --shade:var(--ink);
+  --on-teal:var(--card);
+}
+
+/* ------------------------------------------------------------------
+   2 · BÁZA
+   ------------------------------------------------------------------ */
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  background:var(--paper);color:var(--ink);font-family:var(--body);
+  font-size:16px;line-height:1.5;overflow:hidden;-webkit-font-smoothing:antialiased;
+  position:relative; /* aby .s{position:absolute;inset:0} fungovalo aj bez #deck */
+}
+svg{display:block;max-width:100%;height:auto}
+text{font-family:var(--body)}
+
+/* ------------------------------------------------------------------
+   3 · CHROME — rail, top, dots, nav, counter
+   ------------------------------------------------------------------ */
+#rail{position:fixed;top:0;left:0;right:0;height:2px;background:var(--line);z-index:80}
+#rail i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--teal-2),var(--teal));transition:width .5s cubic-bezier(.16,1,.3,1);box-shadow:0 0 12px color-mix(in srgb,var(--teal) 55%,transparent)}
+
+#top{position:fixed;top:14px;left:24px;right:24px;display:flex;align-items:center;gap:12px;z-index:80;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3)}
+#top .cr{color:var(--gold);font-size:14px;letter-spacing:0}
+#top .sp{flex:1}
+#st{color:var(--amber);display:flex;align-items:center;gap:6px;white-space:nowrap}
+#st b{width:6px;height:6px;border-radius:9px;background:var(--amber);animation:ping 2.6s infinite}
+@keyframes ping{
+  0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--amber) 45%,transparent)}
+  70%,100%{box-shadow:0 0 0 8px transparent}
+}
+
+.pill{border:1px solid var(--line);background:var(--card);color:var(--ink-2);border-radius:99px;padding:5px 11px;font:inherit;font-size:10px;letter-spacing:.12em;cursor:pointer;text-transform:uppercase}
+.pill:hover{border-color:var(--teal-2);color:var(--ink)}
+.pill[aria-pressed="true"],.pill[aria-current="true"]{border-color:var(--teal);color:var(--ink);background:color-mix(in srgb,var(--teal) 10%,var(--card))}
+
+#dots{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);display:flex;gap:5px;z-index:80;max-width:70vw;flex-wrap:wrap;justify-content:center}
+/* transition je vymenovaný, aby sa nikdy neanimoval focus outline */
+#dots span{width:6px;height:6px;border-radius:9px;background:var(--line);cursor:pointer;transition:background .3s,width .3s}
+#dots span:hover{background:var(--ink-3)}
+#dots span.on,#dots span[aria-current="true"]{background:var(--teal);width:20px}
+
+#nav{position:fixed;bottom:14px;right:24px;display:flex;gap:7px;z-index:80}
+#ct{position:fixed;bottom:18px;left:24px;z-index:80;font-family:var(--mono);font-size:10.5px;color:var(--ink-3)}
+#ct b{color:var(--teal)}
+
+/* ------------------------------------------------------------------
+   4 · SLAJDY A TYPOGRAFIA
+   ------------------------------------------------------------------ */
+#deck{height:100%;position:relative;z-index:1}
+.s{position:absolute;inset:0;display:none;z-index:1;padding:56px 24px 56px;overflow-y:auto;overflow-x:hidden;scrollbar-width:thin}
+.s.on{display:block}
+.wr{max-width:1120px;margin:0 auto;min-height:100%;display:flex;flex-direction:column;justify-content:center}
+.eb{font-family:var(--mono);font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--teal);margin-bottom:10px}
+.eb s{text-decoration:none;color:var(--gold-t);margin:0 6px}
+h1{font-family:var(--disp);font-weight:500;font-size:clamp(28px,5vw,58px);line-height:1.04;letter-spacing:-.02em}
+h2{font-family:var(--disp);font-weight:500;font-size:clamp(21px,3.1vw,34px);line-height:1.12;letter-spacing:-.01em}
+.sub{color:var(--ink-2);font-size:clamp(13px,1.4vw,16px);max-width:64ch;margin-top:12px}
+.ld{font-size:12.5px;color:var(--ink-2);max-width:78ch;margin:8px 0 20px}
+hr.r{border:0;border-top:1px solid var(--line);margin:18px 0}
+.tiny{font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;color:var(--ink-3);margin-top:14px;line-height:1.7}
+.tiny a{color:var(--ink-3)}
+.mono{font-family:var(--mono)!important}
+.svl{font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:.1em;text-transform:uppercase}
+.vl,.kpi b,.out .big,td.n,.rw output{font-variant-numeric:tabular-nums}
+
+/* reveal */
+.an{opacity:0;transform:translateY(14px)}
+.s.on .an{animation:rise .6s cubic-bezier(.16,1,.3,1) forwards}
+@keyframes rise{to{opacity:1;transform:none}}
+
+/* prechody slajdov */
+.s.on{animation:sIn .55s cubic-bezier(.16,1,.3,1)}
+.s.leave{display:block;pointer-events:none;z-index:0;animation:sOut .4s ease forwards}
+@keyframes sIn{from{opacity:0;transform:translateX(26px) scale(.992)}to{opacity:1;transform:none}}
+@keyframes sOut{from{opacity:1;transform:none}to{opacity:0;transform:translateX(-30px) scale(.99)}}
+.s.leave .an,.s.leave .nd{animation:none}
+
+/* word stagger v nadpisoch */
+.wm{display:inline-block;opacity:0;transform:translateY(.55em)}
+.s.on .wm{animation:wpop .62s cubic-bezier(.16,1,.3,1) forwards;animation-delay:var(--wd,0ms)}
+@keyframes wpop{to{opacity:1;transform:none}}
+
+/* ------------------------------------------------------------------
+   5 · MRIEŽKY
+   ------------------------------------------------------------------ */
+.g{display:grid;gap:10px}
+.g>*{min-width:0}
+.split>*{min-width:0}
+.g2{grid-template-columns:repeat(2,1fr)}
+.g3{grid-template-columns:repeat(3,1fr)}
+.g4{grid-template-columns:repeat(4,1fr)}
+.g5{grid-template-columns:repeat(5,1fr)}
+.g6{grid-template-columns:repeat(6,1fr)}
+.split{display:grid;grid-template-columns:1.35fr 1fr;gap:20px;align-items:center}
+
+/* ------------------------------------------------------------------
+   6 · KARTY A KPI
+   ------------------------------------------------------------------ */
+.c{position:relative;background:var(--card);border:1px solid var(--line);border-left:2px solid transparent;border-radius:11px;padding:13px 15px;transition:border-color .26s,transform .26s}
+.c:hover{border-left-color:var(--teal);transform:translateY(-2px)}
+.c.gd:hover{border-left-color:var(--gold)}
+.c.am:hover{border-left-color:var(--amber)}
+.c h3{font-size:13px;font-weight:600;margin-bottom:4px;letter-spacing:-.01em}
+.c p{font-size:11.5px;color:var(--ink-2);line-height:1.5}
+.c .tg{font-family:var(--mono);font-size:9px;letter-spacing:.12em;color:var(--teal);text-transform:uppercase;display:block;margin-bottom:6px}
+.c .tg.gd{color:var(--gold-t)}
+.c .tg.am{color:var(--amber)}
+.c .tg.rd{color:var(--red)}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:13px 15px}
+.kpi b{display:block;font-family:var(--disp);font-size:clamp(22px,3.2vw,34px);font-weight:600;line-height:1;color:var(--teal)}
+.kpi b.gd{color:var(--gold-t)}
+.kpi b.am{color:var(--amber)}
+.kpi small{display:block;font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-3);margin-top:7px;line-height:1.5}
+
+/* ------------------------------------------------------------------
+   7 · CALLOUT BOXY
+   ------------------------------------------------------------------ */
+.box{border-radius:11px;padding:13px 15px;border:1px solid var(--line);background:var(--card)}
+.box h3{font-size:12.5px;margin-bottom:4px}
+.box p{font-size:11.5px;color:var(--ink-2)}
+.box.ok{background:color-mix(in srgb,var(--teal) 7%,var(--card));border-color:color-mix(in srgb,var(--teal) 28%,var(--line))}
+.box.ok h3{color:var(--teal)}
+.box.w{background:color-mix(in srgb,var(--amber) 8%,var(--card));border-color:color-mix(in srgb,var(--amber) 30%,var(--line))}
+.box.w h3{color:var(--amber)}
+.box.bad{background:color-mix(in srgb,var(--red) 8%,var(--card));border-color:color-mix(in srgb,var(--red) 30%,var(--line))}
+.box.bad h3{color:var(--red)}
+
+/* ------------------------------------------------------------------
+   8 · TABUĽKY
+   ------------------------------------------------------------------ */
+table{width:100%;border-collapse:collapse;font-size:11.5px}
+th,td{text-align:left;padding:8px 9px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);font-weight:500;white-space:nowrap}
+td.n{font-family:var(--mono);text-align:right;white-space:nowrap}
+tbody tr{transition:background .2s}
+tbody tr:hover{background:var(--card-2)}
+tbody tr[aria-current="true"]{background:var(--card-2);box-shadow:inset 2px 0 0 var(--teal)}
+th[role="button"],th[tabindex],tbody tr[tabindex]{cursor:pointer}
+th[aria-sort]{color:var(--teal)}
+.tw{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--line);border-radius:11px;background:var(--card)}
+.badge{font-family:var(--mono);font-size:8.5px;letter-spacing:.1em;padding:2px 6px;border-radius:4px;text-transform:uppercase;white-space:nowrap}
+.badge.ok{background:color-mix(in srgb,var(--teal) 18%,transparent);color:var(--teal)}
+.badge.cond{background:color-mix(in srgb,var(--amber) 18%,transparent);color:var(--amber)}
+.badge.no{background:color-mix(in srgb,var(--red) 18%,transparent);color:var(--red)}
+.badge.q{background:color-mix(in srgb,var(--violet) 20%,transparent);color:var(--violet)}
+
+/* ------------------------------------------------------------------
+   9 · PRÚŽKOVÉ GRAFY
+   ------------------------------------------------------------------ */
+.bars{display:flex;flex-direction:column;gap:9px}
+.bar{display:grid;grid-template-columns:150px 1fr 86px;gap:10px;align-items:center;font-size:11.5px}
+.bar .lb{color:var(--ink-2);font-size:11px;line-height:1.3}
+.bar .tr{height:16px;background:var(--card-2);border-radius:4px;overflow:hidden;border:1px solid var(--line)}
+.bar .tr i{display:block;height:100%;width:0;border-radius:3px;background:linear-gradient(90deg,var(--teal-2),var(--teal))}
+.bar .tr i.gd{background:linear-gradient(90deg,color-mix(in srgb,var(--gold) 58%,var(--shade)),var(--gold))}
+.bar .tr i.am{background:linear-gradient(90deg,color-mix(in srgb,var(--amber) 60%,var(--shade)),var(--amber))}
+.bar .tr i.rd{background:linear-gradient(90deg,color-mix(in srgb,var(--red) 58%,var(--shade)),var(--red))}
+.bar .vl{font-family:var(--mono);font-size:11px;text-align:right;color:var(--ink)}
+.s.on .bar .tr i{animation:grow 1s cubic-bezier(.16,1,.3,1) forwards}
+@keyframes grow{to{width:var(--w)}}
+
+/* stohované prúžky */
+.stack{display:flex;height:22px;border-radius:5px;overflow:hidden;border:1px solid var(--line);background:var(--card-2)}
+.stack i{height:100%;width:0;transition:none}
+.s.on .stack i{animation:grow 1.05s cubic-bezier(.16,1,.3,1) forwards}
+.lgd{display:flex;flex-wrap:wrap;gap:9px;margin-top:10px;font-size:10px;color:var(--ink-2);font-family:var(--mono);letter-spacing:.04em}
+.lgd span{display:flex;align-items:center;gap:5px}
+.lgd i{width:9px;height:9px;border-radius:2px;flex:none}
+
+/* SVG animácie */
+.s.on .nd{animation:pop .55s cubic-bezier(.16,1,.3,1) forwards;opacity:0}
+@keyframes pop{to{opacity:1}}
+.s.on .ln{stroke-dasharray:var(--l,300);stroke-dashoffset:var(--l,300);animation:draw .85s ease forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+.s.on .fl{animation:flow 2.4s linear infinite}
+@keyframes flow{to{stroke-dashoffset:-40}}
+.tpulse{animation:tp 2.2s ease-in-out infinite}
+@keyframes tp{0%,100%{opacity:1}50%{opacity:.35}}
+
+/* gantt */
+.gt{border:1px solid var(--line);border-radius:11px;background:var(--card);padding:12px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+
+/* ------------------------------------------------------------------
+   10 · AMBIENTNÉ POZADIE
+   ------------------------------------------------------------------ */
+#amb{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+#amb i{position:absolute;width:56vmax;height:56vmax;border-radius:50%;filter:blur(90px);opacity:.16}
+#amb i:first-child{background:radial-gradient(circle,var(--teal-2),transparent 62%);top:-22vmax;right:-14vmax;animation:drift1 26s ease-in-out infinite alternate}
+#amb i:last-child{background:radial-gradient(circle,color-mix(in srgb,var(--gold) 58%,var(--shade)),transparent 62%);bottom:-26vmax;left:-16vmax;animation:drift2 32s ease-in-out infinite alternate}
+:root[data-theme="light"] #amb i{opacity:.1}
+@keyframes drift1{to{transform:translate(-9vmax,7vmax) scale(1.12)}}
+@keyframes drift2{to{transform:translate(8vmax,-6vmax) scale(1.08)}}
+#deck,#top,#rail,#dots,#nav,#ct{position-anchor:none}
+
+/* ------------------------------------------------------------------
+   11 · SEGMENTOVANÝ PREPÍNAČ
+   ------------------------------------------------------------------ */
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:99px;background:var(--card);padding:3px;gap:2px}
+.seg button{font:inherit;font-size:11px;letter-spacing:.06em;text-transform:uppercase;border:0;background:none;
+  color:var(--ink-2);padding:6px 15px;border-radius:99px;cursor:pointer;font-family:var(--mono);
+  transition:color .2s,background-color .2s}
+.seg button:hover{color:var(--ink)}
+.seg button[aria-pressed="true"],.seg button[aria-current="true"]{background:var(--teal-2);color:var(--on-teal)}
+
+/* ------------------------------------------------------------------
+   12 · INTERAKTÍVNY NÁKRES (#ixd) + DETAIL PANEL (.dp)
+   ------------------------------------------------------------------ */
+.ix .s-now,.ix .s-tg{transition:opacity .45s ease}
+.ix[data-st="now"] .s-tg,.ix[data-st="tg"] .s-now{opacity:0;pointer-events:none}
+.ix .hot{cursor:pointer}
+.ix .hot rect{transition:stroke .2s,filter .2s}
+.ix .hot:hover rect,.ix .hot[aria-current="true"] rect{stroke:var(--teal);stroke-width:2}
+.ix .hot:focus-visible{outline:none}
+.ix .hot:focus-visible rect{stroke:var(--teal);stroke-width:2.4}
+
+.dp{background:var(--card);border:1px solid var(--line);border-left:2px solid var(--teal);border-radius:11px;padding:14px 16px;min-height:220px}
+.dp h4{font-size:13.5px;margin-bottom:8px}
+.dp .dr{display:grid;grid-template-columns:62px 1fr;gap:8px;padding:7px 0;border-top:1px solid var(--line);font-size:11.5px}
+.dp .dr:first-of-type{border-top:0}
+.dp .dr span:first-child{font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);padding-top:2px}
+.dp .dr .nowv{color:var(--red)}
+.dp .dr .tgv{color:var(--teal)}
+.dp .dr .ev{font-family:var(--mono);font-size:10.5px;color:var(--gold-t)}
+.dp .hint{font-size:10.5px;color:var(--ink-3);margin-top:10px;font-family:var(--mono)}
+.dp p{font-size:11.5px;color:var(--ink-2);line-height:1.5}
+/* prázdny stav: nič nevybrané (aj po prepnutí stavu nákresu) */
+.dp[data-empty="true"]{border-left-color:var(--line);background:color-mix(in srgb,var(--card-2) 55%,var(--card))}
+.dp[data-empty="true"] h4{color:var(--ink-2);font-family:var(--body);font-weight:500}
+
+/* ------------------------------------------------------------------
+   13 · KONFIGURÁTOR
+   ------------------------------------------------------------------ */
+.cfg{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+/* rovnaká poistka ako .g>* a .split>* — bez nej si stĺpec vynúti min-content
+   šírku a obsah konfigurátora pretečie na úzkych displejoch */
+.cfg>*{min-width:0}
+.fld{margin-bottom:12px}
+.fld>label{display:block;font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);margin-bottom:6px}
+.opts{display:flex;gap:6px;flex-wrap:wrap}
+.opts button{font:inherit;font-size:11px;border:1px solid var(--line);background:var(--card);color:var(--ink-2);
+  border-radius:8px;padding:8px 11px;cursor:pointer;text-align:left;line-height:1.3;
+  transition:border-color .18s,background-color .18s,color .18s}
+.opts button small{display:block;font-family:var(--mono);font-size:9.5px;color:var(--ink-3);margin-top:3px}
+.opts button:hover{border-color:var(--teal-2);color:var(--ink)}
+.opts button[aria-pressed="true"],.opts button[aria-current="true"]{border-color:var(--teal);background:color-mix(in srgb,var(--teal) 10%,var(--card));color:var(--ink)}
+.opts button[aria-pressed="true"] small,.opts button[aria-current="true"] small{color:var(--teal)}
+/* tri deti (label · range · output) potrebujú tri stĺpce — v zdroji boli
+   definované len dva, takže slider mal 78 px a hodnota padala na druhý riadok */
+.rw{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(90px,1fr) 66px;gap:9px;align-items:center;margin-bottom:9px}
+.rw label{font-size:11px;color:var(--ink-2)}
+.rw input[type=range]{width:100%;accent-color:var(--teal);background:none}
+.rw output{font-family:var(--mono);font-size:11px;text-align:right;color:var(--teal)}
+.out{background:var(--card-2);border:1px solid var(--line);border-radius:11px;padding:14px 16px}
+.out .big{font-family:var(--disp);font-size:clamp(26px,3.6vw,38px);font-weight:600;color:var(--teal);line-height:1}
+.out .big.am{color:var(--amber)}
+.out .sm{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin-top:6px}
+.lin{display:flex;justify-content:space-between;gap:10px;font-size:11.5px;padding:5px 0;border-bottom:1px solid var(--line)}
+.lin:last-child{border-bottom:0}
+/* len priamy potomok — inak selektor zachytí aj vnorenú poznámku .nt
+   a tá by ako nowrap vytlačila cenu mimo riadok */
+.lin>span:last-child{font-family:var(--mono);white-space:nowrap}
+.lin .nt{font-family:var(--mono);color:var(--ink-3);font-size:10px;white-space:normal}
+.lin.tot{border-top:1px solid var(--teal-2);border-bottom:0;margin-top:4px;padding-top:8px;font-weight:600}
+.flg{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.flg div{font-size:11px;padding:8px 10px;border-radius:8px;line-height:1.45}
+.flg .f-w{background:color-mix(in srgb,var(--amber) 10%,var(--card));border:1px solid color-mix(in srgb,var(--amber) 32%,var(--line));color:var(--ink)}
+.flg .f-b{background:color-mix(in srgb,var(--red) 10%,var(--card));border:1px solid color-mix(in srgb,var(--red) 32%,var(--line));color:var(--ink)}
+.flg .f-o{background:color-mix(in srgb,var(--teal) 8%,var(--card));border:1px solid color-mix(in srgb,var(--teal) 28%,var(--line));color:var(--ink)}
+.flg b{color:var(--amber)}
+.flg .f-b b{color:var(--red)}
+.flg .f-o b{color:var(--teal)}
+
+/* ------------------------------------------------------------------
+   14 · TOOLTIPY
+   ------------------------------------------------------------------ */
+.tt{border-bottom:1px dotted var(--teal);cursor:help}
+svg text.tt{text-decoration:underline;text-decoration-style:dotted;text-decoration-thickness:.6px;text-underline-offset:2.5px;cursor:help}
+#tip{position:fixed;z-index:200;max-width:300px;background:var(--card);border:1px solid var(--teal-2);
+  border-radius:9px;padding:10px 12px;box-shadow:0 10px 34px color-mix(in srgb,var(--shade) 55%,transparent);
+  opacity:0;visibility:hidden;transition:opacity .16s;pointer-events:none}
+#tip.on{opacity:1;visibility:visible}
+#tip b{display:block;font-size:11.5px;color:var(--teal);margin-bottom:4px;font-weight:600}
+#tip p{font-size:11.5px;color:var(--ink-2);line-height:1.5}
+
+/* ------------------------------------------------------------------
+   15 · SLOVNÍČEK (#gv)
+   ------------------------------------------------------------------ */
+#gv{position:fixed;inset:0;z-index:190;background:color-mix(in srgb,var(--paper) 92%,transparent);
+  backdrop-filter:blur(6px);display:none;overflow-y:auto;padding:64px 24px 40px}
+#gv.on{display:block}
+#gv .gw{max-width:1000px;margin:0 auto}
+#gv h2{margin-bottom:6px}
+#gv .gg{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:16px}
+#gv .gi{background:var(--card);border:1px solid var(--line);border-left:2px solid var(--teal-2);border-radius:9px;padding:11px 13px}
+#gv .gi b{display:block;font-size:12px;margin-bottom:3px}
+#gv .gi p{font-size:11px;color:var(--ink-2);line-height:1.5}
+#gx{position:fixed;top:14px;right:24px;z-index:195}
+
+/* ------------------------------------------------------------------
+   16 · FOCUS-VISIBLE — každý klikateľný / fokusovateľný prvok
+   ------------------------------------------------------------------ */
+.pill:focus-visible,
+#gl:focus-visible,#gx:focus-visible,#th:focus-visible,
+#nav button:focus-visible,
+.seg button:focus-visible,
+.opts button:focus-visible,
+#dots span:focus-visible,
+.tt:focus-visible,
+[data-t]:focus-visible,
+[tabindex="0"]:focus-visible,
+[tabindex]:not([tabindex="-1"]):focus-visible,
+.dp:focus-visible,
+.tw:focus-visible,
+.gt:focus-visible,
+.ix:focus-visible,
+th[role="button"]:focus-visible,th[tabindex]:focus-visible,th[aria-sort]:focus-visible,
+tbody tr[tabindex]:focus-visible,
+.rw input[type=range]:focus-visible,
+input:focus-visible,button:focus-visible,select:focus-visible,a:focus-visible,
+[role="button"]:focus-visible{outline:2px solid var(--teal);outline-offset:2px;border-radius:3px}
+/* v SVG je viditeľný fokus riešený stroke-om na <rect> (pozri §12) */
+.ix .hot:focus-visible,.ix .hot[tabindex="0"]:focus-visible{outline:none;border-radius:0}
+/* fallback pre prehliadače bez :focus-visible sa nerieši — Chromium/PDF ho má */
+
+/* ------------------------------------------------------------------
+   17 · RESPONZÍV
+   ------------------------------------------------------------------ */
+@media(max-width:900px){
+  .split{grid-template-columns:1fr}
+  .g4,.g5,.g6{grid-template-columns:1fr 1fr}
+  .cfg{grid-template-columns:1fr}
+}
+@media(max-width:860px){#gv .gg{grid-template-columns:1fr 1fr}}
+@media(max-width:620px){
+  .bar{grid-template-columns:96px 1fr 70px}
+  .bar .lb{font-size:10px}
+}
+@media(max-width:600px){.g2,.g3,.g4,.g5,.g6{grid-template-columns:1fr}}
+@media(max-width:560px){#gv .gg{grid-template-columns:1fr}}
+
+/* --- 390 px (iPhone) — cieľ: body nikdy nemá horizontálny scroll --- */
+@media(max-width:430px){
+  /* slajd */
+  .s{padding:44px 14px 60px}
+  .wr{justify-content:flex-start;padding-top:4px}
+  h1{font-size:clamp(24px,7.4vw,58px)}
+  h2{font-size:clamp(19px,5.6vw,34px)}
+  .sub{font-size:13px}
+  .ld{font-size:12px;margin-bottom:14px}
+  .g{gap:8px}
+  .split{gap:14px;align-items:start}
+  .kpi b{font-size:clamp(20px,7vw,34px)}
+  .c,.box,.kpi,.out,.dp{padding:11px 12px}
+
+  /* horná lišta — skrátená do jedného riadku, dlhý titulok sa skryje */
+  #top{top:10px;left:12px;right:12px;gap:8px;font-size:9px;letter-spacing:.1em;flex-wrap:wrap;row-gap:6px}
+  #top>span:not(.cr):not(.sp):not(#st){display:none}
+  #st{font-size:9px;letter-spacing:.08em}
+  .pill{padding:5px 9px;font-size:9px;letter-spacing:.08em}
+  #gx{top:10px;right:12px}
+
+  /* dolná lišta — dots nad počítadlom a navigáciou */
+  #dots{bottom:32px;gap:4px;row-gap:4px;max-width:88vw}
+  #dots span{width:5px;height:5px}
+  #dots span.on,#dots span[aria-current="true"]{width:14px}
+  #ct{bottom:9px;left:12px;font-size:9.5px}
+  #nav{bottom:6px;right:12px;gap:5px}
+
+  /* vodorovný scroll vnútri obalu + viditeľný hint na hranách:
+     tieň na okraji zmizne, keď je obsah doscrollovaný na kraj */
+  .tw,.gt,.ix{
+    --sc:var(--card);
+    background-image:
+      linear-gradient(to right,var(--sc),color-mix(in srgb,var(--sc) 0%,transparent)),
+      linear-gradient(to left,var(--sc),color-mix(in srgb,var(--sc) 0%,transparent)),
+      linear-gradient(to right,color-mix(in srgb,var(--shade) 45%,transparent),transparent),
+      linear-gradient(to left,color-mix(in srgb,var(--shade) 45%,transparent),transparent);
+    background-position:0 0,100% 0,0 0,100% 0;
+    background-repeat:no-repeat;
+    background-size:30px 100%,30px 100%,13px 100%,13px 100%;
+    background-attachment:local,local,scroll,scroll;
+  }
+  .tw table{min-width:520px}
+  th,td{padding:7px 8px}
+  .gt svg,.gt table{min-width:560px}
+
+  /* prúžky */
+  .bar{grid-template-columns:84px 1fr 62px;gap:8px}
+  .bar .lb{font-size:9.5px}
+  .bar .vl{font-size:10px}
+  .lgd{font-size:9px;gap:7px}
+
+  /* nákres — vlastný vodorovný scroll, aby text v SVG zostal čitateľný;
+     .ix leží priamo na papieri, takže hint sa kryje --paper, nie --card */
+  .ix{overflow-x:auto;-webkit-overflow-scrolling:touch;--sc:var(--paper)}
+  .ix svg{min-width:560px}
+  .dp{min-height:150px}
+
+  /* konfigurátor — jeden stĺpec, label nad slider */
+  .cfg{gap:12px}
+  .cfg .opts{display:grid;grid-template-columns:1fr;gap:5px}
+  .cfg .opts[data-grp="cnt"]{grid-template-columns:repeat(4,1fr)}
+  .cfg .opts button{text-align:left}
+  .out .big{font-size:clamp(22px,7vw,38px)}
+  .rw{grid-template-columns:1fr 62px;column-gap:8px;row-gap:3px;margin-bottom:12px}
+  .rw label{grid-column:1/-1}
+  .lin{font-size:11px}
+
+  /* slovníček */
+  #gv{padding:56px 14px 32px}
+  #tip{max-width:calc(100vw - 24px)}
+
+  /* prechod slajdov bez posunu do strany — inak transform translateX
+     nafúkne rozsah scrollu a body by na okamih malo horizontálny scroll */
+  .s.on{animation:sInM .45s cubic-bezier(.16,1,.3,1)}
+  .s.leave{animation:sOutM .3s ease forwards}
+}
+@keyframes sInM{from{opacity:0}to{opacity:1}}
+@keyframes sOutM{from{opacity:1}to{opacity:0}}
+
+/* ------------------------------------------------------------------
+   18 · PREFERS-REDUCED-MOTION — vypína animácie aj scroll-behavior
+   ------------------------------------------------------------------ */
+@media (prefers-reduced-motion: reduce){
+  html,body,.s,#gv{scroll-behavior:auto!important}
+  *,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+  .an,.s.on .an{opacity:1!important;transform:none!important;animation:none!important}
+  .wm,.s.on .wm{opacity:1!important;transform:none!important;animation:none!important}
+  .bar .tr i,.s.on .bar .tr i{width:var(--w)!important;transition:none!important;animation:none!important}
+  .stack i,.s.on .stack i{width:var(--w)!important;transition:none!important;animation:none!important}
+  .s.on{animation:none!important}
+  .s.leave{display:none!important;animation:none!important}
+  .ln,.s.on .ln{stroke-dasharray:none!important;stroke-dashoffset:0!important;animation:none!important}
+  .nd,.s.on .nd{opacity:1!important;animation:none!important}
+  .fl,.s.on .fl{animation:none!important}
+  .tpulse{animation:none!important;opacity:1!important}
+  #st b{animation:none!important;box-shadow:none!important}
+  #amb i{animation:none!important}
+  #rail i{transition:none!important}
+  .c:hover{transform:none!important}
+}
+
+/* ===== report.css (A3) ===== */
+/* ============================================================================
+   report.css — A3 · doc (report) režim + tlač
+   Aura AI · interná AI infraštruktúra
+
+   Načítava sa PO deck.css. Preto sa deck pravidlá prepisujú výhradne
+   ŠPECIFICITOU (prefix html[data-mode="doc"]), nikdy nie !important.
+   Výnimka: @media print — tam je !important zámerný, aby tlač vyzerala
+   rovnako z deck aj z doc režimu.
+
+   V tomto súbore nie je ani jeden selektor mimo:
+     · html[data-mode="doc"] …
+     · @media print { … }
+   Žiadny :root, žiadne globálne pravidlo, žiadna zmena deck režimu.
+
+   Závislosti na deck.css: keyframes `rise`, `grow`, `pop`, `draw`
+   (rovnaké, aké deck používa pre .s.on — tu ich riadi .s.rv
+   z IntersectionObservera v mode.js).
+   ============================================================================ */
+
+
+/* ==========================================================================
+   1 · DOC REŽIM — scrollovaný dokument
+   ========================================================================== */
+
+/* --- scroll kontejner: dokument scrolluje na root elemente ---------------- */
+html[data-mode="doc"]{height:auto;overflow-y:auto;scroll-behavior:smooth}
+html[data-mode="doc"] body{height:auto;min-height:100%;overflow:auto}
+html[data-mode="doc"] #deck{height:auto}
+
+/* --- sekcie: všetky viditeľné, tečú za sebou ----------------------------- */
+html[data-mode="doc"] .s{
+  position:static;inset:auto;display:block;overflow:visible;
+  padding:52px 24px;border-top:1px solid var(--line);
+  scroll-margin-top:60px}
+html[data-mode="doc"] .s:first-child{border-top:0}
+/* posledná sekcia nesmie skončiť pod fixným #ct */
+html[data-mode="doc"] .s:last-child{padding-bottom:92px}
+
+/* obsah tečie od hora, nie vertikálne centrovaný; max-width zostáva 1120px */
+html[data-mode="doc"] .wr{min-height:0;justify-content:flex-start}
+
+/* --- chrome ------------------------------------------------------------- */
+html[data-mode="doc"] #dots,
+html[data-mode="doc"] #nav{display:none}
+
+/* V decku sedí #top v prázdnom okraji slajdu, v dokumente mu text podteká.
+   Preto sa z neho stáva plná lišta — #rail (2 px) zostáva nad ňou. */
+html[data-mode="doc"] #top{
+  top:2px;left:0;right:0;padding:11px 24px;
+  background:color-mix(in srgb,var(--paper) 90%,transparent);
+  backdrop-filter:blur(7px);
+  border-bottom:1px solid var(--line)}
+
+/* #rail zostáva na svojom mieste — v doc režime ukazuje scroll pozíciu
+   (šírku dopočítava mode.js) */
+
+/* #ct zostáva — ukazuje aktuálnu sekciu a jej názov (obsah rieši mode.js);
+   nad tečúcim textom potrebuje čitateľný podklad */
+html[data-mode="doc"] #ct{
+  max-width:calc(100vw - 48px);white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis;
+  padding:5px 11px;border:1px solid var(--line);border-radius:99px;
+  background:color-mix(in srgb,var(--paper) 88%,transparent);
+  backdrop-filter:blur(6px)}
+html[data-mode="doc"] #ct .ctn{color:var(--ink-2)}
+
+/* --- prechody slajdov vypnuté ------------------------------------------- */
+html[data-mode="doc"] .s.on{animation:none;z-index:auto}
+html[data-mode="doc"] .s.leave{display:block;animation:none;pointer-events:auto;z-index:auto}
+html[data-mode="doc"] .s.leave .an,
+html[data-mode="doc"] .s.leave .nd{animation:none}
+
+/* --- word-stagger v dokumente ruší čítanie ------------------------------ */
+html[data-mode="doc"] .wm{animation:none;opacity:1;transform:none}
+html[data-mode="doc"] .s.on .wm{animation:none;opacity:1;transform:none}
+
+/* --- reveal: riadi .rv z IntersectionObservera, nie .s.on --------------- */
+html[data-mode="doc"] .s .an{opacity:0;transform:translateY(16px);animation:none}
+html[data-mode="doc"] .s.on .an{animation:none}
+html[data-mode="doc"] .s .bar .tr i,
+html[data-mode="doc"] .s .stack i{width:0;animation:none}
+html[data-mode="doc"] .s.on .bar .tr i,
+html[data-mode="doc"] .s.on .stack i{animation:none}
+html[data-mode="doc"] .s .nd{animation:none}
+html[data-mode="doc"] .s.on .nd{opacity:1;animation:none}
+html[data-mode="doc"] .s .ln{stroke-dasharray:none;stroke-dashoffset:0;animation:none}
+html[data-mode="doc"] .s.on .ln{stroke-dasharray:none;stroke-dashoffset:0;animation:none}
+/* tečúce prerušované linky v dokumente nemajú zmysel */
+html[data-mode="doc"] .s .fl,
+html[data-mode="doc"] .s.on .fl{animation:none}
+
+/* .rv — sekcia vstúpila do viewportu (inline animation-delay zostáva v hre) */
+html[data-mode="doc"] .s.rv .an{animation:rise .55s cubic-bezier(.16,1,.3,1) forwards}
+html[data-mode="doc"] .s.rv .bar .tr i{animation:grow 1s cubic-bezier(.16,1,.3,1) forwards}
+html[data-mode="doc"] .s.rv .stack i{animation:grow 1.05s cubic-bezier(.16,1,.3,1) forwards}
+html[data-mode="doc"] .s.rv .nd{opacity:0;animation:pop .55s cubic-bezier(.16,1,.3,1) forwards}
+html[data-mode="doc"] .s.rv .ln{
+  stroke-dasharray:var(--l,300);stroke-dashoffset:var(--l,300);
+  animation:draw .85s ease forwards}
+
+
+/* --- doc režim na mobile (390 px trieda zariadení) ---------------------- */
+@media(max-width:430px){
+  html[data-mode="doc"] .s{padding:36px 14px}
+  /* prvá sekcia začína pod lištou #top, ktorá je na mobile dvojriadková */
+  html[data-mode="doc"] .s:first-child{padding-top:58px}
+  html[data-mode="doc"] .s:last-child{padding-bottom:76px}
+  html[data-mode="doc"] #top{padding:9px 14px}
+  html[data-mode="doc"] #ct{max-width:calc(100vw - 28px);left:14px}
+}
+
+/* --- reduced motion: reveal aj smooth scroll von ------------------------ */
+@media (prefers-reduced-motion: reduce){
+  html[data-mode="doc"]{scroll-behavior:auto}
+  html[data-mode="doc"] .s .an,
+  html[data-mode="doc"] .s.on .an,
+  html[data-mode="doc"] .s.rv .an{opacity:1;transform:none;animation:none}
+  html[data-mode="doc"] .s .wm,
+  html[data-mode="doc"] .s.rv .wm{opacity:1;transform:none;animation:none}
+  html[data-mode="doc"] .s .bar .tr i,
+  html[data-mode="doc"] .s.rv .bar .tr i,
+  html[data-mode="doc"] .s .stack i,
+  html[data-mode="doc"] .s.rv .stack i{width:var(--w);animation:none}
+  html[data-mode="doc"] .s .nd,
+  html[data-mode="doc"] .s.rv .nd{opacity:1;animation:none}
+  html[data-mode="doc"] .s .ln,
+  html[data-mode="doc"] .s.rv .ln{stroke-dasharray:none;stroke-dashoffset:0;animation:none}
+}
+
+
+/* ==========================================================================
+   2 · TLAČ — 1 sekcia = 1 strana A4 landscape, vynútená svetlá téma
+   ========================================================================== */
+
+@media print{
+
+  /* --- svetlá téma nezávisle od data-theme (CONTRACT §3, light hodnoty) --- */
+  :root,
+  :root[data-theme="dark"],
+  :root[data-theme="light"]{
+    --teal:#05bcc4; --teal-2:#03797e; --teal-3:#7fd0d4;
+    --gold:#d8b878; --gold-t:#8a6417;
+    --paper:#f8f4f7; --card:#fffdfe; --card-2:#ece6ea; --line:#e2dae0;
+    --ink:#131b1a; --ink-2:#3b4a48; --ink-3:#667574;
+    --good:#3fbf7f; --amber:#e8a33d; --red:#e0554e; --violet:#8b7fd4;
+  }
+
+  *{
+    -webkit-print-color-adjust:exact;print-color-adjust:exact;
+    box-shadow:none!important;text-shadow:none!important;
+    backdrop-filter:none!important}
+
+  html,body{
+    background:#fff!important;color:var(--ink)!important;
+    height:auto!important;min-height:0!important;overflow:visible!important}
+
+  /* Tlač na 95 %. A4 landscape je nižšia ako 16:9 plátno; najplnší slajd by
+     pri 100 % pretiekol na druhú stranu. Jedna hodnota drží celý dokument na
+     13 stranách aj keď obsah slajdu ešte o riadok narastie — presne to, čo
+     inak musí obsluha nastaviť v tlačovom dialógu ako „prispôsobiť strane“. */
+  html{zoom:.95}
+
+  /* --- chrome von ------------------------------------------------------- */
+  #top,#dots,#nav,#rail,#ct,#gv,#gx,#tip,#amb{display:none!important}
+
+  /* --- jedna sekcia = jedna strana -------------------------------------- */
+  #deck{height:auto!important;position:static!important;z-index:auto!important}
+  .s{
+    position:static!important;inset:auto!important;display:block!important;
+    overflow:visible!important;height:auto!important;min-height:auto!important;
+    padding:10mm!important;border-top:0!important;
+    opacity:1!important;transform:none!important;animation:none!important;
+    page-break-after:always;break-after:page;
+    page-break-inside:auto;break-inside:auto}
+  .s:last-child{page-break-after:auto;break-after:auto}
+  .s.leave{display:none!important}
+  .wr{
+    max-width:100%!important;min-height:0!important;
+    display:block!important;margin:0!important}
+
+  /* --- žiadna animácia nesmie nechať obsah neviditeľný ------------------ */
+  .an,.wm{opacity:1!important;transform:none!important;animation:none!important}
+  .bar .tr i,.stack i{width:var(--w)!important;animation:none!important;transition:none!important}
+  .nd{opacity:1!important;animation:none!important}
+  .ln,.fl{
+    stroke-dasharray:none!important;stroke-dashoffset:0!important;
+    animation:none!important}
+
+  /* --- nič sa nesmie rozrezať na dvoje ---------------------------------- */
+  .c,.box,.kpi,.bar,table tr,.dp,.out{break-inside:avoid;page-break-inside:avoid}
+  .flg div,.lin,.lgd,.tw,.gt,.seg,.opts{break-inside:avoid;page-break-inside:avoid}
+  h1,h2,h3,.eb{break-after:avoid;page-break-after:avoid}
+
+  /* --- tabuľky sa nesmú odrezať ----------------------------------------- */
+  .tw{overflow:visible!important;overflow-x:visible!important;min-width:0!important}
+  .gt{overflow:visible!important;overflow-x:visible!important}
+  table{min-width:0!important;width:100%!important}
+  th{white-space:normal!important}
+
+  /* --- bodkované linky tooltipov na papieri nemajú zmysel --------------- */
+  .tt{text-decoration:none!important;border-bottom:0!important;cursor:auto!important}
+  svg text.tt{text-decoration:none!important}
+
+  /* --- interaktívne prvky: tlačia sa v aktuálnom stave ------------------ */
+  .c:hover,.opts button:hover{transform:none!important}
+  .dp{min-height:0!important}
+
+  /* --- typografia a rytmus pre papier ------------------------------------
+     Na plátne je meradlom vw (projektor), na A4 landscape je strana nižšia
+     ako 16:9 obrazovka. Bez utiahnutia by najplnšie sekcie (konfigurátor,
+     MCP prehľad) pretiekli na druhú stranu. Čísla ani texty sa nemenia. */
+  h1{font-size:40px!important;line-height:1.06!important}
+  h2{font-size:25px!important;line-height:1.14!important}
+  .sub{font-size:12.5px!important;margin-top:8px!important}
+  .ld{font-size:11px!important;margin:6px 0 12px!important}
+  .eb{margin-bottom:8px!important}
+  .kpi b{font-size:24px!important}
+  .out .big{font-size:26px!important}
+  .g{gap:8px!important}
+  .split{gap:14px!important}
+  .cfg{gap:12px!important}
+  .c,.box,.kpi,.out,.dp,.gt{padding:9px 11px!important}
+  hr.r{margin:11px 0!important}
+  .tiny{margin-top:9px!important;line-height:1.55!important}
+  .bars{gap:7px!important}
+  .bar .tr{height:14px!important}
+  th,td{padding:5px 7px!important}
+  .fld{margin-bottom:8px!important}
+  .rw{margin-bottom:6px!important}
+  .opts{gap:5px!important}
+  .opts button{padding:6px 9px!important}
+  .flg{gap:4px!important;margin-top:8px!important}
+  .flg div{padding:6px 8px!important}
+  .lin{padding:3px 0!important}
+  .dp .dr{padding:5px 0!important}
+  .dp .hint{margin-top:7px!important}
+  .lgd{margin-top:8px!important}
+  .seg button{padding:5px 12px!important}
+
+  /* Konfigurátor je najvyšší blok prezentácie a na A4 landscape by pretiekol
+     na druhú stranu. Na papieri (kde sa už nedá klikať) sa jeho dva zvislé
+     zoznamy — rozpad ceny a vstupy modelu — rozložia do dvoch stĺpcov.
+     Ak by sa štruktúra zmenila, :has() jednoducho nesedí a nič sa nerozbije. */
+  .out:has(> .lin){columns:2;column-gap:16px}
+  .lin > span:last-child{white-space:nowrap}
+  .out:has(> .rw){display:grid;grid-template-columns:1fr 1fr;gap:0 16px}
+  .out:has(> .rw) > label{grid-column:1 / -1}
+
+  @page{size:A4 landscape;margin:0}
+}
+</style>
+</head>
+<body>
+<noscript><p style="padding:24px;font:16px/1.5 system-ui">Táto prezentácia potrebuje JavaScript — bez neho nefunguje navigácia, slovníček ani konfigurátor zostavy.</p></noscript>
+
+<div id="amb" aria-hidden="true"><i></i><i></i></div>
+<div id="rail"><i></i></div>
+<div id="top">
+  <span class="cr">♛</span><span>Aura&nbsp;AI · interná AI infraštruktúra</span>
+  <span class="sp"></span>
+  <span id="st"><b></b>At risk</span>
+  <button class="pill" id="gl">? Slovníček</button>
+  <button class="pill" id="th">Light</button>
+</div>
+
+<div id="tip" role="tooltip"><b></b><p></p></div>
+<div id="gv" role="dialog" aria-modal="true" aria-label="Slovníček pojmov"><div class="gw"><div class="eb">Vysvetlivky</div><h2>Slovníček pojmov</h2><p class="ld">Každý pojem je v prezentácii podčiarknutý bodkovanou linkou — po nabehnutí myšou alebo kliknutí sa zobrazí vysvetlenie. Tu sú všetky na jednom mieste.</p><div class="gg" id="gg"></div><p class="tiny">Zavriete klávesom Esc alebo kliknutím mimo.</p></div></div>
+<button class="pill" id="gx" style="display:none">✕ Zavrieť</button>
+
+<div id="deck">
+<!-- s01 · HERO -->
+<section class="s on" id="s01">
+  <div class="wr">
+    <div class="eb an">01 <s>·</s> Šperky Aura <s>·</s> Investičné rozhodnutie</div>
+    <div class="an" style="animation-delay:.03s;font-family:var(--disp);font-size:34px;line-height:1;color:var(--gold)" aria-hidden="true">♛</div>
+    <h1 class="an" style="animation-delay:.05s">Vlastné AI jadro.<br>Naše dáta zostanú doma.</h1>
+    <p class="sub an" style="animation-delay:.12s">1× Main PC ako Aura Core, 3× Mini PC ako izolovaní workeri, lokálny 70B model, obrazové a video úlohy a najviac 10 súbežných workflowov. Cloud zostáva, ale za kontrolovanou hranicou.</p>
+    <hr class="r an" style="animation-delay:.18s">
+    <div class="g g5">
+      <div class="kpi an" style="animation-delay:.22s"><b>26</b><small>týždňov · do 31. 1. 2027</small></div>
+      <div class="kpi an" style="animation-delay:.27s"><b>11</b><small>brán G1–G11</small></div>
+      <div class="kpi an" style="animation-delay:.32s"><b>67</b><small>úloh · 168 subtaskov</small></div>
+      <div class="kpi an" style="animation-delay:.37s"><b class="gd">3</b><small>scenáre investície</small></div>
+      <div class="kpi an" style="animation-delay:.42s"><b class="am">3</b><small>otvorené blokátory</small></div>
+    </div>
+    <p class="tiny an" style="animation-delay:.5s">Ovládanie: ← → alebo medzerník · 13 slajdov · bodkovane podčiarknuté pojmy majú vysvetlivku · ceny s DPH ak nie je uvedené inak</p>
+  </div>
+</section>
+
+<!-- s02 · AI DNES — MCP a Hades (zdroj 983 + 456) -->
+<section class="s" id="s02">
+  <div class="wr">
+    <div class="eb an">02 <s>·</s> AI dnes</div>
+    <h2 class="an" style="animation-delay:.04s">Ako AI používame už teraz — cez <span class="tt" data-t="mcp" tabindex="0">MCP</span> a Hades</h2>
+    <p class="ld an" style="animation-delay:.08s">Nezačíname od nuly. Beží vrstva MCP nástrojov a Hades, vlastný MCP server, ktorý drží pamäť o skilloch, projektoch a rozhodnutiach a učí sa z každej relácie.</p>
+    <div class="g g4">
+      <div class="kpi an" style="animation-delay:.12s"><b>675</b><small>uzlov v pamäti</small></div>
+      <div class="kpi an" style="animation-delay:.16s"><b>2 049</b><small><span class="tt" data-t="edge" tabindex="0">spojení</span></small></div>
+      <div class="kpi an" style="animation-delay:.2s"><b>5</b><small>oblastí znalostí</small></div>
+      <div class="kpi an" style="animation-delay:.24s"><b class="gd">12</b><small>MCP serverov</small></div>
+    </div>
+    <p class="ld an" style="animation-delay:.28s">Jeden konkrétny príklad — zápis z porady od nahrávky po úlohy v Asane. Všimnite si, kde je človek a kde je hranica.</p>
+    <div class="an" style="animation-delay:.32s">
+    <svg viewBox="0 0 1000 250" role="img" aria-label="Tok workflowu zápisu z porady">
+      <defs><marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto">
+        <path d="M0,0 L10,5 L0,10 z" fill="var(--teal)"/></marker></defs>
+      <g class="nd" style="animation-delay:.15s">
+        <rect x="6" y="72" width="132" height="86" rx="10" fill="var(--card)" stroke="var(--line)"/>
+        <text x="72" y="98" text-anchor="middle" class="svl" fill="var(--ink-3)">01</text>
+        <text x="72" y="120" text-anchor="middle" font-size="11.5" font-weight="600" fill="var(--ink)">Nahrávka</text>
+        <text x="72" y="137" text-anchor="middle" font-size="9.5" fill="var(--ink-2)">lokálny upload</text>
+      </g>
+      <g class="nd" style="animation-delay:.3s">
+        <rect x="176" y="72" width="150" height="86" rx="10" fill="var(--card)" stroke="var(--teal-2)"/>
+        <text x="251" y="98" text-anchor="middle" class="svl" fill="var(--teal)">02 · Mini 2</text>
+        <text x="251" y="120" text-anchor="middle" font-size="11.5" font-weight="600" fill="var(--ink)">Prepis</text>
+        <text x="251" y="137" text-anchor="middle" font-size="9.5" fill="var(--ink-2)">offline, bez cloudu</text>
+      </g>
+      <g class="nd" style="animation-delay:.45s">
+        <rect x="364" y="72" width="164" height="86" rx="10" fill="var(--card)" stroke="var(--teal-2)"/>
+        <text x="446" y="98" text-anchor="middle" class="svl" fill="var(--teal)">03 · Aura Core</text>
+        <text x="446" y="120" text-anchor="middle" font-size="11.5" font-weight="600" fill="var(--ink)">70B extrakcia</text>
+        <text x="446" y="137" text-anchor="middle" font-size="9.5" fill="var(--ink-2)">úlohy · vlastníci · termíny</text>
+      </g>
+      <g class="nd" style="animation-delay:.6s">
+        <rect x="566" y="60" width="150" height="110" rx="10" fill="color-mix(in srgb,var(--gold) 10%,var(--card))" stroke="var(--gold)"/>
+        <text x="641" y="86" text-anchor="middle" class="svl" fill="var(--gold-t)">04 · človek</text>
+        <text x="641" y="110" text-anchor="middle" font-size="11.5" font-weight="600" fill="var(--ink)">Schválenie</text>
+        <text x="641" y="128" text-anchor="middle" font-size="9.5" fill="var(--ink-2)">2 stĺpce, checkboxy</text>
+        <text x="641" y="145" text-anchor="middle" font-size="9.5" fill="var(--gold-t)">bez kliknutia sa nezapíše</text>
+      </g>
+      <g class="nd" style="animation-delay:.75s">
+        <rect x="754" y="30" width="240" height="72" rx="10" fill="var(--card)" stroke="var(--line)" stroke-dasharray="6 5"/>
+        <text x="874" y="54" text-anchor="middle" class="svl" fill="var(--gold-t)">05 · za hranicou</text>
+        <text x="874" y="76" text-anchor="middle" font-size="11.5" fill="var(--ink)">Úlohy do Asany</text>
+        <text x="874" y="92" text-anchor="middle" font-size="9.5" fill="var(--ink-2)" class="tt" data-t="extid" tabindex="0">1 položka = 1 task, s ext ID</text>
+      </g>
+      <g class="nd" style="animation-delay:.85s">
+        <rect x="754" y="120" width="240" height="72" rx="10" fill="var(--card)" stroke="var(--line)" stroke-dasharray="6 5"/>
+        <text x="874" y="144" text-anchor="middle" class="svl" fill="var(--gold-t)">05 · za hranicou</text>
+        <text x="874" y="166" text-anchor="middle" font-size="11.5" fill="var(--ink)">Eventy do Calendara</text>
+        <text x="874" y="182" text-anchor="middle" font-size="9.5" fill="var(--ink-2)">idempotentne, s undo</text>
+      </g>
+      <g fill="none" stroke="var(--teal)" stroke-width="1.7" marker-end="url(#a2)">
+        <path class="ln" style="--l:44;animation-delay:.26s" d="M138 115 H168"/>
+        <path class="ln" style="--l:44;animation-delay:.41s" d="M326 115 H356"/>
+        <path class="ln" style="--l:44;animation-delay:.56s" d="M528 115 H558"/>
+        <path class="ln" style="--l:120;animation-delay:.78s" d="M716 100 H736 V66 H746"/>
+        <path class="ln" style="--l:120;animation-delay:.86s" d="M716 130 H736 V156 H746"/>
+      </g>
+      <g class="nd" style="animation-delay:1s">
+        <rect x="6" y="196" width="988" height="44" rx="9" fill="var(--card-2)" stroke="var(--line)"/>
+        <text x="24" y="216" class="svl" fill="var(--teal)">Audit záznam</text>
+        <text x="24" y="232" font-size="10" fill="var(--ink-2)">Kto spustil · aký model · aké dáta · čo sa zapísalo · kto schválil · čo sa dá vrátiť. Rovnaká stopa pre všetkých 10 workflowov.</text>
+      </g>
+    </svg>
+    </div>
+    <div class="g g3 an" style="animation-delay:.44s;margin-top:12px">
+      <div class="c"><span class="tg">Pamäť</span><h3>Hades ako kontext</h3><p>Recall na začiatku relácie, learn na nové poznatky, decision na rozhodnutia. Znalosť neodchádza s reláciou.</p></div>
+      <div class="c"><span class="tg">Riadenie práce</span><h3>Asana cez MCP</h3><p>Projektová baseline — 11 sekcií, 67 úloh, 168 subtaskov a väzby medzi nimi — vznikla priamo cez MCP, nie ručným klikaním. Rovnako katalóg 126 automatizácií s filtrami.</p></div>
+      <div class="c gd"><span class="tg gd">Vývoj</span><h3>Sprinty s 10 agentmi</h3><p>Aura KPI, Aura Roadmap, Zápis z porady, Banner Studio — postavené sekvenčnými agentmi s kontrolnými bránami a dôkazmi.</p></div>
+    </div>
+    <div class="box ok an" style="animation-delay:.52s;margin-top:12px"><h3>Prečo to súvisí s investíciou</h3><p>Toto všetko dnes beží na cudzích modeloch a cudzej infraštruktúre. Projekt presúva rovnaké workflowy na lokálne jadro — nejde o nový nápad, ide o presun overenej praxe za bezpečnú hranicu.</p></div>
+    <p class="tiny an" style="animation-delay:.58s">Workflow zápisu z porady už dnes existuje ako Aura appka so session prihlásením a MCP klientmi. Projekt ho presúva z cloudu na lokálne jadro.</p>
+  </div>
+</section>
+
+<!-- s03 · ARCHITEKTÚRA (zdroj 296) -->
+<section class="s" id="s03">
+  <div class="wr">
+    <div class="eb an">03 <s>·</s> Nákres — ako to bude fungovať</div>
+    <h2 class="an" style="animation-delay:.04s">Jedno jadro, tri izolované ruky, jedna kontrolovaná hranica</h2>
+    <p class="ld an" style="animation-delay:.08s">Aura Core drží modely a orchestráciu. Workeri robia ťažkú prácu oddelene. Restricted dáta neprekročia prerušovanú čiaru bez schválenia.</p>
+    <div class="an" style="animation-delay:.12s">
+    <svg viewBox="0 0 1000 430" role="img" aria-label="Architektúra Main PC a troch Mini PC">
+      <defs>
+        <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+          <path d="M0,0 L10,5 L0,10 z" fill="var(--teal-2)"/></marker>
+        <marker id="arg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+          <path d="M0,0 L10,5 L0,10 z" fill="var(--gold)"/></marker>
+      </defs>
+      <!-- zone: local -->
+      <rect x="8" y="34" width="640" height="384" rx="14" fill="none" stroke="var(--line)"/>
+      <text x="24" y="26" class="svl" fill="var(--teal)">Lokálna zóna — restricted dáta</text>
+      <!-- zone: cloud -->
+      <rect x="686" y="34" width="306" height="384" rx="14" fill="none" stroke="var(--line)" stroke-dasharray="7 6"/>
+      <text x="702" y="26" class="svl" fill="var(--gold-t)">Kontrolovaná hranica — cloud a SaaS</text>
+
+      <!-- users -->
+      <g class="nd" style="animation-delay:.15s">
+        <rect x="30" y="176" width="112" height="72" rx="10" fill="var(--card)" stroke="var(--line)"/>
+        <text x="86" y="204" text-anchor="middle" font-size="13" font-weight="600" fill="var(--ink)">Tím</text>
+        <text x="86" y="222" text-anchor="middle" font-size="10" fill="var(--ink-2)">10 workflowov max</text>
+      </g>
+      <!-- aura core -->
+      <g class="nd" style="animation-delay:.3s">
+        <rect x="214" y="140" width="176" height="144" rx="12" fill="var(--card)" stroke="var(--teal-2)" stroke-width="1.5"/>
+        <text x="302" y="167" text-anchor="middle" class="svl" fill="var(--teal)">Main PC</text>
+        <text x="302" y="192" text-anchor="middle" font-size="15" font-weight="600" fill="var(--ink)">Aura Core</text>
+        <text x="302" y="212" text-anchor="middle" font-size="10" fill="var(--ink-2)" class="tt" data-t="b70" tabindex="0">70B model · orchestrácia</text>
+        <text x="302" y="228" text-anchor="middle" font-size="10" fill="var(--ink-2)" class="tt" data-t="rag" tabindex="0">RAG index · fronta úloh</text>
+        <text x="302" y="252" text-anchor="middle" font-size="10" fill="var(--gold-t)" class="tt" data-t="rbac" tabindex="0">RBAC · audit · secrets</text>
+        <text x="302" y="268" text-anchor="middle" font-size="10" fill="var(--gold-t)">schvaľovanie zápisov</text>
+      </g>
+      <!-- workers -->
+      <g class="nd" style="animation-delay:.45s">
+        <rect x="446" y="66" width="176" height="62" rx="10" fill="var(--card)" stroke="var(--line)"/>
+        <text x="534" y="88" text-anchor="middle" class="svl" fill="var(--teal)">Mini 1</text>
+        <text x="534" y="108" text-anchor="middle" font-size="11" fill="var(--ink)">Obraz a video</text>
+      </g>
+      <g class="nd" style="animation-delay:.53s">
+        <rect x="446" y="150" width="176" height="62" rx="10" fill="var(--card)" stroke="var(--line)"/>
+        <text x="534" y="172" text-anchor="middle" class="svl" fill="var(--teal)">Mini 2</text>
+        <text x="534" y="192" text-anchor="middle" font-size="11" fill="var(--ink)">Dokumenty a RAG</text>
+      </g>
+      <g class="nd" style="animation-delay:.61s">
+        <rect x="446" y="234" width="176" height="62" rx="10" fill="var(--card)" stroke="var(--line)"/>
+        <text x="534" y="256" text-anchor="middle" class="svl" fill="var(--teal)">Mini 3</text>
+        <text x="534" y="276" text-anchor="middle" font-size="11" fill="var(--ink)">Dávky a integrácie</text>
+      </g>
+      <!-- storage -->
+      <g class="nd" style="animation-delay:.69s">
+        <rect x="446" y="322" width="176" height="72" rx="10" fill="var(--card)" stroke="var(--line)"/>
+        <text x="534" y="344" text-anchor="middle" class="svl tt" fill="var(--gold-t)" data-t="nas" tabindex="0">NAS · backup</text>
+        <text x="534" y="364" text-anchor="middle" font-size="11" fill="var(--ink)">Lokálne dáta</text>
+        <text x="534" y="380" text-anchor="middle" font-size="9.5" fill="var(--ink-2)">osobné · účtovné · obmedzené</text>
+      </g>
+      <!-- cloud services -->
+      <g class="nd" style="animation-delay:.8s">
+        <rect x="712" y="72" width="252" height="52" rx="9" fill="var(--card)" stroke="var(--line)"/>
+        <text x="838" y="97" text-anchor="middle" font-size="11.5" fill="var(--ink)">Asana</text>
+        <text x="838" y="113" text-anchor="middle" font-size="9.5" fill="var(--ink-2)">projekty, úlohy — zápis so schválením</text>
+      </g>
+      <g class="nd" style="animation-delay:.87s">
+        <rect x="712" y="140" width="252" height="52" rx="9" fill="var(--card)" stroke="var(--line)"/>
+        <text x="838" y="165" text-anchor="middle" font-size="11.5" fill="var(--ink)">Drive · Docs · Sheets</text>
+        <text x="838" y="181" text-anchor="middle" font-size="9.5" fill="var(--ink-2)">súbory a dôkazy</text>
+      </g>
+      <g class="nd" style="animation-delay:.94s">
+        <rect x="712" y="208" width="252" height="52" rx="9" fill="var(--card)" stroke="var(--line)"/>
+        <text x="838" y="233" text-anchor="middle" font-size="11.5" fill="var(--ink)">Calendar</text>
+        <text x="838" y="249" text-anchor="middle" font-size="9.5" fill="var(--ink-2)">udalosti — každá zmena schválená</text>
+      </g>
+      <g class="nd" style="animation-delay:1.01s">
+        <rect x="712" y="290" width="252" height="66" rx="9" fill="var(--card)" stroke="var(--gold)" stroke-dasharray="5 4"/>
+        <text x="838" y="314" text-anchor="middle" font-size="11.5" fill="var(--ink)">Cloud AI API</text>
+        <text x="838" y="330" text-anchor="middle" font-size="9.5" fill="var(--ink-2)">len neobmedzené dáta</text>
+        <text x="838" y="346" text-anchor="middle" font-size="9.5" fill="var(--gold-t)">vypnuteľné bez pádu jadra</text>
+      </g>
+      <!-- links -->
+      <g fill="none" stroke="var(--teal-2)" stroke-width="1.6" marker-end="url(#ar)">
+        <path class="ln" style="--l:80;animation-delay:.25s" d="M142 212 H206"/>
+        <path class="ln" style="--l:130;animation-delay:.42s" d="M390 176 H418 V97 H440"/>
+        <path class="ln" style="--l:70;animation-delay:.5s" d="M390 200 H440"/>
+        <path class="ln" style="--l:130;animation-delay:.58s" d="M390 224 H418 V265 H440"/>
+        <path class="ln" style="--l:190;animation-delay:.66s" d="M390 260 H406 V358 H440"/>
+      </g>
+      <g fill="none" stroke="var(--gold)" stroke-width="1.4" stroke-dasharray="6 5" marker-end="url(#arg)">
+        <path class="ln" style="--l:180;animation-delay:.82s" d="M622 260 H668 V98 H706"/>
+        <path class="ln" style="--l:110;animation-delay:.89s" d="M622 265 H668 V166 H706"/>
+        <path class="ln" style="--l:110;animation-delay:.96s" d="M622 270 H668 V234 H706"/>
+        <path class="ln" style="--l:150;animation-delay:1.03s" d="M622 275 H668 V323 H706"/>
+      </g>
+    </svg>
+    </div>
+    <div class="g g3 an" style="animation-delay:.5s;margin-top:12px">
+      <div class="box ok"><h3>Jadro rozhoduje</h3><p>Modely, fronta a <span class="tt" data-t="rag" tabindex="0">RAG index</span> bežia na Main PC. Workeri nemajú prístup k tajomstvám ani k celému dátovému jazeru.</p></div>
+      <div class="box"><h3>Workeri sú vymeniteľní</h3><p>Každý Mini má vlastnú identitu a segment. Keď jeden padne, workflow sa presmeruje, nič sa nestratí.</p></div>
+      <div class="box w"><h3>Cloud je doplnok</h3><p>Prerušovaná čiara je pravidlo, nie odporúčanie. Restricted dáta ju neprekročia — a jadro funguje aj keď je cloud vypnutý.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- s04 · PRED A PO — INTERAKTÍVNE (zdroj 1040) -->
+<section class="s" id="s04">
+  <div class="wr">
+    <div class="eb an">04 <s>·</s> Pred a po <s>·</s> interaktívne</div>
+    <h2 class="an" style="animation-delay:.04s">Prepnite stav a kliknite na ktorýkoľvek prvok</h2>
+    <p class="ld an" style="animation-delay:.07s">Ten istý nákres v dvoch stavoch. Kliknutím na prvok sa vpravo zobrazí, čo to je, ako to funguje dnes, čo chceme dosiahnuť a ktorá úloha to má dokázať.</p>
+    <div class="an" style="animation-delay:.1s;margin-bottom:12px">
+      <span class="seg" id="ixseg" role="group" aria-label="Prepínač stavu">
+        <button data-st="now" aria-pressed="true">Dnes</button>
+        <button data-st="tg" aria-pressed="false">Cieľ po G10</button>
+      </span>
+    </div>
+    <div class="split an" style="animation-delay:.13s;align-items:start">
+      <div class="ix" id="ixd" data-st="now">
+      <svg viewBox="0 0 720 320" role="img" aria-label="Interaktívny nákres dnešného a cieľového stavu">
+        <defs>
+          <marker id="mr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="var(--red)"/></marker>
+          <marker id="mt" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="var(--teal)"/></marker>
+          <marker id="mg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="var(--gold)"/></marker>
+        </defs>
+        <!-- boundary -->
+        <line x1="474" y1="14" x2="474" y2="308" stroke="var(--line)" stroke-width="1.5" stroke-dasharray="7 6"/>
+        <g class="hot" data-k="bnd" tabindex="0" role="button" aria-label="Hranica spracovania">
+          <rect x="430" y="286" width="88" height="22" rx="6" fill="var(--paper)" stroke="var(--line)"/>
+          <text x="474" y="301" text-anchor="middle" class="svl" fill="var(--ink-2)">hranica</text>
+        </g>
+        <!-- left column -->
+        <g class="hot" data-k="tim" tabindex="0" role="button" aria-label="Tím">
+          <rect x="10" y="22" width="120" height="56" rx="9" fill="var(--card)" stroke="var(--line)"/>
+          <text x="70" y="46" text-anchor="middle" font-size="12" font-weight="600" fill="var(--ink)">Tím</text>
+          <text x="70" y="63" text-anchor="middle" font-size="9" fill="var(--ink-2)">10 workflowov</text>
+        </g>
+        <g class="hot" data-k="dat" tabindex="0" role="button" aria-label="Obmedzené dáta">
+          <rect x="10" y="122" width="120" height="72" rx="9" fill="var(--card)" stroke="var(--line)"/>
+          <text x="70" y="146" text-anchor="middle" font-size="11" font-weight="600" fill="var(--ink)">Osobné</text>
+          <text x="70" y="162" text-anchor="middle" font-size="11" font-weight="600" fill="var(--ink)">a účtovné</text>
+          <text x="70" y="179" text-anchor="middle" font-size="11" font-weight="600" fill="var(--ink)">dáta</text>
+        </g>
+        <g class="hot" data-k="mem" tabindex="0" role="button" aria-label="Hades pamäť">
+          <rect x="10" y="230" width="120" height="58" rx="9" fill="var(--card)" stroke="var(--line)"/>
+          <text x="70" y="254" text-anchor="middle" font-size="11" fill="var(--ink)">Hades pamäť</text>
+          <text x="70" y="271" text-anchor="middle" font-size="9" fill="var(--ink-2)">675 uzlov</text>
+        </g>
+        <!-- ENGINE: now = cloud model (right of boundary) -->
+        <g class="s-now">
+          <g class="hot" data-k="eng" tabindex="0" role="button" aria-label="Cloudové modely">
+            <rect x="510" y="34" width="196" height="112" rx="11" fill="color-mix(in srgb,var(--red) 9%,var(--card))" stroke="var(--red)" stroke-dasharray="7 6"/>
+            <text x="608" y="58" text-anchor="middle" class="svl" fill="var(--red)">cudzia infra</text>
+            <text x="608" y="82" text-anchor="middle" font-size="13" font-weight="600" fill="var(--ink)">Cloudové modely</text>
+            <text x="608" y="102" text-anchor="middle" font-size="9.5" fill="var(--ink-2)">cudzie GPU a kvóty</text>
+            <text x="608" y="119" text-anchor="middle" font-size="9.5" fill="var(--ink-2)">audit u dodávateľa</text>
+            <text x="608" y="137" text-anchor="middle" font-size="9.5" fill="var(--red)">bez lokálnej alternatívy</text>
+          </g>
+          <g fill="none" stroke="var(--red)" stroke-width="1.8" marker-end="url(#mr)">
+            <path d="M130 50 H300 V70 H504"/>
+            <path d="M130 158 H300 V96 H504"/>
+            <path d="M130 259 H300 V122 H504"/>
+          </g>
+          <g><rect x="300" y="176" width="164" height="24" rx="6" fill="var(--paper)" stroke="var(--red)"/>
+            <text x="382" y="192" text-anchor="middle" font-size="9.5" fill="var(--red)" class="mono">VŠETKO PRECHÁDZA</text></g>
+        </g>
+        <!-- ENGINE: target = local core (left of boundary) -->
+        <g class="s-tg">
+          <g class="hot" data-k="eng" tabindex="0" role="button" aria-label="Aura Core">
+            <rect x="236" y="34" width="196" height="130" rx="11" fill="color-mix(in srgb,var(--teal) 12%,var(--card))" stroke="var(--teal)" stroke-width="1.6"/>
+            <text x="334" y="58" text-anchor="middle" class="svl" fill="var(--teal)">naše jadro</text>
+            <text x="334" y="82" text-anchor="middle" font-size="13" font-weight="600" fill="var(--ink)">Aura Core</text>
+            <text x="334" y="102" text-anchor="middle" font-size="9.5" fill="var(--ink-2)">70B lokálne · 96 GB</text>
+            <text x="334" y="119" text-anchor="middle" font-size="9.5" fill="var(--ink-2)">3 izolovaní workeri</text>
+            <text x="334" y="138" text-anchor="middle" font-size="9.5" fill="var(--gold-t)">fronta schválení</text>
+            <text x="334" y="155" text-anchor="middle" font-size="9.5" fill="var(--gold-t)">nemazateľný audit</text>
+          </g>
+          <g fill="none" stroke="var(--teal)" stroke-width="1.8" marker-end="url(#mt)">
+            <path d="M130 50 H200 V70 H230"/>
+            <path d="M130 158 H200 V100 H230"/>
+            <path d="M130 259 H200 V130 H230"/>
+          </g>
+          <g fill="none" stroke="var(--gold)" stroke-width="1.6" stroke-dasharray="6 5" marker-end="url(#mg)">
+            <path d="M432 82 H504"/>
+          </g>
+          <g><rect x="436" y="186" width="76" height="22" rx="6" fill="var(--paper)" stroke="var(--teal)"/>
+            <text x="474" y="201" text-anchor="middle" font-size="9" fill="var(--teal)" class="mono">STOP</text></g>
+          <g class="hot" data-k="cld" tabindex="0" role="button" aria-label="Cloud AI API">
+            <rect x="510" y="34" width="196" height="96" rx="11" fill="var(--card)" stroke="var(--gold)" stroke-dasharray="6 5"/>
+            <text x="608" y="58" text-anchor="middle" class="svl" fill="var(--gold-t)">cloud</text>
+            <text x="608" y="82" text-anchor="middle" font-size="12" fill="var(--ink)">len dáta bez</text>
+            <text x="608" y="99" text-anchor="middle" font-size="12" fill="var(--ink)">obmedzenia</text>
+            <text x="608" y="119" text-anchor="middle" font-size="9.5" fill="var(--gold-t)">vypnuteľné bez pádu jadra</text>
+          </g>
+        </g>
+        <!-- SaaS always right -->
+        <g class="hot" data-k="saas" tabindex="0" role="button" aria-label="Asana Drive Calendar">
+          <rect x="510" y="182" width="196" height="94" rx="11" fill="var(--card)" stroke="var(--line)" stroke-dasharray="6 5"/>
+          <text x="608" y="206" text-anchor="middle" class="svl" fill="var(--gold-t)">saas</text>
+          <text x="608" y="230" text-anchor="middle" font-size="12" fill="var(--ink)">Asana · Drive</text>
+          <text x="608" y="247" text-anchor="middle" font-size="12" fill="var(--ink)">Calendar</text>
+          <text x="608" y="266" text-anchor="middle" font-size="9.5" fill="var(--ink-2)" class="s-now">zápisy ad hoc</text>
+          <text x="608" y="266" text-anchor="middle" font-size="9.5" fill="var(--teal)" class="s-tg">zápis so schválením</text>
+        </g>
+      </svg>
+      </div>
+      <div class="dp" id="ixdp" aria-live="polite">
+        <h4>Kliknite na prvok v nákrese</h4>
+        <p style="font-size:11.5px;color:var(--ink-2)">Šesť prvkov je klikateľných — tím, dáta, pamäť, jadro, hranica a SaaS. Prepínač nad nákresom mení stav; detail sa aktualizuje spolu s ním.</p>
+        <p class="hint">Tab a Enter fungujú rovnako ako klik.</p>
+      </div>
+    </div>
+    <div class="g g3 an" style="animation-delay:.2s;margin-top:14px">
+      <div class="box ok"><h3>Čo zostáva rovnaké</h3><p>MCP vrstva, Hades, Asana, Drive a Calendar. Tím pracuje s tými istými nástrojmi — mení sa, kde beží model a kde končia dáta.</p></div>
+      <div class="box"><h3>Čo sa mení najviac</h3><p>Hranica prestáva byť dohodou a stáva sa technickým opatrením: segmentácia, fronta schválení a audit, ktorý sa nedá prepísať.</p></div>
+      <div class="box w"><h3>Čo to podmieňuje</h3><p>Cieľový obrázok platí len ak 70B, obraz, video, 10 workflowov, offline a DR prejdú testami. Inak zostávame vľavo.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- s05 · BEZPEČNOSŤ — ŠTYRI ZÓNY + OFFLINE (zdroj 820 + 402) -->
+<section class="s" id="s05">
+  <div class="wr">
+    <div class="eb an">05 <s>·</s> Nákres — bezpečnostné zóny</div>
+    <h2 class="an" style="animation-delay:.04s">Štyri zóny, jedno pravidlo: nič neprejde bez stopy</h2>
+    <p class="ld an" style="animation-delay:.08s">Zóny sú navrhnuté a namapované na úlohy. Dôkaz zatiaľ nie — bezpečnosť, DR aj offline režim čakajú na reálne testy.</p>
+    <div class="an" style="animation-delay:.12s">
+    <svg viewBox="0 0 1000 300" role="img" aria-label="Diagram bezpečnostných zón a segmentácie">
+      <g class="nd" style="animation-delay:.12s">
+        <rect x="6" y="34" width="232" height="228" rx="12" fill="var(--card)" stroke="var(--teal-2)"/>
+        <text x="22" y="26" class="svl" fill="var(--teal)">Zóna 1 — používatelia</text>
+        <rect x="24" y="54" width="196" height="34" rx="7" fill="var(--card-2)" stroke="var(--line)"/><text x="122" y="76" text-anchor="middle" font-size="10.5" fill="var(--ink)" class="tt" data-t="rbac" tabindex="0">SSO a RBAC role</text>
+        <rect x="24" y="96" width="196" height="34" rx="7" fill="var(--card-2)" stroke="var(--line)"/><text x="122" y="118" text-anchor="middle" font-size="10.5" fill="var(--ink)">VPN pre vzdialený prístup</text>
+        <rect x="24" y="138" width="196" height="34" rx="7" fill="var(--card-2)" stroke="var(--line)"/><text x="122" y="160" text-anchor="middle" font-size="10.5" fill="var(--ink)" class="tt" data-t="lp" tabindex="0">3 roly · least privilege</text>
+        <rect x="24" y="180" width="196" height="66" rx="7" fill="none" stroke="var(--line)" stroke-dasharray="4 4"/>
+        <text x="122" y="202" text-anchor="middle" font-size="9.5" fill="var(--ink-2)">Bez role nie je prístup</text>
+        <text x="122" y="218" text-anchor="middle" font-size="9.5" fill="var(--ink-2)">k obmedzeným dátam</text>
+        <text x="122" y="236" text-anchor="middle" font-size="9.5" fill="var(--gold-t)">lockout a audit prihlásení</text>
+      </g>
+      <g class="nd" style="animation-delay:.28s">
+        <rect x="256" y="34" width="232" height="228" rx="12" fill="var(--card)" stroke="var(--teal-2)"/>
+        <text x="272" y="26" class="svl" fill="var(--teal)">Zóna 2 — jadro</text>
+        <rect x="274" y="54" width="196" height="34" rx="7" fill="var(--card-2)" stroke="var(--line)"/><text x="372" y="76" text-anchor="middle" font-size="10.5" fill="var(--ink)">modely a orchestrácia</text>
+        <rect x="274" y="96" width="196" height="34" rx="7" fill="var(--card-2)" stroke="var(--line)"/><text x="372" y="118" text-anchor="middle" font-size="10.5" fill="var(--ink)" class="tt" data-t="sec" tabindex="0">secrets store</text>
+        <rect x="274" y="138" width="196" height="34" rx="7" fill="var(--card-2)" stroke="var(--line)"/><text x="372" y="160" text-anchor="middle" font-size="10.5" fill="var(--ink)" class="tt" data-t="audit" tabindex="0">audit log · nemazateľný</text>
+        <rect x="274" y="180" width="196" height="66" rx="7" fill="color-mix(in srgb,var(--gold) 10%,transparent)" stroke="var(--gold)"/>
+        <text x="372" y="204" text-anchor="middle" font-size="10.5" fill="var(--ink)">Fronta schválení</text>
+        <text x="372" y="222" text-anchor="middle" font-size="9.5" fill="var(--gold-t)">každý zápis s vedľajším</text>
+        <text x="372" y="238" text-anchor="middle" font-size="9.5" fill="var(--gold-t)">účinkom čaká na človeka</text>
+      </g>
+      <g class="nd" style="animation-delay:.44s">
+        <rect x="506" y="34" width="232" height="228" rx="12" fill="var(--card)" stroke="var(--line)"/>
+        <text x="522" y="26" class="svl" fill="var(--ink-2)">Zóna 3 — workeri a dáta</text>
+        <rect x="524" y="54" width="196" height="34" rx="7" fill="var(--card-2)" stroke="var(--line)"/><text x="622" y="76" text-anchor="middle" font-size="10.5" fill="var(--ink)" class="tt" data-t="segm" tabindex="0">3× segment, 3× identita</text>
+        <rect x="524" y="96" width="196" height="34" rx="7" fill="var(--card-2)" stroke="var(--line)"/><text x="622" y="118" text-anchor="middle" font-size="10.5" fill="var(--ink)" class="tt" data-t="atrest" tabindex="0">šifrovanie v pokoji</text>
+        <rect x="524" y="138" width="196" height="34" rx="7" fill="var(--card-2)" stroke="var(--line)"/><text x="622" y="160" text-anchor="middle" font-size="10.5" fill="var(--ink)">NAS + off-site kópia</text>
+        <rect x="524" y="180" width="196" height="66" rx="7" fill="none" stroke="var(--line)" stroke-dasharray="4 4"/>
+        <text x="622" y="202" text-anchor="middle" font-size="9.5" fill="var(--ink-2)" class="tt" data-t="rpo" tabindex="0">RPO a RTO definované</text>
+        <text x="622" y="218" text-anchor="middle" font-size="9.5" fill="var(--ink-2)">retencia podľa triedy dát</text>
+        <text x="622" y="236" text-anchor="middle" font-size="9.5" fill="var(--ink-2)" class="tt" data-t="prov" tabindex="0">RAG provenance</text>
+      </g>
+      <g class="nd" style="animation-delay:.6s">
+        <rect x="756" y="34" width="238" height="228" rx="12" fill="var(--card)" stroke="var(--gold)" stroke-dasharray="7 6"/>
+        <text x="772" y="26" class="svl" fill="var(--gold-t)">Zóna 4 — vonkajší svet</text>
+        <rect x="774" y="54" width="202" height="34" rx="7" fill="var(--card-2)" stroke="var(--line)"/><text x="875" y="76" text-anchor="middle" font-size="10.5" fill="var(--ink)" class="tt" data-t="scope" tabindex="0">tokeny s minimálnym scope</text>
+        <rect x="774" y="96" width="202" height="34" rx="7" fill="var(--card-2)" stroke="var(--line)"/><text x="875" y="118" text-anchor="middle" font-size="10.5" fill="var(--ink)">revokácia otestovaná</text>
+        <rect x="774" y="138" width="202" height="34" rx="7" fill="var(--card-2)" stroke="var(--line)"/><text x="875" y="160" text-anchor="middle" font-size="10.5" fill="var(--ink)">firewall toky menovite</text>
+        <rect x="774" y="180" width="202" height="66" rx="7" fill="color-mix(in srgb,var(--red) 8%,transparent)" stroke="color-mix(in srgb,var(--red) 40%,var(--line))"/>
+        <text x="875" y="204" text-anchor="middle" font-size="10.5" fill="var(--red)">Zákaz</text>
+        <text x="875" y="222" text-anchor="middle" font-size="9.5" fill="var(--ink-2)">obmedzené dáta von</text>
+        <text x="875" y="238" text-anchor="middle" font-size="9.5" fill="var(--ink-2)">bez výslovnej výnimky</text>
+      </g>
+      <g fill="none" stroke="var(--teal)" stroke-width="1.5" stroke-dasharray="5 5">
+        <path class="ln fl" style="--l:20;animation-delay:.24s" d="M238 148 H252"/>
+        <path class="ln fl" style="--l:20;animation-delay:.4s" d="M488 148 H502"/>
+        <path class="ln fl" style="--l:20;animation-delay:.56s" d="M738 148 H752"/>
+      </g>
+    </svg>
+    </div>
+    <div class="g g3 an" style="animation-delay:.5s;margin-top:12px">
+      <div class="box ok"><h3>Offline režim nie je havária, je to testovaný stav</h3><p>TEST-OFFLINE-001 overuje, že 70B odpovede, obraz, video, hľadanie v interných dokumentoch a audit bežia ďalej, kým zápisy do Asany, Drive a Calendara čakajú vo fronte a po obnove sa prehrajú idempotentne bez duplikátov. Bez dôkazu o bezpečnom obnovení brána G7 neprejde.</p></div>
+      <div class="box"><h3>Každý zápis s vedľajším účinkom čaká na človeka</h3><p>Fronta schválení leží v zóne jadra, nie v aplikácii. Bez kliknutia sa do Asany, Drive ani Calendara nezapíše nič.</p></div>
+      <div class="box w"><h3>Obmedzené dáta von len s výslovnou výnimkou</h3><p>Zóna 4 má firewall toky menovite, tokeny s minimálnym scope a otestovanú revokáciu. Zákaz je predvolený stav, nie odporúčanie.</p></div>
+    </div>
+    <p class="tiny an" style="animation-delay:.6s">Zodpovedá úlohám ARC-001, SEC-001, DATA-001, RES-001 a NET-001 — všetky sa uzatvárajú spoločne v bráne G4 dňa 18. 9. 2026.</p>
+  </div>
+</section>
+
+<!-- s06 · PAMÄŤ JE NEDOSTATKOVÝ TOVAR (zdroj 601) -->
+<section class="s" id="s06">
+  <div class="wr">
+    <div class="eb an">06 <s>·</s> Prečo je načasovanie súčasť rozhodnutia</div>
+    <h2 class="an" style="animation-delay:.04s">Pamäť je nedostatkový tovar. Ceny GPU sa za 16 mesiacov zdvojnásobili.</h2>
+    <p class="ld an" style="animation-delay:.08s">Toto nie je pozadie, toto je hlavný finančný fakt projektu — rovnaká konfigurácia stojí dnes výrazne viac než pri uvedení a rastie ďalej.</p>
+    <div class="bars an" style="animation-delay:.12s">
+      <div class="bar"><span class="lb">RTX 5090 32 GB<br><span style="color:var(--ink-3);font-size:9.5px" class="tt" data-t="msrp" tabindex="0">MSRP pri uvedení, 1/2025</span></span><span class="tr"><i style="--w:36%;animation-delay:.2s"></i></span><span class="vl">1 999 $</span></div>
+      <div class="bar"><span class="lb">RTX 5090 32 GB<br><span style="color:var(--ink-3);font-size:9.5px">Amazon, 11. 7. 2026</span></span><span class="tr"><i class="rd" style="--w:78%;animation-delay:.3s"></i></span><span class="vl">4 329 $</span></div>
+      <div class="bar"><span class="lb">RTX PRO 6000 96 GB<br><span style="color:var(--ink-3);font-size:9.5px">MSRP, 3/2025</span></span><span class="tr"><i style="--w:64%;animation-delay:.4s"></i></span><span class="vl">8 565 $</span></div>
+      <div class="bar"><span class="lb">RTX PRO 6000 96 GB<br><span style="color:var(--ink-3);font-size:9.5px">NVIDIA marketplace, 7/2026</span></span><span class="tr"><i class="rd" style="--w:100%;animation-delay:.5s"></i></span><span class="vl">13 250 $</span></div>
+    </div>
+    <div class="g g3 an" style="animation-delay:.62s;margin-top:18px">
+      <div class="box bad"><h3>+55 % za 16 mesiacov</h3><p>RTX PRO 6000 96 GB. Dôvod je nedostatok pamäti GDDR7 — karta má najväčšiu <span class="tt" data-t="vram" tabindex="0">VRAM</span> na trhu, takže je na to najcitlivejšia.</p></div>
+      <div class="box w"><h3>+15 až 20 % naprieč trhom</h3><p>Podľa TrendForce vzrástli karty RTX 50 so 16 GB a viac o 15–20 %, širší nárast u AMD aj NVIDIA je 10–15 %. Mini PC nie sú výnimka — GEEKOM A9 Mega s 128 GB mal stáť 2 099 $, predáva sa za 3 199 $.</p></div>
+      <div class="box ok"><h3>Čo z toho vyplýva pre G3 a G5</h3><p>Čakanie nie je bezplatné, ale ani panika nie je plán. Odpoveď projektu je pravidlo FIN-001: dve nezávislé cenové kontroly s dátumom, platnosť ponuky ako súčasť rozhodnutia a benchmark pred nákupom, nie po ňom.</p></div>
+    </div>
+    <p class="tiny an" style="animation-delay:.72s">Zdroje: VideoCardz (12. 6. 2026), Thunder Compute cenový prehľad (7/2026), TechTimes (11. 7. 2026), TrendForce via tech-insider, Liliputing (3/2026). Kurz USD/EUR neuvádzame — porovnávame v mene zdroja.</p>
+  </div>
+</section>
+
+<!-- s07 · HARDWARE (zdroj 623 + 681 + 654) -->
+<section class="s" id="s07">
+  <div class="wr">
+    <div class="eb an">07 <s>·</s> Šesť variantov s cenami</div>
+    <h2 class="an" style="animation-delay:.04s">Hardware — čo sme posúdili a čo prešlo</h2>
+    <p class="ld an" style="animation-delay:.08s">O rýchlosti 70B nerozhodujú TOPS, rozhoduje <span class="tt" data-t="bw" tabindex="0">priepustnosť pamäti</span> — preto je benchmark pred nákupom povinný. Ceny sú z EU/SK e-shopov, s DPH, k 28. 7. 2026; nič z toho nie je záväzná ponuka, to je úloha PROC-001 pred G5.</p>
+    <div class="tw an" style="animation-delay:.12s">
+      <table>
+        <thead><tr>
+          <th>Variant</th><th>Kľúčový komponent</th><th><span class="tt" data-t="vram" tabindex="0">Pamäť</span></th><th><span class="tt" data-t="bw" tabindex="0">Priepustnosť</span></th><th class="n">Cena s DPH</th><th>Zdroj</th><th>Stav</th>
+        </tr></thead>
+        <tbody>
+          <tr><td><b>Main Basic</b><br><span style="color:var(--ink-3)">minimálny 70B kandidát</span></td><td>RTX PRO 5000 Blackwell</td><td class="n">48 GB<br><span class="tt" data-t="ecc" tabindex="0">GDDR7 ECC</span></td><td class="n">1 344 GB/s</td><td class="n"><b>6 269 €</b><br><span style="color:var(--ink-3)">5 096,75 € bez DPH</span></td><td>Alza.sk<br><span style="color:var(--ink-3)">na sklade 3 ks</span></td><td><span class="badge cond tt" data-t="cond" tabindex="0">Conditional</span></td></tr>
+          <tr><td><b>Main Standard</b><br><span style="color:var(--ink-3)">odporúčaný Aura Core</span></td><td>RTX PRO 6000 Blackwell<br>Workstation</td><td class="n">96 GB<br>GDDR7 ECC</td><td class="n">~1 790 GB/s</td><td class="n"><b>14 849 €</b><br><span style="color:var(--ink-3)">12 072,36 € bez DPH</span></td><td>Alza.sk<br><span style="color:var(--red)">nedostupné</span></td><td><span class="badge cond">Dostupnosť</span></td></tr>
+          <tr><td><b>Main Premium</b><br><span style="color:var(--ink-3)">maximálny lokálny výkon</span></td><td>2× RTX PRO 6000<br>alebo Server Edition</td><td class="n">192 GB</td><td class="n">1 597 GB/s<br><span style="color:var(--ink-3)">Server Ed.</span></td><td class="n"><b>~29 700 €</b><br><span style="color:var(--ink-3)">2× katalógová cena</span></td><td>Alza.sk<br><span style="color:var(--ink-3)">Server Ed. 14 649 €</span></td><td><span class="badge q">Potrebná ponuka</span></td></tr>
+          <tr><td><b>Mini Basic</b><br><span style="color:var(--ink-3)">izolovaný worker</span></td><td>Beelink SER9 / trieda<br>Ryzen AI 9 HX 370</td><td class="n">32 GB<br>LPDDR5X</td><td class="n">~120 GB/s</td><td class="n"><b>~1 000–1 300 €</b></td><td>EU listingy<br><span style="color:var(--ink-3)">launch 799 $</span></td><td><span class="badge no tt" data-t="noncomp" tabindex="0">Nevhodný na 70B</span></td></tr>
+          <tr><td><b>Mini Standard</b><br><span style="color:var(--ink-3)">preferovaný worker</span></td><td>HP Z2 Mini G1a<br>Ryzen AI Max+ PRO 395</td><td class="n">128 GB<br><span class="tt" data-t="uni" tabindex="0">unified</span></td><td class="n">~256 GB/s</td><td class="n"><b>~3 530 €</b><br><span style="color:var(--ink-3)">14 999 zł</span></td><td>HP Store PL</td><td><span class="badge ok">Kandidát</span></td></tr>
+          <tr><td><b>Mini Premium</b><br><span style="color:var(--ink-3)">akcelerovaný worker</span></td><td>ASUS Ascent GX10<br>NVIDIA DGX Spark GB10</td><td class="n">128 GB<br>unified</td><td class="n">273 GB/s</td><td class="n"><b>4 700 €</b><br><span style="color:var(--ink-3)">4 TB: 6 350 €</span></td><td>buyzero.de<br><span style="color:var(--ink-3)">dodanie 4–6 týž.</span></td><td><span class="badge ok">Kandidát</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="tiny an" style="animation-delay:.2s">Mimo hlavného radu sme posúdili päť ciest. RTX 5090 32 GB za ~3 999 € — 70B sa nezmestí, ale je to kandidát do worker poolu na obraz a video. Server Edition Passive 96 GB za 14 649 € — pasív potrebuje šasi s vlastným prúdením vzduchu. Tá istá karta na sekundárnom trhu za 8 421 €, −42 % oproti novej: úspora 6 228 € na kartu, pri dvoch 12 456 €, ale záruka je od predajcu a bez vrátenia — legitímne rozhodnutie pre G3, nie samozrejmosť ani tabu. Mac Studio M3 Ultra od 5 100 € s 819 GB/s je jediná lacná cesta k veľkej rýchlej pamäti, ale iný operačný systém aj software stack — ak má vstúpiť do hry, je to change control, nie tichá výmena. GMKtec EVO-X2 128 GB za 3 794 € je po zdražení pamätí drahší než HP Z2 Mini s biznis zárukou pri rovnakom čipe — táto consumer-mini vetva je pre nás uzavretá.</p>
+    <div class="g g3 an" style="animation-delay:.26s;margin-top:12px">
+      <div class="box ok"><h3>96 GB je bezpečná zóna</h3><p>70B v FP8 sa zmestí na jednu kartu vrátane rezervy na kontext. Zároveň je to najdrahšia a najhoršie dostupná položka.</p></div>
+      <div class="box w"><h3>128 GB <span class="tt" data-t="uni" tabindex="0">unified</span> je pasca na papieri</h3><p>Kapacita vyzerá lepšie než 96 GB VRAM, ale priepustnosť je 6× nižšia. Dobré na dávky, slabé na interaktívnu odpoveď.</p></div>
+      <div class="box w"><h3>Prečo Main Basic zostáva Conditional</h3><p>48 GB nestačí na 70B v <span class="tt" data-t="quant" tabindex="0">Q8</span> s rezervou na kontext; Q4 sa zmestí, ale kvalitu treba odmerať. Bez benchmarku sa tento variant neodporúča.</p></div>
+    </div>
+    <p class="tiny an" style="animation-delay:.34s">Ceny overené 28. 7. 2026 na Alza.sk, HP Store PL a buyzero.de. Prevod 14 999 zł ≈ 3 530 € pri kurze 4,25 zł/€ — kurz aj cena sa menia, preto register FIN-001 vyžaduje dátum ku každému záznamu. Druhá cenová kontrola, platnosť ponuky, dodacia lehota a záruka ku každému kandidátovi sú obsahom FIN-001 a chýbajú do G3.</p>
+  </div>
+</section>
+
+<!-- s08 · TRI SCENÁRE CAPEX (zdroj 705) -->
+<section class="s" id="s08">
+  <div class="wr">
+    <div class="eb an">08 <s>·</s> Investícia</div>
+    <h2 class="an" style="animation-delay:.04s">Tri scenáre <span class="tt" data-t="capex" tabindex="0">CapEx</span>: 17 · 33 · 54 tisíc €</h2>
+    <p class="ld an" style="animation-delay:.08s">Zložené z overených katalógových cien plus platforma a infraštruktúra ako <span class="tt" data-t="budg" tabindex="0">budgetary</span> blok. Rozdiel medzi scenármi je takmer celý v jednej položke — v grafickej karte jadra.</p>
+    <div class="an" style="animation-delay:.12s">
+      <div style="margin-bottom:14px">
+        <div style="display:flex;justify-content:space-between;font-size:11.5px;margin-bottom:5px">
+          <span><b>A · Basic</b> <span style="color:var(--ink-3)">48 GB jadro + 3× Mini Basic</span></span>
+          <span style="font-family:var(--mono)"><b>~16 900 €</b></span></div>
+        <div class="stack">
+          <i style="--w:37%;background:var(--teal-2);animation-delay:.18s"></i>
+          <i style="--w:21%;background:var(--teal);animation-delay:.26s"></i>
+          <i style="--w:21%;background:var(--gold);animation-delay:.34s"></i>
+          <i style="--w:21%;background:var(--ink-3);animation-delay:.42s"></i>
+        </div>
+      </div>
+      <div style="margin-bottom:14px">
+        <div style="display:flex;justify-content:space-between;font-size:11.5px;margin-bottom:5px">
+          <span><b>B · Standard</b> <span style="color:var(--ink-3)">96 GB jadro + 3× Mini Standard</span> <span class="badge ok">odporúčaný</span></span>
+          <span style="font-family:var(--mono)"><b>~32 900 €</b></span></div>
+        <div class="stack">
+          <i style="--w:45%;background:var(--teal-2);animation-delay:.5s"></i>
+          <i style="--w:12%;background:var(--teal);animation-delay:.58s"></i>
+          <i style="--w:32%;background:var(--gold);animation-delay:.66s"></i>
+          <i style="--w:11%;background:var(--ink-3);animation-delay:.74s"></i>
+        </div>
+      </div>
+      <div>
+        <div style="display:flex;justify-content:space-between;font-size:11.5px;margin-bottom:5px">
+          <span><b>C · Premium</b> <span style="color:var(--ink-3)">192 GB jadro + 3× DGX Spark</span></span>
+          <span style="font-family:var(--mono)"><b>~54 300 €</b></span></div>
+        <div class="stack">
+          <i style="--w:55%;background:var(--teal-2);animation-delay:.82s"></i>
+          <i style="--w:11%;background:var(--teal);animation-delay:.9s"></i>
+          <i style="--w:26%;background:var(--gold);animation-delay:.98s"></i>
+          <i style="--w:8%;background:var(--ink-3);animation-delay:1.06s"></i>
+        </div>
+      </div>
+      <div class="lgd">
+        <span><i style="background:var(--teal-2)"></i>GPU jadra</span>
+        <span><i style="background:var(--teal)"></i>platforma Main</span>
+        <span><i style="background:var(--gold)"></i>3× Mini worker</span>
+        <span><i style="background:var(--ink-3)"></i>UPS, sieť, NAS, kabeláž</span>
+      </div>
+    </div>
+    <hr class="r an" style="animation-delay:.64s">
+    <div class="g g3 an" style="animation-delay:.68s">
+      <div class="c"><span class="tg">Overené</span><h3>Ceny GPU a mini PC</h3><p>6 269 € / 14 849 € / 4 700 € / ~3 530 € — všetko z konkrétnych listingov s dátumom 28. 7. 2026.</p></div>
+      <div class="c gd"><span class="tg gd">Budgetary</span><h3>Platforma a infraštruktúra</h3><p>CPU, doska, 128 GB RAM, 2× NVMe, 1000 W zdroj, skriňa, chladenie: 3 500–6 000 €. Infra blok 3 500–4 500 €. Do G3 treba reálne ponuky.</p></div>
+      <div class="c am"><span class="tg am">Riziko</span><h3>Pamäť a dostupnosť</h3><p>RAM a SSD zdražujú spolu s GPU. Main Standard je dnes na Alze nedostupný — dodacia lehota je súčasťou rozhodnutia, nie detail.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- s09 · TCO 3 ROKY + CLOUD (zdroj 761 + 799) -->
+<section class="s" id="s09">
+  <div class="wr">
+    <div class="eb an">09 <s>·</s> 3-ročný <span class="tt" data-t="tco" tabindex="0">TCO</span></div>
+    <h2 class="an" style="animation-delay:.04s">Celkové náklady na tri roky — a prečo prenájom nie je alternatíva</h2>
+    <p class="ld an" style="animation-delay:.08s">Model, nie ponuka. Všetky vstupy sú viditeľné, aby sa dali spochybniť aj zmeniť — zdrojom pravdy zostáva vzorcový XLSX v úlohe FIN-002.</p>
+    <div class="tw an" style="animation-delay:.12s">
+      <table>
+        <thead><tr><th>Nákladová položka</th><th class="n">A · Basic</th><th class="n">B · Standard</th><th class="n">C · Premium</th></tr></thead>
+        <tbody>
+          <tr><td>CapEx hardware a infra</td><td class="n">16 900</td><td class="n">32 900</td><td class="n">54 300</td></tr>
+          <tr><td>Energia 3 roky</td><td class="n">700</td><td class="n">1 080</td><td class="n">1 700</td></tr>
+          <tr><td>Cloud AI API 3 roky</td><td class="n">5 400</td><td class="n">5 400</td><td class="n">5 400</td></tr>
+          <tr><td>Prírastkové licencie</td><td class="n">2 880</td><td class="n">2 880</td><td class="n">2 880</td></tr>
+          <tr><td>Implementácia — interná práca</td><td class="n">12 000</td><td class="n">12 000</td><td class="n">12 000</td></tr>
+          <tr><td>Školenie</td><td class="n">1 500</td><td class="n">1 500</td><td class="n">1 500</td></tr>
+          <tr><td>Podpora, náhradné diely</td><td class="n">2 400</td><td class="n">3 600</td><td class="n">4 800</td></tr>
+          <tr><td><span class="tt" data-t="rez" tabindex="0">Rezerva 10 %</span></td><td class="n">4 178</td><td class="n">5 936</td><td class="n">8 258</td></tr>
+          <tr style="background:var(--card-2)"><td><b>Celkom 3 roky</b></td><td class="n"><b>45 958</b></td><td class="n"><b>65 296</b></td><td class="n"><b>90 838</b></td></tr>
+          <tr><td style="color:var(--ink-3)">Priemer na mesiac</td><td class="n" style="color:var(--ink-3)">1 277</td><td class="n" style="color:var(--ink-3)">1 814</td><td class="n" style="color:var(--ink-3)">2 523</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="tiny an" style="animation-delay:.2s">Vstupy modelu: energia 0,20 €/kWh, priemerný príkon 350 / 500 / 780 W, 12 h denne, 250 dní ročne; cloud 150 €/mesiac; licencie 80 €/mesiac nad dnešný stav; implementácia 26 týždňov internej práce ohodnotených jednotnou sadzbou. Zámerne v modeli nie je zostatková hodnota hardwaru po 3 rokoch, náklad na neúspešný benchmark ani štvrtý worker — prvé dve patria do RAID registra, tretie do change controlu.</p>
+    <hr class="r an" style="animation-delay:.26s">
+    <div class="g g3 an" style="animation-delay:.3s">
+      <div class="box bad"><h3>Prenájom: dáta tam nesmú ísť</h3><p>Osobné, účtovné a obmedzené údaje sú dôvod celého projektu. Prenájom GPU rieši výpočet, nerieši hranicu spracovania.</p></div>
+      <div class="box w"><h3>Cloud platíme aj tak</h3><p>Cloud API zostáva v modeli — 150 € mesačne pre neobmedzené dáta. Lokálne jadro cloud nenahrádza, len mu berie to, čo tam nepatrí.</p></div>
+      <div class="box ok"><h3>Poctivé porovnanie</h3><p>Prenájom je porovnateľný len pri workloadoch bez restricted dát. Pre tie sme naň otvorení — presne tak je nastavená local/cloud policy v REQ-004.</p></div>
+    </div>
+    <p class="tiny an" style="animation-delay:.4s">Prenájom 1× RTX PRO 6000 v cloude vychádza na ~21 150 $ za tri roky oproti ~65 300 € za celý 3-ročný TCO scenára B. Hodinová cena 2,35 $ za on-demand RTX PRO 6000 Blackwell podľa marketplace Spheron (7/2026); spot od 0,84 $/h, ale kapacita je odoberateľná kedykoľvek. Odhad 3 000 hodín ročne = 12 h denne, 250 dní.</p>
+  </div>
+</section>
+
+<!-- s10 · KONFIGURÁTOR (zdroj 1193) -->
+<section class="s" id="s10">
+  <div class="wr">
+    <div class="eb an">10 <s>·</s> Skladateľný hardware</div>
+    <h2 class="an" style="animation-delay:.04s">Poskladajte si zostavu a uvidíte cenu aj TCO</h2>
+    <p class="ld an" style="animation-delay:.07s">Ceny komponentov sú z overených EU/SK listingov k 28. 7. 2026. Vstupy modelu vpravo dole sa dajú prestaviť — všetko sa prepočíta okamžite, aj upozornenia o zhode.</p>
+    <div class="cfg an" style="animation-delay:.1s">
+      <div>
+        <div class="fld"><label>Jadro — grafická karta</label><div class="opts" data-grp="gpu">
+          <button data-v="basic" aria-pressed="false">Basic · 48 GB<small>6 269 €</small></button>
+          <button data-v="std" aria-pressed="true">Standard · 96 GB<small>14 849 €</small></button>
+          <button data-v="prem" aria-pressed="false">Premium · 2× 96 GB<small>29 698 €</small></button>
+          <button data-v="g5090" aria-pressed="false">RTX 5090 · 32 GB<small>3 999 €</small></button>
+          <button data-v="srv2" aria-pressed="false">Server Ed. · sek. trh<small>8 421 €</small></button>
+          <button data-v="mac" aria-pressed="false">Mac Studio · 256 GB<small>~7 500 €</small></button>
+        </div></div>
+        <div class="fld"><label>Jadro — platforma okolo karty</label><div class="opts" data-grp="plat">
+          <button data-v="lean" aria-pressed="false">Úsporná<small>3 500 €</small></button>
+          <button data-v="solid" aria-pressed="true">Solidná<small>4 500 €</small></button>
+          <button data-v="max" aria-pressed="false">Pre 2 karty<small>6 000 €</small></button>
+        </div></div>
+        <div class="fld"><label>Worker — typ Mini PC</label><div class="opts" data-grp="mini">
+          <button data-v="basic" aria-pressed="false">Basic · 32 GB<small>1 150 €</small></button>
+          <button data-v="std" aria-pressed="true">Standard · 128 GB<small>3 530 €</small></button>
+          <button data-v="prem" aria-pressed="false">Premium · DGX Spark<small>4 700 €</small></button>
+          <button data-v="evo" aria-pressed="false">GMKtec EVO-X2<small>3 794 €</small></button>
+        </div></div>
+        <div class="fld"><label>Počet workerov</label><div class="opts" data-grp="cnt">
+          <button data-v="1" aria-pressed="false">1</button><button data-v="2" aria-pressed="false">2</button>
+          <button data-v="3" aria-pressed="true">3</button><button data-v="4" aria-pressed="false">4</button>
+        </div></div>
+        <div class="fld"><label>Infraštruktúra</label><div class="opts" data-grp="infra">
+          <button data-v="ups" aria-pressed="true">UPS<small>900 €</small></button>
+          <button data-v="net" aria-pressed="true">10GbE<small>700 €</small></button>
+          <button data-v="nas" aria-pressed="true">NAS + disky<small>2 700 €</small></button>
+          <button data-v="offs" aria-pressed="true">Off-site kópia<small>540 € / 3 r.</small></button>
+        </div></div>
+      </div>
+      <div>
+        <div class="out" style="margin-bottom:12px">
+          <div style="display:flex;gap:22px;flex-wrap:wrap">
+            <div><div class="big" id="oCap">32 900 €</div><div class="sm">CapEx jednorazovo</div></div>
+            <div><div class="big" id="oTco">65 300 €</div><div class="sm">TCO 3 roky</div></div>
+            <div><div class="big am" id="oMon">1 814 €</div><div class="sm">priemer / mesiac</div></div>
+          </div>
+        </div>
+        <div class="out" style="margin-bottom:12px" id="oLines"></div>
+        <div class="out">
+          <label style="display:block;font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);margin-bottom:9px">Vstupy modelu</label>
+          <div class="rw"><label for="rE">Cena elektriny €/kWh</label><input type="range" id="rE" min="10" max="45" step="1" value="20"><output id="vE">0,20</output></div>
+          <div class="rw"><label for="rH">Hodín prevádzky ročne</label><input type="range" id="rH" min="500" max="6000" step="250" value="2500"><output id="vH">2 500</output></div>
+          <div class="rw"><label for="rC">Cloud AI €/mesiac</label><input type="range" id="rC" min="0" max="600" step="10" value="150"><output id="vC">150</output></div>
+          <div class="rw"><label for="rL">Licencie €/mesiac</label><input type="range" id="rL" min="0" max="400" step="10" value="80"><output id="vL">80</output></div>
+          <div class="rw"><label for="rI">Implementácia €</label><input type="range" id="rI" min="0" max="40000" step="1000" value="12000"><output id="vI">12 000</output></div>
+          <div class="rw"><label for="rR">Rezerva %</label><input type="range" id="rR" min="0" max="30" step="1" value="10"><output id="vR">10</output></div>
+        </div>
+      </div>
+    </div>
+    <div class="flg an" id="oFlags" style="animation-delay:.16s"></div>
+    <p class="tiny an" style="animation-delay:.2s">Ceny GPU a mini PC: Alza.sk, HP Store PL, buyzero.de — overené 28. 7. 2026, s DPH. Platforma, NAS, UPS a sieť sú budgetary bloky, do G3 ich musia nahradiť reálne ponuky. Spotreba je odhad priemerného príkonu, nie meranie — po G6 ju prepíše TEST-HW-001. Tento konfigurátor je nástroj na rozhovor, nie zdroj pravdy; tým zostáva vzorcový XLSX v úlohe FIN-002. Pozor na známy rozpor: konfigurátor sčítava katalógové ceny komponentov a pri zostave scenára B dá 34&nbsp;779&nbsp;€, kým scenár B na slajde 08 uvádza 32&nbsp;900&nbsp;€ z modelu FIN-002 — rozdiel 1&nbsp;879&nbsp;€. Ktoré číslo platí, sa musí uzavrieť pred G3; dovtedy sa tieto dve čísla neporovnávajú.</p>
+  </div>
+</section>
+
+<!-- s11 · HARMONOGRAM (zdroj 521) -->
+<section class="s" id="s11">
+  <div class="wr">
+    <div class="eb an">11 <s>·</s> Harmonogram</div>
+    <h2 class="an" style="animation-delay:.04s">26 týždňov, 11 brán, žiadne skratky</h2>
+    <p class="ld an" style="animation-delay:.08s">Diamanty sú <span class="tt" data-t="gate" tabindex="0">brány</span>. Bez pripojeného dôkazu a bez uzavretých <span class="tt" data-t="p0" tabindex="0">P0/P1</span> sa brána neotvorí a nasledujúca fáza nezačne.</p>
+    <div class="gt an" style="animation-delay:.12s">
+    <svg viewBox="0 0 1000 372" role="img" aria-label="Ganttov diagram fáz a brán">
+      <!-- month grid: 28.7.2026 -> 31.1.2027 = ~189 days. x: 128..980 -->
+      <g stroke="var(--line)" stroke-width="1">
+        <line x1="128" y1="30" x2="128" y2="352"/><line x1="264" y1="30" x2="264" y2="352"/>
+        <line x1="400" y1="30" x2="400" y2="352"/><line x1="537" y1="30" x2="537" y2="352"/>
+        <line x1="673" y1="30" x2="673" y2="352"/><line x1="810" y1="30" x2="810" y2="352"/>
+        <line x1="946" y1="30" x2="946" y2="352"/>
+      </g>
+      <g class="svl" fill="var(--ink-3)">
+        <text x="136" y="22">Aug</text><text x="272" y="22">Sep</text><text x="408" y="22">Okt</text>
+        <text x="545" y="22">Nov</text><text x="681" y="22">Dec</text><text x="818" y="22">Jan 27</text>
+      </g>
+      <!-- rows -->
+      <g font-size="10" fill="var(--ink-2)">
+        <text x="6" y="48">00 Audit a charter</text>
+        <text x="6" y="82">01 Požiadavky</text>
+        <text x="6" y="116">02 Hardware a TCO</text>
+        <text x="6" y="150">03 Architektúra</text>
+        <text x="6" y="184">04 Nákup a build</text>
+        <text x="6" y="218">05 Integrácie</text>
+        <text x="6" y="252">06 Validácia</text>
+        <text x="6" y="286">07 Pilot a rollout</text>
+        <text x="6" y="320">08 Prevádzka a BAU</text>
+        <text x="6" y="348">09 RAID priebežne</text>
+      </g>
+      <g class="nd">
+        <rect x="128" y="38" width="55" height="14" rx="4" fill="var(--teal-2)" style="animation-delay:.16s" class="nd"/>
+        <rect x="187" y="72" width="82" height="14" rx="4" fill="var(--teal-2)" style="animation-delay:.22s" class="nd"/>
+        <rect x="187" y="106" width="150" height="14" rx="4" fill="var(--teal)" style="animation-delay:.28s" class="nd"/>
+        <rect x="222" y="140" width="120" height="14" rx="4" fill="var(--teal-2)" style="animation-delay:.34s" class="nd"/>
+        <rect x="340" y="174" width="256" height="14" rx="4" fill="var(--teal)" style="animation-delay:.4s" class="nd"/>
+        <rect x="490" y="208" width="120" height="14" rx="4" fill="var(--teal-2)" style="animation-delay:.46s" class="nd"/>
+        <rect x="600" y="242" width="55" height="14" rx="4" fill="var(--amber)" style="animation-delay:.52s" class="nd"/>
+        <rect x="600" y="276" width="290" height="14" rx="4" fill="var(--gold)" style="animation-delay:.58s" class="nd"/>
+        <rect x="673" y="310" width="273" height="14" rx="4" fill="var(--teal-2)" style="animation-delay:.64s" class="nd"/>
+        <rect x="128" y="340" width="818" height="8" rx="4" fill="var(--line)" style="animation-delay:.7s" class="nd"/>
+      </g>
+      <!-- gates -->
+      <g class="nd" style="animation-delay:.8s">
+        <g fill="var(--gold)" stroke="var(--paper)" stroke-width="1">
+          <rect x="177" y="39" width="12" height="12" transform="rotate(45 183 45)"/>
+          <rect x="263" y="73" width="12" height="12" transform="rotate(45 269 79)"/>
+          <rect x="331" y="107" width="12" height="12" transform="rotate(45 337 113)"/>
+          <rect x="363" y="141" width="12" height="12" transform="rotate(45 369 147)"/>
+          <rect x="395" y="175" width="12" height="12" transform="rotate(45 401 181)"/>
+          <rect x="590" y="175" width="12" height="12" transform="rotate(45 596 181)"/>
+          <rect x="649" y="243" width="12" height="12" transform="rotate(45 655 249)"/>
+          <rect x="662" y="277" width="12" height="12" transform="rotate(45 668 283)"/>
+          <rect x="748" y="277" width="12" height="12" transform="rotate(45 754 283)"/>
+          <rect x="884" y="277" width="12" height="12" transform="rotate(45 890 283)"/>
+          <rect x="940" y="311" width="12" height="12" transform="rotate(45 946 317)"/>
+        </g>
+        <g class="svl" fill="var(--gold-t)" text-anchor="middle">
+          <text x="183" y="34">G1</text><text x="269" y="68">G2</text><text x="337" y="102">G3</text>
+          <text x="369" y="136">G4</text><text x="401" y="170">G5</text><text x="596" y="170">G6</text>
+          <text x="655" y="238">G7</text><text x="668" y="272">G8</text><text x="754" y="272">G9</text>
+          <text x="890" y="272">G10</text><text x="946" y="306">G11</text>
+        </g>
+      </g>
+      <!-- today -->
+      <line x1="128" y1="30" x2="128" y2="352" stroke="var(--red)" stroke-width="1.5" stroke-dasharray="4 3" class="tpulse"/>
+      <text x="132" y="366" class="svl" fill="var(--red)">dnes 28. 7.</text>
+    </svg>
+    </div>
+    <div class="g g4 an" style="animation-delay:.72s;margin-top:12px">
+      <div class="kpi"><b>7. 8.</b><small>G1 — audit a charter</small></div>
+      <div class="kpi"><b>28. 8.</b><small>G2 — požiadavky zmrazené</small></div>
+      <div class="kpi"><b class="gd">11. 9.</b><small>G3 — výber hardwaru</small></div>
+      <div class="kpi"><b class="am">25. 9.</b><small>G5 — schválenie investície</small></div>
+    </div>
+  </div>
+</section>
+
+<!-- s12 · OD TESTOV K ROLLOUTU (zdroj 882 + 907) -->
+<section class="s" id="s12">
+  <div class="wr">
+    <div class="eb an">12 <s>·</s> Validácia a rollout</div>
+    <h2 class="an" style="animation-delay:.04s">Od testov k rolloutu — po vlnách, s možnosťou zastaviť</h2>
+    <p class="ld an" style="animation-delay:.08s">Šesť testov medzi nami a pilotom, 16.–27. novembra. Každý má test report, surové metriky a schválený výsledok — toto je jediná cesta k G7.</p>
+    <div class="split" style="align-items:start">
+      <div class="g g2">
+        <div class="c an" style="animation-delay:.12s"><span class="tg">16.–18. 11.</span><h3>HW benchmark a stabilita</h3><p>Teploty, výkon, spotreba, stabilita voči schváleným prahom. Zisťuje, či zostava vydrží plnú záťaž.</p></div>
+        <div class="c am an" style="animation-delay:.16s"><span class="tg am">16.–20. 11.</span><h3>Lokálny 70B model</h3><p>Presný model, quantizácia, kontext. Tento test rozhoduje, či bol výber jadra správny.</p></div>
+        <div class="c an" style="animation-delay:.2s"><span class="tg">18.–23. 11.</span><h3>Obraz a video</h3><p>Kvalita, latencia, pamäť, stabilita. Overuje worker pooly, nie jadro.</p></div>
+        <div class="c an" style="animation-delay:.24s"><span class="tg">20.–24. 11.</span><h3>10 súbežných workflowov</h3><p>Kapacitný a soak test. Nadväzuje na predchádzajúce tri — bez nich nemá zmysel.</p></div>
+        <div class="c gd an" style="animation-delay:.28s"><span class="tg gd">23.–25. 11.</span><h3>Offline a cloud-degraded</h3><p>Lokálne jadro bez cloudu, potom bezpečná obnova. Presne scenár zo slajdu 05.</p></div>
+        <div class="c gd an" style="animation-delay:.32s"><span class="tg gd">23.–27. 11.</span><h3>Bezpečnosť a DR</h3><p>RBAC, šifrovanie, secrets, segmentácia, audit, restore, rollback, approvals. Bez otvorených <span class="tt" data-t="p0" tabindex="0">P0/P1</span>.</p></div>
+      </div>
+      <div class="g" style="gap:10px">
+        <div class="c an" style="animation-delay:.36s"><span class="tg">16.–20. 11.</span><h3>Pilotná skupina</h3><p>Rozsah, používatelia, dáta, scenáre, metriky, stop conditions.</p></div>
+        <div class="c an" style="animation-delay:.4s"><span class="tg">23.–27. 11.</span><h3>Školenie</h3><p>Používanie, eskalácia a zákaz neautorizovaného spracovania — preukázateľne.</p></div>
+        <div class="c gd an" style="animation-delay:.44s"><span class="tg gd">7.–18. 12.</span><h3>Akceptácia pilotu</h3><p>Každé zistenie má závažnosť, nápravu a dôkaz. Go/no-go bez otvorených P0/P1.</p></div>
+        <div class="c gd an" style="animation-delay:.48s"><span class="tg gd">4.–22. 1.</span><h3>Rollout a launch</h3><p>Rollback nacvičený pred finálnym schválením, nie po ňom.</p></div>
+      </div>
+    </div>
+    <div class="box bad an" style="animation-delay:.56s;margin-top:12px"><h3>Neznáme výsledky sa nevymýšľajú</h3><p>Dnes má dôkaz 0 testov a brána G7 je 27. 11. Test bez dôkazu sa neuzatvára ani keď je termín — radšej presunieme bránu než aby sme si napísali číslo, ktoré nikto nemeral.</p></div>
+    <p class="tiny an" style="animation-delay:.62s">Pilot beží 30. 11. — 18. 12. pre vybranú skupinu so stop conditions, potom rollout po vlnách 10 % → 30 % → 60 % → 100 % celej firmy 22. 1. 2027 pri bráne G10 s nacvičeným rollbackom. Každá vlna má výstupné kritérium — pri jeho nesplnení sa vracia, nie tlačí dopredu.</p>
+  </div>
+</section>
+
+<!-- s13 · NAJBLIŽŠÍCH 45 DNÍ (zdroj 1256 + 956) -->
+<section class="s" id="s13">
+  <div class="wr">
+    <div class="eb an">13 <s>·</s> Ďalší krok</div>
+    <h1 class="an" style="animation-delay:.05s;font-size:clamp(24px,3.9vw,44px)">Najbližších 45 dní<br>rozhodne o celej investícii.</h1>
+    <p class="ld an" style="animation-delay:.1s">Baseline stojí. V žltej ju držia tri veci: povolenie nahrať interné artefakty na Drive, chýbajúca formálna kompatibilná EU B2B ponuka na Main Premium pred G5 a technické brány pred G7, kde 70B, obraz, video, 10 workflowov, offline, bezpečnosť a DR čakajú na reálne dôkazy.</p>
+    <div class="g g3 an" style="animation-delay:.14s;margin-top:14px">
+      <div class="c"><span class="tg">do 7. 8.</span><h3>G1 — audit a charter</h3><p>Uzavrieť audit, register 30 rozhodnutí, schváliť charter. Bez toho nemá zmysel zmrazovať požiadavky.</p></div>
+      <div class="c"><span class="tg">do 28. 8.</span><h3>G2 — zmraziť požiadavky</h3><p>Používatelia, workloady, klasifikácia dát, local/cloud hranica, SLO. Vstup pre výber hardwaru.</p></div>
+      <div class="c gd"><span class="tg gd">do 11. 9.</span><h3>G3 — vybrať hardware</h3><p>Šesť variantov s druhou cenovou kontrolou a 3-ročným <span class="tt" data-t="tco" tabindex="0">TCO</span> → jedno rozhodnutie o Main a jedno o Mini.</p></div>
+    </div>
+    <hr class="r an" style="animation-delay:.24s">
+    <div class="g g3 an" style="animation-delay:.28s">
+      <div class="box bad"><h3>Rozhodnutie na dnes č. 1</h3><p>Povolenie nahrať interné artefakty na Drive. Inak nemajú dôkazy k bránam spoločné miesto a G1 sa posunie.</p></div>
+      <div class="box bad"><h3>Rozhodnutie na dnes č. 2</h3><p>Zadať formálnu B2B ponuku na Main Premium. Bez nej scenár C nie je porovnateľný a G3 rozhoduje z dvoch možností namiesto troch.</p></div>
+      <div class="box w"><h3>Otázka pre tím</h3><p>Ktoré tri workflowy zo súčasnej MCP praxe majú prejsť na lokálne jadro ako prvé? Toto je vstup do pilotného charteru.</p></div>
+    </div>
+    <p class="tiny an" style="animation-delay:.38s">Zdroj projektových dát: samostatná projektová baseline AI infraštruktúry — 11 sekcií, 67 úloh, 168 subtaskov — stav k 28. 7. 2026, bez väzby na iný register. Ceny hardwaru: Alza.sk, HP Store PL, buyzero.de, overené 28. 7. 2026, s DPH ak nie je uvedené inak. Trhový kontext: VideoCardz, Thunder Compute, TechTimes, TrendForce, Liliputing (6–7/2026). TCO je model s viditeľnými vstupmi, nie ponuka — zdrojom pravdy zostáva vzorcový XLSX v úlohe FIN-002.</p>
+  </div>
+</section>
+</div>
+
+<div id="ct"><b>01</b> / 13</div>
+<div id="dots"></div>
+<div id="nav">
+  <button class="pill" id="pv">← Späť</button>
+  <button class="pill" id="nx">Ďalej →</button>
+</div>
+
+<script>
+/* ===== tooltips.js (A1) ===== */
+/* tooltips.js — slovníček pojmov a whitelist podčiarknutých pojmov
+ * Vlastník: A1 · Obsah. Konzumuje: deck.js (A2) a report.css/mode.js (A3).
+ *
+ * AURA_GLOSSARY  — všetkých 44 pojmov zo zdroja _source-v2_1.html (objekt G, riadky 1363–1408),
+ *                  prenesených verbatim vrátane kľúča `help`. Poradie zachované zo zdroja.
+ *                  Formát: kluc: ['Titulok','Text'].
+ *                  Modál slovníčka zobrazuje všetky okrem `help` (zoradené podľa titulku, locale 'sk').
+ *
+ * AURA_TT_INLINE — 14 kľúčov (R21 hovorí ~12), ktoré smú byť v texte slajdov podčiarknuté ako
+ *                  <span class="tt" data-t="kluc" tabindex="0">. Zvyšné pojmy žijú len v slovníčku.
+ *                  Výnimka (rozhodnutie A1): vizuály prenesené zo zdroja 1:1 — SVG grafy,
+ *                  tabuľka na s07, .bars na s06/s09 a .kpi strip na s02 — si nechávajú svoje
+ *                  pôvodné class="tt" data-t="…" (edge, ecc, cond, noncomp, msrp a SVG pojmy),
+ *                  pretože CONTRACT zakazuje meniť data-atribúty prenesených blokov.
+ *                  Viď do-asany.md, sekcia „Poznámky pre A2/A3/hlavného agenta“.
+ */
+
+window.AURA_GLOSSARY = {
+ help:['Vysvetlivky','Pojmy s bodkovanou linkou majú vysvetlenie. Nabehnite naň myšou, kliknite na mobile, alebo otvorte celý slovníček tlačidlom vpravo hore.'],
+ rag:['RAG — odpoveď z našich dokumentov','Model si pred odpoveďou najprv vyhľadá relevantné pasáže v našich vlastných súboroch a odpovedá z nich, nie z pamäti. Preto si menej vymýšľa a odpoveď sa dá dohľadať k zdroju. „RAG index“ je ten vyhľadávateľný katalóg našich dokumentov.'],
+ b70:['70B model · orchestrácia','70B znamená 70 miliárd parametrov — veľkosť modelu. Čím väčší, tým lepšie zvláda zložité zadania, ale potrebuje viac pamäti. Orchestrácia je rozdeľovanie práce: jadro rozhodne, ktorý worker čo urobí a v akom poradí.'],
+ rbac:['RBAC — prístup podľa roly','Namiesto individuálnych povolení má každý človek rolu (Admin, Editor, Prehliadač) a rola určuje, čo smie vidieť a robiť. Zmena práv sa deje na role, nie na desiatkach miest.'],
+ sec:['Secrets — prístupové kľúče','Heslá, API kľúče a tokeny, ktorými sa systém prihlasuje k iným službám. Ležia v jednom chránenom trezore, nie v konfiguračných súboroch — aby sa dali otočiť bez prepisovania kódu.'],
+ audit:['Audit log — nemazateľný záznam','Zápis kto, kedy, akým nástrojom a s akými dátami niečo urobil. „Nemazateľný“ znamená, že sa dá iba pridávať — ani administrátor nemôže riadok odstrániť. Bez toho nie je čo doložiť pri kontrole.'],
+ nas:['NAS — sieťové úložisko','Samostatná krabica s diskami, ku ktorej pristupujú všetky počítače po sieti. Tu ležia naše dáta a záložné kópie. „Off-site kópia“ je druhá kópia mimo budovy — pre prípad požiaru či krádeže.'],
+ mcp:['MCP — protokol pre AI nástroje','Model Context Protocol. Spoločný jazyk, ktorým AI hovorí s aplikáciami — dostane zoznam nástrojov (napr. „vytvor úlohu v Asane“) a môže ich volať. Vďaka nemu AI nielen radí, ale koná.'],
+ vram:['VRAM — pamäť grafickej karty','Model musí byť celý naložený v pamäti karty, inak nebeží. 70B model potrebuje približne 70–80 GB, preto je 96 GB bezpečná a 48 GB tesná. Nie je to to isté ako bežná RAM.'],
+ ecc:['ECC — pamäť s opravou chýb','Pamäť, ktorá si sama zachytí a opraví náhodné bitové chyby. Pri dlhých výpočtoch to znamená, že sa úloha nepokazí v polovici. Bežné hráčske karty ju nemajú.'],
+ bw:['Priepustnosť pamäti (GB/s)','Koľko dát prejde medzi pamäťou a čipom za sekundu. Toto rozhoduje, ako rýchlo model odpovedá — model musí pri každom slove prečítať celú svoju pamäť. Vysoký výkon s nízkou priepustnosťou je pomalý.'],
+ tops:['TOPS — počet operácií','Marketingové číslo: koľko biliónov operácií čip zvládne za sekundu. Vyzerá dobre na obale, ale pri veľkých modeloch je limitom priepustnosť pamäti, nie počet operácií.'],
+ tok:['Token a tokeny za sekundu','Token je časť slova — model generuje odpoveď po tokenoch. „Tokeny za sekundu“ je rýchlosť písania: pod 5 je to nepríjemné čakanie, nad 20 sa to číta plynulo ako chat.'],
+ quant:['Quantizácia (Q4, Q8, FP8)','Zmenšenie modelu tým, že sa čísla v ňom uložia s menšou presnosťou. Q8 je jemnejšia a vernejšia, Q4 zaberie polovicu, ale môže stratiť kvalitu. Preto sa kvalita meria, nie predpokladá.'],
+ fp8:['FP8 — 8-bitová presnosť','Formát čísel, v ktorom model beží. Menšia presnosť = menej pamäti a väčšia rýchlosť. Pri FP8 sa 70B model zmestí na jednu 96 GB kartu vrátane rezervy.'],
+ uni:['Unified memory — zdieľaná pamäť','Procesor a grafika používajú jednu spoločnú pamäť namiesto dvoch oddelených. Výhoda: dá sa jej mať veľa (128 GB). Nevýhoda: je výrazne pomalšia než pamäť na grafickej karte.'],
+ ctx:['Kontext','Koľko textu si model naraz „drží pred očami“ — zadanie, dokumenty, doterajšia konverzácia. Zaberá pamäť navyše nad samotný model, preto sa musí počítať pri návrhu.'],
+ gddr:['GDDR7 — typ pamäti','Najnovší typ pamäti na grafických kartách. Práve jej je na trhu nedostatok, pretože ju vykupujú dátové centrá — a to je príčina zdražovania celého hardwaru v roku 2026.'],
+ msrp:['MSRP — odporúčaná cena výrobcu','Cena, za ktorú výrobca produkt uvedie. Reálna predajná cena môže byť dnes výrazne vyššia; rozdiel medzi MSRP a cenou v obchode je presne to, čo tento graf ukazuje.'],
+ gate:['Brána (stage gate)','Kontrolný bod, kde sa formálne rozhodne, či sa pokračuje. Nie je to termín ani porada — je to rozhodnutie s pripojenými dôkazmi. Kým brána neprejde, ďalšia fáza nezačne.'],
+ p0:['P0 až P3 — závažnosť chyby','P0 je kritická chyba, ktorá blokuje prevádzku, P3 je kozmetická. Pravidlo projektu: brána sa neotvorí, kým sú otvorené chyby P0 alebo P1.'],
+ cond:['CONDITIONAL — podmienečne vyhovuje','Variant vyzerá na papieri v poriadku, ale nemá dôkaz. Nesmie sa odporučiť ani kúpiť, kým testom nepreukáže, že splní požiadavku.'],
+ noncomp:['NON-COMPLIANT — nevyhovuje','Variant nesplňuje zadanú požiadavku a do odporúčania nevstupuje. Uvádzame ho, aby bolo zrejmé, že bol posúdený a prečo padol.'],
+ budg:['Budgetary cena','Orientačná cena na plánovanie, nie záväzná ponuka. Nedá sa z nej objednať a môže sa zmeniť. Pred schválením investície ju musí nahradiť formálna ponuka s platnosťou.'],
+ capex:['CapEx — jednorazová investícia','Kapitálový výdaj: nákup hardwaru, ktorý sa odpisuje niekoľko rokov. Zaplatí sa raz na začiatku.'],
+ opex:['OpEx — priebežné náklady','Prevádzkové výdaje, ktoré platíme každý mesiac: energia, cloud, licencie, podpora.'],
+ tco:['TCO — celkové náklady vlastníctva','Súčet všetkého za dané obdobie, nie len cena nákupu: hardware plus energia, cloud, licencie, implementácia, školenie, podpora a rezerva. Až toto číslo sa dá porovnávať s alternatívou.'],
+ rez:['Rezerva','Percento navyše na veci, ktoré nikto nepredvídal — zdraženie, náhradný diel, predĺženie prác. Bez rezervy sa každý rozpočet prekročí a nikto nevie prečo.'],
+ ondem:['On-demand a spot cena','On-demand je prenájom výpočtu za hodinu s garanciou, že o kapacitu neprídeme. Spot je lacnejší, ale poskytovateľ ho môže kedykoľvek odobrať — na rozbehnutú úlohu sa nedá spoliehať.'],
+ lp:['Least privilege — minimálne práva','Každý človek a každá služba dostane presne tie práva, ktoré potrebuje na svoju prácu, a nič viac. Keď potom niečo unikne, škoda je ohraničená.'],
+ segm:['Segmentácia siete','Rozdelenie siete na oddelené časti, ktoré medzi sebou nevidia, ak to nie je výslovne povolené. Keď sa jeden počítač nakazí, nemá odkiaľ pokračovať dovnútra.'],
+ atrest:['Šifrovanie v pokoji','Dáta na diskoch sú zašifrované aj vtedy, keď sa s nimi nepracuje. Kto odnesie disk alebo celý počítač, dostane nečitateľné dáta.'],
+ rpo:['RPO a RTO','RPO je koľko dát si dovolíme stratiť (napr. maximálne hodinu práce). RTO je za ako dlho musíme byť po havárii späť v prevádzke. Obe čísla určujú, ako často zálohovať a čo pripraviť dopredu.'],
+ prov:['Provenance — pôvod dát','Ku každej informácii, ktorú AI použije, vieme dohľadať z ktorého dokumentu prišla. Vďaka tomu sa odpoveď dá overiť a nesprávny zdroj sa dá odstrániť.'],
+ scope:['Scope tokenu','Rozsah oprávnení prístupového kľúča — napríklad „len čítať kalendár“ namiesto „robiť čokoľvek v účte“. Úzky scope znamená, že ukradnutý kľúč nestačí na veľkú škodu.'],
+ idem:['Idempotencia','Vlastnosť, že opakované spustenie tej istej operácie nespôsobí duplikát. Keď sa spojenie preruší a zápis sa zopakuje, v Asane nevznikne tá istá úloha dvakrát.'],
+ extid:['Externé ID a väzba','Ku každej vytvorenej úlohe si uložíme jej identifikátor v Asane. Preto vieme, čo už bolo odoslané, čo sa zmenilo a čo sa dá vrátiť späť.'],
+ soak:['Soak test — dlhá záťaž','Nie krátky špičkový test, ale hodiny nepretržitej práce. Odhalí veci, ktoré sa objavia až po čase: prehrievanie, únik pamäti, zaplnenie diskov.'],
+ rb:['Rollback — vrátenie zmeny','Pripravený a vyskúšaný postup, ako sa vrátiť do predchádzajúceho funkčného stavu. Kľúčové slovo je „vyskúšaný“ — rollback, ktorý sa nikdy netestoval, nie je plán.'],
+ raid:['RAID register','Riziká, problémy (Issues), predpoklady (Assumptions) a rozhodnutia (Decisions). Štyri zoznamy, ktoré sa vedú priebežne — aby sa vedelo, čo hrozí, čo horí a prečo sme sa kedy rozhodli.'],
+ mat:['Skóre 5×5','Riziko sa hodnotí pravdepodobnosťou 1–5 a dopadom 1–5. Súčin dá číslo, podľa ktorého sa riziká zoradia — namiesto debaty, ktoré je „vážnejšie“.'],
+ slo:['SLO — dohodnutá úroveň služby','Konkrétny merateľný sľub, napríklad „odpoveď do 5 sekúnd pri 10 súbežných úlohách“. Bez čísla sa nedá povedať, či systém funguje dobre alebo zle.'],
+ cc:['Change control','Formálny postup na zmenu rozsahu: čo sa mení, prečo, aký to má dopad na čas, náklady a riziko, a kto to schválil. Chráni pred tichým rozrastaním projektu.'],
+ edge:['Uzly a spojenia v pamäti','Uzol je jeden poznatok — skill, projekt alebo fakt. Spojenie je vzťah medzi dvomi poznatkami. Sieť spojení robí z pamäti niečo použiteľnejšie než zoznam: súvislosti sa nájdu samé.']
+};
+
+window.AURA_TT_INLINE = [
+  'tco',    /* s09 eyebrow — 3-ročný TCO */
+  'capex',  /* s08 h2 — Tri scenáre CapEx */
+  'budg',   /* s08 ld — budgetary blok */
+  'rez',    /* s09 tabuľka — Rezerva 10 % */
+  'vram',   /* s06 box +55 %, s07 tabuľka — hlavička Pamäť */
+  'bw',     /* s07 ld a hlavička tabuľky — priepustnosť pamäti */
+  'quant',  /* s07 box Main Basic — Q8 */
+  'uni',    /* s07 box a tabuľka — 128 GB unified */
+  'gate',   /* s11 ld — brány */
+  'p0',     /* s11 ld, s12 karta Bezpečnosť a DR — P0/P1 */
+  'rag',    /* s03 box Jadro rozhoduje — RAG index */
+  'mcp',    /* s02 h2 — MCP */
+  /* +2 doplnené hlavným agentom: oba padajú mimo SVG a tabuľky, takže patria
+     do deklarovaného zoznamu, nie do výnimky pre prenesené vizuály. */
+  'msrp',   /* s06 .bars — MSRP verzus reálna cena je pointa celého slajdu */
+  'edge'    /* s02 .kpi strip — uzly a spojenia v Hades pamäti */
+];
+</script>
+<script>
+/* ===== deck.js (A2) ===== */
+/* ==========================================================================
+   AURA AI · deck.js
+   Vlastník: A2. Jedno IIFE = navigácia + téma + animácie + počítadlá +
+   tooltipy + slovníček + interaktívny nákres (s04) + konfigurátor (s10).
+   Exportuje window.DECK podľa CONTRACT.md §5.
+
+   Poradie skriptov: tooltips.js -> deck.js -> mode.js
+   Glosár sa NEDEFINUJE tu — číta sa z window.AURA_GLOSSARY (A1).
+   Žiadny localStorage / sessionStorage. Čísla vo formáte sk-SK.
+   ========================================================================== */
+(function(){
+'use strict';
+
+/* ------------------------------------------------------------------
+   0 · pomocníci
+   ------------------------------------------------------------------ */
+var NBSP='\u00a0';
+function q(sel,root){return (root||document).querySelector(sel)}
+function qa(sel,root){return [].slice.call((root||document).querySelectorAll(sel))}
+function gid(id){return document.getElementById(id)}
+function esc(t){return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+/* sk-SK: desatinná čiarka, nedeliteľná medzera v tisícoch */
+function fmt(n){return Math.round(n).toLocaleString('sk-SK')}
+function eur(n){return fmt(n)+NBSP+'€'}
+function num(n){return fmt(n)}
+function dec2(n){return n.toFixed(2).replace('.',',')}
+
+/* prefers-reduced-motion — sleduje sa aj za behu */
+var mqRM=(window.matchMedia?window.matchMedia('(prefers-reduced-motion: reduce)'):null);
+var RM=!!(mqRM&&mqRM.matches);
+if(mqRM){
+  if(mqRM.addEventListener){mqRM.addEventListener('change',function(e){RM=!!e.matches})}
+  else if(mqRM.addListener){mqRM.addListener(function(e){RM=!!e.matches})}
+}
+
+/* režim — default 'deck' (CONTRACT §5). Prepína ho A3 cez DECK.onMode(). */
+var mode=(document.documentElement.getAttribute('data-mode')==='doc')?'doc':'deck';
+
+/* ------------------------------------------------------------------
+   1 · NAVIGÁCIA — slajdy, dots, rail, counter, klávesy, swipe, téma
+   ------------------------------------------------------------------ */
+var S=[],N=0,i=0,D=[];
+var dotsEl=null,railI=null,ctB=null;
+
+function paintChrome(){
+  if(mode!=='deck'||!N){return}
+  D.forEach(function(d,k){
+    d.classList.toggle('on',k===i);
+    d.setAttribute('aria-current',k===i?'true':'false');
+  });
+  if(railI){railI.style.width=((i+1)/N*100)+'%'}
+  if(ctB){ctB.textContent=('0'+(i+1)).slice(-2)}
+}
+
+function showSlide(n,force){
+  if(!N){return}
+  n=Math.max(0,Math.min(N-1,n));
+  if(mode!=='deck'){i=n;return}          /* v doc režime .s.on neriadime */
+  var same=(n===i);
+  if(same&&!force){return}
+  var old=S[i];
+  if(!same&&old){
+    old.classList.remove('on');
+    if(!RM){
+      old.classList.add('leave');
+      (function(o){setTimeout(function(){o.classList.remove('leave')},430)})(old);
+    }
+  }
+  S.forEach(function(sl,k){if(k!==n){sl.classList.remove('on')}});
+  var cur=S[n];
+  cur.classList.remove('on');
+  void cur.offsetHeight;                 /* restart CSS animácií slajdu */
+  cur.classList.add('on');
+  cur.scrollTop=0;
+  i=n;
+  counters(cur);
+  tipHide();
+  paintChrome();
+}
+
+/* --- word-stagger nadpisov --- */
+function stagger(){
+  qa('.s h1,.s h2').forEach(function(h){
+    if(h.getAttribute('data-wm')==='1'){return}
+    h.setAttribute('data-wm','1');
+    var d=0,nodes=[].slice.call(h.childNodes);
+    nodes.forEach(function(nd){
+      if(nd.nodeType===3){
+        var frag=document.createDocumentFragment();
+        nd.textContent.split(/(\s+)/).forEach(function(w){
+          if(!w){return}
+          if(/^\s+$/.test(w)){frag.appendChild(document.createTextNode(w));return}
+          var sp=document.createElement('span');
+          sp.className='wm';
+          sp.style.setProperty('--wd',(d++*46)+'ms');
+          sp.textContent=w;
+          frag.appendChild(sp);
+        });
+        h.replaceChild(frag,nd);
+      }else if(nd.nodeType===1&&nd.tagName!=='BR'){
+        nd.classList.add('wm');
+        nd.style.setProperty('--wd',(d++*46)+'ms');
+      }
+    });
+    h.classList.remove('an');
+    h.style.animationDelay='';
+  });
+}
+
+/* --- počítadlá [data-cnt] na .kpi b --- */
+function markCounters(){
+  qa('.s .kpi b').forEach(function(b){
+    if(b.hasAttribute('data-cnt')){return}
+    var t=b.textContent.trim();
+    if(/^[\d\s\u00a0\u202f]+$/.test(t)&&t.replace(/\D/g,'').length){
+      b.setAttribute('data-cnt',t.replace(/\D/g,''));
+    }
+  });
+}
+function counters(sl){
+  if(!sl){return}
+  qa('[data-cnt]',sl).forEach(function(b){
+    var orig=b.getAttribute('data-orig');
+    if(orig===null){orig=b.textContent;b.setAttribute('data-orig',orig)}
+    var end=+b.getAttribute('data-cnt');
+    if(!isFinite(end)||RM){b.textContent=orig;return}
+    var t0=(window.performance&&performance.now?performance.now():Date.now()),dur=950;
+    function step(t){
+      var k=Math.min(1,(t-t0)/dur);
+      k=1-Math.pow(1-k,3);
+      if(k<1){b.textContent=fmt(end*k);requestAnimationFrame(step)}
+      else{b.textContent=orig}          /* finálny text = presne text zo zdroja */
+    }
+    requestAnimationFrame(step);
+  });
+}
+
+/* --- klávesy --- */
+function navBlocked(e){
+  if(mode!=='deck'){return true}
+  if(gvOpen()){return true}
+  var t=e.target||{};
+  var tag=(t.tagName||'').toUpperCase();
+  if(tag==='INPUT'||tag==='TEXTAREA'||tag==='SELECT'||t.isContentEditable){return true}
+  return false;
+}
+document.addEventListener('keydown',function(e){
+  if(navBlocked(e)){return}
+  var t=e.target||{};
+  var tag=(t.tagName||'').toUpperCase();
+  var role=(t.getAttribute?t.getAttribute('role'):null);
+  if((tag==='BUTTON'||role==='button')&&(e.key==='Enter'||e.key===' ')){return}
+  if(e.key==='ArrowRight'||e.key===' '||e.key==='PageDown'){e.preventDefault();showSlide(i+1)}
+  else if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();showSlide(i-1)}
+  else if(e.key==='Home'){e.preventDefault();showSlide(0)}
+  else if(e.key==='End'){e.preventDefault();showSlide(N-1)}
+});
+
+/* --- touch swipe --- */
+var x0=null,y0=null;
+document.addEventListener('touchstart',function(e){
+  if(mode!=='deck'||!e.touches||!e.touches.length){x0=null;y0=null;return}
+  x0=e.touches[0].clientX;y0=e.touches[0].clientY;
+},{passive:true});
+document.addEventListener('touchend',function(e){
+  if(mode!=='deck'||x0===null||!e.changedTouches||!e.changedTouches.length){x0=null;y0=null;return}
+  var dx=e.changedTouches[0].clientX-x0,dy=e.changedTouches[0].clientY-y0;
+  if(Math.abs(dx)>55&&Math.abs(dx)>Math.abs(dy)){showSlide(i+(dx<0?1:-1))}
+  x0=null;y0=null;
+},{passive:true});
+
+/* ------------------------------------------------------------------
+   2 · TOOLTIPY + SLOVNÍČEK (glosár z window.AURA_GLOSSARY)
+   ------------------------------------------------------------------ */
+var tip=null,tipB=null,tipP=null,tipCur=null;
+var gv=null,gg=null,gx=null,gl=null;
+
+function GL(){
+  var g=window.AURA_GLOSSARY;
+  return (g&&typeof g==='object')?g:{};
+}
+/* Tolerantné čítanie zápisu pojmu: ['Titul','Text'] | 'Text' | {t,d} */
+function entry(k){
+  var d=GL()[k];
+  if(d===undefined||d===null){return null}
+  if(Object.prototype.toString.call(d)==='[object Array]'){
+    return {t:String(d[0]!==undefined?d[0]:k),d:String(d[1]!==undefined?d[1]:'')};
+  }
+  if(typeof d==='string'){return {t:k,d:d}}
+  if(typeof d==='object'){
+    var t=d.t||d.title||d.term||d.h||k;
+    var x=d.d||d.desc||d.text||d.def||d.p||'';
+    return {t:String(t),d:String(x)};
+  }
+  return null;
+}
+function gvOpen(){return !!(gv&&gv.classList.contains('on'))}
+function tipHide(){if(tip){tip.classList.remove('on')}tipCur=null}
+function tipShow(el){
+  if(!tip||!el){return}
+  var e=entry(el.getAttribute('data-t'));
+  if(!e){return}                              /* kľúč bez záznamu v glosári — ticho */
+  tipB.textContent=e.t;tipP.textContent=e.d;
+  tip.classList.add('on');tipCur=el;
+  var r=el.getBoundingClientRect(),w=tip.offsetWidth,h=tip.offsetHeight;
+  var l=r.left+r.width/2-w/2;
+  l=Math.max(10,Math.min(l,window.innerWidth-w-10));
+  var t=r.bottom+9;
+  if(t+h>window.innerHeight-10){t=r.top-h-9}
+  t=Math.min(t,window.innerHeight-h-10);   /* aj keď je cieľ pod ohybom slajdu */
+  if(t<10){t=10}
+  tip.style.left=l+'px';tip.style.top=t+'px';
+}
+function closest(node,sel){
+  return (node&&node.closest)?node.closest(sel):null;
+}
+document.addEventListener('mouseover',function(e){
+  var el=closest(e.target,'[data-t]');
+  if(el){tipShow(el)}
+  else if(tipCur&&tip&&!tip.contains(e.target)){tipHide()}
+});
+document.addEventListener('focusin',function(e){
+  var el=closest(e.target,'[data-t]');
+  if(el){tipShow(el)}
+});
+document.addEventListener('focusout',tipHide);
+document.addEventListener('click',function(e){
+  var el=closest(e.target,'[data-t]');
+  if(el){e.preventDefault();if(tipCur===el){tipHide()}else{tipShow(el)}}
+});
+window.addEventListener('resize',tipHide);
+window.addEventListener('scroll',tipHide,{passive:true});
+
+function gopen(){
+  if(!gv){return}
+  tipHide();
+  gv.classList.add('on');
+  if(gx){gx.style.display='block'}
+  gv.scrollTop=0;
+  if(gx&&gx.focus){try{gx.focus()}catch(err){}}
+}
+function gclose(){
+  if(!gv){return}
+  gv.classList.remove('on');
+  if(gx){gx.style.display='none'}
+  if(gl&&gl.focus){try{gl.focus()}catch(err){}}
+}
+function fillGlossary(){
+  if(!gg){return}
+  var G=GL();
+  var inl=Object.prototype.toString.call(window.AURA_TT_INLINE)==='[object Array]'
+    ? window.AURA_TT_INLINE : [];
+  var keys=Object.keys(G).filter(function(k){
+    return k!=='help'&&!!entry(k);
+  }).sort(function(a,b){
+    return entry(a).t.localeCompare(entry(b).t,'sk');
+  });
+  gg.innerHTML=keys.map(function(k){
+    var e=entry(k);
+    /* data-inline je len značka pre verifikáciu (A4) — bez vizuálneho dopadu.
+       Pojmy bez inline .tt výskytu v body sú úplne v poriadku. */
+    return '<div class="gi" data-k="'+esc(k)+'"'+(inl.indexOf(k)>-1?' data-inline="1"':'')+'>'
+      +'<b>'+esc(e.t)+'</b><p>'+esc(e.d)+'</p></div>';
+  }).join('');
+}
+/* Esc / klik mimo / klávesy pri otvorenom modále */
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape'){gclose();tipHide();return}
+  if(gvOpen()&&(e.key==='ArrowLeft'||e.key==='ArrowRight'||e.key===' '||e.key==='PageUp'||e.key==='PageDown')){
+    e.stopPropagation();
+  }
+},true);
+
+/* ------------------------------------------------------------------
+   3 · INTERAKTÍVNY NÁKRES — s04 (#ixd / #ixseg / #ixdp)
+   ------------------------------------------------------------------ */
+var K={
+ tim:['Tím a jeho nástroje',
+  'Ľudia spúšťajú workflowy z tých istých nástrojov, na ktoré sú zvyknutí — chat, MCP klienti, Aura appky.',
+  'Každý prompt s citlivým obsahom ide k cudziemu modelu. Nikto nevie presne povedať, čo všetko už odišlo.',
+  'Rovnaké nástroje, ale požiadavka sa najprv posúdi podľa triedy dát a až potom sa rozhodne, kam pôjde.','REQ-001'],
+ dat:['Osobné a účtovné dáta',
+  'Najcitlivejšia trieda: údaje o ľuďoch, účtovníctvo a ostatné obmedzené informácie.',
+  'Prechádzajú hranicu pri každom použití. Retencia a výmaz sú v rukách dodávateľa, nie našich.',
+  'Neopustia lokálnu zónu. Umiestnenie, retencia, mazanie a pôvod sú určené pre každú triedu zvlášť.','DATA-001 · REQ-003'],
+ mem:['Pamäť Hades',
+  'Vlastný MCP server so 675 uzlami a 2 049 spojeniami — skills, projekty, rozhodnutia.',
+  'Beží lokálne, ale jeho chat endpoint volá cudzí model a von je vystavený cez verejný tunel.',
+  'Presúva sa na Aura Core, inferencia ide na lokálny 70B a prístup zvonku len cez VPN. Uzly dostanú triedu dát.','HADES-001 až 007'],
+ eng:['Výpočtové jadro',
+  'Miesto, kde skutočne beží model — toto je jediný prvok, ktorý sa medzi stavmi celý presúva.',
+  'Cudzí cloud, cudzie GPU, cudzie kvóty. Rýchlosť aj cena sú mimo našej kontroly a bez lokálnej alternatívy.',
+  'Main PC s 96 GB VRAM, 70B model lokálne, tri izolovaní workeri, fronta schválení a nemazateľný audit.','ARC-001 · TEST-LLM-001'],
+ bnd:['Hranica spracovania',
+  'Čiara, za ktorú sa obmedzené dáta nesmú dostať. Vpravo je vonkajší svet.',
+  'Existuje len ako dohoda a dobrá vôľa. Nie je čím ju technicky vynútiť ani ako dokázať, že bola dodržaná.',
+  'Technické opatrenie: segmentácia, tokeny s minimálnym rozsahom, fail-closed pri výpadku a audit každého prechodu.','SEC-001 · NET-001'],
+ saas:['Asana, Drive, Calendar',
+  'Služby, ktoré zostávajú aj po projekte — tu vedieme prácu a ukladáme dôkazy.',
+  'Zápisy vznikajú ad hoc. Čo sa zapísalo a kto to schválil, sa dohľadáva ťažko.',
+  'Každý zápis s vedľajším účinkom prejde frontou schválení a nechá stopu. Pri výpadku čaká a prehrá sa bez duplikátov.','INT-GOV-001'],
+ cld:['Cloud AI API po zmene',
+  'Cloud nezmizne — dostane jasne ohraničenú úlohu.',
+  'Dnes je to hlavný a jediný výpočtový zdroj.',
+  'Doplnok pre dáta bez obmedzenia. Dá sa vypnúť bez toho, aby spadlo jadro — a to sa testuje.','REQ-004 · TEST-OFFLINE-001']
+};
+
+function initDiagram(){
+  var d=gid('ixd'),seg=gid('ixseg'),dp=gid('ixdp');
+  if(!d||!dp){return}
+  var EMPTY=dp.innerHTML;          /* pôvodný „nič nevybrané" obsah z body.html */
+  var sel=null;
+  dp.setAttribute('data-empty','true');
+
+  function clear(){
+    sel=null;
+    dp.innerHTML=EMPTY;
+    dp.setAttribute('data-empty','true');
+    qa('.hot',d).forEach(function(n){n.setAttribute('aria-current','false')});
+  }
+  /* prvok je viditeľný len ak jeho stavová skupina zodpovedá data-st */
+  function visible(el){
+    var st=d.getAttribute('data-st');
+    if(closest(el,'.s-now')){return st==='now'}
+    if(closest(el,'.s-tg')){return st==='tg'}
+    return true;
+  }
+  function render(){
+    if(!sel||!K[sel]){clear();return}
+    var k=K[sel],st=d.getAttribute('data-st');
+    dp.removeAttribute('data-empty');
+    dp.innerHTML='<h4>'+esc(k[0])+'</h4>'
+      +'<div class="dr"><span>Čo to je</span><span>'+esc(k[1])+'</span></div>'
+      +'<div class="dr"><span>Dnes</span><span class="'+(st==='now'?'nowv':'')+'">'+esc(k[2])+'</span></div>'
+      +'<div class="dr"><span>Cieľ</span><span class="'+(st==='tg'?'tgv':'')+'">'+esc(k[3])+'</span></div>'
+      +'<div class="dr"><span>Dôkaz</span><span class="ev">'+esc(k[4])+'</span></div>';
+  }
+  function pick(el){
+    var k=el.getAttribute('data-k');
+    if(!k||!K[k]){return}
+    qa('.hot',d).forEach(function(n){
+      n.setAttribute('aria-current',n.getAttribute('data-k')===k?'true':'false');
+    });
+    sel=k;
+    render();
+  }
+  d.addEventListener('click',function(e){
+    var el=closest(e.target,'.hot');
+    if(el){pick(el)}
+  });
+  d.addEventListener('keydown',function(e){
+    if(e.key!=='Enter'&&e.key!==' '){return}
+    var el=closest(e.target,'.hot');
+    if(el){e.preventDefault();e.stopPropagation();pick(el)}
+  });
+  if(seg){
+    seg.addEventListener('click',function(e){
+      var b=closest(e.target,'button');
+      if(!b){return}
+      d.setAttribute('data-st',b.getAttribute('data-st'));
+      qa('button',seg).forEach(function(n){
+        n.setAttribute('aria-pressed',String(n===b));
+        n.setAttribute('aria-current',String(n===b));
+      });
+      /* vybraný prvok v novom stave nemusí existovať → prázdny stav .dp,
+         nie visiaci starý detail */
+      var still=sel?qa('.hot[data-k="'+sel+'"]',d).filter(visible):[];
+      if(sel&&!still.length){clear()}else{render()}
+    });
+  }
+}
+
+/* ------------------------------------------------------------------
+   4 · KONFIGURÁTOR ZOSTAVY — s10
+   Ceny a TCO vzorce sú prenesené 1:1 zo zdroja a nesmú sa meniť.
+   ------------------------------------------------------------------ */
+function initConfig(){
+  var root=gid('oLines');
+  if(!root){return}
+  var P={
+   gpu:{basic:[6269,'RTX PRO 5000 48 GB','Alza.sk'],std:[14849,'RTX PRO 6000 96 GB','Alza.sk · nedostupné'],prem:[29698,'2× RTX PRO 6000 96 GB','Alza.sk · budgetary'],g5090:[3999,'RTX 5090 32 GB','Amazon EU'],srv2:[8421,'Server Edition 96 GB · sek. trh','eBay.de'],mac:[7500,'Mac Studio M3 Ultra 256 GB','odhad, vrátane platformy']},
+   plat:{lean:[3500,'Platforma úsporná'],solid:[4500,'Platforma solidná'],max:[6000,'Platforma pre 2 karty']},
+   mini:{basic:[1150,'Mini Basic 32 GB','EU listing'],std:[3530,'Mini Standard 128 GB','HP Store PL'],prem:[4700,'Mini Premium DGX Spark','buyzero.de'],evo:[3794,'GMKtec EVO-X2 128 GB','Geizhals DE']},
+   infra:{ups:[900,'UPS'],net:[700,'10GbE sieť'],nas:[2700,'NAS a disky'],offs:[540,'Off-site kópia 3 roky']}
+  };
+  var W={gpu:{basic:300,std:450,prem:700,g5090:400,srv2:420,mac:180},plat:{lean:90,solid:110,max:140},mini:{basic:35,std:80,prem:110,evo:85}};
+  var SUP={basic:800,std:1200,prem:1600,evo:1200};
+  var st={gpu:'std',plat:'solid',mini:'std',cnt:3,infra:{ups:1,net:1,nas:1,offs:1}};
+  var DEF={rE:20,rH:2500,rC:150,rL:80,rI:12000,rR:10};
+
+  function rv(id){var e=gid(id);var v=e?+e.value:DEF[id];return isFinite(v)?v:DEF[id]}
+  function set(id,txt){var e=gid(id);if(e){e.textContent=txt}}
+
+  function calc(){
+    var kwh=rv('rE')/100,hrs=rv('rH'),cld=rv('rC'),lic=rv('rL'),
+        impl=rv('rI'),rez=rv('rR')/100;
+    set('vE',dec2(kwh));set('vH',num(hrs));set('vC',num(cld));
+    set('vL',num(lic));set('vI',num(impl));set('vR',String(Math.round(rez*100)));
+
+    var L=[],cap=0;
+    function add(lab,val,note){L.push([lab,val,note||'']);cap+=val}
+    add(P.gpu[st.gpu][1],P.gpu[st.gpu][0],P.gpu[st.gpu][2]);
+    if(st.gpu!=='mac'){add(P.plat[st.plat][1],P.plat[st.plat][0],'budgetary')}
+    if(st.cnt>0){add(st.cnt+'× '+P.mini[st.mini][1],P.mini[st.mini][0]*st.cnt,P.mini[st.mini][2])}
+    var inf=0,infn=[];
+    Object.keys(st.infra).forEach(function(k){
+      if(st.infra[k]){inf+=P.infra[k][0];infn.push(P.infra[k][1])}
+    });
+    if(inf){add('Infraštruktúra',inf,infn.join(' · '))}
+    var watts=W.gpu[st.gpu]+(st.gpu==='mac'?0:W.plat[st.plat])+W.mini[st.mini]*st.cnt+(inf?50:0);
+    var en=watts/1000*hrs*3*kwh;
+    var sub=cap+en+cld*36+lic*36+impl+1500+SUP[st.mini]*3;
+    var tco=sub*(1+rez);
+
+    root.innerHTML=L.map(function(r){
+      return '<div class="lin"><span>'+esc(r[0])
+        +(r[2]?' <span class="nt">'+esc(r[2])+'</span>':'')
+        +'</span><span>'+eur(r[1])+'</span></div>';
+    }).join('')
+     +'<div class="lin tot"><span>CapEx celkom</span><span>'+eur(cap)+'</span></div>'
+     +'<div class="lin" style="margin-top:8px"><span>Energia 3 roky <span class="nt">'+num(watts)+NBSP+'W priemer</span></span><span>'+eur(en)+'</span></div>'
+     +'<div class="lin"><span>Cloud a licencie 3 roky</span><span>'+eur((cld+lic)*36)+'</span></div>'
+     +'<div class="lin"><span>Implementácia a školenie</span><span>'+eur(impl+1500)+'</span></div>'
+     +'<div class="lin"><span>Podpora 3 roky</span><span>'+eur(SUP[st.mini]*3)+'</span></div>'
+     +'<div class="lin"><span>Rezerva '+Math.round(rez*100)+NBSP+'%</span><span>'+eur(sub*rez)+'</span></div>'
+     +'<div class="lin tot"><span>TCO 3 roky</span><span>'+eur(tco)+'</span></div>';
+
+    set('oCap',eur(cap));set('oTco',eur(tco));set('oMon',eur(tco/36));
+
+    var F=[];
+    if(st.gpu==='basic')F.push(['f-w','CONDITIONAL','48 GB nie je overených na 70B. Variant sa nesmie odporučiť pred úspešným TEST-LLM-001.']);
+    if(st.gpu==='std')F.push(['f-w','Dostupnosť','96 GB karta je dnes na Alze nedostupná. Dodacia lehota patrí do rozhodnutia PROC-001, nie do poznámky.']);
+    if(st.gpu==='prem')F.push(['f-b','Chýba ponuka','Premium je zložená katalógová cena. Pred G5 treba formálnu kompatibilnú EU B2B ponuku na presnú konfiguráciu.']);
+    if(st.gpu==='g5090')F.push(['f-b','NON-COMPLIANT na 70B','32 GB nestačí — model sa v Q8 nezmestí ani pri najvyššej priepustnosti. Karta je legitímna do worker poolu na obraz a video, nie ako jadro.']);
+    if(st.gpu==='srv2')F.push(['f-w','Sekundárny trh','Nová karta od DE predajcu s VAT ID, −42 % oproti katalógu. Záruka predajcu namiesto výrobcu, bez vrátenia — a pasívne chladenie vyžaduje šasi s núteným prúdením. Rozhodnutie patrí do G3.']);
+    if(st.gpu==='mac')F.push(['f-w','Mimo charteru','Iná platforma (macOS) a cena 256 GB konfigurácie je odhad — Apple 512 GB verziu stiahol. 819 GB/s je výborných, ale zaradenie vyžaduje change control a novú ponuku.']);
+    if(st.mini==='evo')F.push(['f-w','Drahší než HP','EVO-X2 stojí po zdražení pamätí viac než HP Z2 Mini G1a s biznis zárukou a rovnakým čipom. Neodporúča sa — je tu pre úplnosť porovnania.']);
+    if(st.gpu==='prem'&&st.plat!=='max')F.push(['f-b','Nekompatibilné','Dve karty potrebujú platformu pre 2 karty — napájanie, sloty a chladenie. Prepnite platformu.']);
+    if(st.mini==='basic')F.push(['f-b','NON-COMPLIANT','Mini Basic má 32 GB a nízku priepustnosť. Ako nositeľ modelu nevyhovuje, do 70B testov nevstupuje.']);
+    if(st.cnt<3)F.push(['f-w','Mimo charteru','Charter hovorí 1× Main a 3× Mini. Menší počet je zmena rozsahu cez RAID-CHANGE-001.']);
+    if(st.cnt>3)F.push(['f-w','Nad charter','Štvrtý worker je rozšírenie rozsahu — potrebuje change control a nové schválenie investície.']);
+    if(!st.infra.nas)F.push(['f-b','Bez záloh','Bez NAS a diskov nie je čo zálohovať ani z čoho obnoviť. TEST-SEC-DR-001 v tejto konfigurácii neprejde.']);
+    if(!st.infra.offs&&st.infra.nas)F.push(['f-w','Bez off-site','Jedna kópia v jednej budove nie je záloha. RES-001 vyžaduje kópiu mimo miesta.']);
+    if(!st.infra.ups)F.push(['f-w','Bez UPS','Výpadok prúdu pri behu modelu môže poškodiť dáta aj hardware.']);
+    if(!st.infra.net)F.push(['f-w','Bez 10GbE','Workeri a NAS sa budú deliť o pomalú sieť — kapacitný test 10 workflowov je potom ohrozený.']);
+    if(!F.length)F.push(['f-o','Bez otvorených nálezov','Táto zostava zodpovedá charteru a nemá blokujúce nálezy. Stále platí, že benchmark musí prejsť pred nákupom.']);
+    var flags=gid('oFlags');
+    if(flags){
+      flags.innerHTML=F.map(function(f){
+        return '<div class="'+f[0]+'"><b>'+esc(f[1])+'</b> — '+esc(f[2])+'</div>';
+      }).join('');
+    }
+  }
+
+  qa('.opts').forEach(function(grp){
+    grp.addEventListener('click',function(e){
+      var b=closest(e.target,'button');
+      if(!b){return}
+      var k=grp.getAttribute('data-grp'),v=b.getAttribute('data-v');
+      if(!k||v===null){return}
+      if(k==='infra'){
+        var on=b.getAttribute('aria-pressed')!=='true';
+        st.infra[v]=on?1:0;
+        b.setAttribute('aria-pressed',String(on));
+        b.setAttribute('aria-current',String(on));
+      }else{
+        if(k==='cnt'){st.cnt=+v}else{st[k]=v}
+        qa('button',grp).forEach(function(n){
+          n.setAttribute('aria-pressed',String(n===b));
+          n.setAttribute('aria-current',String(n===b));
+        });
+      }
+      if(k==='gpu'&&v==='prem'){
+        var mx=q('[data-grp="plat"] [data-v="max"]');
+        if(mx){
+          st.plat='max';
+          qa('[data-grp="plat"] button').forEach(function(n){
+            n.setAttribute('aria-pressed',String(n===mx));
+            n.setAttribute('aria-current',String(n===mx));
+          });
+        }
+      }
+      calc();
+    });
+  });
+  ['rE','rH','rC','rL','rI','rR'].forEach(function(id){
+    var e=gid(id);
+    if(e){e.addEventListener('input',calc)}
+  });
+  calc();
+}
+
+/* ------------------------------------------------------------------
+   5 · REŽIM (CONTRACT §5) — A3 nastaví data-mode a potom volá onMode()
+   ------------------------------------------------------------------ */
+function setMode(m){
+  m=(m==='doc')?'doc':'deck';
+  if(m===mode){return mode}
+  mode=m;
+  /* v oboch smeroch: žiadne prechodové animácie navyše */
+  S.forEach(function(sl){sl.classList.remove('leave')});
+  if(mode==='doc'){
+    /* .s.on od tejto chvíle neriadime, do #dots/#nav/#ct/#rail nezapisujeme,
+       klávesy a swipe sa ignorujú (pozri navBlocked / touch handlery).
+       Viditeľnosť sekcií a reveal preberá report.css + mode.js (A3). */
+    tipHide();
+  }else{
+    showSlide(i,true);            /* späť na aktuálny slajd + obnovené chrome */
+  }
+  try{
+    document.dispatchEvent(new CustomEvent('aura:mode',{detail:{mode:mode}}));
+  }catch(err){
+    try{
+      var ev=document.createEvent('CustomEvent');
+      ev.initCustomEvent('aura:mode',true,false,{mode:mode});
+      document.dispatchEvent(ev);
+    }catch(err2){}
+  }
+  return mode;
+}
+/* ak režim ohlási niekto iný, zosynchronizujeme sa (bez zacyklenia) */
+document.addEventListener('aura:mode',function(e){
+  if(e&&e.detail&&e.detail.mode){setMode(e.detail.mode)}
+});
+
+/* ------------------------------------------------------------------
+   6 · EXPORT — window.DECK
+   ------------------------------------------------------------------ */
+window.DECK={
+  go:function(n){showSlide(Math.round(+n)||0);return i},
+  current:function(){return i},
+  count:function(){return N},
+  slides:function(){return S.slice()},
+  onMode:setMode,
+  reduced:function(){return RM}
+};
+
+/* ------------------------------------------------------------------
+   7 · INIT
+   ------------------------------------------------------------------ */
+function init(){
+  S=qa('.s');
+  N=S.length;
+
+  /* chrome */
+  dotsEl=gid('dots');
+  railI=q('#rail i');
+  var ctEl=gid('ct');
+  if(ctEl){
+    ctEl.innerHTML='<b>01</b> / '+N;
+    ctB=ctEl.querySelector('b');
+  }
+  if(dotsEl){
+    dotsEl.innerHTML='';
+    S.forEach(function(_,k){
+      var d=document.createElement('span');
+      d.setAttribute('role','button');
+      d.setAttribute('tabindex','0');
+      d.setAttribute('aria-label','Slajd '+(k+1));
+      d.setAttribute('aria-current','false');
+      d.addEventListener('click',function(){showSlide(k)});
+      d.addEventListener('keydown',function(e){
+        if(e.key==='Enter'||e.key===' '){e.preventDefault();showSlide(k)}
+      });
+      dotsEl.appendChild(d);
+    });
+    D=[].slice.call(dotsEl.children);
+  }
+
+  /* navigačné tlačidlá */
+  var nx=gid('nx'),pv=gid('pv');
+  if(nx){nx.addEventListener('click',function(){showSlide(i+1)})}
+  if(pv){pv.addEventListener('click',function(){showSlide(i-1)})}
+
+  /* Dark / Light */
+  var th=gid('th');
+  if(th){
+    th.addEventListener('click',function(){
+      var isLight=document.documentElement.getAttribute('data-theme')==='light';
+      document.documentElement.setAttribute('data-theme',isLight?'dark':'light');
+      th.textContent=isLight?'Light':'Dark';
+    });
+  }
+
+  /* tooltipy + slovníček */
+  tip=gid('tip');
+  if(tip){tipB=tip.querySelector('b');tipP=tip.querySelector('p')}
+  gv=gid('gv');gg=gid('gg');gx=gid('gx');gl=gid('gl');
+  fillGlossary();
+  if(gl){gl.addEventListener('click',function(e){e.stopPropagation();if(gvOpen()){gclose()}else{gopen()}})}
+  if(gx){gx.addEventListener('click',gclose)}
+  if(gv){gv.addEventListener('click',function(e){if(e.target===gv){gclose()}})}
+
+  /* animácie a počítadlá */
+  stagger();
+  markCounters();
+  S.forEach(function(sl){sl.addEventListener('scroll',tipHide,{passive:true})});
+
+  /* štartovací slajd = ten, ktorý má .on v body.html (inak prvý) */
+  i=0;
+  for(var k=0;k<N;k++){if(S[k].classList.contains('on')){i=k;break}}
+  if(mode==='deck'&&N){
+    showSlide(i,true);
+  }else{
+    paintChrome();
+  }
+
+  initDiagram();
+  initConfig();
+}
+
+if(document.readyState==='loading'){
+  document.addEventListener('DOMContentLoaded',init);
+}else{
+  init();
+}
+})();
+</script>
+<script>
+/* ===== mode.js (A3) ===== */
+/* ============================================================================
+   mode.js — A3 · prepínač Deck / Dokument, doc reveal, scroll progres
+   Aura AI · interná AI infraštruktúra
+
+   Beží ako posledný skript (tooltips.js → deck.js → mode.js), takže
+   window.DECK (CONTRACT §5) už existuje. Tento súbor DECK iba konzumuje.
+
+   Žiadny localStorage, žiadna externá závislosť. Default režim = 'deck'.
+   ============================================================================ */
+(function () {
+  'use strict';
+
+  var D = window.DECK;
+  if (!D || typeof D.onMode !== 'function') {
+    console.error('[Aura mode.js] window.DECK.onMode nie je k dispozícii — deck.js sa nenačítal alebo spadol; prepínač Deck/Dokument sa neinjektoval.');
+    return;
+  }
+
+  var html = document.documentElement;
+  var topBar = document.getElementById('top');
+  var ctEl = document.getElementById('ct');
+  var railI = document.querySelector('#rail i');
+
+  var mode = 'deck';        /* 'deck' | 'doc' */
+  var secs = [];            /* pole <section class="s"> */
+  var io = null;            /* IntersectionObserver nad sekciami */
+  var mo = null;            /* MutationObserver nad data-mode */
+  var raf = 0;              /* throttle scroll/resize */
+  var btn = null;           /* #md */
+  var nameEl = null;        /* span.ctn v #ct */
+  var lastIdx = -1;
+
+  /* ---------------------------------------------------------------- utility */
+
+  function pad(n) { return ('0' + n).slice(-2); }
+
+  /* rovnaký formát ako deck.js: sk-SK, nedeliteľná medzera → obyčajná */
+  function fmt(n) {
+    return Math.round(n).toLocaleString('sk-SK').replace(/\u00a0/g, ' ');
+  }
+
+  function reduced() {
+    if (typeof D.reduced === 'function') {
+      try { return !!D.reduced(); } catch (e) { /* fallback nižšie */ }
+    }
+    return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  }
+
+  function slides() {
+    var l = null;
+    if (typeof D.slides === 'function') {
+      try { l = D.slides(); } catch (e) { l = null; }
+    }
+    if (!l || !l.length) { l = document.querySelectorAll('#deck .s'); }
+    if (!l || !l.length) { l = document.querySelectorAll('.s'); }
+    return [].slice.call(l);
+  }
+
+  function count() {
+    if (typeof D.count === 'function') {
+      try { var n = D.count(); if (n > 0) { return n; } } catch (e) { /* fallback */ }
+    }
+    return slides().length;
+  }
+
+  function current() {
+    if (typeof D.current === 'function') {
+      try { var n = D.current(); if (n >= 0) { return n; } } catch (e) { /* fallback */ }
+    }
+    return 0;
+  }
+
+  /* scroll kontejner dokumentu (report.css robí scrollerom root element) */
+  function scroller() {
+    var d = document.scrollingElement || html;
+    if (d && d.scrollHeight - d.clientHeight > 2) { return d; }
+    var b = document.body;
+    if (b && b.scrollHeight - b.clientHeight > 2) { return b; }
+    return d || b;
+  }
+
+  function scrollToY(y) {
+    var el = scroller();
+    if (!el) { return; }
+    try {
+      el.scrollTo({ top: y, behavior: reduced() ? 'auto' : 'smooth' });
+    } catch (e) {
+      el.scrollTop = y;
+    }
+  }
+
+  /* --------------------------------------------------------- počítadlá KPI */
+  /* deck.js spúšťa počítadlá v go(); window.DECK ich nevystavuje, takže tu
+     je rovnaká logika: cubic ease-out, 950 ms, sk-SK, reduced-motion skratka.
+     data-cnt značí deck.js pri inicializácii — ak by nie, doplníme rovnako. */
+
+  function ensureCnt() {
+    if (document.querySelector('[data-cnt]')) { return; }
+    var bs = document.querySelectorAll('#deck .s .kpi b, .s .kpi b');
+    [].forEach.call(bs, function (b) {
+      var t = b.textContent.trim();
+      if (/^[\d\s\u00a0]+$/.test(t) && t.replace(/\D/g, '').length) {
+        b.setAttribute('data-cnt', t.replace(/\D/g, ''));
+      }
+    });
+  }
+
+  function counters(sec) {
+    var list = sec.querySelectorAll('[data-cnt]');
+    if (!list.length) { return; }
+    var soft = !reduced();
+    [].forEach.call(list, function (b) {
+      var end = +b.getAttribute('data-cnt');
+      if (!isFinite(end)) { return; }
+      if (!soft) { b.textContent = fmt(end); return; }
+      var t0 = null, dur = 950;
+      function step(t) {
+        if (t0 === null) { t0 = t; }
+        var k = Math.min(1, (t - t0) / dur);
+        k = 1 - Math.pow(1 - k, 3);
+        b.textContent = fmt(end * k);
+        if (k < 1) { requestAnimationFrame(step); }
+      }
+      requestAnimationFrame(step);
+    });
+  }
+
+  /* ------------------------------------------------------------ doc reveal */
+
+  function reveal(sec) {
+    if (!sec || sec.classList.contains('rv')) { return; }
+    sec.classList.add('rv');
+    counters(sec);
+  }
+
+  /* záchranná siet pre sekcie vyššie ako viewport (IO threshold sa im
+     nemusí naplniť) a pre prehliadače bez IntersectionObservera */
+  function sweep() {
+    var vh = window.innerHeight || html.clientHeight || 0;
+    for (var k = 0; k < secs.length; k++) {
+      var s = secs[k];
+      if (s.classList.contains('rv')) { continue; }
+      var r = s.getBoundingClientRect();
+      var vis = Math.min(r.bottom, vh) - Math.max(r.top, 0);
+      if (vis <= 0) { continue; }
+      if (vis >= Math.min(140, r.height * 0.12) || r.height === 0) {
+        reveal(s);
+        if (io) { io.unobserve(s); }
+      }
+    }
+  }
+
+  /* ------------------------------------------------------ #ct a #rail v doc */
+
+  /* názov sekcie z .eb — formát „NN <s>·</s> Názov bloku“ */
+  function ebName(sec) {
+    var eb = sec.querySelector('.eb');
+    if (!eb) {
+      var h = sec.querySelector('h1,h2');
+      return h ? (h.textContent || '').replace(/[\t\n\r ]+/g, ' ').trim() : '';
+    }
+    var sep = eb.querySelector('s'), txt = '';
+    if (sep) {
+      var n = sep.nextSibling;
+      while (n) { txt += n.textContent || ''; n = n.nextSibling; }
+    }
+    if (!txt.trim()) {
+      txt = (eb.textContent || '').replace(/^\s*\d+\s*[·.\-]?\s*/, '');
+    }
+    return txt.replace(/[\t\n\r ]+/g, ' ').trim();
+  }
+
+  function ctB() {
+    if (!ctEl) { return null; }
+    var b = ctEl.querySelector('b');
+    if (!b) {
+      ctEl.innerHTML = '<b>' + pad(current() + 1) + '</b> / ' + count();
+      b = ctEl.querySelector('b');
+    }
+    return b;
+  }
+
+  function ctAttach() {
+    if (!ctEl) { return; }
+    ctB();
+    if (!nameEl) {
+      nameEl = document.createElement('span');
+      nameEl.className = 'ctn';
+    }
+    if (nameEl.parentNode !== ctEl) { ctEl.appendChild(nameEl); }
+  }
+
+  function ctDetach() {
+    if (nameEl && nameEl.parentNode) { nameEl.parentNode.removeChild(nameEl); }
+  }
+
+  /* index sekcie, ktorá je „práve čítaná“ */
+  function activeIndex() {
+    var el = scroller();
+    /* na konci dokumentu je to vždy posledná sekcia, aj keď je krátka */
+    if (el && el.scrollHeight - el.clientHeight - el.scrollTop <= 4) { return secs.length - 1; }
+    var probe = (window.innerHeight || html.clientHeight || 0) * 0.28;
+    var best = 0;
+    for (var k = 0; k < secs.length; k++) {
+      if (secs[k].getBoundingClientRect().top <= probe) { best = k; } else { break; }
+    }
+    return best;
+  }
+
+  function paintCt(i) {
+    var b = ctB();
+    if (!b) { return; }
+    if (i !== lastIdx) { b.textContent = pad(i + 1); }
+    if (nameEl) {
+      var nm = secs[i] ? ebName(secs[i]) : '';
+      var next = nm ? ' · ' + nm : '';
+      if (nameEl.textContent !== next) { nameEl.textContent = next; }
+    }
+    lastIdx = i;
+  }
+
+  function paintRail(p) {
+    if (!railI) { return; }
+    railI.style.width = (p * 100).toFixed(2) + '%';
+  }
+
+  function tick() {
+    var el = scroller();
+    if (el) {
+      var max = el.scrollHeight - el.clientHeight;
+      var p = max > 0 ? Math.min(1, Math.max(0, el.scrollTop / max)) : 1;
+      paintRail(p);
+    }
+    sweep();
+    if (secs.length) { paintCt(activeIndex()); }
+  }
+
+  function onScroll() {
+    if (raf) { return; }
+    raf = requestAnimationFrame(function () { raf = 0; tick(); });
+  }
+
+  /* Home / End = začiatok a konec dokumentu (deck si klávesy v doc režime
+     vypína cez onMode; capture + stopPropagation to poistí) */
+  function onKey(e) {
+    if (mode !== 'doc') { return; }
+    if (e.key !== 'Home' && e.key !== 'End') { return; }
+    if (e.ctrlKey || e.metaKey || e.altKey) { return; }
+    var t = e.target;
+    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) { return; }
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.key === 'Home') {
+      scrollToY(0);
+    } else {
+      var el = scroller();
+      scrollToY(el ? Math.max(0, el.scrollHeight - el.clientHeight) : 0);
+    }
+  }
+
+  /* ------------------------------------------------------- setup / teardown */
+
+  function setupDoc() {
+    secs = slides();
+    lastIdx = -1;
+    ctAttach();
+    /* #rail i má v decku transition .5s — v doc režime sleduje scroll 1:1 */
+    if (railI) { railI.style.transition = 'none'; }
+
+    if (window.IntersectionObserver) {
+      io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (en) {
+          if (!en.isIntersecting) { return; }
+          if (en.intersectionRatio >= 0.12 ||
+              en.intersectionRect.height >= Math.min(140, en.boundingClientRect.height * 0.12)) {
+            reveal(en.target);
+            io.unobserve(en.target);
+          }
+        });
+      }, { threshold: [0, 0.12, 0.5], rootMargin: '0px 0px -6% 0px' });
+      secs.forEach(function (s) { io.observe(s); });
+    } else {
+      secs.forEach(reveal);
+    }
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll, { passive: true });
+    if (document.body) {
+      document.body.addEventListener('scroll', onScroll, { passive: true });
+    }
+
+    /* skok na sekciu, na ktorej bol deck — až po prekreslení layoutu */
+    var i = Math.max(0, Math.min(secs.length - 1, current()));
+    requestAnimationFrame(function () {
+      if (mode !== 'doc') { return; }
+      var el = scroller(), s = secs[i];
+      if (el && s && i > 0) {
+        var y = el.scrollTop + s.getBoundingClientRect().top - 52;
+        try { el.scrollTo({ top: Math.max(0, y), behavior: 'auto' }); }
+        catch (e) { el.scrollTop = Math.max(0, y); }
+      }
+      tick();
+    });
+  }
+
+  function teardownDoc() {
+    if (io) { io.disconnect(); io = null; }
+    window.removeEventListener('scroll', onScroll);
+    window.removeEventListener('resize', onScroll);
+    if (document.body) { document.body.removeEventListener('scroll', onScroll); }
+    if (raf) { cancelAnimationFrame(raf); raf = 0; }
+
+    secs.forEach(function (s) { s.classList.remove('rv'); });
+    ctDetach();
+    lastIdx = -1;
+
+    /* deck stav: číslo slajdu a rail späť na „slajd N / 13“ */
+    var i = current(), n = count() || 1;
+    var b = ctB();
+    if (b) { b.textContent = pad(i + 1); }
+    if (railI) {
+      railI.style.transition = '';
+      railI.style.width = (((i + 1) / n) * 100) + '%';
+    }
+  }
+
+  /* ---------------------------------------------------------------- prepnutie */
+
+  function apply(m) {
+    m = (m === 'doc') ? 'doc' : 'deck';
+    if (m === mode && html.dataset.mode === m) { return; }
+    mode = m;
+
+    if (m === 'deck') { teardownDoc(); }
+
+    html.dataset.mode = m;
+    try {
+      D.onMode(m);
+    } catch (e) {
+      console.error('[Aura mode.js] window.DECK.onMode(' + m + ') zlyhalo:', e);
+    }
+
+    if (m === 'doc') { setupDoc(); }
+
+    document.dispatchEvent(new CustomEvent('aura:mode', { detail: { mode: m } }));
+    paintBtn();
+  }
+
+  /* ------------------------------------------------------------- prepínač #md */
+
+  function paintBtn() {
+    if (!btn) { return; }
+    var doc = mode === 'doc';
+    btn.textContent = doc ? 'Deck' : 'Dokument';
+    btn.setAttribute('aria-pressed', doc ? 'true' : 'false');
+    btn.setAttribute('aria-label', doc ? 'Prepnúť na deck (slajdy)' : 'Prepnúť na dokument (report)');
+    btn.title = doc ? 'Prepnúť na deck (slajdy)' : 'Prepnúť na dokument (report)';
+  }
+
+  function injectBtn() {
+    if (!topBar) {
+      console.error('[Aura mode.js] #top v dokumente nie je — prepínač Deck/Dokument sa neinjektoval.');
+      return false;
+    }
+    btn = document.createElement('button');
+    btn.className = 'pill';
+    btn.id = 'md';
+    btn.type = 'button';
+    var th = document.getElementById('th');
+    if (th && th.parentNode === topBar) {
+      topBar.insertBefore(btn, th.nextSibling);
+    } else {
+      topBar.appendChild(btn);
+    }
+    btn.addEventListener('click', function (e) {
+      e.preventDefault();
+      apply(mode === 'doc' ? 'deck' : 'doc');
+    });
+    paintBtn();
+    return true;
+  }
+
+  /* -------------------------------------------------------------------- init */
+
+  html.dataset.mode = 'deck';   /* default, bez localStorage */
+  ensureCnt();
+  if (!injectBtn()) { return; }
+  document.addEventListener('keydown', onKey, true);
+
+  /* keby režim prepol niekto zvonku (napr. verifikačný skript A4)
+     nastavením data-mode, doc logika sa aj tak správne naviaže */
+  if (window.MutationObserver) {
+    mo = new MutationObserver(function () {
+      var ext = html.dataset.mode === 'doc' ? 'doc' : 'deck';
+      if (ext !== mode) { apply(ext); }
+    });
+    mo.observe(html, { attributes: true, attributeFilter: ['data-mode'] });
+  }
+})();
+</script>
+</body>
+</html>
