@@ -1,4 +1,4 @@
-# =============================================================================
+﻿# =============================================================================
 # BackupCommon.ps1 — shared config + helpers for Aura Roadmap backups.
 # Dot-sourced by backup.ps1 and restore-test.ps1:
 #     . "$PSScriptRoot\BackupCommon.ps1"

@@ -1,4 +1,4 @@
-# =============================================================================
+﻿# =============================================================================
 # restore-test.ps1 — verifies the newest dump can actually be restored.
 # =============================================================================
 # A backup you have never restored is not a backup. This script restores the
