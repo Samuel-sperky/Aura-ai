@@ -309,14 +309,51 @@ nedotknuté — chýba iba `git remote add` + `git push`.
 4. **Prílohy** neexistujú ani ako `links` tabuľka — URL sa píše do popisu položky
    (kontrakt §2.2 ich rušil, otázka 34 navrhovala `links` ako alternatívu).
 
-### Otvorené body pre ďalší sprint
+### Follow-up šprinty (2026-07-29, 5 agentov) — DOKONČENÉ
 
-- `git remote add origin` + prvý push (blokované chýbajúcim `gh`)
-- 23 lint upozornení `react-hooks/set-state-in-effect` — nezhoršujú funkciu, ale
-  spôsobujú kaskádové rendery; kandidát na `useSyncExternalStore` refaktor
-- Prehľad ťahá **7 API requestov** na jedno zobrazenie; zlúčenie do jedného
-  agregačného endpointu by odstránilo hlavný dôvod, prečo bolo treba zvýšiť rate-limit
-- Appka nelogguje chyby route handlerov — pri diagnostike bolo treba merať z prehliadača,
-  lebo `docker logs` mal 4 riadky. Chýba observabilita.
-- Integrácie s rodinou (read-only user `roadmap_ro`) — pripravené, nezapojené
-- Rozpor teal vs zlatá v rodine — samostatná úloha mimo tohto sprintu
+Tri z piatich otvorených bodov sú vyriešené. Brána po nich: `tsc` čistý, lint **0 chýb
+a 0 upozornení**, **593 testov v 27 súboroch**, build 28/28 stránok, **47/47 e2e**.
+
+| Šprint | Výsledok |
+|---|---|
+| **Observabilita** | Každý výstup `defineRoute` emituje jeden štruktúrovaný riadok (metóda, path, status, trvanie, reason, user). Nikdy telo, query hodnoty, hlavičky ani cookies — overené kanárikovým testom s piatimi tajnými hodnotami, z ktorých sa do logu nedostala ani jedna. Logovanie je obalené tak, aby rozbitý logger nezmenil hotovú 200 na unhandled rejection. |
+| **Agregácia Prehľadu** | 7 paralelných requestov → **1** (`GET /api/overview`). Staré endpointy zostali nedotknuté. Tým zmizla príčina, pre ktorú bolo treba zvýšiť rate-limit. |
+| **Lint dlh** | 23 upozornení `set-state-in-effect` → **0**, cez promise chains, derivovaný stav a `useSyncExternalStore`. Nikde plošný `eslint-disable`. |
+
+**Nová observabilita sa zaplatila okamžite:** riadok `POST /api/work-items/.../move 400
+reason=handler` odhalil, že dialóg „Presunúť" nabízal šprinty iných projektov, ktoré API
+odmieta relačnou kontrolou — na seed dátach bol teda každý cieľ zaručený error toast.
+Opravené funkciou `moveTargets()`. **Tú istú pascu má drag & drop** a zatiaľ nie je
+opravená (viď otvorené body).
+
+Seed doplnený: nepriradené položky ES-100 (bez nich sa presun z backlogu nedal vyskúšať
+vôbec) a `updated_at` na dokončených položkách, aby 12-týždňový graf mal čo kresliť.
+
+### Opakovateľné workflows
+
+V `.claude/workflows/` sú štyri agentové workflows verzované s kódom, plus `README.md`:
+`aura-verify` (overovacia brána vrátane kontrol súladu s kontraktom), `aura-new-app`
+(scaffold novej appky rodiny s prenosom 14 overených pascí), a dva odložené —
+`aura-roadmap-integrations` a `aura-family-accent-unify`.
+
+### Otvorené body
+
+**Blokované prostredím:**
+- `git remote add origin` + prvý push — `gh` nie je nainštalované
+
+**Vecné, v poradí hodnoty:**
+- **Drag & drop má tú istú relačnú pascu ako dialóg** — `onDragEnd` v `SprintPlanner.tsx`
+  nefiltruje droppable cieľ, takže pretiahnutie karty do šprintu iného projektu skončí
+  400 a error toastom. Riešenie je použiť `moveTargets()`, rovnako ako dialóg.
+- `GET /api/overview` ťahá 200 checkpointov, hoci panel renderuje 6 a KPI potrebuje len
+  `total`. Zníženie na ~10 riadkov + total je čistá úspora.
+- `ProjectDetailModal` je kľúčovaný projektom, nie tokenom obnovenia, takže pri
+  opätovnom otvorení toho istého projektu na jeden frame zobrazí staré dáta namiesto
+  skeletonu. `aria-busy` je pritom nastavené.
+- Nepoužitý i18n kľúč `overview.kpi.sprintCapacitySub`.
+- `Pagination issues` v seede má stále `updated_at NULL` (existujúci riadok sa pri
+  idempotentnom behu preskočí) — prejaví sa až po čistom reseede.
+
+**Odložené tvojím rozhodnutím** (pripravené ako workflows, nespúšťať bez pokynu):
+- Integrácie s rodinou cez read-only usera `roadmap_ro` (otázka #83)
+- Rozpor teal vs zlatá v rodine (otázka #63)
