@@ -48,6 +48,21 @@ export function getPool(): Pool {
 }
 
 /**
+ * Close the pool and release its connections.
+ *
+ * Only one-shot CLI scripts (migrate, seed, reset-pin) need this. Idle pool
+ * connections keep the Node event loop alive, so a script that finishes its work
+ * without closing the pool never exits — it just hangs holding open sessions.
+ * The long-lived server must NOT call this; its pool lives for the process.
+ */
+export async function closePool(): Promise<void> {
+  const pool = globalThis.__auraRoadmapDbPool;
+  if (!pool) return;
+  globalThis.__auraRoadmapDbPool = undefined;
+  await pool.end();
+}
+
+/**
  * Run a parameterized query. `sql` must use `?` placeholders for ALL dynamic
  * values. Returns rows typed as T[].
  *

@@ -11,7 +11,7 @@
 import "./_bootstrap";
 
 import { randomUUID } from "node:crypto";
-import { withTransaction } from "@/lib/db";
+import { closePool, withTransaction } from "@/lib/db";
 import { ensureBootstrapAdmin, roleIdByKey } from "@/lib/auth/bootstrap";
 import { hashPassword } from "@/lib/auth/pin";
 import { initialsOf } from "@/lib/auth/rbac";
@@ -102,8 +102,11 @@ async function seed(): Promise<void> {
   if (bootstrapResult.adminCreated) {
     console.log(`[seed] Admin created: ${bootstrapResult.adminEmail}`);
   } else if (bootstrapResult.skipped === "users-exist") {
-    console.log("[seed] Users already exist, skipping bootstrap.\n");
-    return;
+    // Do NOT bail out here. Bootstrap runs outside the demo-data transaction, so
+    // a run that fails midway still leaves the admin behind — returning early
+    // would make every later run a silent no-op. Each demo insert below checks
+    // for its own record, which is what actually makes the seed idempotent.
+    console.log("[seed] Admin already exists — keeping it, continuing with demo data.\n");
   } else if (bootstrapResult.skipped === "missing-credentials") {
     console.log("[seed] ADMIN_EMAIL or ADMIN_PASSWORD not set in .env\n");
     throw new Error("Missing ADMIN_EMAIL or ADMIN_PASSWORD");
@@ -320,6 +323,102 @@ async function seed(): Promise<void> {
       console.log(`  ${cp.name}`);
     }
 
+    // Requirements are what readiness % is actually computed from (share of the
+    // REQUIRED ones that are complete), so the `complete` flags below must match
+    // each checkpoint's readiness value or the UI contradicts itself.
+    console.log("\n[seed] Adding checkpoint requirements...");
+    const requirements: Record<string, { label: string; required?: boolean; complete: boolean }[]> = {
+      decided: [
+        { label: "Dizajn schválený vlastníkom", complete: true },
+        { label: "Rozpočet potvrdený", complete: true },
+        { label: "Termín odsúhlasený s tímom", complete: true },
+        { label: "Poznámky z porady priložené", required: false, complete: true },
+      ],
+      ready: [
+        { label: "API kontrakt zdokumentovaný", complete: true },
+        { label: "Endpointy otestované", complete: true },
+        { label: "Rate-limit nastavený", complete: true },
+      ],
+      planned: [
+        { label: "Penetračný test naplánovaný", complete: true },
+        { label: "Závislosti preverené", complete: true },
+        { label: "Auth prehliadka dokončená", complete: false },
+        { label: "Upload endpointy overené", complete: false },
+        { label: "CSP skontrolované", complete: false },
+      ],
+      blocked: [
+        { label: "Dodávateľ potvrdil termín", complete: false },
+        { label: "Zmluva podpísaná", complete: false },
+        { label: "Testovací prístup pridelený", complete: false },
+      ],
+    };
+
+    let requirementCount = 0;
+    for (const [key, reqs] of Object.entries(requirements)) {
+      const checkpointId = checkpointIds[key];
+      if (!checkpointId) continue;
+
+      const existingRows = await conn.query(
+        "SELECT COUNT(*) AS n FROM checkpoint_requirements WHERE checkpoint_id = ?",
+        [checkpointId],
+      );
+      if (Number(existingRows[0].n) > 0) {
+        console.log(`  [skip] ${key} already has requirements`);
+        continue;
+      }
+
+      for (let i = 0; i < reqs.length; i++) {
+        const req = reqs[i];
+        await conn.execute(
+          `INSERT INTO checkpoint_requirements
+           (id, checkpoint_id, label, required, complete, sort_order, created_by)
+           VALUES (?, ?, ?, ?, ?, ?, ?)`,
+          [
+            randomUUID(),
+            checkpointId,
+            req.label,
+            req.required === false ? 0 : 1,
+            req.complete ? 1 : 0,
+            i * 10,
+            demoUserIds[DEMO_USERS[0].email],
+          ],
+        );
+        requirementCount++;
+      }
+      console.log(`  ${key}: ${reqs.length} podmienok`);
+    }
+    console.log(`  Created ${requirementCount} requirements`);
+
+    // The "decided" checkpoint needs its immutable decision record, otherwise the
+    // decision queue has nothing to show as already resolved.
+    console.log("\n[seed] Recording the decision on the decided checkpoint...");
+    const decidedCheckpointId = checkpointIds["decided"];
+    if (decidedCheckpointId) {
+      const existingRows = await conn.query(
+        "SELECT COUNT(*) AS n FROM checkpoint_decisions WHERE checkpoint_id = ?",
+        [decidedCheckpointId],
+      );
+      if (Number(existingRows[0].n) > 0) {
+        console.log("  [skip] decision already recorded");
+      } else {
+        await conn.execute(
+          `INSERT INTO checkpoint_decisions (id, checkpoint_id, outcome, note, decided_by)
+           VALUES (?, ?, ?, ?, ?)`,
+          [
+            randomUUID(),
+            decidedCheckpointId,
+            "go",
+            "Všetky povinné podmienky splnené, dizajn schválený bez pripomienok.",
+            demoUserIds[DEMO_USERS[1].email],
+          ],
+        );
+        await conn.execute("UPDATE checkpoints SET decided_at = NOW() WHERE id = ? AND decided_at IS NULL", [
+          decidedCheckpointId,
+        ]);
+        console.log("  go — Schválenie dizajnu");
+      }
+    }
+
     console.log("\n[seed] Creating work items (~20 total)...");
     const workItemIds: string[] = [];
 
@@ -345,14 +444,31 @@ async function seed(): Promise<void> {
       { projectId: "MARK-30", sprintId: null, type: "idea", title: "Support multiple languages", status: "backlog", priority: "P3", points: 21 },
     ];
 
+    let itemsCreated = 0;
+    let itemsSkipped = 0;
+
     for (let i = 0; i < items.length; i++) {
       const item = items[i];
       const parentId = item.parentIndex !== undefined ? workItemIds[item.parentIndex] : null;
 
-      const itemId = randomUUID();
       const sprintId = item.sprintId ? sprintIds[item.sprintId] : null;
       const projectId = projectIds[item.projectId];
 
+      // (project_id, title) is the natural key of the demo set. Without this check
+      // every re-run duplicates the whole item tree — and because later comments and
+      // worklogs address items by index, the duplicates silently pile up too.
+      const existingItems = await conn.query(
+        "SELECT id FROM work_items WHERE project_id = ? AND title = ? LIMIT 1",
+        [projectId, item.title],
+      );
+      if (existingItems.length > 0) {
+        workItemIds.push(existingItems[0].id);
+        itemsSkipped++;
+        continue;
+      }
+
+      const itemId = randomUUID();
+      itemsCreated++;
       await conn.execute(
         `INSERT INTO work_items
          (id, project_id, sprint_id, parent_id, item_type, title, status, priority, story_points, rank_value, created_by)
@@ -373,56 +489,69 @@ async function seed(): Promise<void> {
       );
       workItemIds.push(itemId);
     }
-    console.log(`  Created ${items.length} items`);
+    console.log(`  Created ${itemsCreated} items, skipped ${itemsSkipped} existing`);
 
     console.log("\n[seed] Adding worklogs and comments...");
 
+    // Items are addressed by their index in `items`, so that the project a
+    // worklog belongs to can be resolved from the same source of truth.
+    const projectIdOfItem = (index: number) => projectIds[items[index].projectId];
+
     // 3 comments
     const comments = [
-      {
-        itemId: workItemIds[0],
-        author: DEMO_USERS[0].name,
-        text: "Už mám hotový draft prototýpu.",
-      },
-      {
-        itemId: workItemIds[1],
-        author: DEMO_USERS[1].name,
-        text: "Testoval som na iOS a Android — všetko OK.",
-      },
-      {
-        itemId: workItemIds[4],
-        author: DEMO_USERS[0].name,
-        text: "Čakáme na schválenie od vedenia.",
-      },
+      { itemIndex: 0, authorEmail: DEMO_USERS[0].email, body: "Už mám hotový draft prototypu." },
+      { itemIndex: 1, authorEmail: DEMO_USERS[1].email, body: "Testoval som na iOS a Android — všetko OK." },
+      { itemIndex: 4, authorEmail: DEMO_USERS[0].email, body: "Čakáme na schválenie od vedenia." },
     ];
 
+    let commentsCreated = 0;
     for (const cmt of comments) {
-      const commentId = randomUUID();
-      await conn.execute(
-        `INSERT INTO work_item_comments (id, work_item_id, text, created_by, author_name, created_at)
-         VALUES (?, ?, ?, ?, ?, NOW())`,
-        [commentId, cmt.itemId, cmt.text, demoUserIds[DEMO_USERS[0].email], cmt.author],
+      const existing = await conn.query(
+        "SELECT id FROM work_item_comments WHERE work_item_id = ? AND body = ? LIMIT 1",
+        [workItemIds[cmt.itemIndex], cmt.body],
       );
+      if (existing.length > 0) continue;
+
+      await conn.execute(
+        `INSERT INTO work_item_comments (id, work_item_id, author_id, body)
+         VALUES (?, ?, ?, ?)`,
+        [randomUUID(), workItemIds[cmt.itemIndex], demoUserIds[cmt.authorEmail], cmt.body],
+      );
+      commentsCreated++;
     }
 
     // 5 worklogs
     const worklogs = [
-      { itemId: workItemIds[0], minutes: 120, note: "Dizajn komponentov" },
-      { itemId: workItemIds[1], minutes: 45, note: "Manuálne testovanie" },
-      { itemId: workItemIds[2], minutes: 90, note: "Implementácia" },
-      { itemId: workItemIds[3], minutes: 30, note: "Bug fix" },
-      { itemId: workItemIds[4], minutes: 60, note: "Dokumentácia API" },
+      { itemIndex: 0, minutes: 120, note: "Dizajn komponentov" },
+      { itemIndex: 1, minutes: 45, note: "Manuálne testovanie" },
+      { itemIndex: 2, minutes: 90, note: "Implementácia" },
+      { itemIndex: 3, minutes: 30, note: "Bug fix" },
+      { itemIndex: 4, minutes: 60, note: "Dokumentácia API" },
     ];
 
+    let worklogsCreated = 0;
     for (const log of worklogs) {
-      const logId = randomUUID();
-      await conn.execute(
-        `INSERT INTO worklogs (id, work_item_id, minutes, description, work_date, created_by)
-         VALUES (?, ?, ?, ?, CURDATE(), ?)`,
-        [logId, log.itemId, log.minutes, log.note, demoUserIds[DEMO_USERS[0].email]],
+      const existing = await conn.query(
+        "SELECT id FROM worklogs WHERE work_item_id = ? AND description = ? LIMIT 1",
+        [workItemIds[log.itemIndex], log.note],
       );
+      if (existing.length > 0) continue;
+
+      await conn.execute(
+        `INSERT INTO worklogs (id, work_item_id, user_id, project_id, work_date, minutes, description)
+         VALUES (?, ?, ?, ?, CURDATE(), ?, ?)`,
+        [
+          randomUUID(),
+          workItemIds[log.itemIndex],
+          demoUserIds[DEMO_USERS[0].email],
+          projectIdOfItem(log.itemIndex),
+          log.minutes,
+          log.note,
+        ],
+      );
+      worklogsCreated++;
     }
-    console.log(`  Created ${comments.length} comments and ${worklogs.length} worklogs`);
+    console.log(`  Created ${commentsCreated} comments and ${worklogsCreated} worklogs`);
 
     console.log("\n[seed] Creating baseline plan...");
     // 1 baseline after the "decided" checkpoint
@@ -433,11 +562,21 @@ async function seed(): Promise<void> {
       items_by_status: { backlog: 12, in_progress: 2, done: 1, waiting: 2 },
     };
 
-    await conn.execute(
-      `INSERT INTO plan_versions (id, checkpoint_id, snapshot, created_by)
-       VALUES (?, ?, ?, ?)`,
-      [planId, checkpointIds["decided"], JSON.stringify(planSnapshot), demoUserIds[DEMO_USERS[0].email]],
+    const planName = "Baseline po rozhodnutí — Spustenie e-shopu";
+    const existingPlans = await conn.query(
+      "SELECT id FROM plan_versions WHERE name = ? LIMIT 1",
+      [planName],
     );
+    if (existingPlans.length > 0) {
+      console.log("  [skip] baseline already exists");
+    } else {
+      await conn.execute(
+        `INSERT INTO plan_versions (id, name, baseline_date, snapshot_json, created_by)
+         VALUES (?, ?, CURDATE(), ?, ?)`,
+        [planId, planName, JSON.stringify(planSnapshot), demoUserIds[DEMO_USERS[0].email]],
+      );
+      console.log(`  ${planName}`);
+    }
 
     console.log("[seed] ✓ Seed complete!\n");
   });
@@ -449,7 +588,12 @@ async function seed(): Promise<void> {
 // Main
 // ────────────────────────────────────────────────────────────────────────────
 
-seed().catch((err) => {
-  console.error("[seed] Error:", err);
-  process.exit(1);
-});
+// The pool must be closed explicitly: idle connections keep the event loop alive,
+// so without this the script hangs forever after finishing its work.
+seed()
+  .then(() => closePool())
+  .catch(async (err) => {
+    console.error("[seed] Error:", err);
+    await closePool().catch(() => {});
+    process.exit(1);
+  });
