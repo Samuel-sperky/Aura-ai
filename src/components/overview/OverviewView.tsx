@@ -9,12 +9,20 @@
 //   4. upcoming checkpoints + recent audit activity
 //   5. "Kopírovať súhrn" → a plain-text summary on the clipboard
 //
-// DATA: one parallel fan-out, all of it read-only. Counts that the server can
-// answer with a COUNT come back as `pagination.total` from a `pageSize=1`
-// request instead of being derived from a downloaded page — cheaper and exact.
+// DATA: ONE read — `GET /api/overview` — and nothing else. This used to be a
+// seven-request parallel fan-out (`/api/projects`, `/api/checkpoints` ×2,
+// `/api/sprints`, `/api/work-items` ×2, `/api/audit`). Rate-limit buckets are
+// keyed by CLIENT IP, so a team behind one NAT address shared a single bucket and
+// every dashboard load spent it seven times over; the symptom was every panel
+// rendering "Údaje sa nepodarilo načítať", which reads as a data bug rather than a
+// throttle. Those endpoints are unchanged — the Overview simply stopped calling
+// them. The KPI counts are exact COUNTs computed server-side, not sums over a
+// downloaded page.
 //
-// The audit panel is rendered ONLY for a holder of `audit.read`; the request is
-// not even sent otherwise, so a viewer never produces a 403 in their network log.
+// The audit panel is rendered ONLY for a holder of `audit.read`. The aggregate
+// returns `activity: []` for everyone else instead of a 403 (so one request
+// serves every role), and without the right the panel is not rendered at all —
+// an empty frame would advertise a block the viewer can never fill.
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -44,8 +52,7 @@ import {
 } from "@/components/ui";
 import type { TableColumn } from "@/components/ui";
 import { EmptyState, ErrorState, LoadingState } from "@/components/states";
-import { ApiError, apiGet, qs } from "@/lib/api";
-import type { ListResult } from "@/lib/api";
+import { ApiError, apiGet } from "@/lib/api";
 import {
   CHECKPOINT_LIFECYCLE_TONE,
   CHECKPOINT_TYPE_ICON,
@@ -53,7 +60,6 @@ import {
   checkpointStateKey,
   checkpointTypeKey,
   healthKey,
-  isActiveProject,
   isAtRisk,
 } from "@/lib/client/domain";
 import {
@@ -67,155 +73,56 @@ import {
   todayIso,
 } from "@/lib/client/format";
 import { t } from "@/lib/i18n";
-import type { CheckpointDto } from "@/lib/domain/contracts/checkpoints";
+import type { OverviewDto } from "@/lib/domain/contracts/overview";
 import type { ProjectDto } from "@/lib/domain/contracts/projects";
-import type { SprintWithMetricsDto } from "@/lib/domain/contracts/sprints";
-import type { WorkItemDto } from "@/lib/domain/contracts/workItems";
 import { useMe } from "@/lib/client/useMe";
 import { DonePointsChart } from "./DonePointsChart";
+import { ZERO_KPIS, summaryKpis } from "./kpis";
 import { sortByRisk } from "./ranking";
 import { buildSummary, copyToClipboard } from "./summary";
 import type { SummaryInput } from "./summary";
-import {
-  CHART_WEEKS,
-  bucketDonePoints,
-  weekOverWeekDelta,
-  weekStarts,
-  windowTotal,
-} from "./weeks";
+import { CHART_WEEKS, bucketDonePoints, weekStarts } from "./weeks";
 
-/** `GET /api/audit` row, restated locally: a client component must never import
- *  from a route module (it would drag `mariadb` into the browser bundle). */
-interface ActivityEntry {
-  id: string;
-  userEmail: string | null;
-  action: string;
-  entity: string | null;
-  entityId: string | null;
-  ts: string | null;
-  detail: string | null;
-}
-
-/** Upper bound for the project block — "all of them" at the 50-project scale. */
-const PROJECT_LIMIT = 200;
-/** Upper bound for the queue list; the KPI count comes from `pagination.total`. */
-const CHECKPOINT_LIMIT = 200;
-/** How many done items to scan for the 12-week chart (newest first). */
-const DONE_SCAN_LIMIT = 2000;
-/** Rows in the activity and checkpoint panels. */
-const ACTIVITY_ROWS = 10;
+/** Rows in the upcoming-checkpoints panel. The activity panel's own cap (10) is
+ *  the endpoint's — it never returns more, so the client does not re-slice it. */
 const UPCOMING_ROWS = 6;
-
-interface OverviewData {
-  projects: ProjectDto[];
-  openCheckpoints: CheckpointDto[];
-  openCheckpointCount: number;
-  myDecisionCount: number;
-  activeSprint: SprintWithMetricsDto | null;
-  overdueItems: number;
-  doneItems: WorkItemDto[];
-  activity: ActivityEntry[];
-}
-
-/** Yesterday — `dueBefore` is inclusive, so "overdue" must stop before today. */
-function yesterdayIso(today = todayIso()): string {
-  const ms = Date.parse(`${today}T00:00:00Z`) - 86_400_000;
-  return new Date(ms).toISOString().slice(0, 10);
-}
 
 export function OverviewView() {
   const router = useRouter();
   const toast = useToast();
   const me = useMe();
 
-  const [data, setData] = useState<OverviewData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState<OverviewDto | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [nonce, setNonce] = useState(0);
+  // `loading` is DERIVED: the nonce of the request whose response is on screen is
+  // remembered, so "a request is in flight" is simply "the two nonces disagree".
+  // A `setLoading(true)` in the effect body would cascade an extra render on every
+  // load — the React Compiler rule `set-state-in-effect` flags exactly that. Same
+  // shape as `lib/client/useMe`.
+  const [loadedNonce, setLoadedNonce] = useState(-1);
+  const loading = loadedNonce !== nonce;
 
   const canReadAudit = me.can("audit.read");
   const meReady = !me.loading;
 
+  // One request for every role: `audit.read` no longer changes WHAT is fetched
+  // (the endpoint returns `activity: []` without the right), only what is
+  // rendered — so the right is not a dependency here.
   useEffect(() => {
     if (!meReady) return;
     const controller = new AbortController();
-    const opts = { signal: controller.signal };
     let alive = true;
 
-    async function load(): Promise<void> {
-      const today = todayIso();
-
-      const [
-        projects,
-        checkpoints,
-        mine,
-        sprints,
-        overdue,
-        done,
-        activity,
-      ] = await Promise.all([
-        apiGet<ListResult<ProjectDto>>(
-          `/api/projects${qs({ pageSize: PROJECT_LIMIT, sort: "risk", dir: "asc" })}`,
-          opts,
-        ),
-        apiGet<ListResult<CheckpointDto>>(
-          `/api/checkpoints${qs({
-            queue: 1,
-            pageSize: CHECKPOINT_LIMIT,
-            sort: "dueDate",
-            dir: "asc",
-          })}`,
-          opts,
-        ),
-        apiGet<ListResult<CheckpointDto>>(
-          `/api/checkpoints${qs({ queue: 1, mine: 1, pageSize: 1 })}`,
-          opts,
-        ),
-        apiGet<ListResult<SprintWithMetricsDto>>(
-          `/api/sprints${qs({ status: "active", pageSize: 5 })}`,
-          opts,
-        ),
-        apiGet<ListResult<WorkItemDto>>(
-          `/api/work-items${qs({
-            openOnly: 1,
-            dueBefore: yesterdayIso(today),
-            pageSize: 1,
-          })}`,
-          opts,
-        ),
-        apiGet<ListResult<WorkItemDto>>(
-          `/api/work-items${qs({
-            status: "done",
-            sort: "updatedAt",
-            dir: "desc",
-            pageSize: DONE_SCAN_LIMIT,
-          })}`,
-          opts,
-        ),
-        canReadAudit
-          ? apiGet<ListResult<ActivityEntry>>(
-              `/api/audit${qs({ pageSize: ACTIVITY_ROWS })}`,
-              opts,
-            ).catch(() => ({ items: [] as ActivityEntry[] }))
-          : Promise.resolve({ items: [] as ActivityEntry[] }),
-      ]);
-
-      if (!alive) return;
-      setData({
-        projects: sortByRisk(projects.items),
-        openCheckpoints: checkpoints.items,
-        openCheckpointCount: checkpoints.pagination.total,
-        myDecisionCount: mine.pagination.total,
-        activeSprint: sprints.items[0] ?? null,
-        overdueItems: overdue.pagination.total,
-        doneItems: done.items,
-        activity: activity.items,
-      });
-      setError(null);
-    }
-
-    setLoading(true);
-    load()
+    apiGet<OverviewDto>("/api/overview", { signal: controller.signal })
+      .then((res) => {
+        if (!alive) return;
+        // The endpoint already orders projects risk-first; `sortByRisk` is a
+        // deliberate second, pure implementation of the one rule a reader trusts
+        // without checking ("the red ones are on top"). Idempotent here.
+        setData({ ...res, projects: sortByRisk(res.projects) });
+        setError(null);
+      })
       .catch((err: unknown) => {
         if (!alive) return;
         if (err instanceof DOMException && err.name === "AbortError") return;
@@ -226,14 +133,14 @@ export function OverviewView() {
         );
       })
       .finally(() => {
-        if (alive) setLoading(false);
+        if (alive) setLoadedNonce(nonce);
       });
 
     return () => {
       alive = false;
       controller.abort();
     };
-  }, [meReady, canReadAudit, nonce]);
+  }, [meReady, nonce]);
 
   const refetch = useCallback(() => setNonce((n) => n + 1), []);
 
@@ -242,21 +149,10 @@ export function OverviewView() {
     return bucketDonePoints(data?.doneItems ?? [], weeks);
   }, [data]);
 
-  const kpis = useMemo(() => {
-    const projects = data?.projects ?? [];
-    return {
-      activeProjects: projects.filter((p) => isActiveProject(p.status)).length,
-      projectsAtRisk: projects.filter((p) => isAtRisk(p.health)).length,
-      openCheckpoints: data?.openCheckpointCount ?? 0,
-      myDecisions: data?.myDecisionCount ?? 0,
-      sprintName: data?.activeSprint?.name ?? null,
-      sprintCapacityUsedPercent:
-        data?.activeSprint?.metrics.capacityUsedPercent ?? null,
-      overdueItems: data?.overdueItems ?? 0,
-      donePointsWindow: windowTotal(buckets),
-      donePointsDelta: weekOverWeekDelta(buckets),
-    };
-  }, [data, buckets]);
+  const kpis = useMemo(
+    () => summaryKpis(data?.kpis ?? ZERO_KPIS, buckets),
+    [data, buckets],
+  );
 
   const atRisk = useMemo(
     () => (data?.projects ?? []).filter((p) => isAtRisk(p.health)),

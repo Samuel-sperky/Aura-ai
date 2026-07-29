@@ -16,7 +16,7 @@
 // decision. Decided ones live in the project detail and in the timeline history —
 // a work queue that keeps finished work in it stops being a queue.
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   parseAsString,
@@ -95,12 +95,41 @@ export function DecisionsView() {
 
   const [rows, setRows] = useState<CheckpointDto[]>([]);
   const [projects, setProjects] = useState<ProjectDto[]>([]);
-  const [loading, setLoading] = useState(true);
   const [firstLoadDone, setFirstLoadDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [nonce, setNonce] = useState(0);
-  const [search, setSearch] = useState(params.q);
-  const [restored, setRestored] = useState(false);
+  // Same guard as in WorkItemsView: a ref, because flipping it is not something
+  // the screen re-renders for.
+  const restored = useRef(false);
+
+  // The search box is EDITED locally and debounced into `?q=`, so its value is
+  // derived rather than mirrored by an effect: as long as the query it was typed
+  // against is still in the URL the local text wins, and the moment `?q=` moves
+  // on its own (Back, a removed chip, the restored preferences) the URL wins.
+  const [typedSearch, setTypedSearch] = useState({ value: params.q, q: params.q });
+  const search = typedSearch.q === params.q ? typedSearch.value : params.q;
+  const setSearch = useCallback(
+    (value: string) => setTypedSearch({ value, q: params.q }),
+    [params.q],
+  );
+
+  // `loading` is DERIVED from which request the rows on screen belong to; a
+  // setLoading(true) in the effect body cascades renders
+  // (react-hooks/set-state-in-effect).
+  const queuePath = `/api/checkpoints${qs({
+    queue: 1,
+    mine: params.mine === "1" ? 1 : undefined,
+    lifecycle: params.lifecycle || undefined,
+    checkpointType: params.checkpointType || undefined,
+    projectId: params.projectId || undefined,
+    q: params.q || undefined,
+    sort: "dueDate",
+    dir: "asc",
+    pageSize: QUEUE_LIMIT,
+  })}`;
+  const requestKey = `${queuePath}#${nonce}`;
+  const [loadedKey, setLoadedKey] = useState<string | null>(null);
+  const loading = loadedKey !== requestKey;
 
   const canWriteCheckpoints = me.can("checkpoints.write");
   const canDecide = me.can("decisions.decide");
@@ -110,8 +139,8 @@ export function DecisionsView() {
 
   // ── remembered filters (URL wins; see ProjectsView for the full rationale) ──
   useEffect(() => {
-    if (restored || prefsLoading || !storedPrefs) return;
-    setRestored(true);
+    if (restored.current || prefsLoading || !storedPrefs) return;
+    restored.current = true;
     const hasUrlState = FILTER_KEYS.some(
       (key) => (params as Record<string, string>)[key] !== "" &&
         (params as Record<string, string>)[key] !== "0",
@@ -124,15 +153,19 @@ export function DecisionsView() {
       q: typeof storedPrefs.q === "string" ? storedPrefs.q : "",
       mine: storedLiteral(storedPrefs, "mine", MINE) ?? "0",
     };
-    setSearch(next.q);
+    // The search box needs no separate write: its text derives from `?q=`, which
+    // this one call sets.
     void setParams(next);
     // `params` is read once here as the entry state; adding it would re-run the
     // restore on every filter change and fight the user.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [restored, prefsLoading, storedPrefs, setParams]);
+  }, [prefsLoading, storedPrefs, setParams]);
 
+  // `prefsLoading` is a dependency so this still runs in the same commit as the
+  // restore pass above (effects fire in declaration order), which is what used to
+  // happen when `restored` was state.
   useEffect(() => {
-    if (!restored) return;
+    if (!restored.current) return;
     savePrefs({
       q: params.q,
       mode: "decisions",
@@ -144,7 +177,7 @@ export function DecisionsView() {
       },
     });
   }, [
-    restored,
+    prefsLoading,
     savePrefs,
     params.q,
     params.lifecycle,
@@ -160,29 +193,11 @@ export function DecisionsView() {
     return () => clearTimeout(timer);
   }, [search, params.q, setParams]);
 
-  useEffect(() => {
-    setSearch((current) => (current === params.q ? current : params.q));
-  }, [params.q]);
-
   // ── data ───────────────────────────────────────────────────────────────────
   useEffect(() => {
     const controller = new AbortController();
     let alive = true;
-    setLoading(true);
-    apiGet<ListResult<CheckpointDto>>(
-      `/api/checkpoints${qs({
-        queue: 1,
-        mine: params.mine === "1" ? 1 : undefined,
-        lifecycle: params.lifecycle || undefined,
-        checkpointType: params.checkpointType || undefined,
-        projectId: params.projectId || undefined,
-        q: params.q || undefined,
-        sort: "dueDate",
-        dir: "asc",
-        pageSize: QUEUE_LIMIT,
-      })}`,
-      { signal: controller.signal },
-    )
+    apiGet<ListResult<CheckpointDto>>(queuePath, { signal: controller.signal })
       .then((res) => {
         if (!alive) return;
         setRows(res.items);
@@ -199,21 +214,14 @@ export function DecisionsView() {
       })
       .finally(() => {
         if (!alive) return;
-        setLoading(false);
+        setLoadedKey(requestKey);
         setFirstLoadDone(true);
       });
     return () => {
       alive = false;
       controller.abort();
     };
-  }, [
-    params.mine,
-    params.lifecycle,
-    params.checkpointType,
-    params.projectId,
-    params.q,
-    nonce,
-  ]);
+  }, [queuePath, requestKey]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -263,7 +271,7 @@ export function DecisionsView() {
       q: "",
       mine: "0",
     });
-  }, [setParams]);
+  }, [setParams, setSearch]);
 
   const chips = useMemo<FilterChipDescriptor[]>(() => {
     const list: FilterChipDescriptor[] = [];
@@ -307,7 +315,7 @@ export function DecisionsView() {
       });
     }
     return list;
-  }, [params, projects, setParams]);
+  }, [params, projects, setParams, setSearch]);
 
   if (!firstLoadDone && loading) {
     return <LoadingState label={t("state.loading")} kpis={4} blocks={2} />;

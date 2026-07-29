@@ -79,6 +79,22 @@ type DetailTab = "overview" | "items" | "checkpoints" | "activity";
 /** Rows pulled per tab; the counters come from the aggregate stats, not from these. */
 const TAB_ROW_LIMIT = 100;
 
+/** Everything that must start over when another project is opened. */
+interface TabState {
+  projectId: string | null;
+  tab: DetailTab;
+  items: WorkItemDto[] | null;
+  checkpoints: CheckpointDto[] | null;
+  error: string | null;
+}
+
+const FRESH_TABS = {
+  tab: "overview" as DetailTab,
+  items: null,
+  checkpoints: null,
+  error: null,
+};
+
 export interface ProjectDetailModalProps {
   /** Project id from `?project=`; null closes the modal. */
   projectId: string | null;
@@ -105,40 +121,65 @@ export function ProjectDetailModal({
   const router = useRouter();
   const toast = useToast();
 
-  const [detail, setDetail] = useState<ProjectDetailDto | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [tab, setTab] = useState<DetailTab>("overview");
+  // The response is stored WITH the project it describes, so closing the modal
+  // drops it during render instead of through a `setDetail(null)` in the effect
+  // body. `loading` is derived the same way but keyed by the refresh token too: a
+  // parent-triggered refetch must keep the current content on screen rather than
+  // flash a skeleton, which is exactly what the old `setLoading(true)` did.
+  const [fetched, setFetched] = useState<{
+    projectId: string;
+    detail: ProjectDetailDto;
+  } | null>(null);
+  const detail = fetched?.projectId === projectId ? fetched.detail : null;
 
-  const [items, setItems] = useState<WorkItemDto[] | null>(null);
-  const [checkpoints, setCheckpoints] = useState<CheckpointDto[] | null>(null);
-  const [tabError, setTabError] = useState<string | null>(null);
+  const requestKey = projectId ? `${projectId}#${refreshToken}` : "";
+  const [loadedKey, setLoadedKey] = useState("");
+  const loading = projectId !== null && loadedKey !== requestKey;
+
+  const [error, setError] = useState<string | null>(null);
+
+  // Tab + lazy caches are stored WITH their project as well, so opening another
+  // project resets all four during render. The reset effect this replaces called
+  // four setStates synchronously in its body on every open
+  // (react-hooks/set-state-in-effect).
+  const [tabState, setTabState] = useState<TabState>({
+    projectId: null,
+    ...FRESH_TABS,
+  });
+  const tabs: TabState =
+    tabState.projectId === projectId ? tabState : { projectId, ...FRESH_TABS };
+  const { tab, items, checkpoints, error: tabError } = tabs;
+
+  const patchTabs = useCallback(
+    (patch: Partial<Omit<TabState, "projectId">>) =>
+      setTabState((current) => ({
+        ...(current.projectId === projectId
+          ? current
+          : { projectId, ...FRESH_TABS }),
+        ...patch,
+        projectId,
+      })),
+    [projectId],
+  );
+
+  const setTab = useCallback(
+    (next: DetailTab) => patchTabs({ tab: next }),
+    [patchTabs],
+  );
 
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
-  // Reset the tab and the lazy caches whenever another project is opened.
   useEffect(() => {
-    setTab("overview");
-    setItems(null);
-    setCheckpoints(null);
-    setTabError(null);
-  }, [projectId]);
-
-  useEffect(() => {
-    if (!projectId) {
-      setDetail(null);
-      return;
-    }
+    if (!projectId) return;
     const controller = new AbortController();
     let alive = true;
-    setLoading(true);
     apiGet<ProjectDetailDto>(`/api/projects/${projectId}`, {
       signal: controller.signal,
     })
       .then((data) => {
         if (!alive) return;
-        setDetail(data);
+        setFetched({ projectId, detail: data });
         setError(null);
       })
       .catch((err: unknown) => {
@@ -151,42 +192,48 @@ export function ProjectDetailModal({
         );
       })
       .finally(() => {
-        if (alive) setLoading(false);
+        if (alive) setLoadedKey(requestKey);
       });
     return () => {
       alive = false;
       controller.abort();
     };
-  }, [projectId, refreshToken]);
+  }, [projectId, requestKey]);
 
-  // Lazy tab loads. Each runs once per opened project.
+  // Lazy tab loads. Each runs once per opened project. `patchTabs` is bound to the
+  // project that started the request, so a response that lands after the user
+  // switched projects can no longer show up under the new one.
   useEffect(() => {
     if (!projectId) return;
     if (tab === "items" && items === null) {
       apiGet<ListResult<WorkItemDto>>(
         `/api/work-items${qs({ projectId, pageSize: TAB_ROW_LIMIT, sort: "rank", dir: "asc" })}`,
       )
-        .then((res) => setItems(res.items))
+        .then((res) => patchTabs({ items: res.items }))
         .catch((err: unknown) =>
-          setTabError(
-            err instanceof ApiError ? err.message : "Položky sa nepodarilo načítať.",
-          ),
+          patchTabs({
+            error:
+              err instanceof ApiError
+                ? err.message
+                : "Položky sa nepodarilo načítať.",
+          }),
         );
     }
     if (tab === "checkpoints" && checkpoints === null) {
       apiGet<ListResult<CheckpointDto>>(
         `/api/checkpoints${qs({ projectId, pageSize: TAB_ROW_LIMIT, sort: "dueDate", dir: "asc" })}`,
       )
-        .then((res) => setCheckpoints(res.items))
+        .then((res) => patchTabs({ checkpoints: res.items }))
         .catch((err: unknown) =>
-          setTabError(
-            err instanceof ApiError
-              ? err.message
-              : "Checkpointy sa nepodarilo načítať.",
-          ),
+          patchTabs({
+            error:
+              err instanceof ApiError
+                ? err.message
+                : "Checkpointy sa nepodarilo načítať.",
+          }),
         );
     }
-  }, [tab, projectId, items, checkpoints]);
+  }, [tab, projectId, items, checkpoints, patchTabs]);
 
   const onConfirmDelete = useCallback(async () => {
     if (!detail) return;

@@ -32,6 +32,23 @@ function randomPassword(length = 14): string {
   return Array.from({ length }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
 }
 
+/**
+ * `YYYY-MM-DD HH:MM:SS` for a point N weeks in the past — a MariaDB DATETIME literal.
+ *
+ * Built from LOCAL calendar parts on purpose. `toISOString()` converts to UTC first,
+ * which in a positive-offset zone (Europe/Bratislava is +1/+2) can shift the date one
+ * day back and move a completed item into the previous chart bucket.
+ */
+function weeksAgo(weeks: number): string {
+  const d = new Date();
+  d.setDate(d.getDate() - weeks * 7);
+  const p = (n: number) => String(n).padStart(2, "0");
+  return (
+    `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ` +
+    `${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`
+  );
+}
+
 const DEMO_USERS: DemoUser[] = [
   {
     email: "editor@aura-roadmap.local",
@@ -432,10 +449,22 @@ async function seed(): Promise<void> {
       { projectId: "ES-100", sprintId: "draft", type: "task", title: "Stripe integration", status: "backlog", priority: "P1", points: 5, parentIndex: 4 },
       { projectId: "ES-100", sprintId: "draft", type: "task", title: "PayPal integration", status: "backlog", priority: "P2", points: 3, parentIndex: 4 },
       { projectId: "ES-100", sprintId: null, type: "idea", title: "Support cryptocurrency", status: "backlog", priority: "P3", points: 13 },
+      // Unassigned ES-100 work. Both sprints belong to ES-100, and the move API
+      // rejects a cross-project target, so WITHOUT these the "move from backlog into
+      // a sprint" path cannot be exercised at all — not by a test and not by hand.
+      { projectId: "ES-100", sprintId: null, type: "task", title: "Refundácie a storná", status: "backlog", priority: "P2", points: 5 },
+      { projectId: "ES-100", sprintId: null, type: "bug", title: "Chybný výpočet DPH v košíku", status: "backlog", priority: "P1", points: 2 },
+      // Finished ES-100 work spread over recent weeks. `doneWeeksAgo` becomes
+      // `updated_at`, which is what the 12-week completed-points chart buckets by —
+      // a done item with updated_at NULL is skipped and the chart draws zeros.
+      { projectId: "ES-100", sprintId: "active", type: "task", title: "Košík — prepočet cien", status: "done", priority: "P1", points: 5, doneWeeksAgo: 1 },
+      { projectId: "ES-100", sprintId: "active", type: "task", title: "Nasadenie CI pipeline", status: "done", priority: "P2", points: 8, doneWeeksAgo: 2 },
+      { projectId: "ES-100", sprintId: "draft", type: "bug", title: "Duplicitné e-maily po registrácii", status: "done", priority: "P1", points: 3, doneWeeksAgo: 4 },
+      { projectId: "ES-100", sprintId: null, type: "task", title: "Migrácia obrázkov na CDN", status: "done", priority: "P2", points: 13, doneWeeksAgo: 6 },
       // TOOLS-50 items
       { projectId: "TOOLS-50", sprintId: null, type: "task", title: "Database schema design", status: "backlog", priority: "P1", points: 8 },
       { projectId: "TOOLS-50", sprintId: null, type: "task", title: "Create REST API", status: "backlog", priority: "P1", points: 13 },
-      { projectId: "TOOLS-50", sprintId: null, type: "bug", title: "Pagination issues", status: "done", priority: "P2", points: 3 },
+      { projectId: "TOOLS-50", sprintId: null, type: "bug", title: "Pagination issues", status: "done", priority: "P2", points: 3, doneWeeksAgo: 3 },
       { projectId: "TOOLS-50", sprintId: null, type: "task", title: "User management", status: "backlog", priority: "P1", points: 5, parentIndex: 9 },
       { projectId: "TOOLS-50", sprintId: null, type: "task", title: "Role-based access", status: "backlog", priority: "P1", points: 3, parentIndex: 9 },
       // MARK-30 items
@@ -471,8 +500,9 @@ async function seed(): Promise<void> {
       itemsCreated++;
       await conn.execute(
         `INSERT INTO work_items
-         (id, project_id, sprint_id, parent_id, item_type, title, status, priority, story_points, rank_value, created_by)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         (id, project_id, sprint_id, parent_id, item_type, title, status, priority,
+          story_points, rank_value, created_by, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           itemId,
           projectId,
@@ -485,6 +515,10 @@ async function seed(): Promise<void> {
           item.points,
           i * 100,
           demoUserIds[DEMO_USERS[0].email],
+          // The 12-week chart buckets completed points by `updated_at`, so a done
+          // item without one is invisible to it. Unfinished work keeps NULL, which
+          // is what an untouched row looks like.
+          item.doneWeeksAgo === undefined ? null : weeksAgo(item.doneWeeksAgo),
         ],
       );
       workItemIds.push(itemId);

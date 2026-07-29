@@ -69,9 +69,17 @@ export function UsersSection({ currentUserId }: UsersSectionProps) {
   const [debounced, setDebounced] = useState("");
   const [role, setRole] = useState("");
   const [active, setActive] = useState("");
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [nonce, setNonce] = useState(0);
+
+  // The request path plus the refetch nonce identifies one request; the key of
+  // the request whose rows are on screen is remembered, so `loading` is DERIVED
+  // during render instead of set synchronously in the effect body (which
+  // cascades renders — react-hooks/set-state-in-effect).
+  const usersPath = `/api/admin/users${qs({ q: debounced, role, active, page, pageSize })}`;
+  const requestKey = `${usersPath}#${nonce}`;
+  const [loadedKey, setLoadedKey] = useState<string | null>(null);
+  const loading = loadedKey !== requestKey;
 
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<PublicUserDto | null>(null);
@@ -91,11 +99,7 @@ export function UsersSection({ currentUserId }: UsersSectionProps) {
   useEffect(() => {
     const controller = new AbortController();
     let alive = true;
-    setLoading(true);
-    apiGet<ListResult<PublicUserDto>>(
-      `/api/admin/users${qs({ q: debounced, role, active, page, pageSize })}`,
-      { signal: controller.signal },
-    )
+    apiGet<ListResult<PublicUserDto>>(usersPath, { signal: controller.signal })
       .then((res) => {
         if (!alive) return;
         setRows(res.items);
@@ -112,13 +116,13 @@ export function UsersSection({ currentUserId }: UsersSectionProps) {
         );
       })
       .finally(() => {
-        if (alive) setLoading(false);
+        if (alive) setLoadedKey(requestKey);
       });
     return () => {
       alive = false;
       controller.abort();
     };
-  }, [debounced, role, active, page, pageSize, nonce]);
+  }, [usersPath, requestKey]);
 
   const onDelete = useCallback(async () => {
     if (!deleteTarget) return;

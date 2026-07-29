@@ -349,6 +349,49 @@ Dve ďalšie pasce v testoch: Playwright matchuje `name` ako **podstring**, tak�
 atribútom, ktorý testuješ (`button[aria-expanded="false"]` po rozbalení prestane
 matchovať a `.first()` sa preresolvuje na ďalší zbalený riadok).
 
+### `set-state-in-effect`: „loader začína awaitom" nie je riešenie
+
+`eslint-plugin-react-hooks` 7.1.1 flagne aj volanie **vyňatej async funkcie**, ktorá
+`setState` robí až za `await` — pravidlo nevidí za hranicu funkcie a označí miesto
+volania. Čisté sú tri vzory, použi jeden z nich:
+
+1. **Promise chain** namiesto async tela — všetky zápisy stavu sú v callbackoch
+   (vzor: `loadCore` v `src/components/timeline/TimelineWorkspace.tsx`)
+2. **Derivovaný stav** namiesto `useState` + zrkadliaceho effectu
+   (vzor: `search` a `loading` v `src/components/projects/ProjectsView.tsx`
+   a `DecisionsView.tsx` — `requestKey`/`loadedKey`)
+3. **`useSyncExternalStore`** pre externý stav (localStorage, `matchMedia`)
+   (vzor: `useIsNarrow` v `ProjectsView.tsx`, `usePreferences` v `ThemeControls.tsx`)
+
+Stav po follow-up šprinte: **0 upozornení**. Kto pridá filter alebo loader, nech
+nepridáva `setState` do effectu, inak sa vrátia.
+
+### Dialóg nesmie nabízať cieľ, ktorý API odmietne
+
+`POST /api/work-items/[id]/move` odmieta cross-project šprint so 400 „Šprint patrí
+inému projektu." (`relationError` v `src/lib/domain/workItems.ts`). Dialóg „Presunúť"
+pritom nabízel **všetky** šprinty v horizonte, takže na seed dátach bol každý cieľ
+zaručený error toast. Ponuku vždy filtruj tou istou relačnou podmienkou, akú vynucuje
+server — na to je `moveTargets()` v `src/components/timeline/moveTargets.ts`:
+
+```typescript
+export function moveTargets<S extends Pick<SprintWithMetricsDto, "projectId">>(
+  sprints: readonly S[], item: { projectId: string },
+): S[]
+```
+
+Môže legitímne vrátiť prázdne pole — projekt bez šprintu v horizonte má ako jediný
+cieľ backlog. **Tú istú pascu má drag & drop**: `onDragEnd` v `SprintPlanner.tsx`
+droppable cieľ zatiaľ nefiltruje, takže pretiahnutie karty do šprintu iného projektu
+skončí 400. Kto sa toho dotkne, nech použije `moveTargets`.
+
+### Log neobsahuje riadky pri zelenom behu — je to zámer
+
+`logRoute` úmyselne nezapisuje rýchle 2xx (`status < 400 && ms < SLOW_REQUEST_MS`),
+aby sa signál neutopil v šume. Prázdny `docker logs` po zelenom e2e behu teda **nie je**
+dôkaz, že observabilita nefunguje. Over ju neautentifikovaným requestom — má sa objaviť
+`[api] GET /api/... 401 reason=auth_denied`.
+
 ## Kontext a zdroje
 
 - **Kontrakt:** `KONTRAKT-AURA-ROADMAP-2026-07-28.md` (zdroj pravdy — mení sa len s user input)

@@ -63,16 +63,18 @@ const STATUS_TONE: Readonly<Record<string, Tone>> = {
 
 export function BackupsSection() {
   const [status, setStatus] = useState<BackupStatus | null>(null);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [nonce, setNonce] = useState(0);
+  // `loading` is DERIVED from "which request has already answered": setting it
+  // inside the effect body cascades a render (react-hooks/set-state-in-effect).
+  const [loadedNonce, setLoadedNonce] = useState(-1);
+  const loading = loadedNonce !== nonce;
 
   const refetch = useCallback(() => setNonce((n) => n + 1), []);
 
   useEffect(() => {
     const controller = new AbortController();
     let alive = true;
-    setLoading(true);
     apiGet<{ backups: BackupStatus }>("/api/backups", {
       signal: controller.signal,
     })
@@ -91,7 +93,7 @@ export function BackupsSection() {
         );
       })
       .finally(() => {
-        if (alive) setLoading(false);
+        if (alive) setLoadedNonce(nonce);
       });
     return () => {
       alive = false;

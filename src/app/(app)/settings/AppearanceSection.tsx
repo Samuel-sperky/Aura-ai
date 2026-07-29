@@ -16,8 +16,11 @@
 //
 // LANGUAGE is stored the same way but does not re-render the app yet: the runtime
 // language provider is A10's. The hint says so out loud instead of pretending.
+// It reads through the same kind of external store as theme and density
+// (`@/lib/client/lang`), so all three preferences arrive without a
+// setState-in-effect round trip after mount.
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect } from "react";
 import { useSyncExternalStore } from "react";
 import { Languages, Monitor, Moon, Rows3, Rows4, Sun } from "lucide-react";
 import {
@@ -40,35 +43,18 @@ import {
   subscribePreferences,
 } from "@/lib/theme";
 import type { Density, ThemePref } from "@/lib/theme";
-import { LANG_STORAGE_KEY } from "@/lib/i18n";
+import {
+  getLang,
+  getLangOnServer,
+  setLang,
+  subscribeLang,
+} from "@/lib/client/lang";
 import type { Lang } from "@/lib/i18n";
 import type { UserPreferences } from "@/lib/domain/contracts/projects";
 import { t } from "@/lib/i18n";
 
 const serverTheme = () => DEFAULT_THEME;
 const serverDensity = () => DEFAULT_DENSITY;
-
-function storedLang(): Lang {
-  try {
-    const raw = globalThis.localStorage?.getItem(LANG_STORAGE_KEY);
-    return raw === "en" ? "en" : "sk";
-  } catch {
-    return "sk";
-  }
-}
-
-function writeLang(lang: Lang): void {
-  try {
-    globalThis.localStorage?.setItem(LANG_STORAGE_KEY, lang);
-  } catch {
-    // Storage blocked: the server copy still records the choice.
-  }
-  try {
-    globalThis.document?.documentElement.setAttribute("lang", lang);
-  } catch {
-    // No DOM (should not happen in a client component).
-  }
-}
 
 export function AppearanceSection() {
   const toast = useToast();
@@ -78,13 +64,7 @@ export function AppearanceSection() {
     getDensity,
     serverDensity,
   );
-  // Language has no external store yet, so it is plain state seeded after mount
-  // (reading localStorage during render would be a hydration mismatch).
-  const [lang, setLang] = useState<Lang>("sk");
-
-  useEffect(() => {
-    setLang(storedLang());
-  }, []);
+  const lang = useSyncExternalStore(subscribeLang, getLang, getLangOnServer);
 
   // Adopt the server copy only where this browser still holds the default.
   useEffect(() => {
@@ -104,8 +84,7 @@ export function AppearanceSection() {
         ) {
           setDensity(preferences.density);
         }
-        if (storedLang() === "sk" && preferences.lang === "en") {
-          writeLang("en");
+        if (getLang() === "sk" && preferences.lang === "en") {
           setLang("en");
         }
       })
@@ -149,7 +128,6 @@ export function AppearanceSection() {
 
   const onLang = useCallback(
     (next: Lang) => {
-      writeLang(next);
       setLang(next);
       persist({ lang: next });
     },

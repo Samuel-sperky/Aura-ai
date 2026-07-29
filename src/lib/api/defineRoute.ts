@@ -20,6 +20,16 @@
 //   4. handler(ctx)         → its Response is returned as-is
 //   5. any thrown error     → AuthError maps via authErrorResponse, everything
 //                             else becomes a uniform 500 JSON.
+//   6. EVERY exit is logged → each of the five outcomes above leaves the pipeline
+//                             through the local `done()`, which hands one line to
+//                             `logRoute` (see ./logging.ts). This is why the step
+//                             exists at all: the pipeline used to log only step 5,
+//                             so a deliberate 401/400/429 was silent and a
+//                             mis-calibrated rate limit looked like a data bug.
+//                             `logRoute` records method, pathname, status, duration,
+//                             reason and user id — never a body, query value, header
+//                             or cookie. Logging is fire-and-forget: it can never
+//                             change or fail the response it is describing.
 //
 // The handler still receives the raw `req` and resolved `params`, so anything
 // not covered declaratively (custom headers, streaming, a second body shape)
@@ -49,6 +59,7 @@ import {
 } from "@/lib/auth/rbac";
 import { rateLimit, clientKeyFromHeaders } from "@/lib/security/rateLimit";
 import { jsonError, versionConflict, notFound, badRequest } from "./respond";
+import { logRoute } from "./logging";
 
 // `versionConflict` / `notFound` / `badRequest` are defined in ./respond (pure
 // `jsonError` wrappers, no auth/DB/env in their import graph) and re-exported
@@ -207,14 +218,41 @@ export function defineRoute<
   >,
 ): (req: Request, ctx: NextRouteCtx) => Promise<Response> {
   return async (req: Request, ctx: NextRouteCtx): Promise<Response> => {
+    const startedAt = performance.now();
+    let user: AppUser | null = null;
+
+    // Every exit goes through here, so a refused request is as visible in the log
+    // as a crashed one. Silent 429s once made a rate-limit misconfiguration look
+    // like a data-loading bug; see lib/api/logging.ts.
+    //
+    // `logRoute` already swallows its own failures, but this guard does not rely
+    // on that promise: an observability bug must not be able to turn a finished
+    // 200 into a 500, and inside the try block a throw here would be re-caught as
+    // "unhandled" and then throw again on the way out.
+    const done = (res: Response, reason?: string, error?: unknown): Response => {
+      try {
+        logRoute({
+          method: req.method,
+          url: req.url,
+          status: res.status,
+          ms: performance.now() - startedAt,
+          reason,
+          userId: user?.id ?? null,
+          error,
+        });
+      } catch {
+        // Intentionally empty: the response is already decided.
+      }
+      return res;
+    };
+
     try {
       // 1. Auth gate (fail-closed: any failure → authErrorResponse).
-      let user: AppUser | null = null;
       if (opts.auth !== undefined) {
         try {
           user = await runAuth(opts.auth);
         } catch (err) {
-          return authErrorResponse(err);
+          return done(authErrorResponse(err), "auth_denied");
         }
       }
 
@@ -223,9 +261,12 @@ export function defineRoute<
         const key = `${clientKeyFromHeaders(req.headers)}:${opts.rateLimit.name}`;
         const rl = rateLimit(key, opts.rateLimit);
         if (!rl.allowed) {
-          return jsonError("Priveľa požiadaviek — skús o chvíľu.", 429, undefined, {
-            headers: { "Retry-After": String(rl.retryAfterSeconds) },
-          });
+          return done(
+            jsonError("Priveľa požiadaviek — skús o chvíľu.", 429, undefined, {
+              headers: { "Retry-After": String(rl.retryAfterSeconds) },
+            }),
+            `rate_limited:${opts.rateLimit.name}`,
+          );
         }
       }
 
@@ -236,7 +277,9 @@ export function defineRoute<
         const raw: Record<string, string> = {};
         for (const [k, v] of url.searchParams.entries()) raw[k] = v;
         const parsed = opts.querySchema.safeParse(raw);
-        if (!parsed.success) return badRequest(firstIssue(parsed.error));
+        if (!parsed.success) {
+          return done(badRequest(firstIssue(parsed.error)), "bad_query");
+        }
         query = parsed.data;
       }
 
@@ -244,9 +287,13 @@ export function defineRoute<
       let body: unknown = undefined;
       if (opts.bodySchema) {
         const read = await readJson(req);
-        if (!read.ok) return badRequest("Neplatné JSON telo požiadavky.");
+        if (!read.ok) {
+          return done(badRequest("Neplatné JSON telo požiadavky."), "bad_json");
+        }
         const parsed = opts.bodySchema.safeParse(read.data);
-        if (!parsed.success) return badRequest(firstIssue(parsed.error));
+        if (!parsed.success) {
+          return done(badRequest(firstIssue(parsed.error)), "bad_body");
+        }
         body = parsed.data;
       }
 
@@ -255,8 +302,11 @@ export function defineRoute<
       if (opts.version === true) {
         const v = extractVersion(body);
         if (v === null) {
-          return badRequest(
-            "Chýba verzia záznamu (version) — obnovte údaje a skúste to znova.",
+          return done(
+            badRequest(
+              "Chýba verzia záznamu (version) — obnovte údaje a skúste to znova.",
+            ),
+            "missing_version",
           );
         }
         version = v;
@@ -281,13 +331,20 @@ export function defineRoute<
         Opts["version"]
       >;
 
-      return await handler(ctxObj);
+      const res = await handler(ctxObj);
+      // Handler-chosen statuses (404, 409 VERSION_CONFLICT, …) are logged here.
+      return done(res, res.status >= 400 ? "handler" : undefined);
     } catch (err) {
       // 5. Uniform error mapping. A handler may throw AuthError to bail with a
       // specific status; anything else is an unexpected server error.
-      if (err instanceof AuthError) return authErrorResponse(err);
-      console.error("Unhandled route error:", err);
-      return jsonError("Nastala neočakávaná chyba servera.", 500);
+      if (err instanceof AuthError) {
+        return done(authErrorResponse(err), "auth_thrown");
+      }
+      return done(
+        jsonError("Nastala neočakávaná chyba servera.", 500),
+        "unhandled",
+        err,
+      );
     }
   };
 }

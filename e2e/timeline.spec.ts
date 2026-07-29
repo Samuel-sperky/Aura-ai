@@ -182,47 +182,79 @@ test.describe("/timeline", () => {
     await page.goto("/timeline?mode=sprints&zoom=week");
     await timelineReady(page);
 
-    // Backlog column, first card. The card itself is the shortcut host.
-    const backlog = page.getByRole("list", {
-      name: /^Backlog — Položky v šprinte$/,
-    });
-    const card = backlog.getByRole("listitem").first();
-    const cards = await backlog.getByRole("listitem").count();
-    test.skip(cards === 0, "Backlog je prázdny — presun sa nedá overiť.");
-    // The card's accessible name IS the item title (see PlannerItem).
-    const title = (await card.getAttribute("aria-label")) ?? "";
-    test.skip(!title, "Karta v backlogu nemá názov — nečakaný stav DOM.");
-
-    // Focus WITHOUT a mouse drag: this is the whole point of the alternative.
-    await card.focus();
-    await expect(card).toBeFocused();
-    await expect(card).toHaveAttribute("aria-keyshortcuts", /M/);
-
-    await page.keyboard.press("m");
-
+    // WHICH card can be moved is data-dependent, and NOT simply "the first one in
+    // the backlog": the dialog offers only sprints from the item's OWN project,
+    // because the API refuses a cross-project target with 400 "Šprint patrí inému
+    // projektu." (see src/components/timeline/moveTargets.ts). On the seeded plan
+    // the backlog holds items of projects that have no sprint in the horizon at
+    // all, so their only destination is the backlog they are already in. Walk the
+    // board and take the first card that has a REAL sprint to move to.
     const dialog = page.getByRole("dialog", { name: /Presunúť položku/ });
-    await expect(dialog).toBeVisible();
+    const lists = await page.getByRole("list", { name: /— Položky v šprinte$/ }).all();
 
-    const select = dialog.getByLabel("Cieľový šprint");
-    const options = await select.locator("option").count();
-    test.skip(
-      options < 2,
-      "V horizonte nie je žiadny šprint — nie je kam položku presunúť.",
-    );
+    let sourceName: string | null = null;
+    let title: string | null = null;
+    let targetValue: string | null = null;
 
-    // Pick the first real sprint (index 0 is "Backlog (bez šprintu)").
-    const targetValue = await select.locator("option").nth(1).getAttribute("value");
-    await select.selectOption(targetValue!);
+    for (const list of lists) {
+      const card = list.getByRole("listitem").first();
+      if ((await card.count()) === 0) continue;
+      // The card's accessible name IS the item title (see PlannerItem).
+      const cardTitle = (await card.getAttribute("aria-label")) ?? "";
+      const listName = (await list.getAttribute("aria-label")) ?? "";
+      if (!cardTitle || !listName) continue;
+
+      // Focus WITHOUT a mouse drag: this is the whole point of the alternative.
+      await card.focus();
+      await expect(card).toBeFocused();
+      await expect(card).toHaveAttribute("aria-keyshortcuts", /M/);
+
+      await page.keyboard.press("m");
+      await expect(dialog).toBeVisible();
+
+      const select = dialog.getByLabel("Cieľový šprint");
+      // Option 0 is always "Backlog (bez šprintu)"; the rest are real sprints. The
+      // one the item already sits in is useless — "Presunúť" stays disabled for it.
+      const current = await select.inputValue();
+      const values = await select
+        .locator("option")
+        .evaluateAll((nodes) => nodes.map((node) => (node as HTMLOptionElement).value));
+      const sprintTarget = values.slice(1).find((value) => value !== current);
+
+      if (sprintTarget === undefined) {
+        await dialog.getByRole("button", { name: "Zrušiť", exact: true }).click();
+        await expect(page.getByRole("dialog")).toHaveCount(0);
+        continue;
+      }
+
+      await select.selectOption(sprintTarget);
+      sourceName = listName;
+      title = cardTitle;
+      targetValue = sprintTarget;
+      break;
+    }
+
+    if (sourceName === null || title === null || targetValue === null) {
+      test.skip(
+        true,
+        "Žiadna karta nemá v horizonte druhý šprint vo vlastnom projekte — presun sa nedá overiť.",
+      );
+      return;
+    }
+
     await dialog.getByRole("button", { name: "Presunúť", exact: true }).click();
 
     await expect(page.getByRole("dialog")).toHaveCount(0);
     await expect(page.getByRole("status").filter({ hasText: /presunut/i })).toBeVisible({
       timeout: 15_000,
     });
-    // The card left the backlog.
-    await expect(backlog.getByRole("listitem", { name: title })).toHaveCount(0, {
-      timeout: 15_000,
-    });
+    // The card left the column it started in. `exact` matters: accessible names
+    // match as a SUBSTRING otherwise, and one title can prefix another.
+    const source = page.getByRole("list", { name: sourceName, exact: true });
+    await expect(source.getByRole("listitem", { name: title, exact: true })).toHaveCount(
+      0,
+      { timeout: 15_000 },
+    );
   });
 
   test("mobil 390 px: timeline sa dá čítať a drag&drop je vypnutý", async ({ page }) => {

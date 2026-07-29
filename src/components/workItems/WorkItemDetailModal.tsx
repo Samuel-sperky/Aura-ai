@@ -110,10 +110,17 @@ function WorkItemDetailBody({
 
   const [item, setItem] = useState<WorkItemDto | null>(null);
   const [children, setChildren] = useState<WorkItemDto[]>([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState<ItemTab>("overview");
   const [nonce, setNonce] = useState(0);
+
+  // `loading` is DERIVED: the key of the request whose data is on screen is
+  // remembered, so "a request is in flight" is a render-time comparison. Calling
+  // setLoading(true) in the effect body cascades renders
+  // (react-hooks/set-state-in-effect).
+  const requestKey = `${itemId}#${refreshToken}#${nonce}`;
+  const [loadedKey, setLoadedKey] = useState<string | null>(null);
+  const loading = loadedKey !== requestKey;
 
   const [comments, setComments] = useState<WorkItemCommentDto[] | null>(null);
   const [deps, setDeps] = useState<DependencyListDto | null>(null);
@@ -126,7 +133,6 @@ function WorkItemDetailBody({
   useEffect(() => {
     const controller = new AbortController();
     let alive = true;
-    setLoading(true);
     apiGet<{ workItem: WorkItemDto; children: WorkItemDto[] }>(
       `/api/work-items/${itemId}`,
       { signal: controller.signal },
@@ -145,13 +151,13 @@ function WorkItemDetailBody({
         );
       })
       .finally(() => {
-        if (alive) setLoading(false);
+        if (alive) setLoadedKey(requestKey);
       });
     return () => {
       alive = false;
       controller.abort();
     };
-  }, [itemId, refreshToken, nonce]);
+  }, [itemId, requestKey]);
 
   // Lazy per-tab loads (each once per opened item).
   useEffect(() => {

@@ -29,14 +29,19 @@ export interface MeState {
 
 export function useMe(): MeState {
   const [user, setUser] = useState<PublicUserDto | null>(null);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [nonce, setNonce] = useState(0);
+  // `loading` is DERIVED, not set inside the effect: the nonce of the request
+  // whose response is on screen is remembered instead, so "a request is in
+  // flight" is simply "the two nonces disagree". Calling setLoading(true) in the
+  // effect body would cascade an extra render every time (the React Compiler
+  // lint rule `set-state-in-effect` flags exactly that).
+  const [loadedNonce, setLoadedNonce] = useState(-1);
+  const loading = loadedNonce !== nonce;
 
   useEffect(() => {
     const controller = new AbortController();
     let alive = true;
-    setLoading(true);
     apiGet<{ user: PublicUserDto }>("/api/auth/me", { signal: controller.signal })
       .then((data) => {
         if (!alive) return;
@@ -53,7 +58,7 @@ export function useMe(): MeState {
         );
       })
       .finally(() => {
-        if (alive) setLoading(false);
+        if (alive) setLoadedNonce(nonce);
       });
     return () => {
       alive = false;

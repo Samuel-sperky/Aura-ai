@@ -123,18 +123,25 @@ function CheckpointModalBody({
   const [override, setOverride] = useState(false);
   const [overrideReason, setOverrideReason] = useState("");
 
-  const load = useCallback(async (id: string) => {
-    try {
-      const res = await apiGet<DetailResponse>(
-        `/api/checkpoints/${encodeURIComponent(id)}`,
-      );
-      setData(res);
-      setError(null);
-    } catch (err) {
-      setData(null);
-      setError(err instanceof Error ? err.message : t("timeline.error.load"));
-    }
-  }, []);
+  // A promise CHAIN rather than async/await, so every state write sits in a
+  // callback instead of in the function body. That is what lets the effect below
+  // call it without setting state synchronously: `set-state-in-effect` cannot see
+  // that an extracted async function only writes state after its first `await`,
+  // and flags the call site. `apiGet` never throws synchronously (it is async), so
+  // this behaves exactly like the try/catch it replaces.
+  const load = useCallback(
+    (id: string): Promise<void> =>
+      apiGet<DetailResponse>(`/api/checkpoints/${encodeURIComponent(id)}`)
+        .then((res) => {
+          setData(res);
+          setError(null);
+        })
+        .catch((err: unknown) => {
+          setData(null);
+          setError(err instanceof Error ? err.message : t("timeline.error.load"));
+        }),
+    [],
+  );
 
   useEffect(() => {
     if (!checkpointId) return;

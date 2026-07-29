@@ -2,6 +2,7 @@
 export { OverviewView } from "./OverviewView";
 export { DonePointsChart } from "./DonePointsChart";
 export type { DonePointsChartProps } from "./DonePointsChart";
+export { ZERO_KPIS, summaryKpis } from "./kpis";
 export { sortByRisk } from "./ranking";
 export {
   SK_SUMMARY_LABELS,

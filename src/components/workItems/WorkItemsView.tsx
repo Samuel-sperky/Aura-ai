@@ -83,6 +83,8 @@ const SEARCH_DEBOUNCE_MS = 350;
 /** The board has no pagination of its own — it needs the whole filtered set. */
 const BOARD_LIMIT = 500;
 const REFERENCE_LIMIT = 200;
+/** Stable empty list, so a render-time fallback keeps a stable identity. */
+const EMPTY_ITEMS: WorkItemDto[] = [];
 
 export function WorkItemsView() {
   const toast = useToast();
@@ -121,14 +123,19 @@ export function WorkItemsView() {
 
   const [rows, setRows] = useState<WorkItemDto[]>([]);
   const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(true);
   const [firstLoadDone, setFirstLoadDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [nonce, setNonce] = useState(0);
 
   const [projects, setProjects] = useState<ProjectDto[]>([]);
   const [sprints, setSprints] = useState<SprintWithMetricsDto[]>([]);
-  const [parentCandidates, setParentCandidates] = useState<WorkItemDto[]>([]);
+  // Kept together with the project they were fetched for, so switching the filter
+  // drops them during render instead of through a setState in an effect body.
+  const [parents, setParents] = useState<{ projectId: string; items: WorkItemDto[] }>(
+    { projectId: "", items: [] },
+  );
+  const parentCandidates =
+    parents.projectId === params.projectId ? parents.items : EMPTY_ITEMS;
 
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [childrenByParent, setChildrenByParent] = useState<Map<string, WorkItemDto[]>>(
@@ -136,7 +143,17 @@ export function WorkItemsView() {
   );
   const [busyId, setBusyId] = useState<string | null>(null);
 
-  const [search, setSearch] = useState(params.q);
+  // The search box is EDITED locally and debounced into `?q=`, so its value is
+  // derived rather than mirrored by an effect: as long as the query it was typed
+  // against is still in the URL the local text wins, and the moment `?q=` moves on
+  // its own (Back, a removed chip, the restored preferences) the URL wins.
+  const [typedSearch, setTypedSearch] = useState({ value: params.q, q: params.q });
+  const search = typedSearch.q === params.q ? typedSearch.value : params.q;
+  const setSearch = useCallback(
+    (value: string) => setTypedSearch({ value, q: params.q }),
+    [params.q],
+  );
+
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<WorkItemDto | null>(null);
   const [newParent, setNewParent] = useState<string | null>(null);
@@ -172,7 +189,8 @@ export function WorkItemsView() {
       backlog: storedFilter(storedPrefs, "backlog"),
       openOnly: storedFilter(storedPrefs, "openOnly"),
     };
-    setSearch(next.q);
+    // The search box needs no separate write: its text derives from `?q=`, which
+    // this one call sets.
     void setParams(next);
   }, [prefsLoading, storedPrefs, urlWasEmpty, setParams]);
 
@@ -217,10 +235,6 @@ export function WorkItemsView() {
     return () => clearTimeout(timer);
   }, [search, params.q, setParams]);
 
-  useEffect(() => {
-    setSearch((current) => (current === params.q ? current : params.q));
-  }, [params.q]);
-
   // ── rows ───────────────────────────────────────────────────────────────────
   const listQuery = useMemo(
     () => ({
@@ -254,14 +268,20 @@ export function WorkItemsView() {
     ],
   );
 
+  // `loading` is DERIVED from which request the rows on screen belong to; a
+  // setLoading(true) in the effect body cascades renders
+  // (react-hooks/set-state-in-effect).
+  const listPath = `/api/work-items${qs(
+    listQuery as Record<string, string | number | undefined>,
+  )}`;
+  const requestKey = `${listPath}#${nonce}`;
+  const [loadedKey, setLoadedKey] = useState<string | null>(null);
+  const loading = loadedKey !== requestKey;
+
   useEffect(() => {
     const controller = new AbortController();
     let alive = true;
-    setLoading(true);
-    apiGet<ListResult<WorkItemDto>>(
-      `/api/work-items${qs(listQuery as Record<string, string | number | undefined>)}`,
-      { signal: controller.signal },
-    )
+    apiGet<ListResult<WorkItemDto>>(listPath, { signal: controller.signal })
       .then((res) => {
         if (!alive) return;
         setRows(res.items);
@@ -277,14 +297,14 @@ export function WorkItemsView() {
       })
       .finally(() => {
         if (!alive) return;
-        setLoading(false);
+        setLoadedKey(requestKey);
         setFirstLoadDone(true);
       });
     return () => {
       alive = false;
       controller.abort();
     };
-  }, [listQuery, nonce]);
+  }, [listPath, requestKey]);
 
   // ── reference data for the filters and the form ────────────────────────────
   useEffect(() => {
@@ -315,26 +335,27 @@ export function WorkItemsView() {
   }, []);
 
   // Parent candidates for the form: top-level items of the selected project.
+  // With no project selected there is nothing to fetch AND nothing to clear —
+  // `parentCandidates` already reads empty above, because the stored list no
+  // longer matches `params.projectId`.
   useEffect(() => {
-    if (!params.projectId) {
-      setParentCandidates([]);
-      return;
-    }
+    const projectId = params.projectId;
+    if (!projectId) return;
     const controller = new AbortController();
     let alive = true;
     apiGet<ListResult<WorkItemDto>>(
       `/api/work-items${qs({
-        projectId: params.projectId,
+        projectId,
         parentId: "none",
         pageSize: REFERENCE_LIMIT,
       })}`,
       { signal: controller.signal },
     )
       .then((res) => {
-        if (alive) setParentCandidates(res.items);
+        if (alive) setParents({ projectId, items: res.items });
       })
       .catch(() => {
-        if (alive) setParentCandidates([]);
+        if (alive) setParents({ projectId, items: [] });
       });
     return () => {
       alive = false;
@@ -448,7 +469,7 @@ export function WorkItemsView() {
       openOnly: "",
       page: 1,
     });
-  }, [setParams]);
+  }, [setParams, setSearch]);
 
   const chips = useMemo<FilterChipDescriptor[]>(() => {
     const list: FilterChipDescriptor[] = [];
@@ -525,7 +546,7 @@ export function WorkItemsView() {
       });
     }
     return list;
-  }, [params, projects, sprints, directory.byId, setParams]);
+  }, [params, projects, sprints, directory.byId, setParams, setSearch]);
 
   const sprintOptions = useMemo(
     () =>

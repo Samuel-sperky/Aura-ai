@@ -14,6 +14,7 @@ import type { SprintWithMetricsDto } from "@/lib/domain/contracts/sprints";
 import type { WorkItemDto } from "@/lib/domain/contracts/workItems";
 import { formatRange } from "@/lib/timeline";
 import { Button, Field, Modal, Select } from "@/components/ui";
+import { moveTargets } from "./moveTargets";
 import { t } from "./text";
 
 /** Sentinel `<option>` value for "no sprint" (an empty value is the placeholder). */
@@ -22,7 +23,10 @@ const BACKLOG = "__backlog__";
 export interface MoveDialogProps {
   /** The item being moved; null closes the dialog. */
   item: WorkItemDto | null;
-  /** Sprints offered as targets (already narrowed to the planner's horizon). */
+  /**
+   * Sprints in the planner's horizon — ACROSS projects, because the planner axis
+   * is not filtered to one. They are narrowed to the item's own project below.
+   */
   sprints: SprintWithMetricsDto[];
   busy?: boolean;
   onClose: () => void;
@@ -53,6 +57,11 @@ function MoveDialogBody({
   if (!item) return null;
 
   const unchanged = (item.sprintId ?? BACKLOG) === target;
+
+  // Only the item's OWN project — see ./moveTargets for why the whole horizon was
+  // wrong (the API rejects a cross-project target with 400, so those options could
+  // only ever end in an error toast).
+  const targets = moveTargets(sprints, item);
 
   return (
     <Modal
@@ -90,7 +99,7 @@ function MoveDialogBody({
           onChange={(event) => setTarget(event.target.value)}
           options={[
             { value: BACKLOG, label: t("planner.move.toBacklog") },
-            ...sprints.map((sprint) => ({
+            ...targets.map((sprint) => ({
               value: sprint.id,
               label: `${sprint.name} · ${formatRange(sprint.startDate, sprint.endDate)}`,
             })),

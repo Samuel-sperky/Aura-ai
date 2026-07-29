@@ -69,9 +69,18 @@ export function AuditSection() {
   const [entity, setEntity] = useState("");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [nonce, setNonce] = useState(0);
+
+  // The request is identified by its own path plus the retry nonce, and the key
+  // of the request already on screen is remembered. `loading` is therefore
+  // DERIVED during render — "the rows do not belong to the current filters" —
+  // instead of set synchronously in the effect body, which cascades renders
+  // (react-hooks/set-state-in-effect).
+  const auditPath = `/api/audit${qs({ q: debounced, action, entity, from, to, page, pageSize })}`;
+  const requestKey = `${auditPath}#${nonce}`;
+  const [loadedKey, setLoadedKey] = useState<string | null>(null);
+  const loading = loadedKey !== requestKey;
 
   const refetch = useCallback(() => setNonce((n) => n + 1), []);
 
@@ -86,11 +95,7 @@ export function AuditSection() {
   useEffect(() => {
     const controller = new AbortController();
     let alive = true;
-    setLoading(true);
-    apiGet<ListResult<AuditEntry>>(
-      `/api/audit${qs({ q: debounced, action, entity, from, to, page, pageSize })}`,
-      { signal: controller.signal },
-    )
+    apiGet<ListResult<AuditEntry>>(auditPath, { signal: controller.signal })
       .then((res) => {
         if (!alive) return;
         setRows(res.items);
@@ -105,13 +110,13 @@ export function AuditSection() {
         );
       })
       .finally(() => {
-        if (alive) setLoading(false);
+        if (alive) setLoadedKey(requestKey);
       });
     return () => {
       alive = false;
       controller.abort();
     };
-  }, [debounced, action, entity, from, to, page, pageSize, nonce]);
+  }, [auditPath, requestKey]);
 
   // Options built from the rows on screen — see the module header.
   const actionOptions = useMemo(() => {

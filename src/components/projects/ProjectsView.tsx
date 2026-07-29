@@ -161,12 +161,23 @@ export function ProjectsView() {
   const [rows, setRows] = useState<ProjectDto[]>([]);
   const [total, setTotal] = useState(0);
   const [areas, setAreas] = useState<AreaDto[]>([]);
-  const [loading, setLoading] = useState(true);
   const [firstLoadDone, setFirstLoadDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [nonce, setNonce] = useState(0);
 
-  const [search, setSearch] = useState(params.q);
+  // The search box is EDITED locally and debounced into `?q=`, so its value is
+  // DERIVED rather than mirrored by an effect: as long as the query it was typed
+  // against is still in the URL the local text wins, and the moment `?q=` moves on
+  // its own (Back, a removed chip, the restored preferences) the URL wins. Mirroring
+  // it with a setState in an effect body cascades renders
+  // (react-hooks/set-state-in-effect). Same shape as DecisionsView.
+  const [typedSearch, setTypedSearch] = useState({ value: params.q, q: params.q });
+  const search = typedSearch.q === params.q ? typedSearch.value : params.q;
+  const setSearch = useCallback(
+    (value: string) => setTypedSearch({ value, q: params.q }),
+    [params.q],
+  );
+
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<ProjectDto | null>(null);
   const [suggested, setSuggested] = useState<ProjectHealth | null>(null);
@@ -190,7 +201,8 @@ export function ProjectsView() {
       priority: storedFilter(stored, "priority"),
       q: typeof stored.q === "string" ? stored.q : "",
     };
-    setSearch(next.q);
+    // The search box needs no separate write: its text derives from `?q=`, which
+    // this one call sets.
     void setParams(next);
   }, [prefsLoading, storedPrefs, urlWasEmpty, setParams]);
 
@@ -230,29 +242,31 @@ export function ProjectsView() {
     return () => clearTimeout(timer);
   }, [search, params.q, setParams]);
 
-  // Keep the box in sync when the URL changes from elsewhere (Back, restore).
-  useEffect(() => {
-    setSearch((current) => (current === params.q ? current : params.q));
-  }, [params.q]);
+  // No effect keeps the box in sync when the URL changes from elsewhere (Back, a
+  // removed chip, the restored preferences) — `search` above derives from `?q=`.
 
   // ── data ───────────────────────────────────────────────────────────────────
+  // `loading` is DERIVED from which request the rows on screen belong to; a
+  // setLoading(true) in the effect body cascades renders
+  // (react-hooks/set-state-in-effect).
+  const listPath = `/api/projects${qs({
+    area: params.area,
+    status: params.status,
+    priority: params.priority,
+    q: params.q,
+    sort: params.sort,
+    dir: params.dir,
+    page: params.page,
+    pageSize: params.pageSize,
+  })}`;
+  const requestKey = `${listPath}#${nonce}`;
+  const [loadedKey, setLoadedKey] = useState<string | null>(null);
+  const loading = loadedKey !== requestKey;
+
   useEffect(() => {
     const controller = new AbortController();
     let alive = true;
-    setLoading(true);
-    apiGet<ListResult<ProjectDto>>(
-      `/api/projects${qs({
-        area: params.area,
-        status: params.status,
-        priority: params.priority,
-        q: params.q,
-        sort: params.sort,
-        dir: params.dir,
-        page: params.page,
-        pageSize: params.pageSize,
-      })}`,
-      { signal: controller.signal },
-    )
+    apiGet<ListResult<ProjectDto>>(listPath, { signal: controller.signal })
       .then((res) => {
         if (!alive) return;
         setRows(res.items);
@@ -270,7 +284,7 @@ export function ProjectsView() {
       })
       .finally(() => {
         if (!alive) return;
-        setLoading(false);
+        setLoadedKey(requestKey);
         setFirstLoadDone(true);
       });
     return () => {
@@ -278,6 +292,8 @@ export function ProjectsView() {
       controller.abort();
     };
   }, [
+    listPath,
+    requestKey,
     params.area,
     params.status,
     params.priority,
@@ -316,7 +332,7 @@ export function ProjectsView() {
   const resetFilters = useCallback(() => {
     setSearch("");
     void setParams({ area: "", status: "", priority: "", q: "", page: 1 });
-  }, [setParams]);
+  }, [setParams, setSearch]);
 
   const chips = useMemo<FilterChipDescriptor[]>(() => {
     const list: FilterChipDescriptor[] = [];
@@ -352,7 +368,7 @@ export function ProjectsView() {
       });
     }
     return list;
-  }, [params.area, params.status, params.priority, params.q, setParams]);
+  }, [params.area, params.status, params.priority, params.q, setParams, setSearch]);
 
   const sort = useMemo<TableSort | undefined>(() => {
     const key = Object.keys(SORTABLE).find((k) => SORTABLE[k] === params.sort);

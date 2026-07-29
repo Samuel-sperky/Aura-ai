@@ -129,12 +129,16 @@ export function TimelineWorkspace() {
   // "Dnes" line mid-session and make the horizon jump at midnight.
   const today = useMemo(() => todayIso(), []);
 
-  // Every loader starts with an `await` and only touches state afterwards: a
-  // synchronous setState in an effect body cascades renders (and the React
-  // Compiler lint rightly complains about it).
-  const loadCore = useCallback(async (signal?: AbortSignal) => {
-    try {
-      const [me, projects, checkpoints, sprints] = await Promise.all([
+  // Every loader is a promise CHAIN, not an async/await body: that keeps all state
+  // writes inside callbacks, so the effects below can call them without setting
+  // state synchronously (which cascades renders). An `await` as the first
+  // statement is not enough — `set-state-in-effect` cannot see past the call into
+  // an extracted async function and flags the call site regardless. `apiGet` is
+  // itself async and therefore never throws synchronously, so a chain behaves
+  // exactly like the try/catch it replaces.
+  const loadCore = useCallback(
+    (signal?: AbortSignal): Promise<void> =>
+      Promise.all([
         apiGet<{ user: PublicUserDto }>("/api/auth/me", { signal }),
         apiGet<ListResult<ProjectDto>>(
           `/api/projects${qs({ pageSize: PAGE.projects })}`,
@@ -148,20 +152,23 @@ export function TimelineWorkspace() {
           `/api/sprints${qs({ pageSize: PAGE.sprints, sort: "startDate", dir: "asc" })}`,
           { signal },
         ),
-      ]);
-      setCore({
-        me: me.user,
-        projects: projects.items,
-        checkpoints: checkpoints.items,
-        sprints: sprints.items,
-      });
-      setCoreError(null);
-    } catch (err) {
-      if (err instanceof DOMException && err.name === "AbortError") return;
-      // 401 already redirected inside the api client.
-      setCoreError(err instanceof Error ? err.message : t("timeline.error.load"));
-    }
-  }, []);
+      ])
+        .then(([me, projects, checkpoints, sprints]) => {
+          setCore({
+            me: me.user,
+            projects: projects.items,
+            checkpoints: checkpoints.items,
+            sprints: sprints.items,
+          });
+          setCoreError(null);
+        })
+        .catch((err: unknown) => {
+          if (err instanceof DOMException && err.name === "AbortError") return;
+          // 401 already redirected inside the api client.
+          setCoreError(err instanceof Error ? err.message : t("timeline.error.load"));
+        }),
+    [],
+  );
 
   useEffect(() => {
     const controller = new AbortController();
@@ -195,41 +202,41 @@ export function TimelineWorkspace() {
 
   // ── planner items (sprints mode only) ─────────────────────────────────────
   const loadBuckets = useCallback(
-    async (ids: string[], signal?: AbortSignal) => {
-      try {
-        const [backlog, ...perSprint] = await Promise.all([
+    (ids: string[], signal?: AbortSignal): Promise<void> =>
+      Promise.all([
+        apiGet<ListResult<WorkItemDto>>(
+          `/api/work-items${qs({
+            backlog: 1,
+            openOnly: 1,
+            pageSize: PAGE.items,
+            sort: "rank",
+            dir: "asc",
+          })}`,
+          { signal },
+        ),
+        ...ids.map((id) =>
           apiGet<ListResult<WorkItemDto>>(
             `/api/work-items${qs({
-              backlog: 1,
-              openOnly: 1,
+              sprintId: id,
               pageSize: PAGE.items,
               sort: "rank",
               dir: "asc",
             })}`,
             { signal },
           ),
-          ...ids.map((id) =>
-            apiGet<ListResult<WorkItemDto>>(
-              `/api/work-items${qs({
-                sprintId: id,
-                pageSize: PAGE.items,
-                sort: "rank",
-                dir: "asc",
-              })}`,
-              { signal },
-            ),
-          ),
-        ]);
-        const next: ItemBuckets = { [BACKLOG_ID]: backlog.items };
-        ids.forEach((id, index) => {
-          next[id] = perSprint[index]?.items ?? [];
-        });
-        setBuckets(next);
-      } catch (err) {
-        if (err instanceof DOMException && err.name === "AbortError") return;
-        toast.error(err instanceof Error ? err.message : t("timeline.error.load"));
-      }
-    },
+        ),
+      ])
+        .then(([backlog, ...perSprint]) => {
+          const next: ItemBuckets = { [BACKLOG_ID]: backlog.items };
+          ids.forEach((id, index) => {
+            next[id] = perSprint[index]?.items ?? [];
+          });
+          setBuckets(next);
+        })
+        .catch((err: unknown) => {
+          if (err instanceof DOMException && err.name === "AbortError") return;
+          toast.error(err instanceof Error ? err.message : t("timeline.error.load"));
+        }),
     [toast],
   );
 
@@ -241,21 +248,27 @@ export function TimelineWorkspace() {
   }, [mode, core, columnKey, loadBuckets]);
 
   // ── capacity of the selected sprint ───────────────────────────────────────
-  const loadCapacity = useCallback(
-    async (id: string | null, signal?: AbortSignal) => {
+  // This one RETURNS the breakdown instead of storing it: with no sprint selected
+  // there is nothing to await, so a state write in here would land synchronously
+  // in the body of the effect below. The callers apply it in a `.then` instead.
+  // An abort is re-thrown so they can skip the write and leave the panel alone.
+  const fetchCapacity = useCallback(
+    async (
+      id: string | null,
+      signal?: AbortSignal,
+    ): Promise<CapacityBreakdownDto | null> => {
+      if (!id) return null;
       try {
-        const res = id
-          ? await apiGet<{
-              metrics: SprintMetricsDto;
-              capacity: CapacityBreakdownDto;
-            }>(`/api/sprints/${encodeURIComponent(id)}`, { signal })
-          : null;
-        setCapacity(res?.capacity ?? null);
+        const res = await apiGet<{
+          metrics: SprintMetricsDto;
+          capacity: CapacityBreakdownDto;
+        }>(`/api/sprints/${encodeURIComponent(id)}`, { signal });
+        return res?.capacity ?? null;
       } catch (err) {
-        if (err instanceof DOMException && err.name === "AbortError") return;
+        if (err instanceof DOMException && err.name === "AbortError") throw err;
         // A missing capacity panel is a degraded view, not a page failure — the
         // axis and the board stay usable, so this never becomes an ErrorState.
-        setCapacity(null);
+        return null;
       }
     },
     [],
@@ -264,18 +277,23 @@ export function TimelineWorkspace() {
   useEffect(() => {
     if (mode !== "sprints") return;
     const controller = new AbortController();
-    void loadCapacity(selectedSprintId, controller.signal);
+    void fetchCapacity(selectedSprintId, controller.signal)
+      .then(setCapacity)
+      .catch(() => {
+        // Aborted — the run that superseded this one owns the panel.
+      });
     return () => controller.abort();
-  }, [mode, selectedSprintId, loadCapacity]);
+  }, [mode, selectedSprintId, fetchCapacity]);
 
   // ── mutations ─────────────────────────────────────────────────────────────
   const refreshPlanner = useCallback(async () => {
     await Promise.all([
       loadCore(),
       loadBuckets(columnKey ? columnKey.split(",") : []),
-      loadCapacity(selectedSprintId),
+      // No signal here, so this can only resolve — never abort.
+      fetchCapacity(selectedSprintId).then(setCapacity),
     ]);
-  }, [loadCore, loadBuckets, loadCapacity, columnKey, selectedSprintId]);
+  }, [loadCore, loadBuckets, fetchCapacity, columnKey, selectedSprintId]);
 
   /**
    * One error policy for every planner mutation: a 409 shows the SERVER's Slovak
