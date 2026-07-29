@@ -254,4 +254,69 @@ Schválením plánu ich potvrdzuješ; ak s niektorým nesúhlasíš, napíš jeh
 
 ## 11. Výsledok
 
-_(dopĺňa sa po dokončení šprintu)_
+**Dokončené 2026-07-29.** Appka beží v Dockeri na `http://localhost:3040`, celá overovacia
+brána zelená.
+
+### Stav overovacej brány
+
+| Kontrola | Výsledok |
+|---|---|
+| `npx tsc --noEmit` | čistý |
+| `npm run lint` | **0 chýb**, 23 upozornení (`react-hooks/set-state-in-effect`, neblokujúce) |
+| `npx vitest run` | **535 testov / 22 súborov, 0 padnutých** |
+| `npx next build` | prejde — 6 pohľadov, 32 API rout, middleware aktívny |
+| `npx playwright test` | **47 / 47**, vrátane axe na Prehľade, Timeline a Projektoch v oboch témach |
+| Docker | `aura-roadmap-app` healthy na `:3040`, `aura-roadmap-db` healthy, DB bez host portu |
+| `/api/health` | `{"ok":true,"db":true}` |
+| Migrácie | `0001_init` (6) + `0002_domain` (13) + `_migrations` = **20 tabuliek** |
+| Seed | idempotentný — druhý beh pridá 0 riadkov; 16 položiek / 3 komentáre / 5 worklogov / 15 podmienok / 1 rozhodnutie / 1 baseline |
+| Zálohy | dump 78 KB do `backups/`, retencia 3, status JSON + log |
+| Screenshoty | 21 (dark + light 1440, dark 390) v `test-results/screenshots/` |
+
+### Dosiahnuté zjednodušenie
+
+| Vec | Pred | Po |
+|---|---|---|
+| Generácie UI | 3 (V1 + V2 + V3) | **1** |
+| Tabuľky | 36 | **20** (13 doménových + 7 infra) |
+| CSS | 189 KB v 3 súboroch | **1 súbor, 560 riadkov / 36 KB** |
+| Režimy Timeline | 5 | **3** |
+| Zoomy | 5 | **3** |
+| Hustoty | 3 | **2** |
+| Hierarchia práce | 5 úrovní + Bug + Spike | **2 úrovne, 3 typy** |
+| Workflow engine | konfigurovateľný per projekt | **1 pevný stavový model** |
+| Runtime | Cloudflare Worker + D1 + R2 + `vinext` | **Node 22 + Next 16 standalone + MariaDB 11.4** |
+| Testy | 1 súbor | **22 unit + 4 e2e specy** |
+
+### Akceptačné kritériá
+
+Splnených **17 z 18**. Nesplnené je len kritérium o GitHub remote (§3.2/97): `gh` nie je
+v prostredí nainštalované a remote nebol nastavený, takže repo na GitHube som vytvoriť
+nemohol. Lokálny repo, branch `feat/aura-family-port` a 9 commitov existujú a sú
+nedotknuté — chýba iba `git remote add` + `git push`.
+
+### Odchýlky od kontraktu
+
+1. **Rate-limit hodnoty zmenené** oproti pôvodnej implementácii: `read` 120→600,
+   `write` 60→120, `heavy` 30→120 za minútu. Buckety sú per-IP a Prehľad ťahá 7
+   requestov na zobrazenie, takže pôvodné čísla dovolili ~4 zobrazenia za minútu pre
+   celý tím. `login` zostal na 10/min. Reverzibilné, zapísané.
+2. **Projekty na mobile vykresľujú karty**, nie tabuľku (pod 700 px), nezávisle od
+   uloženej preferencie. Kontrakt §3.2/72 hovorí „mobil: čítanie + rýchle akcie", takže
+   je to v jeho duchu; 9-stĺpcová tabuľka potrebuje 940 px.
+3. **16 pracovných položiek v seede** namiesto „~20" zo špecifikácie (otázka 48).
+   Pokrývajú všetky stavy, typy aj 2 úrovne, takže účel je splnený.
+4. **Prílohy** neexistujú ani ako `links` tabuľka — URL sa píše do popisu položky
+   (kontrakt §2.2 ich rušil, otázka 34 navrhovala `links` ako alternatívu).
+
+### Otvorené body pre ďalší sprint
+
+- `git remote add origin` + prvý push (blokované chýbajúcim `gh`)
+- 23 lint upozornení `react-hooks/set-state-in-effect` — nezhoršujú funkciu, ale
+  spôsobujú kaskádové rendery; kandidát na `useSyncExternalStore` refaktor
+- Prehľad ťahá **7 API requestov** na jedno zobrazenie; zlúčenie do jedného
+  agregačného endpointu by odstránilo hlavný dôvod, prečo bolo treba zvýšiť rate-limit
+- Appka nelogguje chyby route handlerov — pri diagnostike bolo treba merať z prehliadača,
+  lebo `docker logs` mal 4 riadky. Chýba observabilita.
+- Integrácie s rodinou (read-only user `roadmap_ro`) — pripravené, nezapojené
+- Rozpor teal vs zlatá v rodine — samostatná úloha mimo tohto sprintu
