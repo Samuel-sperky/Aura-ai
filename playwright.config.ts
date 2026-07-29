@@ -27,5 +27,19 @@ export default defineConfig({
     locale: "sk-SK",
     timezoneId: "Europe/Bratislava",
   },
-  projects: [{ name: "chromium", use: { browserName: "chromium" } }],
+  projects: [
+    // Signs in once; every spec reuses the saved session. Logging in per test
+    // trips the login rate limit (10/min) and the failures then masquerade as
+    // application bugs.
+    { name: "setup", testMatch: /auth\.setup\.ts/, use: { browserName: "chromium" } },
+    {
+      name: "chromium",
+      dependencies: ["setup"],
+      testIgnore: /auth\.setup\.ts/,
+      use: {
+        browserName: "chromium",
+        storageState: "test-results/.auth/admin.json",
+      },
+    },
+  ],
 });

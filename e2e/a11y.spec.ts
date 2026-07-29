@@ -39,7 +39,13 @@ const SCREENS = [
 const THEMES = ["dark", "light"] as const;
 
 async function login(page: Page): Promise<void> {
-  await page.goto("/login");
+  // The session normally arrives from auth.setup.ts via storageState. Fall back to
+  // the form only when it is missing or expired: signing in once per test issues
+  // ~50 logins, trips the deliberate 10/min rate limit, and the resulting
+  // navigation timeouts look like application bugs when they are self-inflicted.
+  await page.goto("/");
+  if (!new URL(page.url()).pathname.startsWith("/login")) return;
+
   await page.locator('input[name="email"]').fill(EMAIL);
   await page.locator('input[name="password"]').fill(PASSWORD);
   await page.getByRole("button", { name: /prihlásiť/i }).click();
