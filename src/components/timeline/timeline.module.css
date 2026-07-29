@@ -1,0 +1,950 @@
+/* ============================================================================
+   Timeline — scoped styles (CSS Module).
+
+   Lives here and not in globals.css because A7 owns that file and a Gantt is the
+   only screen in the app that needs this geometry. Same iron rules apply:
+   NO raw hex, NO rgba — every colour comes from a token, every tint through
+   `color-mix(in srgb, var(--token) N%, transparent)`.
+
+   Sticky strategy: `.scroller` is the scroll container in BOTH axes (a
+   max-height plus `overflow: auto`). That is what makes `position: sticky` work
+   for the time header (top) and the row identity (left) at the same time — a
+   pure `overflow-x` wrapper has no vertical scrollport for `top` to stick to.
+   ========================================================================== */
+
+.wrap {
+  /* Width of the frozen left identity column. */
+  --tl-identity: 236px;
+  --tl-row-h: 40px;
+  --tl-lane-h: 34px;
+  --tl-bar-h: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.scroller {
+  position: relative;
+  max-height: min(66vh, 680px);
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+/* The inner canvas is at least as wide as the zoom needs; `--tl-track-min` is
+   set inline from the column count so a week zoom does not crush its columns. */
+.canvas {
+  position: relative;
+  min-width: calc(var(--tl-identity) + var(--tl-track-min, 720px));
+}
+
+/* ── time header ────────────────────────────────────────────────────────── */
+.head {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  display: flex;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+}
+
+.headIdentity {
+  position: sticky;
+  left: 0;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 2px;
+  flex: 0 0 var(--tl-identity);
+  width: var(--tl-identity);
+  padding: var(--space-2) var(--space-3);
+  background: var(--panel);
+  border-right: 1px solid var(--border);
+}
+
+.headAxis {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
+.headRow {
+  display: flex;
+  width: 100%;
+}
+
+.headYear {
+  flex: 0 0 auto;
+  min-width: 0;
+  padding: 5px var(--space-2);
+  border-left: 1px solid var(--border-soft);
+  color: var(--muted);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.headCol {
+  flex: 0 0 auto;
+  min-width: 0;
+  padding: 4px var(--space-2) 7px;
+  border-left: 1px solid var(--border-soft);
+  color: var(--ink2);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.headColCurrent {
+  color: var(--accent-ink);
+  background: var(--accent-tint);
+}
+
+/* ── the "Dnes" line (spec Q10) ─────────────────────────────────────────── */
+.todayFlag {
+  position: absolute;
+  bottom: 3px;
+  z-index: 5;
+  transform: translateX(-50%);
+  padding: 1px 7px;
+  border-radius: var(--radius-pill);
+  background: var(--accent);
+  color: var(--on-accent);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.todayLine {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 2;
+  width: 2px;
+  margin-left: -1px;
+  background: var(--accent);
+  pointer-events: none;
+}
+
+/* ── body, groups, rows ─────────────────────────────────────────────────── */
+.body {
+  position: relative;
+}
+
+.groupHead {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: var(--tl-identity);
+  padding: var(--space-2) var(--space-3);
+  background: var(--panel2);
+  border-bottom: 1px solid var(--border);
+  color: var(--muted);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.groupStripe {
+  border-top: 1px solid var(--border);
+  background: color-mix(in srgb, var(--ink) 2%, transparent);
+}
+
+.row {
+  display: flex;
+  min-height: var(--tl-row-h);
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.row:hover .identity {
+  background: var(--accent-tint);
+}
+
+.identity {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex: 0 0 var(--tl-identity);
+  width: var(--tl-identity);
+  min-width: 0;
+  padding: 6px var(--space-3);
+  background: var(--panel);
+  border-right: 1px solid var(--border);
+  transition: background var(--transition);
+}
+
+.identityMain {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.identityName {
+  color: var(--ink);
+  font-size: var(--text-md);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.identityLink {
+  color: var(--ink);
+  text-align: left;
+  font: inherit;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.identityLink:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+.identityMeta {
+  color: var(--muted);
+  font-size: var(--text-xs);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.track {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
+/* Column dividers drawn once per row so the grid reads across the whole chart. */
+.grid {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  pointer-events: none;
+}
+
+.gridCell {
+  flex: 0 0 auto;
+  border-left: 1px solid var(--border-soft);
+}
+
+.gridCellCurrent {
+  background: color-mix(in srgb, var(--accent) 5%, transparent);
+}
+
+/* ── bars ───────────────────────────────────────────────────────────────── */
+.bar {
+  position: absolute;
+  top: 50%;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  height: var(--tl-bar-h);
+  min-width: 6px;
+  padding: 0 7px;
+  transform: translateY(-50%);
+  border: 1px solid color-mix(in srgb, var(--accent) 46%, transparent);
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--accent) 20%, transparent);
+  color: var(--ink);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.barLabel {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Progress fill inside the project bar — the plan vs the reality in one shape. */
+.barFill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--accent) 34%, transparent);
+  pointer-events: none;
+}
+
+.barText {
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Health bands. Semantic colour on a band is allowed; on a category it is not. */
+.barGreen {
+  border-color: color-mix(in srgb, var(--success) 46%, transparent);
+  background: color-mix(in srgb, var(--success) 16%, transparent);
+}
+.barGreen .barFill { background: color-mix(in srgb, var(--success) 30%, transparent); }
+
+.barAmber {
+  border-color: color-mix(in srgb, var(--warn) 48%, transparent);
+  background: color-mix(in srgb, var(--warn) 16%, transparent);
+}
+.barAmber .barFill { background: color-mix(in srgb, var(--warn) 30%, transparent); }
+
+.barRed {
+  border-color: color-mix(in srgb, var(--danger) 48%, transparent);
+  background: color-mix(in srgb, var(--danger) 16%, transparent);
+}
+.barRed .barFill { background: color-mix(in srgb, var(--danger) 30%, transparent); }
+
+.barGrey {
+  border-color: var(--border);
+  background: var(--panel2);
+}
+.barGrey .barFill { background: color-mix(in srgb, var(--ink) 8%, transparent); }
+
+/* Cut-off edges tell the reader the interval leaves the horizon. */
+.clipStart {
+  border-top-left-radius: 2px;
+  border-bottom-left-radius: 2px;
+  border-left-style: dashed;
+}
+.clipEnd {
+  border-top-right-radius: 2px;
+  border-bottom-right-radius: 2px;
+  border-right-style: dashed;
+}
+
+.noDates {
+  position: absolute;
+  top: 50%;
+  left: var(--space-3);
+  transform: translateY(-50%);
+  color: var(--muted);
+  font-size: var(--text-xs);
+}
+
+/* ── checkpoint markers (spec Q11: filled = past, outlined = future) ─────── */
+.marker {
+  position: absolute;
+  top: 50%;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  transform: translate(-50%, -50%);
+  border: 1.5px solid var(--accent);
+  border-radius: var(--radius-sm);
+  background: var(--panel);
+  color: var(--accent);
+  transition: transform var(--transition), box-shadow var(--transition);
+}
+
+.marker:hover,
+.marker:focus-visible {
+  transform: translate(-50%, -50%) scale(1.18);
+  box-shadow: var(--shadow-pop);
+  z-index: 3;
+}
+
+/* Past = filled. */
+.markerPast {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.markerToday {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent);
+}
+
+.markerBlocked {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+.markerBlocked.markerPast {
+  background: var(--danger);
+  color: var(--on-gold);
+}
+
+.markerDecided {
+  border-color: var(--success);
+  background: var(--success);
+  color: var(--on-gold);
+}
+
+.markerReady {
+  border-color: var(--warn);
+  color: var(--warn);
+}
+.markerReady.markerPast {
+  background: var(--warn);
+  color: var(--on-gold);
+}
+
+/* ── legend ─────────────────────────────────────────────────────────────── */
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-2) var(--card-pad);
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  font-size: var(--text-xs);
+}
+
+.legendItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legendSwatch {
+  width: 16px;
+  height: 8px;
+  border-radius: var(--radius-pill);
+  border: 1px solid color-mix(in srgb, var(--accent) 46%, transparent);
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+}
+
+.legendLine {
+  width: 2px;
+  height: 14px;
+  background: var(--accent);
+}
+
+/* ── sprint planner board ───────────────────────────────────────────────── */
+.board {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(272px, 1fr);
+  gap: var(--grid-gap);
+  overflow-x: auto;
+  padding-bottom: var(--space-2);
+  align-items: start;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--panel);
+  box-shadow: var(--shadow-sm);
+}
+
+.columnBacklog {
+  background: var(--panel2);
+}
+
+.columnActive {
+  border-color: color-mix(in srgb, var(--accent) 44%, transparent);
+  box-shadow: var(--shadow-md);
+}
+
+.columnHead {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: var(--head-pad-y) var(--card-pad);
+  border-bottom: 1px solid var(--border);
+}
+
+.columnTitleRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.columnTitle {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--text-lg);
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.columnGoal {
+  color: var(--muted);
+  font-size: var(--text-xs);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.columnMeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--muted);
+  font-size: var(--text-xs);
+}
+
+.items {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-height: 96px;
+  padding: var(--space-2);
+  list-style: none;
+  transition: background var(--transition);
+}
+
+.itemsOver {
+  background: var(--accent-tint);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 40%, transparent);
+}
+
+.item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--panel);
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.item:hover {
+  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+}
+
+.item:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.itemDragging {
+  opacity: 0.55;
+  box-shadow: var(--shadow-lg);
+}
+
+.handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 22px;
+  height: 26px;
+  border-radius: var(--radius-sm);
+  color: var(--muted);
+  cursor: grab;
+  touch-action: none;
+}
+
+.handle:hover {
+  color: var(--accent);
+  background: var(--accent-tint);
+}
+
+/* Expand/collapse chevron on a chart row. Deliberately NOT `.handle`: that one is
+   hidden on touch because dragging is desktop-only, and expanding a sprint row
+   must keep working on a phone. */
+.rowToggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 20px;
+  height: 22px;
+  border-radius: var(--radius-sm);
+  color: var(--muted);
+}
+
+.rowToggle:hover:not(:disabled) {
+  color: var(--accent);
+  background: var(--accent-tint);
+}
+
+.rowToggle:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.itemMain {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.itemTitle {
+  color: var(--ink);
+  font-size: var(--text-md);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.itemMeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: var(--text-xs);
+}
+
+.itemActions {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.dropEmpty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 72px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-md);
+  color: var(--muted);
+  font-size: var(--text-xs);
+}
+
+/* ── decision queue rows ────────────────────────────────────────────────── */
+.queue {
+  display: flex;
+  flex-direction: column;
+  list-style: none;
+}
+
+.queueRow {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) 132px 116px;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-3) var(--card-pad);
+  border-bottom: 1px solid var(--border-soft);
+  text-align: left;
+  transition: background var(--transition);
+}
+
+.queueRow:hover {
+  background: color-mix(in srgb, var(--accent) 7%, transparent);
+}
+
+.queueRank {
+  color: var(--muted);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.queueMain {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.queueTitle {
+  color: var(--ink);
+  font-size: var(--text-md);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.queueMeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: var(--text-xs);
+}
+
+.queueReadiness {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
+
+.queueDue {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: right;
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
+
+.queueDueOverdue {
+  color: var(--danger);
+  font-weight: 700;
+}
+
+/* ── checkpoint modal internals ─────────────────────────────────────────── */
+.cpHero {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-4);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--border);
+}
+
+.cpHeroMain {
+  flex: 1 1 260px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.cpFacts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  color: var(--muted);
+  font-size: var(--text-xs);
+}
+
+.cpFact {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.cpFact strong {
+  color: var(--ink2);
+  font-weight: 600;
+}
+
+.cpReadiness {
+  flex: 0 0 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--panel2);
+}
+
+.cpReadinessValue {
+  font-size: var(--kpi-value);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+  font-variant-numeric: tabular-nums;
+}
+
+.cpTabPanel {
+  padding-top: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.reqList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  list-style: none;
+}
+
+.reqRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--panel);
+  text-align: left;
+  width: 100%;
+}
+
+.reqRow:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+  background: var(--accent-tint);
+}
+
+.reqRow:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.reqMark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  color: var(--muted);
+  background: var(--panel2);
+}
+
+.reqMarkDone {
+  border-color: transparent;
+  background: color-mix(in srgb, var(--success) 18%, transparent);
+  color: var(--success);
+}
+
+.reqMain {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.reqLabel {
+  color: var(--ink);
+  font-size: var(--text-md);
+  font-weight: 500;
+}
+
+.decisionGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+
+.outcomeBtn {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--panel);
+  text-align: left;
+  transition: all var(--transition);
+}
+
+.outcomeBtn:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: var(--accent-tint);
+}
+
+.outcomeBtn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.outcomeBtnOn {
+  border-color: var(--accent);
+  background: var(--accent-tint);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+.outcomeName {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ink);
+  font-size: var(--text-md);
+  font-weight: 600;
+}
+
+.outcomeHint {
+  color: var(--muted);
+  font-size: var(--text-xs);
+}
+
+.trail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  list-style: none;
+}
+
+.trailRow {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius-md);
+  background: var(--panel2);
+}
+
+.trailSuperseded {
+  border-left-color: var(--border);
+  opacity: 0.82;
+}
+
+.trailMeta {
+  color: var(--muted);
+  font-size: var(--text-xs);
+}
+
+/* ── responsive ─────────────────────────────────────────────────────────── */
+@media (max-width: 1100px) {
+  .wrap { --tl-identity: 200px; }
+  .queueRow { grid-template-columns: 28px minmax(0, 1fr) 112px 100px; }
+}
+
+@media (max-width: 900px) {
+  .board {
+    grid-auto-flow: row;
+    grid-auto-columns: auto;
+    grid-template-columns: minmax(0, 1fr);
+    overflow-x: visible;
+  }
+  .decisionGrid { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 700px) {
+  .wrap { --tl-identity: 150px; --tl-row-h: 44px; }
+  .scroller { max-height: min(56vh, 460px); }
+  .queueRow {
+    grid-template-columns: minmax(0, 1fr) 92px;
+    row-gap: var(--space-2);
+  }
+  .queueRank { display: none; }
+  .queueReadiness { grid-column: 1 / -1; }
+  .cpReadiness { flex: 1 1 100%; }
+  .items { min-height: 64px; }
+}
+
+/* Drag & drop is desktop-only (contract §3.2/72) — hide the grab affordance so
+   nothing on a phone advertises an interaction that is switched off. */
+@media (max-width: 700px), (pointer: coarse) {
+  .handle { display: none; }
+}
