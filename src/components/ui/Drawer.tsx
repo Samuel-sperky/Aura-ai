@@ -74,7 +74,8 @@ export function Drawer({
                 size="sm"
                 iconOnly
                 icon={X}
-                aria-label="Zavrieť"
+                // Distinct from a footer "Zavrieť" button in the same drawer.
+                aria-label="Zavrieť panel"
                 onClick={onClose}
               />
             ) : null}

@@ -128,7 +128,9 @@ test.describe("smoke — celá cesta aplikáciou", () => {
     // Four tabs: Prehľad · Položky · Checkpointy · Aktivita (spec Q22).
     await expect(dialog.getByRole("tab")).toHaveCount(4);
 
-    await dialog.getByRole("button", { name: "Zavrieť" }).click();
+    // exact: the header's icon button is "Zavrieť dialóg", and Playwright matches
+    // accessible names as a substring by default, so both would match.
+    await dialog.getByRole("button", { name: "Zavrieť", exact: true }).click();
     await expect(page.getByRole("dialog")).toHaveCount(0);
     await expect(page).not.toHaveURL(/[?&]project=/);
   });
@@ -160,13 +162,22 @@ test.describe("smoke — celá cesta aplikáciou", () => {
     await ready(page);
     await noErrorState(page);
 
-    // Only a parent renders a twisty, so this locator IS the "has subtasks" test.
-    const twisty = page.locator('button[aria-expanded="false"]').first();
-    const hasParent = (await twisty.count()) > 0;
+    // Only a parent renders a twisty. Scoped to <main> because the sidebar
+    // hamburger is also an aria-expanded button and, being first in the DOM, an
+    // unscoped locator picks it up and then fails as hidden at desktop widths.
+    const twisties = page.getByRole("main").locator("button.wl-twisty");
+    const hasParent = (await twisties.count()) > 0;
     test.skip(
       !hasParent,
       "Žiadna položka s podúlohami — preskakujem rozbalenie hierarchie.",
     );
+
+    // Resolve a STABLE handle before clicking. Locating by [aria-expanded="false"]
+    // would be defined by the very attribute under test: after a successful expand
+    // the element stops matching, `.first()` silently re-resolves to the next
+    // collapsed row, and the assertion then reads that row's "false".
+    const label = await twisties.first().getAttribute("aria-label");
+    const twisty = page.getByRole("main").getByLabel(label ?? "", { exact: true });
 
     await twisty.click();
     await expect(twisty).toHaveAttribute("aria-expanded", "true");
@@ -221,11 +232,17 @@ test.describe("smoke — celá cesta aplikáciou", () => {
     await page.goto("/settings?section=appearance");
     await ready(page);
 
-    const density = page.getByRole("tablist", { name: "Hustota zobrazenia" });
-    await density.getByRole("tab", { name: "Kompaktná" }).click();
+    // exact on BOTH levels: the topbar carries a second, icon-only density picker
+    // named "Hustota zobrazenia — rýchle prepnutie" whose tabs are "Kompaktná
+    // hustota"/"Pohodlná hustota". Substring matching (the default) hits all of them.
+    const density = page.getByRole("tablist", {
+      name: "Hustota zobrazenia",
+      exact: true,
+    });
+    await density.getByRole("tab", { name: "Kompaktná", exact: true }).click();
     await expect(page.locator("html")).toHaveAttribute("data-density", "compact");
 
-    await density.getByRole("tab", { name: "Pohodlná" }).click();
+    await density.getByRole("tab", { name: "Pohodlná", exact: true }).click();
     await expect(page.locator("html")).toHaveAttribute("data-density", "cozy");
   });
 

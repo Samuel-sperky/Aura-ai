@@ -87,7 +87,9 @@ export function Modal({
               size="sm"
               iconOnly
               icon={X}
-              aria-label="Zavrieť"
+              // Not plain "Zavrieť": modal footers carry their own Zavrieť button,
+              // so two controls in the same dialog would share one accessible name.
+              aria-label="Zavrieť dialóg"
               onClick={onClose}
             />
           ) : null}

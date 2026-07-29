@@ -79,12 +79,18 @@ export function ThemeToggle() {
   );
 }
 
-/** Three-way theme picker (Nastavenia → Vzhľad). */
+// These are the ICON-ONLY topbar controls. Nastavenia → Vzhľad renders its own
+// labelled pickers for the same two preferences, so on that page both exist at
+// once. Their accessible names must differ: two tablists reading "Hustota
+// zobrazenia" leave a screen-reader user unable to tell which one they are on
+// (and made the e2e selector ambiguous, which is how this surfaced).
+
+/** Compact three-way theme picker for the topbar. */
 export function ThemePicker() {
   const { theme, changeTheme } = usePreferences();
   return (
     <Segmented
-      ariaLabel="Téma"
+      ariaLabel="Téma — rýchle prepnutie"
       value={theme}
       onChange={changeTheme}
       options={THEME_OPTIONS}
@@ -92,12 +98,12 @@ export function ThemePicker() {
   );
 }
 
-/** Two-way density picker (Nastavenia → Vzhľad, and the topbar on desktop). */
+/** Compact two-way density picker for the topbar. */
 export function DensityPicker() {
   const { density, changeDensity } = usePreferences();
   return (
     <Segmented
-      ariaLabel="Hustota zobrazenia"
+      ariaLabel="Hustota zobrazenia — rýchle prepnutie"
       value={density}
       onChange={changeDensity}
       options={DENSITY_OPTIONS}

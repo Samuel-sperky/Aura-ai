@@ -94,11 +94,18 @@ test.describe("screenshoty — mobil 390 px", () => {
       await page.goto(screen.path);
       await ready(page);
 
-      // The body must never scroll sideways — the family's documented grid pitfall.
-      const overflow = await page.evaluate(
-        () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
-      );
-      expect(overflow, "stránka nesmie pretekať do strán na 390 px").toBeLessThanOrEqual(1);
+      // The page must not scroll sideways. Asserted as BEHAVIOUR, not geometry:
+      // scrollWidth still reports the un-clipped content width even when
+      // `overflow-x: clip` has made that content unreachable, and wide tables
+      // legitimately scroll inside their own .tbl-wrap. What matters is that the
+      // page itself cannot be panned away from the left edge.
+      const scrolled = await page.evaluate(() => {
+        window.scrollTo(9999, 0);
+        const x = window.scrollX;
+        window.scrollTo(0, 0);
+        return x;
+      });
+      expect(scrolled, "stránka sa nesmie dať posunúť do strán na 390 px").toBe(0);
 
       await page.screenshot({
         path: `${OUT}/dark-390-${screen.slug}.png`,

@@ -168,7 +168,13 @@
 *, *::before, *::after { box-sizing: border-box; }
 * { margin: 0; padding: 0; }
 html { -webkit-text-size-adjust: 100%; }
-html, body { max-width: 100vw; }
+/* The page itself must NEVER scroll sideways; wide content scrolls inside its own
+   container (.tbl-wrap, the timeline scroller). `max-width` alone does not achieve
+   that — it caps the box, not the overflow bleeding out of it, which is how
+   /projects still scrolled 424 px at a 390 px viewport.
+   `clip` rather than `hidden`: `hidden` would turn html into a scroll container and
+   break every `position: sticky` header in the app. */
+html, body { max-width: 100vw; overflow-x: clip; }
 body {
   min-height: 100vh;
   background: var(--bg);
@@ -212,7 +218,13 @@ button { background: none; border: 0; cursor: pointer; }
 @keyframes popIn { from { transform: scale(0.97) translateY(8px); opacity: 0; } to { transform: none; opacity: 1; } }
 
 /* ── 5 · APP SHELL ──────────────────────────────────────────────────────── */
-.app-shell { display: flex; min-height: 100vh; }
+/* The shell is where sideways overflow is contained, NOT on html/body. The root
+   element's overflow is propagated to the viewport, and with overflow-y: visible
+   Chrome ignores overflow-x: clip there — measured on /projects at 390 px: html
+   reported scrollWidth 814 against clientWidth 390 and the page panned 424 px even
+   though the rule computed to `clip`. On a plain flex div `clip` behaves as written.
+   `clip`, not `hidden`: hidden would create a scroll container and break sticky. */
+.app-shell { display: flex; min-height: 100vh; overflow-x: clip; }
 .skip-link {
   position: fixed; top: var(--space-2); left: 50%; z-index: 300;
   transform: translate(-50%, -220%);

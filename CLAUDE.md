@@ -262,6 +262,93 @@ Keď skončíš, vypíšeš do `docs/HANDOFF.md` (A10 vlastní):
 | Bezpečný secret v kóde | Breach risk | Len `.env`, nikdy `.js` |
 | Hard reset / force push | Lossless | Ak naozaj musíš: ask user |
 
+## Overené pasce (verifikačná brána, 2026-07-29)
+
+Každá z týchto vecí reálne zlyhala pri overovaní a je opravená. Nevracaj ich.
+
+### Jednorazové CLI skripty musia zatvoriť pool
+
+`seed.ts` bez `closePool()` **nikdy neskončí** — idle mariadb spojenia držia Node event
+loop, kontajner bežal 6 hodín a v `information_schema.processlist` stálo 5 spojení v
+stave `Sleep`. Platí aj pre úspešnú cestu, nielen chybovú.
+
+```typescript
+seed()
+  .then(() => closePool())
+  .catch(async (err) => { console.error(err); await closePool().catch(() => {}); process.exit(1); });
+```
+
+`migrate.ts` a `reset-pin.ts` to robia správne — pozri ich, keď pridávaš nový skript.
+
+### Seed musí byť idempotentný na prirodzenom kľúči
+
+Bootstrap admina beží **mimo** transakcie demo dát. Keď beh padne v polovici, admin
+zostane committnutý — a `if (users exist) return` z každého ďalšieho behu urobí tichý
+no-op. Zároveň `INSERT` bez kontroly existencie duplikuje: po dvoch behoch bolo
+32 položiek namiesto 16. Idempotenciu **dokáž** — druhý beh musí vypísať 0 nových riadkov.
+
+### Migrácie sú zdroj pravdy, nie seed
+
+Seed bol napísaný proti vymysleným stĺpcom (`text` namiesto `body`, `created_by`
+namiesto `author_id`, chýbajúce `NOT NULL project_id`). Keď sa nezhodujú, opravuje sa
+**seed**.
+
+### Rate-limit: fan-out × jeden bucket na celý tím
+
+Buckety sú kľúčované podľa **client IP**, nie podľa používateľa, takže celý tím za NAT
+zdieľa jeden limit. Prehľad ťahá **7** list requestov na jedno zobrazenie. Pri
+`read: 120` / `heavy: 30` to znamenalo ~17 / ~4 zobrazenia za minútu — namerané: prvý
+`429` pri 85. requeste. Prejav je zradný: appka nespadne, len každá obrazovka vykreslí
+„Údaje sa nepodarilo načítať", takže to vyzerá ako chyba dát. `login` nikdy nezvyšuj.
+
+### `max-width` nezabráni vodorovnému pretekaniu
+
+`html, body { max-width: 100vw }` obmedzuje box, nie obsah vytekajúci z neho.
+`overflow-x: clip` na **root elemente** Chrome pri `overflow-y: visible` ignoruje (root
+overflow sa propaguje na viewport) — `/projects` panoval 424 px, hoci pravidlo
+computovalo na `clip`. Klipuj na `.app-shell`, a hlavne: **neposielaj na mobil layout,
+ktorý sa tam nezmestí.** 9-stĺpcová tabuľka potrebuje 940 px → pod 700 px sa Projekty
+vykresľujú ako karty (`useIsNarrow`), nezávisle od uloženej preferencie.
+
+Pri hľadaní vinníka pretečenia vylúč prvky vnútri overflow kontejnerov —
+`getBoundingClientRect` klipovanie predkom ignoruje, takže tabuľka v `.tbl-wrap` sa
+javí ako vinník, hoci ním nie je.
+
+### Semantické farby ako text potrebujú vlastný token
+
+Fill hodnoty sú ladené na pozadia; ako text na vlastnom 14 % tinte dávajú 3,6–4,4:1,
+pod AA hranicou 4,5:1 pre 11px labely (axe: `color-contrast`, impact **serious**).
+Používaj `--success-text` / `--danger-text` / `--warn-text` — rovnaký vzor ako
+`--gold-text`. Na `border-color` naopak patrí fill.
+
+### Accessible names musia byť jedinečné v jednom kontexte
+
+Topbar aj Nastavenia renderujú ovládač témy a hustoty. Kým mali rovnaký `ariaLabel`,
+čítač obrazovky ich nerozlíšil. Topbar má sufix „— rýchle prepnutie". Modal má
+„Zavrieť dialóg", drawer „Zavrieť panel", aby sa nebili s tlačidlom „Zavrieť" v pätičke.
+
+### `.ps1` s diakritikou potrebuje UTF-8 BOM
+
+Windows PowerShell 5.1 dekóduje `.ps1` bez BOM systémovou ANSI stránkou. Rozbitý
+em-dash v double-quoted stringu zhodí parsovanie s „Missing closing '}'" — zálohovací
+skript bol takto **mŕtvy**. Overenie:
+
+```powershell
+[System.Management.Automation.Language.Parser]::ParseFile($path, [ref]$null, [ref]$err)
+```
+
+### E2E: prihlás sa RAZ
+
+Suite, ktorá sa prihlasuje v `beforeEach`, vystrelí ~50 loginov a strhne si vlastný
+login limit; pády sa javia ako chyby appky (`waitForURL` timeout). Z pôvodných 17 pádov
+bolo takto falošných 6. Session dodáva `e2e/auth.setup.ts` cez `storageState`
+(zachytáva aj httpOnly cookie).
+
+Dve ďalšie pasce v testoch: Playwright matchuje `name` ako **podstring**, takže
+„Zavrieť" trafí aj „Zavrieť dialóg" — používaj `exact: true`. A nikdy nelokalizuj prvok
+atribútom, ktorý testuješ (`button[aria-expanded="false"]` po rozbalení prestane
+matchovať a `.first()` sa preresolvuje na ďalší zbalený riadok).
+
 ## Kontext a zdroje
 
 - **Kontrakt:** `KONTRAKT-AURA-ROADMAP-2026-07-28.md` (zdroj pravdy — mení sa len s user input)
