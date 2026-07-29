@@ -122,14 +122,30 @@ export function clientKeyFromHeaders(headers: Headers): string {
   return clientIp(headers);
 }
 
-/** Convenience presets for the routes that must be throttled. */
+/**
+ * Convenience presets for the routes that must be throttled.
+ *
+ * These buckets are keyed by CLIENT IP, not by user, and the whole team sits
+ * behind one NAT address — so a limit is shared by everyone in the office, not
+ * spent per person. They also have to absorb the app's fan-out: one Prehľad load
+ * issues seven list requests, and Timeline issues one per visible sprint column.
+ *
+ * The original read/write/heavy numbers were calibrated as if one screen were one
+ * request. At read 120 and heavy 30 a single user clicking around tripped the limit
+ * within a minute (measured: first 429 at request 85 of a plain list endpoint), and
+ * every screen then rendered "Údaje sa nepodarilo načítať". They are raised here to
+ * match the real fan-out.
+ *
+ * `login` is deliberately NOT raised. It is the security-critical bucket, it backs
+ * up the DB lockout, and ten attempts a minute is already generous for a human.
+ */
 export const RATE_LIMITS = {
   /** Login: complements the DB-backed lockout with a fast in-memory throttle. */
   login: { name: "login", limit: 10, windowMs: 60_000 },
-  /** Generic read endpoints (lists, detail). Generous. */
-  read: { name: "read", limit: 120, windowMs: 60_000 },
+  /** Generic read endpoints (lists, detail). ~85 screen loads/min at 7 reads each. */
+  read: { name: "read", limit: 600, windowMs: 60_000 },
   /** Generic write endpoints (create/update/delete). */
-  write: { name: "write", limit: 60, windowMs: 60_000 },
+  write: { name: "write", limit: 120, windowMs: 60_000 },
   /** Heavy/aggregating endpoints (overview KPIs, timeline). */
-  heavy: { name: "heavy", limit: 30, windowMs: 60_000 },
+  heavy: { name: "heavy", limit: 120, windowMs: 60_000 },
 } as const satisfies Record<string, RateLimitOptions>;

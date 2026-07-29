@@ -45,6 +45,11 @@
   --success: #0f8c5a;
   --danger: #d64545;
   --warn: #d97706;
+  /* semantics as TEXT: the fills above are 3.6-4.4:1 on their own tint, under
+     the 4.5:1 AA floor for 11px labels. Same reasoning as --gold-text. */
+  --success-text: #087348;
+  --danger-text: #b02e2e;
+  --warn-text: #974900;
   /* overlay + elevation — the ONLY place rgba() may appear */
   --overlay: rgba(15, 29, 27, 0.45);
   --shadow-sm: 0 1px 2px rgba(15, 40, 38, 0.05);
@@ -125,6 +130,9 @@
   --success: #2fae74;
   --danger: #e26464;
   --warn: #e8912f;
+  --success-text: #47c98d;
+  --danger-text: #ec7777;
+  --warn-text: #f0a44d;
   --overlay: rgba(0, 0, 0, 0.6);
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
   --shadow-md: 0 1px 2px rgba(0, 0, 0, 0.3), 0 12px 30px -16px rgba(0, 0, 0, 0.55);
@@ -298,7 +306,7 @@ button { background: none; border: 0; cursor: pointer; }
 .btn-outline:hover:not(:disabled) { border-color: var(--accent); background: var(--accent-tint); color: var(--accent-ink); transform: translateY(-1px); }
 .btn-ghost { background: transparent; color: var(--ink2); }
 .btn-ghost:hover:not(:disabled) { background: color-mix(in srgb, var(--ink) 6%, transparent); color: var(--ink); }
-.btn-danger { background: transparent; color: var(--danger); border-color: transparent; }
+.btn-danger { background: transparent; color: var(--danger-text); border-color: transparent; }
 .btn-danger:hover:not(:disabled) { background: color-mix(in srgb, var(--danger) 14%, transparent); border-color: color-mix(in srgb, var(--danger) 40%, transparent); }
 .btn-sm { min-height: calc(var(--control-h) - 4px); padding: 0 11px; font-size: var(--text-sm); }
 .btn-xs { min-height: 26px; padding: 0 9px; font-size: var(--text-xs); }
@@ -311,9 +319,9 @@ button { background: none; border: 0; cursor: pointer; }
 .field { display: block; }
 .field + .field { margin-top: var(--space-3); }
 .field-label { display: block; margin-bottom: 5px; font-size: var(--text-xs); font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
-.field-req { color: var(--danger); margin-left: 3px; }
+.field-req { color: var(--danger-text); margin-left: 3px; }
 .field-hint { margin-top: 4px; font-size: var(--text-xs); color: var(--muted); }
-.field-error { margin-top: 4px; font-size: var(--text-xs); color: var(--danger); }
+.field-error { margin-top: 4px; font-size: var(--text-xs); color: var(--danger-text); }
 .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
 .input, .select, .textarea {
   width: 100%; min-height: var(--control-h); padding: 6px 11px;
@@ -360,24 +368,24 @@ button { background: none; border: 0; cursor: pointer; }
 
 /* delta pill — semantic colours live here and on bands, nowhere else */
 .delta { display: inline-flex; align-items: center; gap: 3px; padding: 1px 7px; border-radius: var(--radius-pill); font-size: var(--text-sm); font-weight: 700; font-variant-numeric: tabular-nums; }
-.delta-up { color: var(--success); background: color-mix(in srgb, var(--success) 14%, transparent); }
-.delta-down { color: var(--danger); background: color-mix(in srgb, var(--danger) 14%, transparent); }
+.delta-up { color: var(--success-text); background: color-mix(in srgb, var(--success) 14%, transparent); }
+.delta-down { color: var(--danger-text); background: color-mix(in srgb, var(--danger) 14%, transparent); }
 .delta-flat { color: var(--muted); background: var(--panel2); }
 
 /* badges + pills (state always carries TEXT, never colour alone) */
 .badge { display: inline-flex; align-items: center; gap: 5px; padding: 2px 9px; border-radius: var(--radius-pill); border: 1px solid var(--border); background: var(--panel2); color: var(--ink2); font-size: var(--text-xs); font-weight: 600; white-space: nowrap; }
 .badge svg { width: 12px; height: 12px; }
-.badge-ok { color: var(--success); background: color-mix(in srgb, var(--success) 13%, transparent); border-color: transparent; }
-.badge-warn { color: var(--warn); background: color-mix(in srgb, var(--warn) 15%, transparent); border-color: transparent; }
-.badge-danger { color: var(--danger); background: color-mix(in srgb, var(--danger) 14%, transparent); border-color: transparent; }
+.badge-ok { color: var(--success-text); background: color-mix(in srgb, var(--success) 13%, transparent); border-color: transparent; }
+.badge-warn { color: var(--warn-text); background: color-mix(in srgb, var(--warn) 15%, transparent); border-color: transparent; }
+.badge-danger { color: var(--danger-text); background: color-mix(in srgb, var(--danger) 14%, transparent); border-color: transparent; }
 .badge-accent { color: var(--accent-ink); background: var(--accent-tint); border-color: transparent; }
 .badge-gold { color: var(--gold-text); background: color-mix(in srgb, var(--brand-gold) 16%, transparent); border-color: transparent; }
 .badge-neutral { color: var(--muted); background: var(--panel2); }
 .pill { display: inline-flex; align-items: center; gap: 6px; padding: 2px 10px; border: 1px solid transparent; border-radius: var(--radius-pill); font-size: var(--text-xs); font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap; }
 .pill::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
-.pill-ok { color: var(--success); background: color-mix(in srgb, var(--success) 13%, transparent); }
-.pill-warn { color: var(--warn); background: color-mix(in srgb, var(--warn) 15%, transparent); }
-.pill-danger { color: var(--danger); background: color-mix(in srgb, var(--danger) 14%, transparent); }
+.pill-ok { color: var(--success-text); background: color-mix(in srgb, var(--success) 13%, transparent); }
+.pill-warn { color: var(--warn-text); background: color-mix(in srgb, var(--warn) 15%, transparent); }
+.pill-danger { color: var(--danger-text); background: color-mix(in srgb, var(--danger) 14%, transparent); }
 .pill-accent { color: var(--accent-ink); background: var(--accent-tint); }
 .pill-gold { color: var(--gold-text); background: color-mix(in srgb, var(--brand-gold) 18%, transparent); }
 .pill-neutral { color: var(--muted); background: var(--panel2); }
@@ -491,7 +499,7 @@ table.tbl.rows-clickable tbody tr:hover td { background: color-mix(in srgb, var(
 .state { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: var(--space-7) var(--space-5); text-align: center; color: var(--muted); }
 .state-bare { padding: var(--space-6) var(--space-4); }
 .state-icon { display: flex; align-items: center; justify-content: center; width: 56px; height: 56px; margin-bottom: var(--space-2); border-radius: 50%; color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent); }
-.state-error .state-icon { color: var(--danger); background: color-mix(in srgb, var(--danger) 12%, transparent); }
+.state-error .state-icon { color: var(--danger-text); background: color-mix(in srgb, var(--danger) 12%, transparent); }
 .state-muted .state-icon { color: var(--muted); background: var(--panel2); }
 .state-gold .state-icon { color: var(--gold-text); background: color-mix(in srgb, var(--brand-gold) 16%, transparent); }
 .state-title { font-size: var(--text-lg); font-weight: 700; color: var(--ink); }
@@ -501,8 +509,8 @@ table.tbl.rows-clickable tbody tr:hover td { background: color-mix(in srgb, var(
 /* notices */
 .notice { display: flex; align-items: flex-start; gap: var(--space-3); padding: 10px 14px; border-radius: var(--radius-md); font-size: var(--text-md); border: 1px solid var(--border); background: var(--panel2); color: var(--ink2); }
 .notice svg { flex-shrink: 0; margin-top: 1px; }
-.notice-warn { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 32%, transparent); background: color-mix(in srgb, var(--warn) 12%, transparent); }
-.notice-danger { color: var(--danger); border-color: color-mix(in srgb, var(--danger) 32%, transparent); background: color-mix(in srgb, var(--danger) 12%, transparent); }
+.notice-warn { color: var(--warn-text); border-color: color-mix(in srgb, var(--warn) 32%, transparent); background: color-mix(in srgb, var(--warn) 12%, transparent); }
+.notice-danger { color: var(--danger-text); border-color: color-mix(in srgb, var(--danger) 32%, transparent); background: color-mix(in srgb, var(--danger) 12%, transparent); }
 .notice-accent { color: var(--accent-ink); border-color: color-mix(in srgb, var(--accent) 28%, transparent); background: var(--accent-tint); }
 .notice-body { flex: 1; min-width: 0; color: var(--ink2); }
 

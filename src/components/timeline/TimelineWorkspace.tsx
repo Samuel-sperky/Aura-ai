@@ -105,6 +105,19 @@ export function TimelineWorkspace() {
     parseAsBoolean.withDefault(false),
   );
 
+  // `clearOnDefault: false` keeps a default in the URL once it has been written,
+  // but it does not put it there on a bare /timeline visit. Write it once so the
+  // address bar always spells out the current view and a copied link reproduces
+  // the screen. `history: "replace"` — the initial visit must not leave a history
+  // entry that Back would land on.
+  const urlNormalised = useRef(false);
+  useEffect(() => {
+    if (urlNormalised.current) return;
+    urlNormalised.current = true;
+    void setMode(mode, { history: "replace" });
+    void setZoom(zoom, { history: "replace" });
+  }, [mode, zoom, setMode, setZoom]);
+
   // ── data ──────────────────────────────────────────────────────────────────
   const [core, setCore] = useState<CoreData | null>(null);
   const [coreError, setCoreError] = useState<string | null>(null);
