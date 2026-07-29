@@ -1,0 +1,156 @@
+# =============================================================================
+# Aura Roadmap — local stack (app + MariaDB)
+# =============================================================================
+# Topology:
+#
+#   host:3040 ──▶ app:3000 ──(private net `aura-roadmap`)──▶ db:3306
+#
+#   - Only `app` publishes a host port (3040). `db` has NO host port mapping.
+#   - The app talks to the DB by service name `db` over the private network.
+#
+# ⚠ ALWAYS PASS --env-file. Compose's default env file is `.env`, and the `${...}`
+#   interpolations below (MARIADB_*) resolve to EMPTY without it — MariaDB then
+#   boots with NO database and NO app user, and every request fails with a
+#   confusing auth error. This is a verified trap inherited from the family
+#   reference. Use:
+#
+#     docker compose --env-file .env up -d --build
+#
+#   Or export once per shell:
+#     $env:COMPOSE_ENV_FILES = ".env"
+#
+# One-off DB tasks use the profiled `migrator` service (not started by `up`):
+#   docker compose --env-file .env --profile tools run --rm migrator npm run db:migrate
+#   docker compose --env-file .env --profile tools run --rm migrator npm run db:seed
+# =============================================================================
+
+services:
+  # --- Next.js app (standalone server) ---------------------------------------
+  app:
+    container_name: aura-roadmap-app
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runner
+    image: aura-roadmap:local
+    restart: unless-stopped
+    # Secrets + DB connection injected at runtime (server-side only).
+    env_file:
+      - .env
+    environment:
+      # Talk to the db service over the private network by its service name.
+      # These override any host values in .env so the app always points at the
+      # compose `db` service, not 127.0.0.1.
+      DB_HOST: db
+      DB_PORT: "3306"
+      NODE_ENV: production
+    ports:
+      # Host 3040 → container 3000. Port 3040 is the project's reserved port; the
+      # archived source app on 3010 can keep running without a collision.
+      - "3040:3000"
+    volumes:
+      # READ-ONLY. `GET /api/backups` (admin-only) lists dump metadata for the
+      # Settings › Zálohy section; without this mount it correctly reports
+      # `available: false`. `:ro` on purpose — the app must never be able to write
+      # to or delete a backup; dumps are produced by scripts/backup/backup.ps1 on
+      # the host.
+      - ./backups:/app/backups:ro
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - aura-roadmap
+    # Give Next.js time to drain in-flight requests on SIGTERM before Docker
+    # force-kills it.
+    stop_grace_period: 30s
+    healthcheck:
+      # GET /api/health → 200 when up, 503 when the DB is unreachable.
+      # Uses Node (always present) rather than curl/wget to avoid extra deps.
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # --- MariaDB ---------------------------------------------------------------
+  db:
+    container_name: aura-roadmap-db
+    image: mariadb:11.4
+    restart: unless-stopped
+    # NO `ports:` ON PURPOSE. The database is reachable ONLY on the private
+    # compose network — nothing on the host (or the LAN) can connect to it, and
+    # it cannot collide with another project's 3306. Consequence to know: a local
+    # `next dev` on the host CANNOT reach this DB. Verify against
+    # http://localhost:3040 (the container), not the dev server. Do NOT add a
+    # host port mapping just to make `next dev` work.
+    env_file:
+      - .env
+    environment:
+      # The MariaDB image bootstraps the database + app user from these on FIRST
+      # run only. The MARIADB_* names differ from the app's DB_* names, so we
+      # remap them from the interpolated values — which requires
+      # `--env-file .env` (see the header warning).
+      MARIADB_DATABASE: ${DB_DATABASE}
+      MARIADB_USER: ${DB_USER}
+      MARIADB_PASSWORD: ${DB_PASSWORD}
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MARIADB_AUTO_UPGRADE: "1"
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - aura-roadmap
+    healthcheck:
+      # `healthcheck.sh` ships with the official mariadb image.
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  # --- One-off DB tooling (migrate / seed) -----------------------------------
+  # Profiled so `docker compose up` never starts it. Run on demand:
+  #   docker compose --env-file .env --profile tools run --rm migrator npm run db:migrate
+  migrator:
+    profiles: ["tools"]
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: migrator
+    image: aura-roadmap-migrator:local
+    env_file:
+      - .env
+    environment:
+      DB_HOST: db
+      DB_PORT: "3306"
+      NODE_ENV: production
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - aura-roadmap
+    restart: "no"
+
+networks:
+  aura-roadmap:
+    driver: bridge
+
+  # --- FUTURE: shared aura-app family network (contract §3.2 / #85) -----------
+  # Integrations with the other aura apps are prepared but NOT wired up in this
+  # version. When they are, attach `app` to the existing network created by the
+  # sperky-ai stack and give the read-only DB user `roadmap_ro` to the consumer.
+  # Uncomment BOTH this block and the `networks:` entry on the `app` service.
+  #
+  # sperky-ai_aura_net:
+  #   external: true
+
+volumes:
+  db_data: # MariaDB data — survives container/image rebuilds

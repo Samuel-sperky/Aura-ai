@@ -1,0 +1,39 @@
+# =============================================================================
+# Aura Roadmap — ngrok tunnel override (PREPARED, DISABLED)
+# =============================================================================
+# Contract §3.2 / #10: localhost only; the ngrok profile is prepared and OFF.
+# Nothing here starts with a plain `docker compose up` — the service sits behind
+# the `tunnel` profile, so it is opt-in per invocation.
+#
+# ENABLE (only when you actually want a public URL):
+#   1. put NGROK_AUTHTOKEN=... in .env
+#   2. docker compose --env-file .env -f docker-compose.yml -f docker-compose.ngrok.yml \
+#        --profile tunnel up -d
+#   3. open http://127.0.0.1:4040 for the assigned public URL
+#
+# ⚠ SECURITY: a tunnel makes this app reachable from the public internet. Before
+# enabling, confirm SESSION_SECRET is strong, the seeded demo accounts are gone
+# or re-passworded, and TRUSTED_PROXY_HOPS matches the real hop count (ngrok
+# terminates TLS at its edge and forwards, so 1 is typical).
+#
+# DISABLE: omit the `-f docker-compose.ngrok.yml --profile tunnel` flags. The
+# tunnel container stops existing; the app keeps serving on localhost:3040.
+# =============================================================================
+
+services:
+  ngrok:
+    profiles: ["tunnel"]
+    image: ngrok/ngrok:latest
+    restart: "no"
+    environment:
+      NGROK_AUTHTOKEN: ${NGROK_AUTHTOKEN}
+    # Tunnel the app service's container port over the private compose network.
+    command: ["http", "app:3000"]
+    ports:
+      # ngrok's local inspection UI — bound to loopback only.
+      - "127.0.0.1:4040:4040"
+    depends_on:
+      app:
+        condition: service_healthy
+    networks:
+      - aura-roadmap
