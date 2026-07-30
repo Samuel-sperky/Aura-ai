@@ -388,8 +388,17 @@ export function ProjectsView() {
     [params.sort, params.dir, setParams],
   );
 
+  // Counts OPENS, so the detail modal can tell "the same project again" from "still
+  // the same project". Without it, reopening a project showed the previous response
+  // for a frame: the cached detail was keyed by project id, which had not changed.
+  // Bumped from the event handler, never from an effect.
+  const [openToken, setOpenToken] = useState(0);
+
   const openProject = useCallback(
-    (project: ProjectDto) => void setParams({ project: project.id }),
+    (project: ProjectDto) => {
+      setOpenToken((n) => n + 1);
+      void setParams({ project: project.id });
+    },
     [setParams],
   );
 
@@ -677,6 +686,7 @@ export function ProjectsView() {
       <ProjectDetailModal
         projectId={params.project === "" ? null : params.project}
         refreshToken={detailToken}
+        openToken={openToken}
         canWrite={canWrite}
         canDelete={canDelete}
         onClose={() => void setParams({ project: "" })}

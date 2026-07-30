@@ -77,6 +77,7 @@ import {
 import { EmptyState } from "@/components/states";
 import { CapacityPanel } from "./CapacityPanel";
 import { MoveDialog } from "./MoveDialog";
+import { droppableBuckets } from "./moveTargets";
 import { t, tk } from "./text";
 import styles from "./timeline.module.css";
 
@@ -149,6 +150,15 @@ export function SprintPlanner({
   );
   const dragged = dragId ? allItems.find((i) => i.id === dragId) ?? null : null;
 
+  // Which columns the dragged card may actually land in. The axis spans projects,
+  // but the move API refuses a cross-project sprint, so a drop on a foreign column
+  // could only ever come back 400 — the exact rule the Presunúť dialog applies.
+  // Null while nothing is being dragged: no column is dimmed at rest.
+  const validBuckets = useMemo(
+    () => (dragged ? droppableBuckets(sprints, dragged, BACKLOG_ID) : null),
+    [dragged, sprints],
+  );
+
   /** Which bucket an item currently sits in. */
   const bucketOf = useCallback(
     (item: WorkItemDto) => item.sprintId ?? BACKLOG_ID,
@@ -168,6 +178,12 @@ export function SprintPlanner({
     const overItem = allItems.find((i) => i.id === overId);
     const targetBucket = overItem ? bucketOf(overItem) : overId;
     if (!(targetBucket in buckets)) return;
+
+    // Belt and braces. The foreign column is already non-droppable, but a keyboard
+    // drag or a future collision strategy must not be able to fire a request the
+    // server is going to reject — the user would get an error toast for a gesture
+    // the UI appeared to invite.
+    if (!droppableBuckets(sprints, item, BACKLOG_ID).has(targetBucket)) return;
 
     const sourceBucket = bucketOf(item);
     const sameBucket = targetBucket === sourceBucket;
@@ -251,6 +267,7 @@ export function SprintPlanner({
           onSelect={() => onSelectSprint(sprint.id)}
           items={buckets[sprint.id] ?? []}
           dndEnabled={dndEnabled}
+          dropDisabled={validBuckets ? !validBuckets.has(sprint.id) : false}
           canWriteItems={canWriteItems}
           canWriteSprints={canWriteSprints}
           busyItemId={busyItemId}
@@ -366,6 +383,12 @@ interface PlannerColumnProps {
   selected?: boolean;
   onSelect?: () => void;
   dndEnabled: boolean;
+  /**
+   * True while a card is being dragged that this column cannot accept (it belongs
+   * to another project and the move API would reject it). The backlog never sets
+   * this — returning an item to it carries no relational constraint.
+   */
+  dropDisabled?: boolean;
   canWriteItems: boolean;
   canWriteSprints?: boolean;
   busyItemId: string | null;
@@ -380,6 +403,7 @@ function PlannerColumn({
   title,
   subtitle,
   items,
+  dropDisabled = false,
   sprint,
   backlog = false,
   selected = false,
@@ -393,7 +417,13 @@ function PlannerColumn({
   onRankItem,
   onSprintAction,
 }: PlannerColumnProps) {
-  const { setNodeRef, isOver } = useDroppable({ id, disabled: !dndEnabled });
+  // `dropDisabled` makes @dnd-kit skip this column in collision detection, so the
+  // card cannot be released here at all — better than accepting the drop and then
+  // surfacing the server's 400.
+  const { setNodeRef, isOver } = useDroppable({
+    id,
+    disabled: !dndEnabled || dropDisabled,
+  });
   const points = items.reduce((sum, item) => sum + item.storyPoints, 0);
   const load = sprint && sprint.capacityPoints > 0
     ? Math.round((points / sprint.capacityPoints) * 100)
@@ -478,7 +508,11 @@ function PlannerColumn({
       >
         <ul
           ref={setNodeRef}
-          className={cx(styles.items, isOver && styles.itemsOver)}
+          className={cx(
+            styles.items,
+            isOver && styles.itemsOver,
+            dropDisabled && styles.itemsBlocked,
+          )}
           aria-label={`${title} — ${t("timeline.sprints.itemsInSprint")}`}
         >
           {items.map((item) => (

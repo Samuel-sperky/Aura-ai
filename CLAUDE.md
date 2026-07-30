@@ -381,9 +381,18 @@ export function moveTargets<S extends Pick<SprintWithMetricsDto, "projectId">>(
 ```
 
 Môže legitímne vrátiť prázdne pole — projekt bez šprintu v horizonte má ako jediný
-cieľ backlog. **Tú istú pascu má drag & drop**: `onDragEnd` v `SprintPlanner.tsx`
-droppable cieľ zatiaľ nefiltruje, takže pretiahnutie karty do šprintu iného projektu
-skončí 400. Kto sa toho dotkne, nech použije `moveTargets`.
+cieľ backlog.
+
+**Oba vstupy tú istú podmienku vynucujú** a musia to robiť ďalej:
+
+| Vstup | Ako |
+|---|---|
+| Dialóg „Presunúť" | `MoveDialog` nabízí len `moveTargets(sprints, item)` |
+| Drag & drop | `droppableBuckets(sprints, item, BACKLOG_ID)` → cudzí stĺpec dostane `disabled` v `useDroppable`, takže sa naň **nedá pustiť**, a je stlmený triedou `.itemsBlocked`. Plus poistka v `onDragEnd`, aby ani klávesnicová cesta neposlala request, ktorý server odmietne |
+
+Test `moveTargets.test.ts` obsahuje kontrolu, že sa oba vstupy zhodnú — divergencia medzi
+nimi je presne tá diera, ktorá dovolila drag & dropu nabízať cieľ, ktorý dialóg už
+vylúčil. Backlog je vždy platný: zrušenie `sprint_id` nemá relačnú podmienku.
 
 ### Log neobsahuje riadky pri zelenom behu — je to zámer
 

@@ -40,10 +40,6 @@ export const overviewKeys: Record<string, TranslationEntry> = {
     en: "You are the listed approver",
   },
   "overview.kpi.sprintCapacity": { sk: "Aktívny šprint", en: "Active sprint" },
-  "overview.kpi.sprintCapacitySub": {
-    sk: "Využitie kapacity",
-    en: "Capacity used",
-  },
   "overview.kpi.noActiveSprint": { sk: "Žiadny aktívny šprint", en: "No active sprint" },
   "overview.kpi.overdueItems": {
     sk: "Položky po termíne",

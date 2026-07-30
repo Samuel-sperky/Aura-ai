@@ -522,6 +522,14 @@
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 40%, transparent);
 }
 
+/* Only while a card from ANOTHER project is being dragged: this column is not a
+   legal destination, so it reads as inapplicable instead of droppable.
+   Deliberately no danger colour — nothing has gone wrong. */
+.itemsBlocked {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 .item {
   display: flex;
   align-items: flex-start;

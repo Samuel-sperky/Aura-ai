@@ -53,9 +53,20 @@ import type {
 
 /** Every project: 50 is the target scale, so the block is not paginated. */
 export const OVERVIEW_PROJECT_LIMIT = 200;
-/** The decision queue. The panel renders the first few; the KPI needs the total. */
-export const OVERVIEW_CHECKPOINT_LIMIT = 200;
-/** How many done items to scan for the 12-week chart (newest change first). */
+/**
+ * The decision queue. The panel renders the first few (`UPCOMING_ROWS` = 6) and the
+ * KPI dlaždica needs only the TOTAL, which `listCheckpoints` reports independently
+ * of the page size — so there is nothing to gain from a large page here.
+ */
+export const OVERVIEW_CHECKPOINT_LIMIT = 12;
+/**
+ * How far back to look for completed work. The client owns the exact 12-week window;
+ * this is only a generous upper bound so the query stops short of full history.
+ * 15 weeks: three weeks of slack over the client's 12, which absorbs timezone skew
+ * at the boundary without pretending to define the window.
+ */
+export const OVERVIEW_DONE_WINDOW_DAYS = 15 * 7;
+/** Safety cap on the windowed done-item scan. */
 export const OVERVIEW_DONE_SCAN_LIMIT = 2000;
 /** Rows in the activity panel. */
 export const OVERVIEW_ACTIVITY_ROWS = 10;
@@ -333,18 +344,28 @@ async function loadActiveSprint(): Promise<OverviewKpiInput["activeSprint"]> {
 }
 
 /**
- * Done items for the chart, newest change first. Deliberately NOT windowed to the
- * last 12 weeks in SQL: the window belongs to the client (`weeks.weekStarts`), and
- * a second, server-side definition of "which weeks" would be free to drift from it.
+ * Done items for the chart, newest change first.
+ *
+ * The EXACT window stays the client's: `weeks.weekStarts` picks the 12 weeks from
+ * the browser's calendar day, and a second server-side definition of "which weeks"
+ * would be free to drift from it. But the server has no reason to hand over years
+ * of history either, so it cuts at a deliberately GENEROUS bound — comfortably
+ * wider than any 12-week window the client can ask for, including timezone skew at
+ * the edges. Rows outside it could not land in a bucket anyway.
+ *
+ * `updated_at IS NULL` rows are excluded here for the same reason the client skips
+ * them: with no completion time there is no bucket to put them in.
  */
 async function loadDoneItems(): Promise<OverviewDoneItemDto[]> {
   const rows = await query<DoneItemRow>(
     `SELECT w.id, w.updated_at, w.story_points
        FROM work_items w
       WHERE w.status = 'done'
+        AND w.updated_at IS NOT NULL
+        AND w.updated_at >= DATE_SUB(CURDATE(), INTERVAL ? DAY)
       ORDER BY w.updated_at DESC, w.id ASC
       LIMIT ?`,
-    [OVERVIEW_DONE_SCAN_LIMIT],
+    [OVERVIEW_DONE_WINDOW_DAYS, OVERVIEW_DONE_SCAN_LIMIT],
   );
   return rows.map(toDoneItem);
 }

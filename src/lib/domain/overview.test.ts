@@ -38,7 +38,9 @@ vi.mock("@/lib/auth/audit", () => ({
 
 import {
   OVERVIEW_ACTIVITY_ROWS,
+  OVERVIEW_CHECKPOINT_LIMIT,
   OVERVIEW_DONE_SCAN_LIMIT,
+  OVERVIEW_DONE_WINDOW_DAYS,
   computeKpis,
   getOverview,
   isActiveProjectStatus,
@@ -409,14 +411,18 @@ describe("getOverview", () => {
     expect(sqlSeen()).not.toContain("FROM projects p");
   });
 
-  it("asks for the sizes the dashboard has always used", async () => {
+  it("binds the row limits it declares", async () => {
     routeQueries();
     await getOverview(ADMIN, { today: "2026-07-29" });
 
+    // The done-item scan is bounded on BOTH axes: a time window and a hard cap.
     const done = dbMock.query.mock.calls.find((c) =>
       String(c[0]).includes("w.status = 'done'"),
     );
-    expect(done?.[1]).toEqual([OVERVIEW_DONE_SCAN_LIMIT]);
+    expect(done?.[1]).toEqual([
+      OVERVIEW_DONE_WINDOW_DAYS,
+      OVERVIEW_DONE_SCAN_LIMIT,
+    ]);
 
     const activity = dbMock.query.mock.calls.find((c) =>
       String(c[0]).includes("FROM audit_log"),
@@ -450,5 +456,54 @@ describe("getOverview", () => {
       doneItems: [],
       activity: [],
     });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Query cost. The endpoint replaced seven parallel requests, so it is the single
+// thing every dashboard load pays for — it must not quietly fetch rows nobody
+// renders.
+// ---------------------------------------------------------------------------
+
+describe("query cost", () => {
+  it("asks for barely more checkpoints than the panel shows", () => {
+    // The panel renders 6 (UPCOMING_ROWS) and the KPI needs only the TOTAL, which
+    // listCheckpoints reports independently of the page size. 200 was pure overhead.
+    expect(OVERVIEW_CHECKPOINT_LIMIT).toBeLessThanOrEqual(20);
+    expect(OVERVIEW_CHECKPOINT_LIMIT).toBeGreaterThanOrEqual(6);
+  });
+
+  it("windows the done-item scan instead of walking all history", async () => {
+    dbMock.query.mockImplementation(async (sql: string) => {
+      if (sql.includes("COUNT(*) AS n")) return [{ n: 0 }];
+      if (sql.includes("AS my_decisions")) {
+        return [{ my_decisions: 0, overdue_items: 0 }];
+      }
+      return [];
+    });
+
+    await getOverview(ADMIN, { today: "2026-07-29" });
+
+    const done = dbMock.query.mock.calls.find(
+      (call) => String(call[0]).includes("w.status = 'done'"),
+    );
+    expect(done, "done-item query was not issued").toBeDefined();
+
+    const sql = String(done?.[0]);
+    // Bounded in SQL, not by pulling everything and filtering in JS.
+    expect(sql).toContain("DATE_SUB");
+    // A completed item with no timestamp cannot land in a week bucket, so the
+    // client skips it — no reason to transfer it either.
+    expect(sql).toContain("w.updated_at IS NOT NULL");
+    expect(done?.[1]).toEqual([
+      OVERVIEW_DONE_WINDOW_DAYS,
+      OVERVIEW_DONE_SCAN_LIMIT,
+    ]);
+  });
+
+  it("leaves the client's 12-week window real slack", () => {
+    // The client picks the exact weeks from the browser's calendar day; the server
+    // bound only has to be comfortably wider, including timezone skew at the edges.
+    expect(OVERVIEW_DONE_WINDOW_DAYS).toBeGreaterThan(12 * 7);
   });
 });

@@ -107,6 +107,14 @@ export interface ProjectDetailModalProps {
   canDelete: boolean;
   /** Bump to force a refetch after the parent saved an edit. */
   refreshToken?: number;
+  /**
+   * Bump when the modal is OPENED. Distinct from `refreshToken` on purpose — the
+   * two want opposite things on screen: a refresh after saving keeps the current
+   * content visible, while a fresh open must start from the skeleton. Without this
+   * token, reopening the SAME project showed the previous response for a frame,
+   * because the cached detail was keyed by project id alone.
+   */
+  openToken?: number;
 }
 
 export function ProjectDetailModal({
@@ -117,22 +125,27 @@ export function ProjectDetailModal({
   canWrite,
   canDelete,
   refreshToken = 0,
+  openToken = 0,
 }: ProjectDetailModalProps) {
   const router = useRouter();
   const toast = useToast();
 
-  // The response is stored WITH the project it describes, so closing the modal
-  // drops it during render instead of through a `setDetail(null)` in the effect
-  // body. `loading` is derived the same way but keyed by the refresh token too: a
+  // The response is stored WITH the open it belongs to, so closing the modal drops
+  // it during render instead of through a `setDetail(null)` in the effect body.
+  // `loading` is derived the same way but keyed by the refresh token too: a
   // parent-triggered refetch must keep the current content on screen rather than
   // flash a skeleton, which is exactly what the old `setLoading(true)` did.
   const [fetched, setFetched] = useState<{
-    projectId: string;
+    openKey: string;
     detail: ProjectDetailDto;
   } | null>(null);
-  const detail = fetched?.projectId === projectId ? fetched.detail : null;
+  // Keyed by the OPEN, not by the project: reopening the same project is a new open
+  // and must show the skeleton rather than the previous response. `refreshToken` is
+  // deliberately absent from this key — a refetch after saving keeps content up.
+  const openKey = projectId ? `${projectId}#${openToken}` : "";
+  const detail = fetched?.openKey === openKey ? fetched.detail : null;
 
-  const requestKey = projectId ? `${projectId}#${refreshToken}` : "";
+  const requestKey = projectId ? `${openKey}#${refreshToken}` : "";
   const [loadedKey, setLoadedKey] = useState("");
   const loading = projectId !== null && loadedKey !== requestKey;
 
@@ -179,7 +192,7 @@ export function ProjectDetailModal({
     })
       .then((data) => {
         if (!alive) return;
-        setFetched({ projectId, detail: data });
+        setFetched({ openKey, detail: data });
         setError(null);
       })
       .catch((err: unknown) => {
@@ -198,7 +211,7 @@ export function ProjectDetailModal({
       alive = false;
       controller.abort();
     };
-  }, [projectId, requestKey]);
+  }, [projectId, openKey, requestKey]);
 
   // Lazy tab loads. Each runs once per opened project. `patchTabs` is bound to the
   // project that started the request, so a response that lands after the user

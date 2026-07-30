@@ -29,3 +29,23 @@ export function moveTargets<S extends Pick<SprintWithMetricsDto, "projectId">>(
 ): S[] {
   return sprints.filter((sprint) => sprint.projectId === item.projectId);
 }
+
+/**
+ * Planner bucket ids that `item` may legitimately be dropped into: the backlog,
+ * plus the sprint columns of its own project.
+ *
+ * Drag & drop needs the same rule the dialog uses, expressed over bucket ids
+ * rather than sprint objects. Without it a card could be dropped on any column on
+ * the axis and the request would come back 400 — the dialog was fixed for this and
+ * the drop target was not, which is the kind of gap that only shows up as a user
+ * getting an error toast for doing something the UI invited.
+ *
+ * Note the backlog is ALWAYS valid: clearing `sprint_id` carries no relational
+ * constraint, so any item can be returned to it.
+ */
+export function droppableBuckets<
+  S extends Pick<SprintWithMetricsDto, "id" | "projectId">,
+>(sprints: readonly S[], item: MovableItem, backlogId: string): Set<string> {
+  const ids = moveTargets(sprints, item).map((sprint) => sprint.id);
+  return new Set([backlogId, ...ids]);
+}

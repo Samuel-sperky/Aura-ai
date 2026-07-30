@@ -341,18 +341,22 @@ V `.claude/workflows/` sú štyri agentové workflows verzované s kódom, plus 
 **Blokované prostredím:**
 - `git remote add origin` + prvý push — `gh` nie je nainštalované
 
-**Vecné, v poradí hodnoty:**
-- **Drag & drop má tú istú relačnú pascu ako dialóg** — `onDragEnd` v `SprintPlanner.tsx`
-  nefiltruje droppable cieľ, takže pretiahnutie karty do šprintu iného projektu skončí
-  400 a error toastom. Riešenie je použiť `moveTargets()`, rovnako ako dialóg.
-- `GET /api/overview` ťahá 200 checkpointov, hoci panel renderuje 6 a KPI potrebuje len
-  `total`. Zníženie na ~10 riadkov + total je čistá úspora.
-- `ProjectDetailModal` je kľúčovaný projektom, nie tokenom obnovenia, takže pri
-  opätovnom otvorení toho istého projektu na jeden frame zobrazí staré dáta namiesto
-  skeletonu. `aria-busy` je pritom nastavené.
-- Nepoužitý i18n kľúč `overview.kpi.sprintCapacitySub`.
+**Vecné:**
 - `Pagination issues` v seede má stále `updated_at NULL` (existujúci riadok sa pri
-  idempotentnom behu preskočí) — prejaví sa až po čistom reseede.
+  idempotentnom behu preskočí) — prejaví sa až po čistom reseede. Kozmetické:
+  štyri ďalšie dokončené položky `updated_at` majú, takže graf kreslí dáta.
+
+### Záverečný šprint (2026-07-30) — DOKONČENÉ
+
+Zvyšné štyri vecné body uzavreté. Agentov sa použiť nedalo — session limit vyčerpaný
+s resetom o 11 hodín — takže ich odrobil orchestrátor v main loope.
+
+| Bod | Riešenie |
+|---|---|
+| **Drag & drop mal tú istú relačnú pascu ako dialóg** | `droppableBuckets()` — cudzí stĺpec dostane `disabled` v `useDroppable`, takže sa naň nedá pustiť, a je stlmený `.itemsBlocked`. Poistka v `onDragEnd` chráni klávesnicovú cestu. Test overuje, že dialóg aj drag & drop vynucujú **tú istú** podmienku |
+| `GET /api/overview` ťahal 200 checkpointov | **12** (panel renderuje 6, `total` hlási `listCheckpoints` nezávisle od stránky). Sken dokončených položiek navyše ohraničený v SQL na 15 týždňov namiesto 2000 riadkov, a vylučuje `updated_at IS NULL`, ktoré graf aj tak preskočí |
+| Modal ukázal staré dáta na jeden frame | Nový `openToken` — cache je kľúčovaná **otvorením**, nie projektom. Zámerne oddelený od `refreshToken`: refetch po uložení má obsah nechať, nové otvorenie má začať skeletonom |
+| Nepoužitý i18n kľúč | Zmazaný |
 
 **Odložené tvojím rozhodnutím** (pripravené ako workflows, nespúšťať bez pokynu):
 - Integrácie s rodinou cez read-only usera `roadmap_ro` (otázka #83)
