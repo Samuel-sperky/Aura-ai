@@ -158,7 +158,12 @@ test.describe("smoke — celá cesta aplikáciou", () => {
   });
 
   test("Úlohy: rozbalenie podúlohy načíta druhú úroveň", async ({ page }) => {
-    await page.goto("/work-items");
+    // `?view=list` is EXPLICIT on purpose. The app persists the last view per page
+    // in user_view_preferences (a deliberate feature), so a bare /work-items can
+    // restore `board` from an earlier run — and then this test found no twisties and
+    // silently skipped itself instead of failing. The URL is the source of truth, so
+    // a test that needs a view must say which one.
+    await page.goto("/work-items?view=list");
     await ready(page);
     await noErrorState(page);
 
@@ -188,7 +193,10 @@ test.describe("smoke — celá cesta aplikáciou", () => {
   test("Úlohy: prepínač na board zobrazí štyri stavové stĺpce", async ({
     page,
   }) => {
-    await page.goto("/work-items");
+    // Start from the list explicitly: a stored `view=board` preference would leave
+    // this test already on the board, with zero `.wl-item` rows, so it skipped as
+    // "no work items in the database" while the database was in fact full.
+    await page.goto("/work-items?view=list");
     await ready(page);
 
     const anyRow = page.locator(".wl-item");

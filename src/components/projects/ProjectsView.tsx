@@ -13,14 +13,7 @@
 // The detail modal is driven by `?project=<id>` (contract §3.2/57), so a project
 // is linkable and Back closes it.
 
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  useSyncExternalStore,
-} from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   parseAsInteger,
@@ -64,6 +57,7 @@ import {
   projectStatusKey,
 } from "@/lib/client/domain";
 import { EM_DASH, dueLabel, fmtDate, fmtPercent } from "@/lib/client/format";
+import { useIsNarrow } from "@/lib/client/useIsNarrow";
 import { useMe } from "@/lib/client/useMe";
 import { storedFilter, storedLiteral, useViewPrefs } from "@/lib/client/viewPrefs";
 import { PRIORITIES, PROJECT_STATUSES } from "@/lib/domain/contracts/projects";
@@ -79,29 +73,6 @@ import { ProjectFormModal } from "./ProjectFormModal";
 
 const VIEWS = ["table", "cards"] as const;
 
-/**
- * Below this width the nine-column table is not a usable representation: it needs
- * ~940 px, so on a 390 px phone it both becomes unreadable and drags the page into
- * sideways scrolling. The contract scopes mobile to reading plus quick actions and
- * the cards layout already exists, so narrow viewports always get cards — the
- * stored desktop preference is left untouched and returns with the window.
- *
- * Read through useSyncExternalStore so the server renders the desktop branch and
- * the client corrects it without a setState-in-effect round trip.
- */
-const NARROW_QUERY = "(max-width: 700px)";
-
-function subscribeNarrow(onChange: () => void): () => void {
-  const mql = window.matchMedia(NARROW_QUERY);
-  mql.addEventListener("change", onChange);
-  return () => mql.removeEventListener("change", onChange);
-}
-const getNarrow = () => window.matchMedia(NARROW_QUERY).matches;
-const getNarrowOnServer = () => false;
-
-function useIsNarrow(): boolean {
-  return useSyncExternalStore(subscribeNarrow, getNarrow, getNarrowOnServer);
-}
 const DIRS = ["asc", "desc"] as const;
 
 /** Table column key → the sort key the API accepts. */
@@ -146,7 +117,9 @@ export function ProjectsView() {
     { history: "replace", clearOnDefault: true },
   );
 
-  // Narrow viewports always get cards; see useIsNarrow. `params.view` stays as the
+  // Narrow viewports always get cards — the nine-column table needs ~940 px and
+  // would drag the page sideways. See lib/client/useIsNarrow for why this is a
+  // rendering decision rather than CSS. `params.view` stays as the
   // user left it so the table returns when the window grows.
   const isNarrow = useIsNarrow();
   const effectiveView = isNarrow ? "cards" : params.view;

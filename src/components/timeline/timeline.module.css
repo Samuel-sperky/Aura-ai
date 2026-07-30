@@ -339,6 +339,431 @@
   font-size: var(--text-xs);
 }
 
+/* =========================================================================
+   VERTICAL ROADMAP — time runs top to bottom, one lane per project.
+   Twelve months squeezed into the page WIDTH left the labels overlapping the
+   bars while half the page sat empty below, so the axis was turned on its side.
+   The geometry helpers return a share of the horizon, not a direction, so the
+   same percentages feed `top`/`height` here that fed `left`/`width` before.
+   ========================================================================= */
+
+.vt {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.vtLegend {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  color: var(--muted);
+  font-size: var(--text-xs);
+}
+
+/* Lanes may outgrow the viewport sideways; the PAGE must never scroll, so the
+   overflow lives here. See the globals.css note on overflow-x. */
+.vtScroll {
+  overflow-x: auto;
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--panel);
+}
+
+/* ── header: mirrors the body's group → lane nesting so widths line up ───── */
+.vtHead {
+  display: flex;
+  align-items: stretch;
+  position: sticky;
+  top: 0;
+  z-index: 4;
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in srgb, var(--panel) 92%, transparent);
+  backdrop-filter: blur(8px);
+}
+
+.vtAxisHead {
+  flex: 0 0 var(--vt-axis-w, 92px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  padding: var(--space-2) var(--space-2);
+  border-right: 1px solid var(--border);
+}
+
+.vtAxisHeadLabel {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.vtAxisHeadHint {
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
+
+.vtGroupHead {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--border);
+}
+
+.vtGroupHead:last-child { border-right: 0; }
+
+.vtGroupLabel {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 4px var(--space-2);
+  border-bottom: 1px solid var(--border-soft);
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  min-width: 0;
+}
+
+.vtLaneHeads { display: flex; align-items: stretch; min-width: 0; }
+
+.vtLaneHead {
+  flex: 1 1 0;
+  min-width: 116px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: var(--space-2);
+}
+
+.vtLaneName {
+  color: var(--ink);
+  font-size: var(--text-md);
+  font-weight: 600;
+  line-height: 1.25;
+  text-decoration: none;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.vtLaneName:hover { color: var(--accent); }
+
+.vtLaneMeta { color: var(--muted); font-size: var(--text-xs); }
+
+/* ── body: axis on the left, lanes to the right ──────────────────────────── */
+.vtBody { display: flex; align-items: stretch; min-width: 0; }
+
+.vtAxis {
+  flex: 0 0 var(--vt-axis-w, 92px);
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  left: 0;
+  z-index: 3;
+  border-right: 1px solid var(--border);
+  background: var(--panel);
+}
+
+/* Height is the month's share of the horizon, so a 31-day month really is
+   taller than a 28-day one and the bars beside it cannot drift. */
+.vtAxisCell {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-1);
+  padding: 3px var(--space-2) 0;
+  border-top: 1px solid var(--border-soft);
+  color: var(--muted);
+  font-size: var(--text-xs);
+  overflow: hidden;
+}
+
+.vtAxisCell:first-child { border-top: 0; }
+
+.vtAxisCellNow {
+  background: color-mix(in srgb, var(--accent) 6%, transparent);
+  color: var(--ink2);
+}
+
+.vtAxisMonth { font-weight: 600; }
+/* No opacity here: --muted is already the darkest-allowed body text (~5.8:1), so
+   fading it drops the year label below AA (axe caught exactly that). Smaller, yes;
+   dimmer, no. */
+.vtAxisYear { font-size: 10px; }
+
+.vtLanesWrap { position: relative; flex: 1 1 auto; display: flex; min-width: 0; }
+
+.vtGrid {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  pointer-events: none;
+}
+
+.vtGridRow { border-top: 1px solid var(--border-soft); }
+.vtGridRow:first-child { border-top: 0; }
+.vtGridRowNow { background: color-mix(in srgb, var(--accent) 5%, transparent); }
+
+/* "Today" is now a HORIZONTAL rule — the one line every reading of this chart
+   starts from. */
+.vtToday {
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 3;
+  height: 2px;
+  margin-top: -1px;
+  background: var(--accent);
+  pointer-events: none;
+}
+
+.vtTodayFlag {
+  position: absolute;
+  right: var(--space-2);
+  z-index: 4;
+  transform: translateY(-50%);
+  padding: 1px 7px;
+  border-radius: var(--radius-pill);
+  background: var(--accent);
+  color: var(--on-accent);
+  font-size: 10px;
+  font-weight: 700;
+  pointer-events: none;
+}
+
+.vtGroupLanes {
+  display: flex;
+  align-items: stretch;
+  min-width: 0;
+  border-right: 1px solid var(--border);
+}
+
+.vtGroupLanes:last-child { border-right: 0; }
+
+.vtLane {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 116px;
+}
+
+/* ── the bar: a vertical span, progress filling downward with time ───────── */
+.vtBar {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 26px;
+  min-height: 10px;
+  overflow: hidden;
+  border: 1px solid transparent;
+  border-radius: var(--radius-pill);
+  transition: box-shadow var(--transition);
+}
+
+.vtBar:hover { box-shadow: var(--shadow-sm); }
+
+/* A span that runs past the horizon loses its rounded cap on that side, so a
+   clipped project cannot be mistaken for one that starts or ends here. */
+.vtBarCutTop { border-top-left-radius: 2px; border-top-right-radius: 2px; }
+.vtBarCutBottom { border-bottom-left-radius: 2px; border-bottom-right-radius: 2px; }
+
+.vtBarFill {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  background: color-mix(in srgb, var(--accent) 34%, transparent);
+  pointer-events: none;
+}
+
+.vtBarLabel {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: var(--space-2);
+  /* Sideways text: a 26 px column has no room for a horizontal label, and this
+     keeps the project name readable without a tooltip. */
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--ink2);
+  white-space: nowrap;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.vtBarGreen { background: color-mix(in srgb, var(--success) 14%, transparent); border-color: color-mix(in srgb, var(--success) 40%, transparent); }
+.vtBarGreen .vtBarFill { background: color-mix(in srgb, var(--success) 30%, transparent); }
+.vtBarAmber { background: color-mix(in srgb, var(--warn) 14%, transparent); border-color: color-mix(in srgb, var(--warn) 40%, transparent); }
+.vtBarAmber .vtBarFill { background: color-mix(in srgb, var(--warn) 30%, transparent); }
+.vtBarRed { background: color-mix(in srgb, var(--danger) 14%, transparent); border-color: color-mix(in srgb, var(--danger) 40%, transparent); }
+.vtBarRed .vtBarFill { background: color-mix(in srgb, var(--danger) 30%, transparent); }
+.vtBarGrey { background: color-mix(in srgb, var(--ink) 6%, transparent); border-color: var(--border); }
+.vtBarGrey .vtBarFill { background: color-mix(in srgb, var(--ink) 8%, transparent); }
+
+.vtNoDates {
+  position: absolute;
+  top: var(--space-3);
+  left: 50%;
+  transform: translateX(-50%);
+  color: var(--muted);
+  font-size: var(--text-xs);
+  writing-mode: vertical-rl;
+}
+
+/* ── checkpoint markers, now stacked down the lane ───────────────────────── */
+.vtMarker {
+  position: absolute;
+  left: 50%;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  transform: translate(-50%, -50%);
+  border: 1.5px solid var(--accent);
+  border-radius: var(--radius-sm);
+  background: var(--panel);
+  color: var(--accent);
+  cursor: pointer;
+  transition: transform var(--transition), box-shadow var(--transition);
+}
+
+.vtMarker:hover,
+.vtMarker:focus-visible {
+  transform: translate(-50%, -50%) scale(1.15);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Filled = already happened, outlined = still ahead (spec Q11). */
+.vtMarkerPast { background: var(--accent); color: var(--on-accent); }
+.vtMarkerToday { box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent); }
+.vtMarkerBlocked { border-color: var(--danger); color: var(--danger); }
+.vtMarkerBlocked.vtMarkerPast { background: var(--danger); color: var(--on-accent); }
+.vtMarkerDecided { border-color: var(--success); color: var(--success); }
+.vtMarkerDecided.vtMarkerPast { background: var(--success); color: var(--on-accent); }
+.vtMarkerReady { border-color: var(--warn); color: var(--warn); }
+.vtMarkerReady.vtMarkerPast { background: var(--warn); color: var(--on-accent); }
+
+/* ── phone: the same facts as a list in time, no lanes ───────────────────── */
+.vtList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  min-width: 0;
+}
+
+.vtListItem {
+  position: relative;
+  min-width: 0;
+  padding: var(--space-3) var(--space-3) var(--space-3) var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--panel);
+}
+
+/* The health band the desktop bar carries, kept as a left rail so the list reads
+   the same way at a glance. */
+.vtListRail {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  border-radius: var(--radius-md) 0 0 var(--radius-md);
+  background: var(--border);
+}
+
+.vtListRailGreen { background: var(--success); }
+.vtListRailAmber { background: var(--warn); }
+.vtListRailRed { background: var(--danger); }
+.vtListRailGrey { background: color-mix(in srgb, var(--ink) 20%, transparent); }
+
+.vtListHead {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.vtListMeta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: var(--text-xs);
+}
+
+.vtListCps {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: var(--space-2) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.vtListCp {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  min-width: 0;
+  padding: 4px var(--space-1);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--ink2);
+  font-size: var(--text-xs);
+  text-align: left;
+  cursor: pointer;
+}
+
+.vtListCp:hover { background: var(--accent-tint); }
+
+.vtListCpDot {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border: 1.5px solid var(--accent);
+  border-radius: var(--radius-sm);
+  background: var(--panel);
+  color: var(--accent);
+}
+
+.vtListCpDate { flex: 0 0 auto; color: var(--muted); }
+.vtListCpName { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vtListCpState { flex: 0 0 auto; color: var(--muted); }
+
+@media (prefers-reduced-motion: reduce) {
+  .vtBar,
+  .vtMarker { transition: none; }
+  .vtMarker:hover,
+  .vtMarker:focus-visible { transform: translate(-50%, -50%); }
+}
+
 /* ── checkpoint markers (spec Q11: filled = past, outlined = future) ─────── */
 .marker {
   position: absolute;
