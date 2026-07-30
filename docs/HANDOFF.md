@@ -69,8 +69,31 @@ každého je v `CLAUDE.md` → „Overené pasce", tu len zoznam:
 
 ## Čo ostáva
 
-**Blokované prostredím:**
-- GitHub remote a push. `gh` nie je nainštalované. Príkazy: `gh repo create DeliPistacna/aura-roadmap --private --source=. --push` alebo ručne `git remote add origin <url>` + `git push -u origin feat/aura-family-port`.
+**Blokované prostredím — jeden krok, ktorý musíš urobiť ty:**
+
+Zmerané, nie odhadnuté:
+- `remote origin` **už je zapojený** na `https://github.com/DeliPistacna/aura-roadmap.git`
+- **GitHub credentials fungujú** — `git ls-remote` proti `sperky-ai` vracia reálne refs,
+  takže Git Credential Manager má platný token a `git push` sa autentifikuje sám
+- **Repo ale neexistuje** — `git ls-remote` na `aura-roadmap` vracia `Repository not found`
+- `gh` nie je nainštalované (`winget` áno)
+
+Vytvorenie repozitára ide cez GitHub API, nie cez git, takže ho `git push` nezaloží.
+Zámerne som na to nesiahol dvoma spôsobmi, ktoré by technicky fungovali: neinštaloval
+som ti globálny CLI bez opýtania a nevyťahoval som token z credential managera —
+zakladanie verejne dostupného repozitára na tvojom účte je tvoje rozhodnutie, nie moje.
+
+```powershell
+winget install --id GitHub.cli --accept-source-agreements --accept-package-agreements
+gh auth login
+gh repo create DeliPistacna/aura-roadmap --private --source=C:\Aura\aura-roadmap --push
+```
+
+Ak repo založíš cez web, stačí:
+
+```powershell
+git -C C:\Aura\aura-roadmap push -u origin feat/aura-family-port
+```
 
 **Kandidáti na ďalší sprint (v poradí hodnoty):**
 1. **Zlúčiť 7 requestov Prehľadu do jedného agregačného endpointu.** Toto bol dôvod,
