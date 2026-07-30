@@ -358,6 +358,45 @@ s resetom o 11 hodín — takže ich odrobil orchestrátor v main loope.
 | Modal ukázal staré dáta na jeden frame | Nový `openToken` — cache je kľúčovaná **otvorením**, nie projektom. Zámerne oddelený od `refreshToken`: refetch po uložení má obsah nechať, nové otvorenie má začať skeletonom |
 | Nepoužitý i18n kľúč | Zmazaný |
 
+### Presun do `C:\Users\Ucet\Documents\GitHub\Aura-app` (2026-07-30)
+
+Projekt má nový domov. Presunutý **pushom branchu**, nie kópiou súborov, takže všetkých
+16 commitov aj ich správy zostali zachované. Overené na novom mieste: `tsc` čistý,
+lint 0, **601 testov / 27 súborov**, 256 trackovaných súborov, `.env` skopírovaný
+a správne netrackovaný, všetky 4 workflows na mieste.
+
+Dve veci, ktoré z presunu vyplývajú:
+- `docker-compose.yml` má **explicitné** `container_name`, takže `docker compose up`
+  z nového miesta koliduje so stackom bežiacim z `C:\Aura\aura-roadmap`. Treba starý
+  zastaviť, alebo nové miesto používať len ako git domov.
+- DB volume je viazaný na názov projektu (adresár), takže nové miesto by začalo
+  **s prázdnou DB** a potrebovalo migráciu a seed. Starý stack ich má naseedované.
+
+`C:\Aura\aura-roadmap` nie je zmazaný ani vypnutý — je to teraz zastaraná kópia
+a jej likvidácia je rozhodnutie vlastníka.
+
+### `npm audit` — vedome prijaté riziko
+
+Akceptačné kritérium 13 znelo „bez **kritických** zraniteľností". Kritické tam nie sú,
+ale schovávať sa za to slovo by bolo nečestné: `npm audit --omit=dev` hlási
+**3 high** (celkovo 12).
+
+| Advisory | Cesta | Reálna expozícia |
+|---|---|---|
+| PostCSS path traversal v auto-loadingu source map ([GHSA-r28c-9q8g-f849](https://github.com/advisories/GHSA-r28c-9q8g-f849)) | `next@16.2.12 → postcss@8.4.31` | Build-time, nad naším vlastným CSS. Žiadny vstup od útočníka |
+| `sharp` < 0.35.0, dedené libvips CVE ([GHSA-f88m-g3jw-g9cj](https://github.com/advisories/GHSA-f88m-g3jw-g9cj)) | `next@16.2.12 → sharp@0.34.5` | **Nikdy sa nespustí.** Appka nepoužíva `next/image` ani nemá `images` config, takže Nextov image optimizer — jediné, čo `sharp` vyvoláva — sa nevykoná |
+
+Ani jeden balík **nie je priamou závislosťou** — obe idú výhradne z `next`.
+
+**Prečo sa to neopravuje:** jediná nabízaná oprava je `npm audit fix --force`, ktorá
+nainštaluje **`next@9.3.3`** — downgrade zo 16 na 9. Advisory pritom pokrýva `next`
+až po `16.3.0-preview.7`, takže dopredná oprava zatiaľ **neexistuje**. Kontrakt §4
+`npm audit fix --force` výslovne zakazuje a zdrojová appka mala ten istý stav
+zdokumentovaný v handoffe.
+
+**Kedy to znovu preveriť:** keď `next` vydá verziu mimo rozsahu advisory — vtedy bump
+a nový `npm audit`. Dovtedy je to zdedená upstream situácia, nie dlh tohto portu.
+
 **Odložené tvojím rozhodnutím** (pripravené ako workflows, nespúšťať bez pokynu):
 - Integrácie s rodinou cez read-only usera `roadmap_ro` (otázka #83)
 - Rozpor teal vs zlatá v rodine (otázka #63)
