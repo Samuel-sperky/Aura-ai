@@ -392,5 +392,68 @@ Podklad je hotový. **Aplikačná fáza sa nespustí bez pokynu vlastníka.**
 3. **Aktívna navigácia** — zlatý rail (handoff) alebo čierny ink pill (worktree)?
 4. **Čo s nepushnutým `main` commitom 858549c** pred rebuildom produkcie?
 
+---
+
+## Výsledok — 2026-07-30, možnosť A vykonaná
+
+Vlastník odpovedal: **zlatá na produkcii NEBOLA zámerná** → možnosť A. Nepushnutý
+`main` commit → pushnuť. Vykonané a overené v ten istý deň.
+
+**Čo sa zmenilo (len `sperky-ai` / `aura-web`, rozsah A pre túto appku):**
+
+| krok | stav |
+|---|---|
+| `redesign` preklopený na teal (`globals.css` + `chartTheme` LIGHT_FALLBACK + 2 komentáre) | ✅ commit `f666b0a` |
+| `main` fast-forward na `redesign` (13 commitov, bez merge commitu) | ✅ `main` = `f666b0a` |
+| produkcia rebuildnutá z `main` | ✅ `aura-web:latest` = `b30a2083a543` |
+| compose reťaz reprodukovateľná | ✅ commit `a38e236` |
+| `main` pushnutý (`c2ac428` → `a38e236`, 15 commitov) | ✅ |
+
+**Overené (3 nezávislé kontroly, nie report agenta):**
+- CSS **vnútri kontajnera**: `--accent:#03797e` / `#05bcc4`, `--on-accent:#fff` / `#0e1413`.
+- CSS **po HTTP** z bežiacej appky: to isté; zlaté hexy len na `--gold` a `--gold-text`.
+- **Computed styles v prehliadači** v oboch témach: light `#03797e`+`#fff`,
+  dark `#05bcc4`+`#0e1413`.
+- 2034 unit testov zelených (130 súborov) pred commitom aj po merge, `next build` čistý,
+  `/api/health` → `{"ok":true,"db":true}`.
+- `git merge-base --is-ancestor redesign main` → **exit 0** (pred tým 1). Rozdvojenie
+  produkcia-vs-`main` je uzavreté.
+
+**Doplnok k tabuľke v Kroku 1 — `--on-accent` tam chýbal a je POVINNÝ.**
+Zlatá je jasná v oboch témach, preto bol `--on-accent` správne theme-invariantný
+tmavý ink (`#1a1410`). Teal taký nie je: v light je tmavý (`#03797e`), v dark jasný
+(`#05bcc4`). Preklopenie len akcentových tokenov by nechalo tmavý ink na tmavom teal
+= **3,54:1, nová AA chyba**. Správne je light `#ffffff` (5,24:1) + **dark override**
+`#0e1413` (7,95:1). Ten dark override je zároveň oprava z Kroku 3 — tu nie je
+voliteľná, vynucuje ju zmena odtieňa.
+
+**Poistky:** zlatý produkčný image zachovaný ako `aura-web:gold-c6f4061`
+(digest `sha256:f314fe0b…`, `BUILD_ID=yHkmEtAzrf6t6DhnvsS0n`); záloha DB pred
+nasadením v `C:\Aura\sperky-ai\backups\aura_marketing_pre-teal-deploy_20260730.sql`
+(6,5 MB, 78 tabuliek). Migrácie `0044`/`0045` už boli na prod DB aplikované — prod DB
+bola teda ovplyvnená rovnakým rozdvojením ako CSS; po merge `main` tie migrácie
+obsahuje a ledger ich preskočí.
+
+**Reprodukovateľnosť (bod 3 zadania) — vyriešená bez obnovy chýbajúceho override:**
+`compose.redesign-context.yml` presmerovával `build.context` na worktree
+`aura-redesign` — presne tak sa na produkciu dostala nezmergovaná vetva. Po merge
+už nie je potrebný a **nesmie sa obnoviť**. `docker-compose.ngrok.yml` bol
+netrackovaný (existoval len na disku) → **zacommitnutý**. Živý reťazec je teraz
+2 súbory z repa a jediný dostatočný príkaz je zdokumentovaný v
+`AI_COMPOSE_RUNBOOK.md` §4b.
+
+**Zostáva otvorené (zámerne, mimo rozsahu tejto úlohy):**
+- **Otázka 3 (zlatý rail vs ink pill)** — nerozhodnutá, aktívna navigácia zostala
+  ink pill. Je to samostatné vizuálne rozhodnutie, nie dôsledok odtieňa.
+- **Krok 2** (`aura-prototype` štvrtý teal `#087f83` + odaliasovanie zlatej)
+  a **Krok 3 pre ostatné appky** (`--on-accent` v 4 vanilla `styles.css`,
+  `ads-hierarchy`, `mindmap-orient`) — flagnuté ako samostatné úlohy.
+- **`ERR_NGROK_725`** — účet ngrok vyčerpal mesačný bandwidth, tunel `aura` vracia
+  na edge 403 a počítadlo spojení stojí na 9459 (rovnaká hodnota ako pri audite).
+  Appka lokálne beží v poriadku; verejný vstup je mimo, kým sa limit neresetuje
+  alebo nezmení plán. **Nesúvisí s týmto nasadením** (je to limit na strane ngroku).
+- Predexistujúca lint chyba `react-hooks/set-state-in-effect` v `src/lib/useMe.tsx`
+  (+197 upozornení) — nedotknuté, nie je súčasťou tejto zmeny.
+
 Krok 3 (`--on-accent` v dark mode) je pravá AA chyba na primárnych CTA v 7 z 10
 appiek a dá sa spraviť samostatne, nezávisle od odpovedí vyššie.
