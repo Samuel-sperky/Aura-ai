@@ -16,7 +16,7 @@ Sú verzované s kódom zámerne — keď sa zmení appka, zmení sa s ňou aj t
 |---|---|---|---|
 | `aura-verify` | 4 | Pred každým commitom, ktorý sa dotkol `src/`, `db/` alebo `scripts/`. Vždy pred pushom. | **pripravený** |
 | `aura-new-app` | 3 | Pri zakladaní novej appky rodiny | **pripravený** |
-| `aura-roadmap-integrations` | 5 | Až keď sa rozhodneš zapojiť Roadmap do rodiny | **odložený rozhodnutím** |
+| `aura-roadmap-integrations` | 5 (1 v `reconOnly`) | Prieskum kedykoľvek, zapojenie až keď sa rozhodneš | **prieskum spustený, zapojenie odložené** |
 | `aura-family-accent-unify` | 5 | Až keď sa rozhodneš doriešiť teal vs zlatá | **odložený rozhodnutím** |
 
 ## `aura-verify` — overovacia brána
@@ -64,12 +64,28 @@ Tento workflow kopíruje z `aura-roadmap`, ktorá je prvá appka rodiny s reáln
 overovacou bránou, a — to je hlavné — **prenáša do novej appky zoznam 14 overených
 pascí** a v bráne overí, že žiadna z nich sa nevrátila.
 
-## `aura-roadmap-integrations` — odložený
+## `aura-roadmap-integrations` — prieskum hotový, zapojenie odložené
 
 Read-only user `roadmap_ro` a plnenie IT projektov ako metrika v `aura-kpi`.
 
-**Odložené rozhodnutím** (otázka #83: „nie v prvej verzii — pripraviť read-only usera,
-nezapájať"). Nespúšťaj ako rutinnú follow-up prácu.
+Otázka #83 znela „nie v prvej verzii — **pripraviť** read-only usera, **nezapájať**".
+Workflow tie dve polovice rozdeľuje, takže sa nemusí odkladať celý:
+
+```
+Workflow({ name: 'aura-roadmap-integrations', args: { reconOnly: true } })
+```
+
+`reconOnly` spustí prieskum a **zastaví sa**. Nič nemení — len zistí, ako `aura-kpi`
+registruje integration source, aký tvar má `integration_values`, aké granty už rodina
+používa, a navrhne stabilný kontrakt. To je tá „pripraviť" polovica.
+
+Bez toho flagu ide workflow ďalej a **mení súbory**: migráciu v Roadmape, compose siete
+a adaptér vnútri **bežiacej** `aura-kpi`. To je „zapojiť" a zostáva za tvojím pokynom.
+
+Workflow zároveň obchádza pascu, ktorú má existujúca integrácia: `aura-kpi` si
+hardcoduje názvy stĺpcov susedných DB a `aura-logistika` nemá git repo vôbec, takže
+rename tam rozbije KPI bez histórie na diff. Roadmap preto exponuje **SQL view** ako
+stabilný kontrakt, nie surové tabuľky.
 
 Rodina má presne jeden integračný vzor a workflow ho rešpektuje: `aura-kpi` čita
 susedov read-only cez SQL, žiadne HTTP API-to-API volania medzi appkami v `C:\Aura`

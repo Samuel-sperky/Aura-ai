@@ -2,7 +2,7 @@ export const meta = {
   name: 'aura-roadmap-integrations',
   description: 'Wire Aura Roadmap into the family: read-only roadmap_ro user, and IT project progress as an aura-kpi metric',
   whenToUse:
-    'Only when the owner decides to connect Roadmap to the rest of the family. This was DEFERRED by an explicit decision (question #83: "nie v prvej verzii") — do not run it as routine follow-up work.',
+    'Only when the owner decides to connect Roadmap to the rest of the family. This was DEFERRED by an explicit decision (question #83: "nie v prvej verzii") — do not run the full workflow as routine follow-up work. args { reconOnly: true } IS safe to run any time: it changes nothing and only produces the design for the neighbour contract, which is the "pripraviť" half of that decision.',
   phases: [
     { title: 'Prieskum' },
     { title: 'DB prístup a adaptér' },
@@ -25,11 +25,22 @@ export const meta = {
 // adapter individually try/caught so an unavailable neighbour never takes the
 // caller down). There is NO HTTP API-to-API precedent anywhere in C:\Aura.
 //
-// Usage: Workflow({ name: 'aura-roadmap-integrations' })
+// Usage:
+//   Workflow({ name: 'aura-roadmap-integrations' })                        full
+//   Workflow({ name: 'aura-roadmap-integrations', args: { reconOnly: true } })
+//
+// reconOnly runs the read-only survey and STOPS. Question #83 was "prepare the
+// read-only user, do not connect" — the survey is the prepare half, so it is safe
+// to run without reopening that decision. The phases after it touch a migration in
+// Roadmap, the compose networks, and an adapter inside the RUNNING aura-kpi; those
+// are the connect half and stay behind the owner's go-ahead.
 // ---------------------------------------------------------------------------
 
 const ROADMAP = 'C:\\Aura\\aura-roadmap'
 const KPI = 'C:\\Aura\\aura-kpi'
+
+const wfArgs = args && typeof args === 'object' ? args : {}
+const reconOnly = wfArgs.reconOnly === true
 
 const REPORT = {
   type: 'object',
@@ -100,6 +111,24 @@ Nič nemeň, len čítaj a reportuj.
 V \`nextAgentNotes\` vypíš všetko, čo ďalší dva agenti potrebujú doslovne: názvy sietí,
 env prefix, ktorý použiješ, tvar \`integration_values\`, a navrhnutý kontrakt.
 `, { label: 'recon', phase: 'Prieskum', schema: REPORT })
+
+// The survey is the "prepare" half of decision #83 and changes nothing. Everything
+// after this point is the "connect" half: a migration in Roadmap, the compose
+// networks, and an adapter inside the RUNNING aura-kpi. Stop here unless the owner
+// has actually asked for the connection.
+if (reconOnly) {
+  log('reconOnly — zastavujem pred zmenami. Podklad na integráciu je hotový.')
+  return {
+    reconOnly: true,
+    recon,
+    roadmapSide: null,
+    kpiSide: null,
+    gate: null,
+    openIssues: recon ? recon.issues : [],
+    nextStep:
+      'Prečítaj prieskum. Ak chceš integráciu zapojiť, spusti ten istý workflow BEZ reconOnly — až tá vlna mení migráciu, compose siete a adaptér v bežiacej aura-kpi.',
+  }
+}
 
 const HANDOFF = `\n## Prieskum\n${recon && recon.nextAgentNotes ? recon.nextAgentNotes : '(nedostupné — preskúmaj sám)'}\n`
 
