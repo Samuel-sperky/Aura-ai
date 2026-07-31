@@ -29,10 +29,20 @@ const WCAG_TAGS = [
   "wcag22aa",
 ] as const;
 
-/** The three screens named by acceptance criterion 12. */
+/**
+ * The three screens named by acceptance criterion 12, plus the two Timeline modes
+ * that a bare `/timeline` never reaches.
+ *
+ * `/timeline` renders `mode=roadmap` only, so until these two entries existed the
+ * sprint planner and the decision timeline — their own buttons, tints and month
+ * headers — had never been through a contrast or target-size check. The gate has
+ * to audit what the user can actually open, not just the default view.
+ */
 const SCREENS = [
   { path: "/", name: "Prehľad" },
   { path: "/timeline", name: "Timeline" },
+  { path: "/timeline?mode=sprints", name: "Timeline — Šprinty" },
+  { path: "/timeline?mode=decisions", name: "Timeline — Rozhodnutia" },
   { path: "/projects", name: "Projekty" },
 ] as const;
 

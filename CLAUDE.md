@@ -394,6 +394,120 @@ Test `moveTargets.test.ts` obsahuje kontrolu, že sa oba vstupy zhodnú — dive
 nimi je presne tá diera, ktorá dovolila drag & dropu nabízať cieľ, ktorý dialóg už
 vylúčil. Backlog je vždy platný: zrušenie `sprint_id` nemá relačnú podmienku.
 
+### Horizont Timeline sa riadi zoomom, nie fixnými 12 mesiacmi
+
+Zoom je voľba **detailu**, nie dĺžky stránky. Kým bol horizont fixne 12 mesiacov,
+`week` kreslil ~53 stĺpcov (nekonečný scroll) a `quarter` štyri (prázdna stránka).
+Zdroj pravdy je mapa v `src/lib/timeline.ts`:
+
+```typescript
+export const ROADMAP_HORIZON: Readonly<Record<TimelineZoom, number>> = {
+  quarter: 8, month: 12, week: 12,   // jednotiek TOHO zoomu
+};
+```
+
+**Nikde nehardcoduj 12** — čítaj mapu. `ROADMAP_HORIZON_MONTHS` zostal len pre
+kompatibilitu a je z mapy derivovaný, takže sa nemôžu rozísť.
+
+Horizont je ukotvený na **začiatku jednotky, ktorá obsahuje dnes** (pondelok /
+1. deň mesiaca / 1. deň kvartálu). Preto je `scale.columns.length ===
+ROADMAP_HORIZON[zoom]` presne, bez odseknutého prvého či posledného stĺpca, a dnes
+je vždy vnútri horizontu — `scale.todayPercent` v režime roadmap nikdy nie je `null`.
+Dôsledok, s ktorým treba počítať: **`scale.startIso` sa hýbe pri zmene zoomu**
+(predtým to bol 1. deň aktuálneho mesiaca pri každom zoome).
+
+Režim `sprints` to **zámerne nesleduje** — 12 týždňov od pondelka pri každom zoome,
+a jeho prvý aj posledný stĺpec **sú** odseknuté. Neopravuj to, e2e to drží.
+
+`barGeometry()` a `markerPercent()` vracajú **podiel horizontu v percentách, bez
+smeru**. To je jediný dôvod, prečo sa roadmap dal postaviť na výšku bez zásahu do
+`lib/timeline`: tie isté čísla, ktoré šli do `left`/`width`, idú do `top`/`height`.
+Nemeň im semantiku — drží obe orientácie v zhode.
+
+### `unitPx` reaguje na hustotu, nie na obsah
+
+Výška vertikálnej osi je `columns.length × UNIT_PX[density]` s podlahou
+`MIN_AXIS_PX = 360` (`RoadmapMode.tsx`), kde `UNIT_PX = { cozy: 58, compact: 40 }`.
+Kompaktná hustota existuje presne preto, aby sa **12 mesiacov zmestilo bez svislého
+scrollu** (480 px os proti 700 px). Pruhy sú polohované v **percentách** tejto výšky,
+takže číslo rozhoduje len o vzdušnosti — nikdy o tom, či pruh padne do správneho
+mesiaca.
+
+Hustota prichádza cez `useSyncExternalStore` (`getDensity` / `subscribePreferences`
+z `@/lib/theme`), nie cez `useState` + effect. Kto to prepíše na effect, vráti
+`set-state-in-effect` upozornenia, ktoré sú na nule.
+
+### `@media` nepridáva špecificitu — na poradí v súbore záleží
+
+`timeline.module.css` má hore spoločné media bloky (`@media (max-width: 1100px)`
+a `700px` okolo r. 1500) a **až za nimi** blok `DECISION TIMELINE` s prefixom `dt`.
+Media query špecificitu **nezvyšuje**, takže pravidlo pre `.dtCard` napísané nižšie
+v súbore prebije to isté pravidlo z horného media bloku — aj keď je viewport úzky.
+
+Preto sú media bloky pre `dt` zámerne **vnútri** `DECISION TIMELINE`, na konci
+súboru (r. ~1759 a ~1768). Kto pridá `dt` pravidlo do horných media blokov, tichým
+spôsobom si ho vypne: build prejde, testy prejdú, len sa to na mobile neaplikuje.
+To isté platí pre každý nový prefixovaný blok, ktorý sa pridá na konec súboru.
+
+Poznámka k `:has()`: v tomto CSS module funguje a prefixuje sa lokálne — pozri
+`.dtCards > li:has(+ .dtNow) > .dtCard` a `:global(.page-stack):has(.vt)` v print
+bloku. Nie je to dôvod na obavy, prežilo to build.
+
+### Graf nesmie tvrdiť horizont, ktorý škála nemá
+
+Rovnaká trieda chyby ako pasca o `moveTargets` vyššie, len na výstupnej strane:
+**popis nesmie hlásiť stav, ktorý dáta nekryjú.** Keď sa horizont stal
+zoomo-závislým, statický popisok osi zostal.
+
+Prípad, ktorý to spôsobil (**opravený 2026-07-30**, nevracaj ho): `RoadmapMode.tsx`
+renderoval v hlavičke osi `t("timeline.horizonRoadmap")`, čo bolo natvrdo
+„12 mesiacov". Pri `zoom=quarter` je os 8 kvartálov (2 roky) a pri `zoom=week`
+12 týždňov — popisok tam **klamal**. Pri predvolenom `zoom=month` bol pravdivý,
+preto to prešlo cez tsc, lint, testy aj e2e.
+
+Dnes to rieši `horizonHint(scale)` v `RoadmapMode.tsx`:
+
+```typescript
+function horizonHint(scale: TimeScale): string {
+  const units = scale.columns.length;               // NIE ROADMAP_HORIZON, nie konštanta
+  return t(`timeline.horizonUnits.${scale.zoom}.${pluralForm(units)}`, { n: units });
+}
+```
+
+Číslo je `scale.columns.length` — teda **tie isté stĺpce, ktoré os kreslí**, nie
+druhý zdroj tej istej pravdy. Kľúč `timeline.horizonRoadmap` je zrušený, aby sa
+nedal omylom použiť znova. Slovenčina potrebuje tri tvary (1 / 2–4 / 5+), takže
+`keys.timeline.ts` má 9 kľúčov `timeline.horizonUnits.<zoom>.<one|few|many>`
+a `pluralForm()` v `./text` vyberá tvar; angličtina `few` a `many` zlučuje.
+Testy: `src/components/timeline/text.test.ts`.
+
+Pravidlo: keď pridáš popisok, ktorý hovorí o rozsahu, dĺžke alebo počte, ber ho
+z tej istej hodnoty, z akej sa kreslí obsah — nie z konštanty v texte. A keď
+pridávaš počítaný text po slovensky, počítaj s tromi tvarmi, nie dvomi.
+
+### Klikací terč má 24 px, aj keď mu tak dobre nesedí dizajn
+
+`.vtMarker` (značka checkpointu na dráhe) bola 18×18 px a axe ju zhodila pravidlom
+`target-size` (WCAG 2.2 SC 2.5.8, impact **serious**) na **všetkých** značkách
+v oboch témach — hláška je adresná: „Target has insufficient size (18px by 18px,
+should be at least 24px by 24px)". Pravidlo prejde, keď je terč aspoň 24×24 **alebo**
+má aspoň 24 px voľného odstupu; značky ležia nad pruhom projektu, takže odstupová
+cesta bola zavretá a jediná oprava je veľkosť.
+
+Dráha má 116 px a pruh 26 px, takže 24 px značka sa stále zmestí do šírky pruhu —
+z veľkosti neplynie žiadna zmena layoutu. Ikona vnútri má 13 px (11 px sa v 24 px
+boxe strácalo). Kto bude značku zmenšovať „aby bola jemnejšia", zhodí axe gate.
+
+### Axe gate musí auditovať režimy, nie len defaultnú routu
+
+`/timeline` vykreslí **iba** `mode=roadmap`. Kým `e2e/a11y.spec.ts` auditoval len
+`/`, `/timeline` a `/projects`, sprintový planner a rozhodovacia os — vlastné
+tlačidlá kariet, tint po termíne, `--accent-ink` na `--accent-tint` v mesačnej
+hlavičke — **nikdy neprešli** kontrolou kontrastu ani terčov. `SCREENS` preto dnes
+obsahuje aj `/timeline?mode=sprints` a `/timeline?mode=decisions` (2 režimy × 2 témy
+= 4 testy navyše). Keď pridáš režim alebo obrazovku, ktorá má vlastné ovládacie
+prvky, pridaj ju do `SCREENS` — inak je nová a neauditovaná.
+
 ### Log neobsahuje riadky pri zelenom behu — je to zámer
 
 `logRoute` úmyselne nezapisuje rýchle 2xx (`status < 400 && ms < SLOW_REQUEST_MS`),
@@ -418,4 +532,5 @@ dôkaz, že observabilita nefunguje. Over ju neautentifikovaným requestom — m
 
 ---
 
-**Session:** A10 (2026-07-28) — i18n, seed, dokumentácia
+**Session:** dokončenie dizajnu Timeline (2026-07-30) — vertikálny Roadmap, Rozhodnutia
+na tej istej osi, horizont podľa zoomu. Predtým: A10 (2026-07-28) — i18n, seed, dokumentácia.

@@ -354,13 +354,29 @@
   min-width: 0;
 }
 
+/* One row, small type. Four legend entries at body size used to occupy a whole
+   line that the axis could have had, and the axis is what the reader came for.
+   `flex-wrap` stays as a safety valve — wrapping is never overflow. */
 .vtLegend {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: var(--space-4);
+  gap: var(--space-1) var(--space-3);
   color: var(--muted);
-  font-size: var(--text-xs);
+  /* No opacity anywhere near --muted: it is already the lightest allowed text
+     (~5.8:1). Smaller, yes; dimmer, no. */
+  font-size: 10px;
+  line-height: 1.6;
+}
+
+/* The sprint swatch is deliberately the same THIN shape as the bar on the lane —
+   a legend that shows a different silhouette teaches the wrong thing. */
+.vtLegendSprint {
+  width: 5px;
+  height: 14px;
+  border-radius: var(--radius-pill);
+  border: 1px solid color-mix(in srgb, var(--accent) 60%, transparent);
+  background: color-mix(in srgb, var(--accent) 42%, transparent);
 }
 
 /* Lanes may outgrow the viewport sideways; the PAGE must never scroll, so the
@@ -418,18 +434,37 @@
 
 .vtGroupHead:last-child { border-right: 0; }
 
-.vtGroupLabel {
+/* The area caption is the collapse control — the whole header, not a hit-box the
+   size of a chevron. A real <button>, so it is keyboard reachable and announces
+   its state through aria-expanded. */
+.vtGroupToggle {
   display: flex;
   align-items: center;
   gap: var(--space-1);
+  width: 100%;
+  min-width: 0;
   padding: 4px var(--space-2);
+  border: 0;
   border-bottom: 1px solid var(--border-soft);
+  background: transparent;
   color: var(--muted);
+  font-family: inherit;
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  min-width: 0;
+  text-align: left;
+  cursor: pointer;
+}
+
+.vtGroupToggle:hover {
+  background: var(--accent-tint);
+  color: var(--ink2);
+}
+
+.vtGroupToggle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
 }
 
 .vtLaneHeads { display: flex; align-items: stretch; min-width: 0; }
@@ -457,6 +492,19 @@
 }
 
 .vtLaneName:hover { color: var(--accent); }
+
+/* Same type as .vtLaneName but for a caption that is NOT a link: a collapsed area
+   stands for several projects, so there is no single thing to open. */
+.vtLaneNameStatic {
+  color: var(--ink);
+  font-size: var(--text-md);
+  font-weight: 600;
+  line-height: 1.25;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
 
 .vtLaneMeta { color: var(--muted); font-size: var(--text-xs); }
 
@@ -542,9 +590,16 @@
   pointer-events: none;
 }
 
+/* `flex: 1 1 0` MIRRORS .vtGroupHead exactly, and that is the whole trick behind
+   this layout: header and body are the same nested flex structure, so a lane head
+   always lands above its own lane with no width maths. Without the growth here the
+   body groups sized to content (116 px per lane) while the header groups stretched
+   to fill the row — on a wide screen the heads drifted right of their bars, and a
+   collapsed area (one lane under a full-width head) made it obvious. */
 .vtGroupLanes {
   display: flex;
   align-items: stretch;
+  flex: 1 1 0;
   min-width: 0;
   border-right: 1px solid var(--border);
 }
@@ -557,10 +612,14 @@
   min-width: 116px;
 }
 
-/* ── the bar: a vertical span, progress filling downward with time ───────── */
+/* ── the bar: a vertical span, progress filling downward with time ─────────
+   It is a LINK: the biggest target in the lane used to do nothing, while only the
+   name in the header opened the project. `z-index: 1` keeps it under the markers,
+   which are siblings — a click on a checkpoint must open the checkpoint. */
 .vtBar {
   position: absolute;
   left: 50%;
+  z-index: 1;
   transform: translateX(-50%);
   width: 26px;
   min-height: 10px;
@@ -571,6 +630,18 @@
 }
 
 .vtBar:hover { box-shadow: var(--shadow-sm); }
+
+.vtBar:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* A collapsed area's summary lane: the same geometry, drawn as an outline so it
+   cannot be read as a single project's plan. */
+.vtBarSummary {
+  border-style: dashed;
+  border-width: 1.5px;
+}
 
 /* A span that runs past the horizon loses its rounded cap on that side, so a
    clipped project cannot be mistaken for one that starts or ends here. */
@@ -586,24 +657,10 @@
   pointer-events: none;
 }
 
-.vtBarLabel {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  padding-top: var(--space-2);
-  /* Sideways text: a 26 px column has no room for a horizontal label, and this
-     keeps the project name readable without a tooltip. */
-  writing-mode: vertical-rl;
-  text-orientation: mixed;
-  font-size: var(--text-xs);
-  font-weight: 600;
-  color: var(--ink2);
-  white-space: nowrap;
-  overflow: hidden;
-  pointer-events: none;
-}
+/* There is no label inside the bar any more. A `writing-mode: vertical-rl` name was
+   cut off on every bar shorter than a quarter, and the lane header directly above
+   it carries the same name — so the bar shows the fill and nothing else, with the
+   full sentence in `title` / `aria-label`. */
 
 .vtBarGreen { background: color-mix(in srgb, var(--success) 14%, transparent); border-color: color-mix(in srgb, var(--success) 40%, transparent); }
 .vtBarGreen .vtBarFill { background: color-mix(in srgb, var(--success) 30%, transparent); }
@@ -614,17 +671,27 @@
 .vtBarGrey { background: color-mix(in srgb, var(--ink) 6%, transparent); border-color: var(--border); }
 .vtBarGrey .vtBarFill { background: color-mix(in srgb, var(--ink) 8%, transparent); }
 
-.vtNoDates {
+/* ── sprint bars: a thin second span beside the project's own ──────────────
+   The roadmap showed the plan but never the work. A sprint sits on the SAME axis,
+   so putting it alongside answers "when was this actually worked on" by looking
+   straight across. Kept narrow and to the side so it never competes with the
+   project bar or covers the markers, which stay centred. */
+.vtSprint {
   position: absolute;
-  top: var(--space-3);
-  left: 50%;
-  transform: translateX(-50%);
-  color: var(--muted);
-  font-size: var(--text-xs);
-  writing-mode: vertical-rl;
+  left: calc(50% + 17px);
+  z-index: 1;
+  width: 5px;
+  min-height: 4px;
+  border: 1px solid color-mix(in srgb, var(--accent) 60%, transparent);
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--accent) 42%, transparent);
 }
 
-/* ── checkpoint markers, now stacked down the lane ───────────────────────── */
+/* ── checkpoint markers, now stacked down the lane ─────────────────────────
+   24×24 is not a taste decision: WCAG 2.2 SC 2.5.8 is the floor for a pointer
+   target, and at 18×18 axe failed this with `target-size` (serious) on every
+   marker in both themes. The lane is 116 px wide and the bar 26 px, so the
+   marker still sits inside the bar's width — no layout follows from the size. */
 .vtMarker {
   position: absolute;
   left: 50%;
@@ -632,8 +699,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 18px;
-  height: 18px;
+  width: 24px;
+  height: 24px;
   transform: translate(-50%, -50%);
   border: 1.5px solid var(--accent);
   border-radius: var(--radius-sm);
@@ -658,6 +725,74 @@
 .vtMarkerDecided.vtMarkerPast { background: var(--success); color: var(--on-accent); }
 .vtMarkerReady { border-color: var(--warn); color: var(--warn); }
 .vtMarkerReady.vtMarkerPast { background: var(--warn); color: var(--on-accent); }
+
+/* Due outside its project's duration. It stays on the lane — it is real information,
+   most likely a data error, and hiding it would hide the mistake — but the dashed
+   outline says "this does not belong here" and `title` spells it out. A border STYLE
+   rather than a colour, so it composes with every lifecycle band above. */
+.vtMarkerOutside {
+  border-style: dashed;
+  border-width: 2px;
+}
+
+/* ── projects with no dates: under the axis, not an empty lane ─────────────
+   They have no place on a time axis, but dropping them would make this screen
+   disagree with the project count everywhere else. `flex-wrap` matters: this row
+   must grow downward, never sideways. */
+.vtUndated {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-2);
+  min-width: 0;
+  padding: var(--space-2) var(--space-3);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-md);
+  background: var(--panel2);
+}
+
+.vtUndatedLabel {
+  flex: 0 0 auto;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.vtUndatedList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-2);
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+  list-style: none;
+}
+
+.vtUndatedLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 260px;
+  padding: 2px var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--panel);
+  color: var(--ink2);
+  font-size: var(--text-xs);
+  text-decoration: none;
+}
+
+.vtUndatedLink:hover {
+  border-color: color-mix(in srgb, var(--accent) 44%, transparent);
+  color: var(--accent);
+}
+
+.vtUndatedLink:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
 
 /* ── phone: the same facts as a list in time, no lanes ───────────────────── */
 .vtList {
@@ -762,6 +897,98 @@
   .vtMarker { transition: none; }
   .vtMarker:hover,
   .vtMarker:focus-visible { transform: translate(-50%, -50%); }
+}
+
+/* =========================================================================
+   PRINT — reporting is one of the three pillars, and a roadmap on paper is what
+   it mostly means. The vertical axis is the reason this is worth doing: twelve
+   months down the page fit A4 portrait, which the horizontal version never did.
+   Conventions follow the family block in globals.css, which already flips the
+   tokens to a light palette and hides .sidebar / .topbar / .toast-stack /
+   .no-print — none of that is repeated here.
+   ========================================================================= */
+@media print {
+  /* The mode + zoom switch is rendered by TimelineWorkspace, so it is outside this
+     file's classes and has to be reached through :global. Next runs CSS Modules in
+     `pure` mode (a top-level :global would make the module have side effects), and
+     the pragma below is that checker's documented escape hatch.
+     `:has(.vt)` keeps the reach honest: `.vt` is a LOCAL class, so this only fires
+     on a page-stack that actually contains the vertical roadmap. It matters —
+     /decisions imports the timeline barrel and therefore loads this stylesheet too,
+     and its filter toolbar is not ours to hide. */
+  /* cssmodules-pure-ignore */
+  :global(.page-stack):has(.vt) :global(.toolbar) {
+    display: none !important;
+  }
+
+  /* The legend explains interaction that paper does not have. */
+  .vtLegend { display: none; }
+
+  .vt { gap: var(--space-2); }
+
+  /* Nothing scrolls and nothing sticks on paper: the header prints once, above the
+     axis, and the whole chart flows at full width. */
+  .vtScroll {
+    overflow: visible;
+    background: transparent;
+  }
+
+  .vtHead {
+    position: static;
+    background: transparent;
+    backdrop-filter: none;
+  }
+
+  .vtAxis {
+    position: static;
+    background: transparent;
+  }
+
+  /* A lane broken across a page loses the only thing it is for: being compared
+     against the axis beside it. */
+  .vtGroupHead,
+  .vtGroupLanes,
+  .vtLane,
+  .vtLaneHead,
+  .vtListItem {
+    break-inside: avoid;
+  }
+
+  /* Screen tints wash out on paper, and a browser may drop backgrounds entirely.
+     So the bands get a solid outline, a stronger fill, and an explicit instruction
+     to keep the colour. */
+  .vtBar,
+  .vtBarFill,
+  .vtSprint,
+  .vtMarker,
+  .vtToday,
+  .vtTodayFlag,
+  .vtAxisCellNow,
+  .vtGridRowNow {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .vtBarGreen { background: color-mix(in srgb, var(--success) 22%, transparent); border-color: var(--success); }
+  .vtBarGreen .vtBarFill { background: color-mix(in srgb, var(--success) 55%, transparent); }
+  .vtBarAmber { background: color-mix(in srgb, var(--warn) 22%, transparent); border-color: var(--warn); }
+  .vtBarAmber .vtBarFill { background: color-mix(in srgb, var(--warn) 55%, transparent); }
+  .vtBarRed { background: color-mix(in srgb, var(--danger) 22%, transparent); border-color: var(--danger); }
+  .vtBarRed .vtBarFill { background: color-mix(in srgb, var(--danger) 55%, transparent); }
+  .vtBarGrey { background: color-mix(in srgb, var(--ink) 12%, transparent); border-color: var(--ink2); }
+  .vtBarGrey .vtBarFill { background: color-mix(in srgb, var(--ink) 32%, transparent); }
+
+  .vtSprint {
+    background: color-mix(in srgb, var(--accent) 55%, transparent);
+    border-color: var(--accent);
+  }
+
+  .vtMarker { box-shadow: none; }
+
+  /* "Dnes" as ink rather than accent: it is the one line the whole print is read
+     from, and it must survive a greyscale printer. */
+  .vtToday { height: 1.5px; background: var(--ink); }
+  .vtTodayFlag { background: var(--ink); color: var(--panel); }
 }
 
 /* ── checkpoint markers (spec Q11: filled = past, outlined = future) ─────── */
@@ -1070,82 +1297,8 @@
   font-size: var(--text-xs);
 }
 
-/* ── decision queue rows ────────────────────────────────────────────────── */
-.queue {
-  display: flex;
-  flex-direction: column;
-  list-style: none;
-}
-
-.queueRow {
-  display: grid;
-  grid-template-columns: 34px minmax(0, 1fr) 132px 116px;
-  align-items: center;
-  gap: var(--space-3);
-  width: 100%;
-  padding: var(--space-3) var(--card-pad);
-  border-bottom: 1px solid var(--border-soft);
-  text-align: left;
-  transition: background var(--transition);
-}
-
-.queueRow:hover {
-  background: color-mix(in srgb, var(--accent) 7%, transparent);
-}
-
-.queueRank {
-  color: var(--muted);
-  font-size: var(--text-sm);
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-}
-
-.queueMain {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  min-width: 0;
-}
-
-.queueTitle {
-  color: var(--ink);
-  font-size: var(--text-md);
-  font-weight: 600;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.queueMeta {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px;
-  color: var(--muted);
-  font-size: var(--text-xs);
-}
-
-.queueReadiness {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  font-size: var(--text-xs);
-  color: var(--muted);
-}
-
-.queueDue {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  text-align: right;
-  font-size: var(--text-xs);
-  color: var(--muted);
-}
-
-.queueDueOverdue {
-  color: var(--danger);
-  font-weight: 700;
-}
+/* The decision queue's own classes used to live here. It is a vertical time axis
+   now — see the DECISION TIMELINE block at the end of this file (`dt` prefix). */
 
 /* ── checkpoint modal internals ─────────────────────────────────────────── */
 .cpHero {
@@ -1350,7 +1503,6 @@
 /* ── responsive ─────────────────────────────────────────────────────────── */
 @media (max-width: 1100px) {
   .wrap { --tl-identity: 200px; }
-  .queueRow { grid-template-columns: 28px minmax(0, 1fr) 112px 100px; }
 }
 
 @media (max-width: 900px) {
@@ -1366,12 +1518,6 @@
 @media (max-width: 700px) {
   .wrap { --tl-identity: 150px; --tl-row-h: 44px; }
   .scroller { max-height: min(56vh, 460px); }
-  .queueRow {
-    grid-template-columns: minmax(0, 1fr) 92px;
-    row-gap: var(--space-2);
-  }
-  .queueRank { display: none; }
-  .queueReadiness { grid-column: 1 / -1; }
   .cpReadiness { flex: 1 1 100%; }
   .items { min-height: 64px; }
 }
@@ -1380,4 +1526,295 @@
    nothing on a phone advertises an interaction that is switched off. */
 @media (max-width: 700px), (pointer: coarse) {
   .handle { display: none; }
+}
+
+/* =========================================================================
+   DECISION TIMELINE — the decisions mode on the same vertical axis as the
+   roadmap. Months are SECTIONS, not absolute offsets: a checkpoint is a single
+   day rather than a span, so there is nothing to scale, and a section that grows
+   with its content can never overflow the way a percentage-positioned card does
+   at 390 px. The one rule at today is the point of the whole block.
+   Prefix `dt`, appended after the `vt` block so the two never collide.
+   ========================================================================= */
+
+.dt {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.dtMonths {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+  list-style: none;
+}
+
+/* One month. `min-width: 0` on every level down to the card is what keeps a long
+   checkpoint name from widening the section and panning the whole page. */
+.dtMonth {
+  min-width: 0;
+  border-top: 1px solid var(--border);
+}
+
+.dtMonths > .dtMonth:first-child { border-top: 0; }
+
+/* The month caption doubles as the axis tick. Same 10 px uppercase treatment as
+   the roadmap's area caption, so the two modes read as one screen. */
+.dtMonthHead {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  margin: 0;
+  padding: var(--space-2) var(--card-pad);
+  background: var(--panel2);
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.dtMonthLabel {
+  /* No opacity near --muted: it is already the lightest allowed text (~5.8:1). */
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.dtMonthCount {
+  color: var(--muted);
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The month the reader is standing in gets the same accent wash the roadmap gives
+   the current axis cell. */
+.dtMonthNow > .dtMonthHead {
+  background: var(--accent-tint);
+}
+
+.dtMonthNow > .dtMonthHead > .dtMonthLabel {
+  color: var(--accent-ink);
+}
+
+.dtCards {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+  list-style: none;
+}
+
+/* ── one checkpoint ───────────────────────────────────────────────────────── */
+.dtCard {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 132px 116px;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  min-width: 0;
+  padding: var(--space-3) var(--card-pad);
+  border-bottom: 1px solid var(--border-soft);
+  text-align: left;
+  transition: background var(--transition);
+}
+
+/* No doubled edge where a card meets the section border below it or the "Dnes"
+   rule's own 2 px edge. */
+.dtCards > li:last-child > .dtCard,
+.dtCards > li:has(+ .dtNow) > .dtCard { border-bottom: 0; }
+
+.dtCard:hover {
+  background: color-mix(in srgb, var(--accent) 7%, transparent);
+}
+
+.dtCard:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+/* Day of the month as the axis position. The full date stays in the right-hand
+   column — a month header plus "30" is not a date a reader can quote. */
+.dtDay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 0;
+}
+
+.dtDayNum {
+  color: var(--ink);
+  font-size: var(--text-lg);
+  font-weight: 700;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.dtRank {
+  color: var(--muted);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+}
+
+.dtMain {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.dtTitle {
+  color: var(--ink);
+  font-size: var(--text-md);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* `overflow-wrap` rather than a second ellipsis: this row wraps by design, and an
+   unbroken approver name or project code must break instead of pushing the grid
+   wider than its column. */
+.dtMeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  color: var(--muted);
+  font-size: var(--text-xs);
+  overflow-wrap: anywhere;
+}
+
+.dtReadiness {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  color: var(--muted);
+  font-size: var(--text-xs);
+}
+
+.dtDue {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  text-align: right;
+  color: var(--muted);
+  font-size: var(--text-xs);
+}
+
+/* Overdue and undecided — the strongest signal on the screen. `--danger-text`, not
+   `--danger`: the fill token is tuned for backgrounds and lands at 3,6–4,4:1 as
+   11 px text on its own tint, under the AA floor. */
+.dtCardOverdue {
+  background: color-mix(in srgb, var(--danger) 6%, transparent);
+}
+
+.dtCardOverdue:hover {
+  background: color-mix(in srgb, var(--danger) 11%, transparent);
+}
+
+.dtCardOverdue .dtDayNum {
+  color: var(--danger-text);
+}
+
+.dtDueOverdue {
+  color: var(--danger-text);
+  font-weight: 700;
+}
+
+/* ── the "Dnes" rule ──────────────────────────────────────────────────────
+   The whole reason the queue became an axis: everything above this line is late,
+   everything below it is still ahead. A 2 px accent edge plus a wash, so it reads
+   as a boundary and not as one more row. */
+.dtNow {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-2);
+  min-width: 0;
+  padding: var(--space-1) var(--card-pad);
+  border-top: 2px solid var(--accent);
+  background: color-mix(in srgb, var(--accent) 9%, transparent);
+}
+
+.dtNowLabel {
+  color: var(--accent-ink);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.dtNowDate {
+  color: var(--accent-ink);
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── laptop / tablet: narrower fixed columns, same four of them ─────────────
+   These media blocks sit AFTER the base rule on purpose. A media query adds no
+   specificity, so the `@media (max-width: 1100px)` block higher up in this file
+   would lose to a `.dtCard` declared below it. */
+@media (max-width: 1100px) {
+  .dtCard { grid-template-columns: 40px minmax(0, 1fr) 112px 100px; }
+}
+
+/* ── phone: the same four blocks, stacked beside the day ─────────────────────
+   Four columns need ~470 px of content; a 390 px screen has ~358 px inside the
+   card padding. Anything wide here pans the WHOLE page (measured once at 517 px
+   against a 390 px client width), so the three text blocks move under each other
+   and the day number keeps its own column. Nothing is hidden. */
+@media (max-width: 700px) {
+  .dtCard {
+    grid-template-columns: 34px minmax(0, 1fr);
+    row-gap: var(--space-2);
+    align-items: start;
+  }
+
+  .dtReadiness,
+  .dtDue {
+    grid-column: 2;
+  }
+
+  /* Row, but wrapping: "28. február 2027" next to "142 dní po termíne" is the
+     worst case and it must break instead of widening the grid. */
+  .dtDue {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-1) var(--space-2);
+    text-align: left;
+  }
+
+  .dtDayNum { font-size: var(--text-md); }
+}
+
+/* ── print: the rule and the late rows are the report ────────────────────── */
+@media print {
+  .dtCard,
+  .dtNow,
+  .dtMonthHead {
+    break-inside: avoid;
+  }
+
+  .dtNow,
+  .dtCardOverdue {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Ink rather than accent, so the one line the report is read from survives a
+     greyscale printer. */
+  .dtNow {
+    border-top-color: var(--ink);
+    background: transparent;
+  }
+
+  .dtNowLabel,
+  .dtNowDate { color: var(--ink); }
 }

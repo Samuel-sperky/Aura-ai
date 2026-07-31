@@ -400,3 +400,148 @@ a nový `npm audit`. Dovtedy je to zdedená upstream situácia, nie dlh tohto po
 **Odložené tvojím rozhodnutím** (pripravené ako workflows, nespúšťať bez pokynu):
 - Integrácie s rodinou cez read-only usera `roadmap_ro` (otázka #83)
 - Rozpor teal vs zlatá v rodine (otázka #63)
+
+### Dokončenie dizajnu Timeline (2026-07-30)
+
+Timeline bola funkčne hotová, ale čítala sa zle: Roadmap tlačil 12 mesiacov do
+**šírky** stránky, takže popisy prekrývali pruhy a pod grafom zostala prázdna polovica
+obrazovky. Šprint to prestavil na **vertikálnu** os — čas plynie zhora dole — a to isté
+rozhodnutie dotiahol aj na režim Rozhodnutia.
+
+**Desať rozhodnutí, ktoré šprint implementoval,** a dôvod ku každému. Dôvody sú
+zapísané aj priamo v hlavičkách `RoadmapMode.tsx`, `DecisionQueue.tsx`,
+`decisionTimeline.ts` a `lib/timeline.ts`, aby sa nedali stratiť s týmto dokumentom:
+
+| # | Rozhodnutie | Prečo |
+|---|---|---|
+| 1 | **Roadmap je vertikálny** — mesiace v ľavom sticky stĺpci, jeden projekt = jedna svislá dráha, „Dnes" je vodorovná linka | 12 mesiacov na šírku nechalo popisy prekryté pruhmi a spodnú polovicu stránky prázdnu. Šírka je vzácna, výška nie |
+| 2 | **Horizont sa riadi zoomom**: 8 kvartálov / 12 mesiacov / 12 týždňov (`ROADMAP_HORIZON`) | Zoom je voľba detailu, nie dĺžky stránky. Pri fixných 12 mesiacoch kreslil `week` ~53 stĺpcov (nekonečný scroll) a `quarter` štyri (prázdna stránka). Horizont je ukotvený na začiatku jednotky obsahujúcej dnes, takže žiadny stĺpec nie je odseknutý a dnes je vždy vnútri |
+| 3 | **Výška osi z hustoty** — `UNIT_PX = { cozy: 58, compact: 40 }`, podlaha 360 px | Kompaktná hustota má jednu úlohu: 12 mesiacov bez svislého scrollu (480 px proti 700 px). Pruhy sú v percentách tejto výšky, takže číslo rieši vzdušnosť, nie správnosť |
+| 4 | **Žiadny názov vnútri pruhu** — nesie ho hlavička dráhy nad ním | Text na boku bol na krátkych pruhoch odseknutý a hlavička ho aj tak duplikovala |
+| 5 | **Oblasť sa zbalí do JEDNEJ súhrnnej dráhy**, zbalený stav v `?collapsed=` | 50 projektov rozbalených znamená ~5 800 px vodorovného scrollu. Stav je v URL, takže skopírovaný odkaz reprodukuje obrazovku; prázdny set zapisuje `null`, čiže rozbalený Roadmap má čistú adresu |
+| 6 | **Checkpoint mimo trvania projektu si značku PONECHÁ** a dostane výstražný štýl | Je to reálna informácia — takmer isto chyba v dátach. Skryť ju znamená skryť tú chybu. Pravidlo je zdieľané s `barGeometry` (`isOutsideProject`), aby marker a pruh nehovorili každý niečo iné |
+| 7 | **Projekty bez dátumov idú POD os**, nie do prázdnej dráhy | Prázdna dráha vyzerá ako chyba vykreslenia. Riadok „Bez termínu" pod osou ich prizná a nechá klikateľné |
+| 8 | **Celý pruh otvára projekt**; značky checkpointov ležia nad ním a klik si držia | Pruh bol najväčší terč na obrazovke a nerobil nič. Klik na značku musí otvoriť checkpoint, nie projekt pod ňou |
+| 9 | **`@media print`** — bez toolbaru a legendy, os na plnú šírku, dráhy nerozseknuté cez stránku | Pilier „evidencia pre reporting" znamená, že roadmap sa tlačí. Doteraz sa tlačila s ovládacími prvkami |
+| 10 | **Rozhodnutia sú tá istá vertikálna os** — mesiace ako sekcie, jedna linka „Dnes" medzi „po termíne" a „pred nami" | Fronta zoradená podľa termínu hovorila, ktorý checkpoint je ďalší, ale nie **ako ďaleko** je. „O 6 dní" a „o 5 mesiacov" boli dva riadky od seba a vyzerali rovnako. Mesačné sekcie vrátili vzdialenosť a linka „Dnes" zmenila „čo je po termíne" z čítania na videnie. Nič sa nezahodilo: readiness bar, typ, stav, schvaľovateľ, pozícia vo fronte aj filtre zostali |
+
+Tri veci, ktoré z toho vyplynuli a sú **zámerné**, nie nedokončené:
+
+- **Rozhodnutia nemajú horizont.** Checkpoint rok po termíne alebo tri roky dopredu
+  dostane vlastnú mesačnú sekciu. Klipovanie na 12 mesiacov by spôsobilo, že os
+  nesúhlasí s dlaždicami priamo nad ňou. Mesiace bez checkpointu sa nekreslia —
+  30 prázdnych sekcií medzi dvoma reálnymi je šum.
+- **Rozhodnutia nepoužívajú absolútne polohovanie.** Checkpoint je jeden deň, nie
+  rozsah; sekcia na mesiac s kartami pod sebou je čitateľnejšia a imúnna voči
+  pretečeniu, ktoré by percentuálna geometria na 390 px potrebovala riešiť.
+- **Režim `sprints` horizont zoomu nesleduje** — 12 týždňov od pondelka pri každom
+  zoome, s odseknutým prvým a posledným stĺpcom. Plánovacie okno je vlastnosť režimu,
+  nie zoomu, a e2e to drží.
+
+**Čo to nestálo:** `barGeometry()` a `markerPercent()` vracajú podiel horizontu
+v percentách **bez smeru**, takže obrat osi na výšku nepotreboval v `lib/timeline`
+ani jednu zmenu — tie isté čísla, ktoré šli do `left`/`width`, idú do `top`/`height`.
+
+#### Odchýlky od `docs/04-DOKONCENIE-50-OTAZOK.md`
+
+Dve odpovede z pôvodnej päťdesiatky sú týmto **prekonané**:
+
+- **Q9** („Rozhodnutia = fronta, **nie** časová os") — fronta bez osi nevedela ukázať
+  vzdialenosť k termínu, viď rozhodnutie 10. Fronta ako *pracovné usporiadanie*
+  zostáva: server ju dodáva cez `queue=1` a `groupDecisionsByMonth` jeho poradie
+  neprepisuje, len ho rozdelí do mesiacov.
+- **Q10** („dnes = **vertikálna** teal linka") — pri vertikálnej osi je „Dnes"
+  vodorovná linka. Vzor sám (jedna akcentová linka + vlajka „Dnes") sa nemenil.
+
+#### Otvorené body
+
+Nič z tohto nie je regresia — appka je zelená aj s nimi. Sú to nedotiahnuté konce.
+
+1. ~~**`sprints` prop nie je zapojený.**~~ **UZAVRETÉ (2026-07-30).**
+   `TimelineWorkspace.tsx` posiela `sprints={axisSprints}` v bloku
+   `mode === "roadmap"`; sprintové pruhy sa kreslia a legenda „Šprint" má k čomu
+   patriť.
+
+   Pôvodná oprava zapísaná vyššie („poslať `core.sprints`, **nie** `axisSprints`")
+   bola **vecne nesprávna** a neriaď sa ňou. Vychádzala zo zastaraného komentára nad
+   `axisSprints` („those overlapping the 12-week horizon"), nie z kódu: `axisSprints`
+   je `sprintsInHorizon(core.sprints, scale)` a `scale` je jediné
+   `buildTimeScale({ mode, zoom, today })` kľúčované **režimom**. V režime `roadmap`
+   je teda `axisSprints` filtrované presne tým horizontom, ktorý `RoadmapMode`
+   aj kreslí — nie sprintovým. Komentár je opravený, aby pascu neobnovil.
+
+   `axisSprints` je navyše **správnejšia** voľba než `core.sprints`: `RoadmapMode`
+   posiela ten istý zoznam do `ScreenReaderSummary`, ktorý pod stĺpcom
+   `timeline.roadmap.sprintCount` počíta `sprints.filter(s => s.projectId === …)`.
+   S `core.sprints` by sr-only tabuľka hlásila aj šprinty mimo horizontu, teda viac
+   šprintov, než koľko je na obrazovke pruhov. Filtrovanie cez `barGeometry`
+   vnútri `RoadmapMode` rieši len pruhy, nie tento počet.
+2. ~~**Popisok horizontu v hlavičke osi klame pri dvoch zoomoch z troch.**~~
+   **UZAVRETÉ (2026-07-30).** `RoadmapMode.tsx` už nerenderuje statické
+   `t("timeline.horizonRoadmap")`, ale `horizonHint(scale)`, ktorý skladá popisok
+   z `scale.columns.length` a `scale.zoom` cez `timeline.horizonUnits.<zoom>.<tvar>`
+   (9 kľúčov, SK + EN, so slovenským plurálom cez `pluralForm`). Popisok sa odvodzuje
+   od stĺpcov, ktoré os **naozaj** kreslí, takže sa s ňou nemôže rozísť ani po zmene
+   `ROADMAP_HORIZON`. Pasca ostáva v `CLAUDE.md` („Graf nesmie tvrdiť horizont, ktorý
+   škála nemá").
+3. **Zjednotenie aktívnej navigácie naprieč rodinou — vedome odložené ako samostatná
+   úloha**, rovnako ako sa riešil akcent (`docs/AKCENT-ROZHODNUTIE.md`, otázka #63).
+   Aura Roadmap značí aktívnu položku zlatým tintom plus vnútornou lištou
+   (`.nav-item.active`: `color-mix(… --brand-gold 12% …)` + `inset 3px 0 0
+   var(--brand-gold)`), zvyšok rodiny čiernou pill. To je **rozhodnutie o rodinnom
+   dizajne, nie bug v tejto appke** — meniť to v jednej appke by rozpor len presunul.
+   Stav ostatných appiek v tomto šprinte overený nebol.
+
+#### Čo bolo overené
+
+`npx.cmd tsc --noEmit` čistý, `npm.cmd run lint` 0/0, `npx.cmd vitest run` zelený.
+i18n: každý `t()` / `tk()` kľúč použitý v `src/components/timeline/` existuje
+v registri a má SK aj EN (overené grepom proti `keys.*.ts`, 142 kľúčov rodiny
+`timeline.*` / `planner.*` / `capacity.*` / `checkpointModal.*`, žiadny osirelý);
+prefixy dynamických kľúčov `health.*`, `sprintStatus.*`, `checkpointState.*`,
+`checkpointType.*`, `outcome.*`, `status.*`, `itemType.*`, `priority.*` sú kryté
+v `keys.common.ts` a `keys.sprints.ts`.
+
+#### Brána (2026-07-30, po rebuilde)
+
+Statická brána: `tsc --noEmit` čistý · `npm run lint` **0 chýb / 0 upozornení** ·
+`vitest run` **666 testov / 30 súborov** (pred šprintom 601 / 27) ·
+`next build` prejde. Živá brána: `docker compose up -d --build app`,
+`/api/health` → `{"ok":true,"db":true}`, `npx playwright test`
+**58/58 prejde, 0 preskočených** (pred šprintom 47/47).
+
+Prvý beh e2e po rebuilde **spadol**: axe `target-size` (WCAG 2.2 SC 2.5.8, impact
+serious), 4 uzly, obe témy — `.vtMarker` bola 18×18 px namiesto 24×24. Opravené
+v `timeline.module.css` (značka 24×24, ikona 13 px); pasca zapísaná v `CLAUDE.md`.
+
+Zároveň brána rozšírila `e2e/a11y.spec.ts` o `/timeline?mode=sprints`
+a `/timeline?mode=decisions`. `/timeline` vykreslí len `mode=roadmap`, takže
+sprintový planner a rozhodovacia os do tej chvíle **nikdy** neprešli kontrolou
+kontrastu ani terčov (nález A3). Po rozšírení je axe na nule na 5 obrazovkách
+× 2 témy.
+
+Overené v prehliadači na bežiacom builde (1440×900 a 390×780, obe témy):
+
+| Rozhodnutie | Ako to bolo odmerané |
+|---|---|
+| 2 — horizont podľa zoomu | popisok osi `8 kvartálov` / `12 mesiacov` / `12 týždňov`, `columns.length` 8 / 12 / 12 |
+| 3 — `compact` znižuje mesiac na 40 px | výška osi 696 px pri `cozy`, **480 px** pri `compact`; buňky 41/39 px podľa dĺžky mesiaca |
+| 4 — žiadny svislý text v pruhu | `writing-mode` na `.vtBar` je `horizontal-tb` na všetkých pruhoch |
+| 5 — zbalenie oblasti je v URL | e2e „zbalenie oblasti je v URL a reload ho reprodukuje" |
+| 7 — projekty bez dátumov pod osou | **nedalo sa odmerať** — seed nemá projekt bez dátumov (logika krytá `partitionByDates` v `roadmapAggregate.test.ts`) |
+| 6 — checkpoint mimo trvania | **nedalo sa odmerať** — seed nemá taký checkpoint (logika krytá `isOutsideProject`) |
+| 8 — pruh otvára projekt, značka checkpoint | e2e „klik na pruh projektu otvorí detail" + „checkpoint na dráhe otvorí checkpoint, nie projekt" |
+| 9 — `@media print` | pod `media: print` je toolbar, sidebar aj `.no-print` `display: none`, `.vtScroll` `overflow: visible`, `break-inside: avoid` platí na `.vtLane`; roadmap sa vytlačí na jednu stránku |
+| 10 — os Rozhodnutí s linkou „Dnes" | linka je práve raz, karta je `<button>`, Tab na ňu dosiahne (12 tabov), focus ring `2px` s `offset -2px`, Enter otvorí modal a zapíše `?checkpoint=<id>` |
+| „Skočiť na dnes" | po kliknutí je linka „Dnes" vo viewporte |
+| legenda na jednom riadku | 26 px vysoká, všetky položky majú rovnaký vertikálny stred |
+| sprintové pruhy | 2 pruhy `.vtSprint` (5 px, vpravo od pruhu projektu), **0** prekryvov so značkami; sr-only stĺpec „Šprinty" hlási 2 = počet nakreslených pruhov |
+| 390 px | `documentElement.scrollWidth === clientWidth === 390` v režimoch roadmap, sprints aj decisions; Roadmap je zoznam v čase (4 položky), nie dráhy |
+| observabilita | neautentifikovaný `GET /api/projects` → `401` a v logu `[api] GET /api/projects 401 1ms reason=auth_denied` |
+
+Regresné grepy čisté: žiadny raw hex ani `rgba(` mimo `:root`, `--muted` je
+`#566964` (dark `#8a9b98`) a nikde naň nie je `opacity`, žiadny `role="img"` na
+kontejneri s tlačidlami, `globals.css` 605 riadkov, žiadny `deleted_at` (len testy
+overujúce absenciu), žiadny `northstar`/`cloudflare`/`wrangler`/`drizzle`, každý
+`route.ts` má `defineRoute` s `auth` — bez `auth` sú presne `/api/health`
+a `/api/auth/login`.

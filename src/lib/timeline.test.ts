@@ -7,8 +7,10 @@ import {
   DEFAULT_MODE,
   DEFAULT_ZOOM,
   NO_AREA_LABEL,
+  ROADMAP_HORIZON,
   ROADMAP_HORIZON_MONTHS,
   SPRINTS_HORIZON_WEEKS,
+  TIMELINE_ZOOMS,
   addDays,
   barGeometry,
   buildTimeScale,
@@ -34,6 +36,7 @@ import {
   RANK_STEP,
   rankBetween,
   rankForInsert,
+  roadmapHorizonDays,
   sortDecisionQueue,
   sprintsInHorizon,
   startOfMonthDay,
@@ -124,7 +127,7 @@ describe("calendar primitives are timezone-proof", () => {
   });
 });
 
-describe("buildTimeScale — roadmap horizon is 12 months from the 1st", () => {
+describe("buildTimeScale — roadmap at month zoom is 12 months from the 1st", () => {
   it("spans exactly one year of calendar days", () => {
     const scale = buildTimeScale({ mode: "roadmap", zoom: "month", today: TODAY });
     expect(scale.startIso).toBe("2026-07-01");
@@ -145,38 +148,186 @@ describe("buildTimeScale — roadmap horizon is 12 months from the 1st", () => {
     expect(scale.columns.reduce((sum, c) => sum + c.widthPercent, 0)).toBeCloseTo(100, 8);
   });
 
-  it("clips the quarter columns to the horizon instead of stretching it", () => {
-    const scale = buildTimeScale({ mode: "roadmap", zoom: "quarter", today: TODAY });
-    // Jul 2026 – Jun 2027 touches Q3/26, Q4/26, Q1/27, Q2/27 — all whole here.
-    expect(scale.columns.map((c) => c.key)).toEqual([
-      "2026-Q3",
-      "2026-Q4",
-      "2027-Q1",
-      "2027-Q2",
-    ]);
-    expect(scale.totalDays).toBe(365);
-    expect(scale.columns.reduce((sum, c) => sum + c.days, 0)).toBe(scale.totalDays);
-  });
-
-  it("clips a partial leading quarter when the month is mid-quarter", () => {
-    const scale = buildTimeScale({ mode: "roadmap", zoom: "quarter", today: "2026-08-14" });
+  it("starts a mid-month view on the 1st of that month", () => {
+    const scale = buildTimeScale({ mode: "roadmap", zoom: "month", today: "2026-08-14" });
     expect(scale.startIso).toBe("2026-08-01");
     expect(scale.endIso).toBe("2027-07-31");
-    // Q3/2026 is Jul–Sep but the horizon starts in August → 61 days, not 92.
-    expect(scale.columns[0].key).toBe("2026-Q3");
-    expect(scale.columns[0].days).toBe(61);
-    expect(scale.columns.at(-1)!.key).toBe("2027-Q3");
-    expect(scale.columns.at(-1)!.days).toBe(31); // only July 2027 is inside
-    expect(scale.columns.reduce((sum, c) => sum + c.days, 0)).toBe(scale.totalDays);
+    expect(scale.columns).toHaveLength(12);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// The horizon length is a function of the ZOOM (A1). One fixed 12-month horizon
+// made `week` draw ~53 units and `quarter` draw 4, i.e. zoom decided the page
+// length instead of the grain. Each zoom now gets its own number of WHOLE units.
+// ---------------------------------------------------------------------------
+
+/** First day of the unit a zoom is measured in — used to prove the anchoring. */
+const UNIT_START = {
+  quarter: startOfQuarterDay,
+  month: startOfMonthDay,
+  week: startOfWeekDay,
+} as const;
+
+/**
+ * Anchor days the invariants are re-checked on. Every one of them has previously
+ * been able to break day arithmetic: both DST switches of this zone, a leap day,
+ * and both sides of a year boundary (where ISO week 53 of 2026 holds 2027-01-01).
+ */
+const ANCHOR_DAYS = [
+  TODAY,
+  "2026-08-14", // mid-week, mid-month and mid-quarter at once
+  "2026-03-29", // CET → CEST
+  "2026-10-25", // CEST → CET
+  "2028-02-29", // leap day
+  "2026-12-31",
+  "2027-01-01",
+];
+
+describe("buildTimeScale — roadmap horizon follows the zoom", () => {
+  it("declares 12 weeks, 12 months and 8 quarters", () => {
+    expect(ROADMAP_HORIZON).toEqual({ quarter: 8, month: 12, week: 12 });
+    // The old single constant is now just the `month` entry, so it cannot drift.
+    expect(ROADMAP_HORIZON_MONTHS).toBe(ROADMAP_HORIZON.month);
+    expect(ROADMAP_HORIZON_MONTHS).toBe(12);
   });
 
-  it("clips the week columns at both ends of a month-aligned horizon", () => {
+  it("gives each zoom its own horizon anchored on today's unit", () => {
+    const shape = TIMELINE_ZOOMS.map((zoom) => {
+      const scale = buildTimeScale({ mode: "roadmap", zoom, today: TODAY });
+      return {
+        zoom,
+        columns: scale.columns.length,
+        startIso: scale.startIso,
+        endIso: scale.endIso,
+        totalDays: scale.totalDays,
+      };
+    });
+    expect(shape).toEqual([
+      // 8 quarters = 24 calendar months from the 1st of the current quarter.
+      { zoom: "quarter", columns: 8, startIso: "2026-07-01", endIso: "2028-06-30", totalDays: 731 },
+      // Unchanged: 12 months from the 1st of the current month.
+      { zoom: "month", columns: 12, startIso: "2026-07-01", endIso: "2027-06-30", totalDays: 365 },
+      // 12 weeks from the Monday of the current week.
+      { zoom: "week", columns: 12, startIso: "2026-07-27", endIso: "2026-10-18", totalDays: 84 },
+    ]);
+  });
+
+  it("draws eight whole quarters, leap February included", () => {
+    const scale = buildTimeScale({ mode: "roadmap", zoom: "quarter", today: TODAY });
+    expect(scale.columns.map((c) => c.key)).toEqual([
+      "2026-Q3", "2026-Q4", "2027-Q1", "2027-Q2",
+      "2027-Q3", "2027-Q4", "2028-Q1", "2028-Q2",
+    ]);
+    // Calendar months, never 30-day approximations: 29 Feb 2028 is inside.
+    expect(scale.columns.map((c) => c.days)).toEqual([92, 92, 90, 91, 92, 92, 91, 91]);
+    expect(dayOf(2028, 6, 30) - dayOf(2026, 7, 1) + 1).toBe(731);
+    // The same 24 months without a leap day inside are one day shorter.
+    const noLeap = buildTimeScale({ mode: "roadmap", zoom: "quarter", today: "2026-03-29" });
+    expect(noLeap.startIso).toBe("2026-01-01");
+    expect(noLeap.endIso).toBe("2027-12-31");
+    expect(noLeap.totalDays).toBe(730);
+  });
+
+  it("starts a mid-quarter view at the beginning of the current quarter", () => {
+    // The horizon used to start on the 1st of the current MONTH, which cut Q3/2026
+    // down to 61 days. Anchoring on the quarter is what makes the count exact.
+    const scale = buildTimeScale({ mode: "roadmap", zoom: "quarter", today: "2026-08-14" });
+    expect(scale.startIso).toBe("2026-07-01");
+    expect(scale.columns[0].key).toBe("2026-Q3");
+    expect(scale.columns[0].days).toBe(92); // whole, not clipped
+    expect(scale.columns.at(-1)!.key).toBe("2028-Q2");
+  });
+
+  it("draws twelve whole weeks from the current Monday", () => {
     const scale = buildTimeScale({ mode: "roadmap", zoom: "week", today: TODAY });
-    // 2026-07-01 is a Wednesday → the first week column carries 5 days.
-    expect(scale.columns[0].days).toBe(5);
-    expect(scale.columns[0].key).toBe("2026-W27");
-    expect(scale.columns.reduce((sum, c) => sum + c.days, 0)).toBe(scale.totalDays);
-    expect(scale.columns.every((c) => c.days >= 1 && c.days <= 7)).toBe(true);
+    expect(scale.columns).toHaveLength(12);
+    expect(scale.columns[0].key).toBe("2026-W31");
+    expect(scale.columns.at(-1)!.key).toBe("2026-W42");
+    expect(scale.columns.every((c) => c.days === 7)).toBe(true);
+  });
+
+  it("spreads the quarter horizon over three year cells", () => {
+    const scale = buildTimeScale({ mode: "roadmap", zoom: "quarter", today: TODAY });
+    const groups = headerGroups(scale);
+    expect(groups.map((g) => g.label)).toEqual(["2026", "2027", "2028"]);
+    expect(groups.map((g) => g.columnCount)).toEqual([2, 4, 2]);
+    expect(groups.reduce((s, g) => s + g.days, 0)).toBe(scale.totalDays);
+    expect(groups.reduce((s, g) => s + g.widthPercent, 0)).toBeCloseTo(100, 8);
+  });
+
+  it("exposes the bounds without building a scale", () => {
+    for (const zoom of TIMELINE_ZOOMS) {
+      const scale = buildTimeScale({ mode: "roadmap", zoom, today: TODAY });
+      expect(roadmapHorizonDays(toDay(TODAY)!, zoom)).toEqual({
+        startDay: scale.startDay,
+        endDay: scale.endDay,
+      });
+    }
+  });
+
+  it("keeps columns, percentages and today consistent at every zoom and anchor", () => {
+    for (const zoom of TIMELINE_ZOOMS) {
+      for (const today of ANCHOR_DAYS) {
+        const at = `${zoom}@${today}`;
+        const scale = buildTimeScale({ mode: "roadmap", zoom, today });
+        const cols = scale.columns;
+
+        // Exactly the declared number of units — this is the number the axis
+        // height is built from, so it must not depend on the anchor day.
+        expect({ at, n: cols.length }).toEqual({ at, n: ROADMAP_HORIZON[zoom] });
+
+        // The horizon starts on the first day of the unit holding today.
+        expect({ at, start: scale.startDay }).toEqual({
+          at,
+          start: UNIT_START[zoom](scale.todayDay),
+        });
+
+        // Whole units only: each column starts a unit, ends inside the same one,
+        // and the day after it starts the next.
+        for (const col of cols) {
+          expect({ at, key: col.key, whole: true }).toEqual({
+            at,
+            key: col.key,
+            whole:
+              UNIT_START[zoom](col.startDay) === col.startDay &&
+              UNIT_START[zoom](col.endDay) === col.startDay &&
+              UNIT_START[zoom](col.endDay + 1) === col.endDay + 1,
+          });
+        }
+
+        // Contiguous tiling of the horizon, with no gap and no overlap.
+        expect({ at, first: cols[0].startDay }).toEqual({ at, first: scale.startDay });
+        expect({ at, last: cols.at(-1)!.endDay }).toEqual({ at, last: scale.endDay });
+        for (let i = 1; i < cols.length; i += 1) {
+          expect({ at, i, joins: cols[i].startDay }).toEqual({
+            at, i, joins: cols[i - 1].endDay + 1,
+          });
+        }
+
+        // Days and percentages both add up: the vertical render puts these same
+        // numbers on `top`/`height`, so anything but 100 leaves a visible gap.
+        expect({ at, days: cols.reduce((s, c) => s + c.days, 0) }).toEqual({
+          at,
+          days: scale.totalDays,
+        });
+        expect(cols.reduce((s, c) => s + c.widthPercent, 0)).toBeCloseTo(100, 8);
+
+        // Today is inside the horizon at every zoom, in exactly one column.
+        expect({ at, hasToday: scale.todayPercent !== null }).toEqual({ at, hasToday: true });
+        expect(scale.todayPercent!).toBeGreaterThan(0);
+        expect(scale.todayPercent!).toBeLessThan(100);
+        expect({ at, current: cols.filter((c) => c.isCurrent).length }).toEqual({ at, current: 1 });
+
+        // Geometry agrees with the scale: a whole-horizon bar is 0 → 100 % and the
+        // marker for today lands on the today line.
+        const bar = barGeometry(scale, scale.startIso, scale.endIso);
+        expect({ at, left: bar.leftPercent }).toEqual({ at, left: 0 });
+        expect(bar.widthPercent).toBeCloseTo(100, 10);
+        expect({ at, days: bar.days }).toEqual({ at, days: scale.totalDays });
+        expect(markerPercent(scale, scale.todayIso)).toBeCloseTo(scale.todayPercent!, 10);
+      }
+    }
   });
 });
 
@@ -192,13 +343,31 @@ describe("buildTimeScale — sprints horizon is 12 weeks from Monday", () => {
   });
 
   it("keeps the 84-day horizon on the coarser zooms", () => {
-    for (const zoom of ["quarter", "month", "week"] as const) {
+    for (const zoom of TIMELINE_ZOOMS) {
       const scale = buildTimeScale({ mode: "sprints", zoom, today: TODAY });
       expect(scale.totalDays).toBe(84);
       expect(scale.startIso).toBe("2026-07-27");
       expect(scale.columns.reduce((sum, c) => sum + c.days, 0)).toBe(84);
       expect(scale.columns.reduce((sum, c) => sum + c.widthPercent, 0)).toBeCloseTo(100, 8);
     }
+  });
+
+  it("ignores ROADMAP_HORIZON — the planner window belongs to the mode", () => {
+    // The zoom-dependent horizon is a roadmap feature. e2e asserts this window, so
+    // a future zoom must not stretch it here.
+    for (const zoom of TIMELINE_ZOOMS) {
+      const scale = buildTimeScale({ mode: "sprints", zoom, today: "2026-08-14" });
+      expect({ zoom, days: scale.totalDays }).toEqual({ zoom, days: SPRINTS_HORIZON_WEEKS * 7 });
+      expect({ zoom, start: scale.startIso }).toEqual({ zoom, start: "2026-08-10" });
+      expect({ zoom, end: scale.endIso }).toEqual({ zoom, end: "2026-11-01" });
+    }
+    // Which is also why the coarse zooms still CLIP here: 12 weeks from a Monday
+    // cut through months and quarters at both ends. That path has no other cover
+    // now that the roadmap horizon is unit-aligned.
+    const byMonth = buildTimeScale({ mode: "sprints", zoom: "month", today: TODAY });
+    expect(byMonth.columns.map((c) => c.days)).toEqual([5, 31, 30, 18]);
+    const byQuarter = buildTimeScale({ mode: "sprints", zoom: "quarter", today: TODAY });
+    expect(byQuarter.columns.map((c) => c.days)).toEqual([66, 18]);
   });
 });
 

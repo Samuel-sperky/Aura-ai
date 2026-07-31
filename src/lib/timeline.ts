@@ -33,9 +33,37 @@ export type TimelineZoom = (typeof TIMELINE_ZOOMS)[number];
 export const DEFAULT_MODE: TimelineMode = "roadmap";
 export const DEFAULT_ZOOM: TimelineZoom = "month";
 
-/** Roadmap horizon: 12 calendar months from the first of the current month. */
-export const ROADMAP_HORIZON_MONTHS = 12;
-/** Sprints horizon: 12 weeks from the Monday of the current week. */
+/**
+ * Length of the ROADMAP horizon per zoom, counted in that zoom's OWN unit.
+ *
+ * Zoom is a choice of DETAIL, not a choice of page length. With a single fixed
+ * 12-month horizon the `week` zoom drew ~53 units (an endless scroll) and
+ * `quarter` drew 4 (an empty page). These three numbers give every zoom an axis
+ * of roughly the same length, so switching zoom changes the grain and not how far
+ * the reader has to scroll.
+ *
+ * The horizon starts at the first day of the unit CONTAINING today (Monday / the
+ * 1st / the first day of the quarter), which makes `columns.length` exactly this
+ * number for every zoom, with no stub column at either end. UI may read the map
+ * directly to size the axis before it has a scale.
+ */
+export const ROADMAP_HORIZON: Readonly<Record<TimelineZoom, number>> = {
+  quarter: 8,
+  month: 12,
+  week: 12,
+};
+
+/**
+ * The `month` entry under its historical name — 12 months is still the default
+ * view. Derived from the map, so the two can never drift apart.
+ */
+export const ROADMAP_HORIZON_MONTHS = ROADMAP_HORIZON.month;
+
+/**
+ * Sprints horizon: 12 weeks from the Monday of the current week, on EVERY zoom.
+ * The planner window is fixed by the mode and e2e asserts it, so this mode
+ * deliberately does NOT follow `ROADMAP_HORIZON`.
+ */
 export const SPRINTS_HORIZON_WEEKS = 12;
 
 /** Language of the generated labels. Kept local so this module never imports i18n. */
@@ -226,10 +254,12 @@ export function formatRange(
 /**
  * One column of the time header.
  *
- * The first and last columns of a scale are CLIPPED to the horizon, so their
- * `days` can be shorter than the calendar unit. That is deliberate: the horizon
- * length is fixed by the MODE (12 months / 12 weeks) and must not stretch just
- * because the user picked a coarser zoom.
+ * The first and last columns of a scale may be CLIPPED to the horizon, so their
+ * `days` can be shorter than the calendar unit. That is deliberate: the horizon is
+ * decided before the columns are laid out and must never stretch to fit a coarser
+ * zoom. It happens in `sprints`, whose 12-week window is Monday-anchored and so
+ * cuts through months and quarters. In `roadmap` the horizon is anchored on the
+ * zoom's own unit (see `ROADMAP_HORIZON`), so there every column is whole.
  */
 export interface TimelineColumn {
   /** Stable key: `2026-Q3` / `2026-07` / `2026-W31`. */
@@ -299,6 +329,28 @@ function unitIdentity(
   return { key: `${c.year}-${pad2(c.month)}`, year: c.year, ordinal: c.month };
 }
 
+/**
+ * Inclusive day-number bounds of the ROADMAP horizon: `ROADMAP_HORIZON[zoom]`
+ * WHOLE units, starting on the first day of the unit that contains `todayDay`.
+ *
+ * Anchoring on the unit instead of always on the 1st of the month is what makes
+ * `columns.length === ROADMAP_HORIZON[zoom]` exactly true, and it keeps the
+ * reader's current week / month / quarter visible from its own beginning. Today is
+ * therefore always inside the horizon, at every zoom.
+ */
+export function roadmapHorizonDays(
+  todayDay: number,
+  zoom: TimelineZoom,
+): { startDay: number; endDay: number } {
+  const units = ROADMAP_HORIZON[zoom];
+  const startDay = unitStart(todayDay, zoom);
+  if (zoom === "week") return { startDay, endDay: startDay + units * 7 - 1 };
+  // Month arithmetic, never 30-day approximations: a quarter is 3 calendar months
+  // whether or not a leap February sits inside it.
+  const months = units * (zoom === "quarter" ? 3 : 1);
+  return { startDay, endDay: addMonthsToStart(startDay, months) - 1 };
+}
+
 export interface BuildScaleOptions {
   mode: TimelineMode;
   zoom: TimelineZoom;
@@ -309,13 +361,18 @@ export interface BuildScaleOptions {
 /**
  * Build the time grid for a mode + zoom.
  *
- * The horizon is anchored on today and its LENGTH depends only on the mode:
- *   roadmap  → 12 calendar months, starting on the 1st of the current month
- *   sprints  → 12 weeks, starting on the Monday of the current week
- *   decisions→ same as roadmap (the queue does not draw an axis, but callers may
- *              still ask for a scale, e.g. to label "po termíne")
+ * The horizon is always anchored on today; how far it reaches depends on the mode:
+ *   sprints  → 12 weeks from the Monday of the current week, on every zoom. The
+ *              planner window is a property of the mode, not of the zoom.
+ *   roadmap  → `ROADMAP_HORIZON[zoom]` whole units from the start of the current
+ *              unit: 12 weeks / 12 months / 8 quarters. Every zoom therefore draws
+ *              the same number of rows (bar `quarter`'s 8) instead of the same
+ *              number of days.
+ *   decisions→ same as roadmap (the queue draws no axis, but callers may still ask
+ *              for a scale, e.g. to label "po termíne")
  *
- * The ZOOM only changes the column granularity drawn over that horizon.
+ * The ZOOM decides the column granularity; in `roadmap` it now also decides the
+ * horizon, which is the only reason `zoom` reaches the horizon branch at all.
  */
 export function buildTimeScale({
   mode,
@@ -330,8 +387,9 @@ export function buildTimeScale({
     startDay = startOfWeekDay(todayDay);
     endDay = startDay + SPRINTS_HORIZON_WEEKS * 7 - 1;
   } else {
-    startDay = startOfMonthDay(todayDay);
-    endDay = addMonthsToStart(startDay, ROADMAP_HORIZON_MONTHS) - 1;
+    const horizon = roadmapHorizonDays(todayDay, zoom);
+    startDay = horizon.startDay;
+    endDay = horizon.endDay;
   }
   const totalDays = endDay - startDay + 1;
 

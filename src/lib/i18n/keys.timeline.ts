@@ -37,7 +37,19 @@ export const timelineKeys: TranslationDict = {
   "timeline.axis.label": { sk: "Časová os", en: "Time axis" },
   "timeline.today": { sk: "Dnes", en: "Today" },
   "timeline.horizon": { sk: "Horizont", en: "Horizon" },
-  "timeline.horizonRoadmap": { sk: "12 mesiacov", en: "12 months" },
+  // The roadmap horizon depends on the zoom (8 quarters / 12 months / 12 weeks),
+  // so the axis hint is composed from the drawn column count — never stated as a
+  // constant. `{n}` is the count; the suffix is the Slovak plural bucket
+  // (1 / 2–4 / 5+), which English collapses into singular + plural.
+  "timeline.horizonUnits.quarter.one": { sk: "{n} kvartál", en: "{n} quarter" },
+  "timeline.horizonUnits.quarter.few": { sk: "{n} kvartály", en: "{n} quarters" },
+  "timeline.horizonUnits.quarter.many": { sk: "{n} kvartálov", en: "{n} quarters" },
+  "timeline.horizonUnits.month.one": { sk: "{n} mesiac", en: "{n} month" },
+  "timeline.horizonUnits.month.few": { sk: "{n} mesiace", en: "{n} months" },
+  "timeline.horizonUnits.month.many": { sk: "{n} mesiacov", en: "{n} months" },
+  "timeline.horizonUnits.week.one": { sk: "{n} týždeň", en: "{n} week" },
+  "timeline.horizonUnits.week.few": { sk: "{n} týždne", en: "{n} weeks" },
+  "timeline.horizonUnits.week.many": { sk: "{n} týždňov", en: "{n} weeks" },
   "timeline.horizonSprints": { sk: "12 týždňov", en: "12 weeks" },
   "timeline.timezone": { sk: "Europe/Bratislava", en: "Europe/Bratislava" },
   "timeline.clippedStart": {
@@ -64,10 +76,25 @@ export const timelineKeys: TranslationDict = {
     en: "Create a project with a start and an end and it will appear on the axis.",
   },
   "timeline.roadmap.legendProject": { sk: "Trvanie projektu", en: "Project duration" },
+  "timeline.roadmap.legendSprint": { sk: "Šprint", en: "Sprint" },
   "timeline.roadmap.legendCheckpoint": { sk: "Checkpoint", en: "Checkpoint" },
   "timeline.roadmap.legendDecided": { sk: "Rozhodnutý", en: "Decided" },
   "timeline.roadmap.progress": { sk: "Hotovo", en: "Done" },
   "timeline.roadmap.checkpointCount": { sk: "Checkpointy", en: "Checkpoints" },
+  "timeline.roadmap.sprintCount": { sk: "Šprinty", en: "Sprints" },
+
+  // Vertical roadmap: collapsing an area, the undated tail, the warning marker and
+  // the jump back to the "Dnes" rule.
+  "timeline.roadmap.collapseArea": { sk: "Zbaliť oblasť", en: "Collapse area" },
+  "timeline.roadmap.expandArea": { sk: "Rozbaliť oblasť", en: "Expand area" },
+  "timeline.roadmap.areaSummary": { sk: "Súhrn oblasti", en: "Area summary" },
+  "timeline.roadmap.projectsCount": { sk: "projektov", en: "projects" },
+  "timeline.roadmap.undated": { sk: "Bez termínu", en: "No dates" },
+  "timeline.roadmap.checkpointOutside": {
+    sk: "mimo trvania projektu",
+    en: "outside the project duration",
+  },
+  "timeline.roadmap.jumpToday": { sk: "Skočiť na dnes", en: "Jump to today" },
 
   // ── sprints mode ──────────────────────────────────────────────────────────
   "timeline.sprints.lanesLabel": { sk: "Šprinty na osi", en: "Sprints on the axis" },
@@ -174,8 +201,13 @@ export const timelineKeys: TranslationDict = {
   // ── decision queue inside Timeline ────────────────────────────────────────
   "timeline.queue.title": { sk: "Rozhodovacia fronta", en: "Decision queue" },
   "timeline.queue.subtitle": {
-    sk: "Checkpointy čakajúce na rozhodnutie, zoradené podľa termínu.",
-    en: "Checkpoints awaiting a decision, ordered by due date.",
+    sk: "Checkpointy čakajúce na rozhodnutie na časovej osi. Nad linkou „Dnes“ je to, čo je po termíne.",
+    en: "Checkpoints awaiting a decision on the time axis. Everything above the “Today” rule is past due.",
+  },
+  /** Accessible name of the month axis itself (the list of month sections). */
+  "timeline.queue.axisLabel": {
+    sk: "Rozhodnutia na časovej osi",
+    en: "Decisions on the time axis",
   },
   "timeline.queue.full": {
     sk: "Otvoriť plný pohľad Rozhodnutia",

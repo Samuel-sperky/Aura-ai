@@ -33,6 +33,20 @@ function randomPassword(length = 14): string {
 }
 
 /**
+ * `YYYY-MM-DD` N days from today — negative for the past. A MariaDB DATE literal.
+ *
+ * Relative rather than hard-coded on purpose: a checkpoint that must be OVERDUE has
+ * to stay overdue as the calendar moves, otherwise the demo silently loses the case
+ * and any test asserting on it goes vacuous without failing.
+ */
+function daysFromToday(days: number): string {
+  const d = new Date();
+  d.setDate(d.getDate() + days);
+  const p = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+
+/**
  * `YYYY-MM-DD HH:MM:SS` for a point N weeks in the past — a MariaDB DATETIME literal.
  *
  * Built from LOCAL calendar parts on purpose. `toISOString()` converts to UTC first,
@@ -64,7 +78,21 @@ const DEMO_USERS: DemoUser[] = [
   },
 ];
 
-const DEMO_PROJECTS = [
+const DEMO_PROJECTS: Array<{
+  code: string;
+  name: string;
+  area: string;
+  status: string;
+  health: string;
+  priority: string;
+  owner: string;
+  ownerInitials: string;
+  /** Null on purpose for the undated case — the schema allows it and the roadmap
+   *  lists such projects UNDER the axis rather than holding an empty lane open. */
+  startDate: string | null;
+  endDate: string | null;
+  description: string;
+}> = [
   {
     code: "ES-100",
     name: "Redesign e-shopu",
@@ -103,6 +131,22 @@ const DEMO_PROJECTS = [
     startDate: "2026-10-01",
     endDate: "2027-03-31",
     description: "Chatbot pre 24/7 support zákazníkov.",
+  },
+  // No dates yet — an idea that has an owner but no schedule. The roadmap lists it
+  // under the axis instead of giving it an empty lane, and without such a case in
+  // the demo that whole branch of the UI is never actually seen.
+  {
+    code: "IT-004",
+    name: "Obnova zálohovacej stratégie",
+    area: "Interné nástroje",
+    status: "planned",
+    health: "grey",
+    priority: "P3",
+    owner: "Marko Horváth",
+    ownerInitials: "MH",
+    startDate: null,
+    endDate: null,
+    description: "Zatiaľ bez termínu — čaká na kapacitu a rozhodnutie o rozsahu.",
   },
 ];
 
@@ -304,6 +348,32 @@ async function seed(): Promise<void> {
         dueDate: "2026-11-01",
         ownerId: demoUserIds[DEMO_USERS[1].email],
         approverId: null,
+      },
+      // OVERDUE and still undecided. Without one of these the decision timeline has
+      // nothing above its "Dnes" rule, and the e2e assertion that checks the late
+      // section is vacuous — green while asserting nothing at all.
+      {
+        key: "overdue",
+        name: "Prevzatie textov od copywritera",
+        projectId: projectIds["ES-100"],
+        type: "review",
+        lifecycle: "ready",
+        dueDate: daysFromToday(-12),
+        ownerId: demoUserIds[DEMO_USERS[0].email],
+        approverId: demoUserIds[DEMO_USERS[1].email],
+      },
+      // Due AFTER its project ends (ES-100 runs to 2027-02-28). Most likely a data
+      // error in real use, which is exactly why the roadmap flags it rather than
+      // hiding it — and why the demo needs a case to show the flag on.
+      {
+        key: "outside",
+        name: "Doškolenie podpory",
+        projectId: projectIds["ES-100"],
+        type: "delivery",
+        lifecycle: "planned",
+        dueDate: "2027-06-15",
+        ownerId: demoUserIds[DEMO_USERS[1].email],
+        approverId: demoUserIds[DEMO_USERS[0].email],
       },
     ];
 

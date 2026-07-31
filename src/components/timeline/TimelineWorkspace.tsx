@@ -182,7 +182,11 @@ export function TimelineWorkspace() {
     [mode, zoom, today],
   );
 
-  /** Sprints drawn on the axis: those overlapping the 12-week horizon. */
+  /**
+   * Sprints drawn on the axis: those overlapping the CURRENT scale's horizon.
+   * That is 12 weeks in `sprints` mode and `ROADMAP_HORIZON[zoom]` units in
+   * `roadmap`, because `scale` follows the mode — both modes render from this.
+   */
   const axisSprints = useMemo(
     () => sprintsInHorizon(core?.sprints ?? [], scale),
     [core?.sprints, scale],
@@ -476,6 +480,11 @@ export function TimelineWorkspace() {
           scale={scale}
           projects={core.projects}
           checkpoints={core.checkpoints}
+          // `axisSprints`, not the raw list: it is filtered by the very predicate
+          // the lane uses to draw a bar (`barGeometry(...).visible`) against THIS
+          // mode's scale, so the sr-only sprint count says exactly as many sprints
+          // as there are bars on screen.
+          sprints={axisSprints}
           onOpenCheckpoint={(id) => void setCheckpointParam(id)}
         />
       ) : null}

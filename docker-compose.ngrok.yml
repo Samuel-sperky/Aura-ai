@@ -31,7 +31,13 @@ services:
     command: ["http", "app:3000"]
     ports:
       # ngrok's local inspection UI — bound to loopback only.
-      - "127.0.0.1:4040:4040"
+      #
+      # Port is configurable because 4040 is often ALREADY TAKEN: this machine runs a
+      # host ngrok agent as an automatic Windows service, tunnelling sperky-ai on
+      # :3000. Hard-coding 4040 makes this container fail to start with a bind error,
+      # and — worse — the inspector API then answers from that OTHER agent, so you
+      # read back a public URL belonging to a different app.
+      - "127.0.0.1:${NGROK_INSPECTOR_PORT:-4040}:4040"
     depends_on:
       app:
         condition: service_healthy

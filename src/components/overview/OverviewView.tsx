@@ -521,7 +521,11 @@ const OVERVIEW_CSS = `
   display: flex; flex-direction: column; align-items: flex-end; gap: 4px;
   flex-shrink: 0; text-align: right;
 }
-.ov-late { color: var(--danger); font-weight: 600; }
+/* --danger-text, not --danger: this is small TEXT on the panel, and the fill tone
+   lands under AA there. axe found it the moment the seed first contained an overdue
+   checkpoint — before that this rule had never rendered, so the violation existed
+   for weeks without anything to reveal it. */
+.ov-late { color: var(--danger-text); font-weight: 600; }
 @media (max-width: 700px) {
   .ov-list-row { flex-wrap: wrap; }
   .ov-list-side { align-items: flex-start; text-align: left; }
