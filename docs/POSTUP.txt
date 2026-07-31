@@ -1,0 +1,120 @@
+﻿===============================================================================
+ AURA ROADMAP — PRACOVNÝ POSTUP
+===============================================================================
+ http://localhost:3040   ·   admin@aura-roadmap.local
+===============================================================================
+
+
+DENNE (2 minúty)
+-------------------------------------------------------------------------------
+ 1. Otvor Prehľad.
+ 2. Pozri dve dlaždice: „Rozhodnutia čakajúce na mňa" a „Položky po termíne".
+ 3. Ak niektorá nie je nula, klikni na ňu a vyrieš to hneď. Inak to zapadne.
+
+
+KEĎ PRÍDE NOVÁ PRÁCA
+-------------------------------------------------------------------------------
+ Úlohy → Nová položka. Vyplň:
+
+   Projekt        povinný, inak sa to nikde nezobrazí
+   Typ            Úloha / Chyba / Nápad
+   Priorita       P1 / P2 / P3
+   Story pointy   ← BEZ TOHTO SA PLNENIE PROJEKTU NEPOČÍTA
+   Riešiteľ       vyber človeka, alebo nechaj „Nepriradené"
+
+ Ak je to podúloha, otvor rodičovskú položku a pridaj ju v nej.
+ Hlbšie ako dve úrovne appka nepustí.
+
+
+POČAS PRÁCE
+-------------------------------------------------------------------------------
+ • Čas si zapisuj v detaile položky — tlačidlá +15 / +30 / +60 min.
+   Nie je to povinné, ale bez toho nebude čo vykazovať.
+
+ • Keď na niečom prestaneš robiť, prehoď stav na „Čaká" a napíš komentár
+   prečo. Za tri týždne si dôvod nebudeš pamätať.
+
+ • Zdravie projektu si nastav sám (Projekty → detail). Appka ti ukáže návrh,
+   ale rozhodnutie je tvoje — vieš viac ako dáta.
+
+
+ŠPRINT
+-------------------------------------------------------------------------------
+ ŠTART
+   1. Timeline → Šprinty.
+   2. Napíš šprintu CIEĽ. Bez cieľa sa nedá commitnúť.
+   3. Pretiahni položky z backlogu do šprintu (alebo klávesa M → Presunúť).
+   4. Skontroluj kapacitný panel — nepretiahol si sa?
+   5. Commit. Uzamkne východiskový rozsah, aby sa dalo porovnať, o koľko
+      sa scope neskôr zmenil.
+
+ UZÁVER
+   1. Každá otvorená položka musí dostať rozhodnutie: dokončená, alebo
+      prenesená do ďalšieho šprintu či backlogu.
+   2. Close. Zapíše sa dokončených bodov a velocity.
+
+
+CHECKPOINT — SCHVAĽOVANIE
+-------------------------------------------------------------------------------
+ PRÍPRAVA
+   1. Otvor checkpoint (Rozhodnutia, alebo značka na dráhe v Timeline).
+   2. Tab „Podmienky" → odškrtávaj, čo je hotové.
+   3. Pripravenosť % sa počíta z POVINNÝCH podmienok. Kým nie je 100 %,
+      tlačidlo Rozhodnúť je vypnuté.
+
+ ROZHODNUTIE
+   4. Tab „Rozhodnutie" → vyber výsledok:
+
+        Go               ide sa
+        Podmienečne go   ← VYŽADUJE názov follow-up úlohy, appka ju vytvorí
+        No-go            nejde sa
+        Odložené         chýbajú podklady
+
+   5. Potvrď. Automaticky sa uloží baseline, zapíše audit a vlastník
+      projektu dostane notifikáciu.
+
+ ROZHODNUTIE SA NEDÁ PREPÍSAŤ. Ak sa situácia zmenila, checkpoint sa
+ znovuotvorí — vznikne nový záznam a starý si nechá odkaz, že ho nahradil
+ novší. História zostáva celá. Je to zmysel rozhodovacej fronty, nie
+ obmedzenie.
+
+
+MESAČNE
+-------------------------------------------------------------------------------
+ 1. Prehľad → „Kopírovať súhrn" → vlož do reportu.
+ 2. Nastavenia → Audit → prejdi, čo sa v appke menilo.
+ 3. Spusť zálohu:
+      powershell -ExecutionPolicy Bypass -File .\scripts\backup\backup.ps1
+
+
+ČO APPKA VYNÚTI (a je to zámer)
+-------------------------------------------------------------------------------
+ • Plnenie projektu sa nedá zadať ručne — počíta sa zo story pointov.
+ • Šprint sa nedá commitnúť bez cieľa.
+ • Checkpoint sa nedá rozhodnúť pod 100 % pripravenosti.
+   (Admin to môže prelomiť, ale musí napísať dôvod do auditu.)
+ • Pri type Gate musí byť schvaľovateľ iný človek ako vlastník.
+ • „Podmienečne go" bez follow-up úlohy neprejde.
+ • Hierarchia úloh má presne dve úrovne.
+ • Projekt zmaže len admin a musí odpísať jeho kód.
+
+
+DVE VECI, KTORÉ ŤA INAK ZMÄTÚ
+-------------------------------------------------------------------------------
+ • Appka si pamätá posledný pohľad pre každú stránku zvlášť. Ak si na
+   Úlohách prepneš na Board, nabudúce tam budeš. Keď chceš spoľahlivo
+   Zoznam, otvor /work-items?view=list
+
+ • Adresa je zdroj pravdy. Filtre, režim, zoom aj zbalené oblasti sú v URL,
+   takže odkaz kolegovi zobrazí presne tú istú obrazovku. Využívaj to
+   namiesto opisovania, kde má klikať.
+
+
+CHYBOVÉ HLÁŠKY
+-------------------------------------------------------------------------------
+ „Záznam sa medzičasom zmenil"     niekto ho zmenil, kým si ho mal otvorený.
+                                    Obnov stránku a zmenu urob znova.
+ „Priveľa požiadaviek"              počkaj minútu.
+ Účet zamknutý                      po 5 neúspešných prihláseniach na 15 min.
+
+===============================================================================
