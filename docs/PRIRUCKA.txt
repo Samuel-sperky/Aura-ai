@@ -1,0 +1,357 @@
+===============================================================================
+ AURA ROADMAP - PRIRUCKA
+ Ako s tym pracovat
+===============================================================================
+ Verzia: 2026-07-31
+ Appka:  http://localhost:3040
+ Login:  admin@aura-roadmap.local (heslo je v .env, riadok ADMIN_PASSWORD)
+
+ Diakritika je v tomto subore zamerne vynechana, aby sa citala spravne
+ v kazdom editore. Texty v samotnej appke su plne slovenske.
+===============================================================================
+
+
+-------------------------------------------------------------------------------
+ 1. NA CO TO JE
+-------------------------------------------------------------------------------
+
+Appka stoji na troch pilieroch. Ak si nie si isty, kam nieco patri, riad sa
+tymto:
+
+  PLANOVANIE       Kedy sa co bude diet. Timeline a Sprinty.
+  EVIDENCIA        V akom stave to je. Projekty a Prehlad.
+  ROZHODOVANIE     Kto co schvalil a kedy. Rozhodnutia a Checkpointy.
+
+Co appka zamerne NEROBI: nesleduje peniaze (ziadny rozpocet ani cerpanie),
+nema timy, neschvaluje vykazy, neposiela e-maily a nema prilohy. KPI ma
+vlastnu appku (aura-kpi, port 3030) - tato ju neduplikuje.
+
+
+-------------------------------------------------------------------------------
+ 2. SPUSTENIE A ZASTAVENIE
+-------------------------------------------------------------------------------
+
+Appka bezi v Dockeri. Prikazy spustaj v C:\Aura\aura-roadmap.
+
+  SPUSTIT
+    docker compose --env-file .env up -d
+
+  ZASTAVIT (data zostanu)
+    docker compose --env-file .env down
+
+  OVERIT, ZE ZIJE
+    v prehliadaci: http://localhost:3040/api/health
+    ma vratit: {"ok":true,"db":true}
+
+  POZRIET LOGY (ked sa nieco chova divne)
+    docker logs aura-roadmap-app --tail 50
+
+DOLEZITE: prepinac --env-file .env je POVINNY. Bez neho sa premenne
+vyhodnotia na prazdno a databaza nabootuje prazdna. Nie je to chyba,
+je to ticha strata konfiguracie - appka nabehne a bude sa tvarit, ze
+nemas zadne data.
+
+
+-------------------------------------------------------------------------------
+ 3. VEREJNY PRISTUP (ngrok)
+-------------------------------------------------------------------------------
+
+Standardne appka bezi LEN lokalne. Ked ju potrebujes ukazat niekomu mimo
+tohto pocitaca, zapne sa tunel:
+
+  ZAPNUT
+    docker compose --env-file .env -f docker-compose.yml ^
+      -f docker-compose.ngrok.yml --profile tunnel up -d
+
+  ZISTIT VEREJNU URL
+    http://127.0.0.1:4042/api/tunnels
+
+  VYPNUT
+    docker compose --env-file .env -f docker-compose.yml ^
+      -f docker-compose.ngrok.yml --profile tunnel down
+
+POZOR NA DVE VECI:
+
+ a) Ked je tunel zapnuty, jedina brana do appky je prihlasenie. Nie je tam
+    ziadne dalsie heslo ani obmedzenie na IP. Nechavaj ho zapnuty len kym
+    ho realne potrebujes.
+
+ b) Na tomto pocitaci bezi este JEDEN ngrok agent ako sluzba Windows a ten
+    tuneluje sperky-ai (port 3000) na adresu karma-crucial-shorty.
+    Nezamen si ich. Verejnu URL Roadmapu citaj VZDY z portu 4042, nie 4040 -
+    na 4040 ti odpoveda ten druhy agent a vratil by ti adresu e-shopu.
+
+
+-------------------------------------------------------------------------------
+ 4. ROLY - KTO CO MOZE
+-------------------------------------------------------------------------------
+
+  ADMIN         Vsetko. Naviac: maze projekty, spravuje pouzivatelov,
+                vidi Audit a Zalohy, a moze prelomit pravidlo 100 %
+                pripravenosti pri rozhodovani (s povinnym dovodom).
+
+  EDITOR        Vytvara a upravuje projekty, ulohy, checkpointy, sprinty
+                a worklogy. Rozhoduje o checkpointe, ak je pri nom uvedeny
+                ako schvalovatel. NEMAZE projekty, nespravuje pouzivatelov.
+
+  PREHLIADAC    Iba cita. Moze si menit vlastne filtre, temu a jazyk.
+                Nezapisuje nic, ani worklog.
+
+Sekcie, na ktore nemas pravo, sa vobec nezobrazia - nie su len zosivelene.
+
+
+-------------------------------------------------------------------------------
+ 5. OBRAZOVKY
+-------------------------------------------------------------------------------
+
+PREHLAD (/)
+  Sest dlazdic s cislami, zoznam projektov zoradeny podla zdravia (cervene
+  najprv), graf dokoncenych story pointov za 12 tyzdnov a poslednych 10
+  udalosti z auditu.
+
+  Tlacidlo "Kopirovat suhrn" da do schranky citatelny text - urceny na
+  vlozenie do reportu. Toto je najkratsia cesta z appky do CEO reportu.
+
+TIMELINE (/timeline)
+  Tri rezimy, prepinaju sa vlavo hore:
+
+    Roadmap      Cas plynie ZHORA DOLE. Mesiace v lavom stlpci, kazdy
+                 projekt je svisla draha. Vyplnenie pruhu = plnenie
+                 projektu a rastie dole, teda rovnakym smerom ako cas.
+                 Vodorovna linka je "Dnes".
+                 Znacky na pruhu su checkpointy - kliknutim sa otvoria.
+                 Kliknutie na PRUH otvori projekt.
+
+    Sprinty      Planovaci board. Backlog vlavo, sprintove drahy vpravo,
+                 pod tym kapacita podla osob.
+
+    Rozhodnutia  Fronta checkpointov v case, rozdelena po mesiacoch.
+                 Linka "Dnes" oddeluje to, co je po termine, od zvysku.
+
+  Zoom: Kvartal / Mesiac / Tyzden. Menia sa aj obdobia, nie len sirka -
+  kvartal ukaze 8 kvartalov, mesiac 12 mesiacov, tyzden 12 tyzdnov.
+
+  Kliknutim na nazov oblasti ju ZBALIS - vsetky jej projekty sa spoja do
+  jednej suhrnnej drahy (prerusovany okraj). Uzitocne, ked mas projektov
+  vela. Zbalenie sa zapise do adresy, takze odkaz ho reprodukuje.
+
+PROJEKTY (/projects)
+  Tabulka alebo karty. Detail sa otvara v modale so styrmi tabmi:
+  Prehlad, Polozky, Checkpointy, Aktivita.
+
+  Na mobile (pod 700 px) sa tabulka nezobrazuje vobec a vidis karty -
+  devat stlpcov sa na telefon nezmesti citatelne.
+
+ULOHY (/work-items)
+  Zoznam alebo board. Hierarchia ma PRESNE DVE urovne: Uloha -> Poduloha.
+  Tretiu uroven server odmietne.
+
+  Typy: Uloha, Chyba, Napad. Odlisuju sa ikonou, nie farbou.
+
+ROZHODNUTIA (/decisions)
+  To iste ako rezim Rozhodnutia v Timeline, ale ako plna obrazovka
+  s filtrami - vratane "len moje na schvalenie".
+
+NASTAVENIA (/settings)
+  Vzhlad (tema, hustota, jazyk), Ucet (zmena hesla), a pre admina
+  Pouzivatelia, Audit a Zalohy.
+
+
+-------------------------------------------------------------------------------
+ 6. TYPICKY TYZDEN - AKO TO REALNE POUZIVAT
+-------------------------------------------------------------------------------
+
+V PONDELOK (10 minut)
+  1. Otvor Prehlad. Pozri dlazdicu "Rozhodnutia cakajuce na mna" a
+     "Polozky po termine".
+  2. Ak nieco svieti cervene, klikni na projekt a pozri, co sa deje.
+  3. Timeline -> Rozhodnutia: co ma tento tyzden termin?
+
+POCAS TYZNA
+  - Novu pracu zapisuj do Uloh. Daj jej projekt, prioritu a story pointy.
+  - Cas si zapisuj v detaile polozky - tlacidla +15 / +30 / +60 min.
+    Nie je to povinne, ale bez toho nebudes mat co pozerat.
+  - Ked na niecom prestanes robit, prehod stav na "Caka" a napis komentar
+    prečo. Za tri tyzdne si to nepamatas.
+
+PRI STARTE SPRINTU
+  1. Timeline -> Sprinty.
+  2. Napis sprintu CIEL. Bez ciela sa neda commitnut - je to zamerne.
+  3. Pretahaj polozky z backlogu do sprintu (alebo klavesou M, viz nizsie).
+  4. Skontroluj kapacitny panel - nepretiahol si sa?
+  5. Commit. Tym sa uzamkne vychodiskovy rozsah, aby sa dalo neskor
+     porovnat, o kolko sa scope zmenil.
+
+PRI UZAVERE SPRINTU
+  1. Kazda otvorena polozka musi dostat rozhodnutie: dokoncena, alebo
+     prenesena (carry-over) do dalsieho sprintu ci backlogu.
+  2. Potom Close. Zapise sa dokoncenych bodov a velocity.
+
+RAZ MESACNE
+  - Prehlad -> "Kopirovat suhrn" -> vloz do reportu.
+  - Nastavenia -> Audit: prejdi, co sa v appke menilo.
+
+
+-------------------------------------------------------------------------------
+ 7. CHECKPOINTY A ROZHODNUTIA - JADRO APPKY
+-------------------------------------------------------------------------------
+
+Toto je cast, ktora sa najviac vyplati pochopit spravne.
+
+Checkpoint je bod, v ktorom niekto nieco SCHVALI. Ma:
+
+  TYP           Review / Rozhodnutie / Dodanie / Gate
+  ZIVOTNY CYKLUS  Planovany -> Pripraveny -> Rozhodnuty (alebo Blokovany)
+  PODMIENKY     Checklist. Z NEHO sa pocita pripravenost v procentach.
+  SCHVALOVATELA Jednu konkretnu osobu.
+
+PRAVIDLA, KTORE APPKA VYNUCUJE:
+
+ * Rozhodnut sa da LEN pri 100 % pripravenosti. Kym nie su splnene vsetky
+   POVINNE podmienky, tlacidlo Rozhodnut je vypnute a napise ti preco.
+   Admin to moze prelomit, ale musi napisat dovod a ten sa zapise do auditu.
+
+ * Pri type Gate musi byt schvalovatel INA osoba ako vlastnik. Pri
+   ostatnych typoch to appka nekontroluje - pri styroch ludoch by to
+   zablokovalo pracu.
+
+ * ROZHODNUTIE SA NEDA PREPISAT. Nie je to obmedzenie, je to zmysel
+   rozhodovacej fronty. Ak sa situacia zmenila, checkpoint sa formalne
+   ZNOVUOTVORI - vznikne NOVY zapis a stary dostane odkaz, ze ho nahradil
+   novy. Historia zostava cela.
+
+ * Vysledok "Podmienecne go" VYZADUJE nazov follow-up ulohy. Appka ju
+   sama vytvori a naviaze na checkpoint. Bez toho ta nepusti dalej.
+
+ * Po kazdom rozhodnuti sa automaticky ulozi baseline (snapshot planu),
+   zapise audit a vlastnik projektu dostane notifikaciu.
+
+
+-------------------------------------------------------------------------------
+ 8. CO TA PREKVAPI (a je to spravne)
+-------------------------------------------------------------------------------
+
+PLNENIE PROJEKTU SA NEDA ZADAT RUCNE
+  Pocita sa z pomeru dokoncenych story pointov jeho poloziek. Ak polozkam
+  nedavas body, plnenie zostane na nule. Nie je to chyba - rucne cislo
+  nikto neaktualizuje, tak sme ho zrusili.
+
+ZDRAVIE SI NAOPAK NASTAVUJES SAM
+  Appka ti ukaze navrh podla plnenia a uplynuteho casu, ale rozhoduje
+  clovek. Vlastnik projektu vie viac ako data.
+
+DALSI CHECKPOINT SA TIEZ POCITA
+  Berie sa najblizsi nerozhodnuty. Needituje sa.
+
+STORY POINTY RODICA SU SUCTOM PODULOH
+  Ak ma polozka podulohy, zobrazi sa napr. "5 (3+2)". Vlastnu hodnotu ma
+  len polozka bez podulohy.
+
+RIESITEL JE SKUTOCNY POUZIVATEL, NIE TEXT
+  Vyberas z ludi v appke, alebo "Nepriradene". Volny text by po mesiaci
+  znamenal traja "Jana", "jana" a "J. Kovacova".
+
+APPKA SI PAMATA POSLEDNY POHLAD
+  Ak si na Ulohach prepnes na Board, pri dalsom otvoreni budes v Boarde.
+  Plati to pre kazdu stranku zvlast. Ked chces spolahlivo Zoznam, otvor
+  /work-items?view=list.
+
+ADRESA JE ZDROJ PRAVDY
+  Filtre, rezim, zoom aj zbalene oblasti su v adrese. Ked posles kolegovi
+  odkaz, uvidi PRESNE tu istu obrazovku. Vyuzivaj to.
+
+MAZANIE PROJEKTU CHCE ODPISAT KOD
+  Zmaze aj vsetky jeho polozky, checkpointy a sprinty. Preto potvrdovaci
+  dialog ziada napisat kod projektu. A moze to len admin.
+
+NA MOBILE NEFUNGUJE PRETAHOVANIE
+  Zamerne. Na telefone je appka na citanie a rychle akcie. Presun rob
+  dialogom "Presunut".
+
+
+-------------------------------------------------------------------------------
+ 9. KLAVESNICA
+-------------------------------------------------------------------------------
+
+  M            V sprintovom planovaci otvori dialog "Presunut polozku".
+               Rovnocenna alternativa pretahovania - nie nahradka.
+  Sipky ^ v    Meni poradie polozky v backlogu.
+  Tab          Prechadza vsetko, vratane checkpointov na drahach.
+  Enter        Otvori to, na com stojis.
+  Esc          Zavrie modal alebo dialog.
+
+Cela appka sa da obsluhovat bez mysi. Ak na nieco myskou dosiahnes
+a klavesnicou nie, je to chyba - nahlas ju.
+
+
+-------------------------------------------------------------------------------
+ 10. KED SA NIECO POKAZI
+-------------------------------------------------------------------------------
+
+"Zaznam sa medzicasom zmenil. Obnovte udaje a skuste to znova."
+  Niekto iny ten zaznam zmenil, kym si ho mal otvoreny. Appka zamerne
+  neprepise jeho pracu tvojou. Obnov stranku a zmenu urob znova.
+
+"Privelo poziadaviek - skus o chvilu."
+  Naraz sa poslalo prilis mnoho poziadaviek. Pockaj minutu.
+
+Prihlasenie nefunguje a hlasi zamknutie
+  Po piatich neuspesnych pokusoch sa ucet na 15 minut zamkne. Pockaj,
+  alebo si necha admin resetovat heslo skriptom:
+    docker compose --env-file .env --profile tools run --rm migrator ^
+      npx tsx scripts/reset-pin.ts admin@aura-roadmap.local
+
+"Udaje sa nepodarilo nacitat"
+  Pozri logy: docker logs aura-roadmap-app --tail 50
+  Riadky zacinajuce [api] ti povedia, ktory endpoint zlyhal a preco.
+  Poznamka: pri normalnom behu je log prazdny - zapisuju sa len chyby
+  a pomale poziadavky. Prazdny log NEZNAMENA, ze nieco nefunguje.
+
+Appka vobec nenabehla
+  Skontroluj, ze bezia oba kontajnery:
+    docker compose --env-file .env ps
+  Oba maju byt "healthy". Ak databaza nie, daj jej minutu - startuje
+  dlhsie ako appka.
+
+
+-------------------------------------------------------------------------------
+ 11. ZALOHY
+-------------------------------------------------------------------------------
+
+  SPUSTIT ZALOHU
+    powershell -ExecutionPolicy Bypass -File .\scripts\backup\backup.ps1
+
+Ulozi dump do backups\ a drzi POSLEDNE TRI. Starsie maze sama.
+Stav poslednej zalohy vidis v Nastavenia -> Zalohy.
+
+Zaloh si sprav VZDY predtym, nez budes menit alebo mazat data.
+
+  OBNOVA
+    postup je v scripts\backup\RESTORE.md
+
+
+-------------------------------------------------------------------------------
+ 12. DEMO DATA
+-------------------------------------------------------------------------------
+
+V appke su fiktivne demo data - tri projekty, dva sprinty, checkpointy
+a zopar uloh. Su tam zamerne aj "skaredé" pripady, aby bolo vidiet, ako
+sa appka chova v nich: checkpoint po termine, checkpoint mimo trvania
+projektu a projekt bez datumov.
+
+Ked zacnes appku pouzivat naozaj, demo data pokojne pomaz (Admin ->
+projekt -> Zmazat). Ziadne z nich nie su skutocne osobne udaje.
+
+
+-------------------------------------------------------------------------------
+ 13. DALSIE DOKUMENTY
+-------------------------------------------------------------------------------
+
+  README.md                          spustenie, stack, prikazy
+  KONTRAKT-AURA-ROADMAP-2026-07-28.md  co appka ma a NEMA robit a preco
+  CLAUDE.md                          konvencie a overene pasce (pre vyvoj)
+  docs\HANDOFF.md                    stav a otvorene body
+  docs\INTEGRACIE-PODKLAD.md         priprava napojenia na aura-kpi
+  docs\AKCENT-ROZHODNUTIE.md         rozhodnutie o farbe akcentu v rodine
+
+===============================================================================
