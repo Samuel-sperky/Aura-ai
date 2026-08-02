@@ -25,7 +25,7 @@ const HTML = resolve(__dir, process.argv[2] || '../aura-apps-hub.html');
 const OUT  = resolve(__dir, process.argv[3] || '../screens');
 const W = 1600, H = 1000, DSF = 2, ANIM = 550;
 
-const MODULES = ['marketing','hr','sales','finance','support','ops'];
+const MODULES = ['marketing','kpi','logistika','hr','roadmap','trzby'];
 const SCREENS = ['dashboard','list','detail','settings'];
 const errors = [], jsErrors = [], shots = [];
 const ok = m => console.log('  ✓ ' + m);
@@ -59,7 +59,7 @@ async function main(){
   const url = pathToFileURL(HTML).href;
   const routes = [['hub', 'hub'], ['login', 'login'], ['workspace', 'workspace'], ['profile', 'profile']];
   for (const m of MODULES){ routes.push([m, `${m}`]); for (const s of SCREENS) routes.push([`${m}-${s}`, `${m}/${s}`]); }
-  routes.push([`marketing-detail-jar`, 'marketing/detail/jar']);
+  routes.push([`marketing-detail-summer`, 'marketing/detail/summer']);
 
   console.log('\nFáza A — verifikácia');
   await page.goto(url, { waitUntil: 'networkidle' });
@@ -79,10 +79,10 @@ async function main(){
   console.log('\nFáza B2 — interakčné stavy (overlay/modál)');
   const states = [
     ['state-cmdk', 'marketing/dashboard', () => window.openCmdk()],
-    ['state-modal', 'sales/list', () => window.openModal('sales')],
-    ['state-notif', 'ops/dashboard', () => window.openNotif()],
+    ['state-modal', 'kpi/list', () => window.openModal('kpi')],
+    ['state-notif', 'logistika/dashboard', () => window.openNotif()],
     ['state-usermenu', 'hr/dashboard', () => window.openUser()],
-    ['state-empty', 'finance/list', () => { window.state.query.finance = 'zzz'; window.renderList(window.MOD.finance); }],
+    ['state-empty', 'trzby/list', () => { window.state.query.trzby = 'zzz'; window.renderList(window.MOD.trzby); }],
   ];
   for (const [slug, hash, fn] of states){
     await page.evaluate(h => { location.hash = '#' + h; }, hash);
@@ -109,7 +109,7 @@ async function main(){
 
   console.log('\nFáza C — svetlá téma (ukážky) + EN rozcestník');
   await page.evaluate(() => document.getElementById('themebtn').click());
-  for (const [slug, hash] of [['hub','hub'],['marketing-dashboard','marketing/dashboard'],['hr-detail','hr/detail'],['finance-list','finance/list']]){
+  for (const [slug, hash] of [['hub','hub'],['kpi-dashboard','kpi/dashboard'],['hr-detail','hr/detail'],['trzby-list','trzby/list']]){
     await page.evaluate(h => { location.hash = '#' + h; }, hash);
     await sleep(ANIM);
     const file = join(OUT, `${slug}-light.png`);

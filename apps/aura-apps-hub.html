@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Aura · Ekosystém aplikácií</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Playfair+Display:wght@600;700;800&family=Geist+Mono:wght@400;500&display=swap');
 
 :root{
   /* jadro značky */
@@ -16,10 +16,11 @@
   /* stavové (LEN pre stavy/badge, nie pre brand akcenty) */
   --good:#3fbf7f; --amber:#e8a33d; --red:#e0554e; --violet:#8b7fd4;
   /* brand akcenty modulov (oddelené od stavových) */
-  --b-mkt:#05bcc4; --b-hr:#8b7fd4; --b-sales:#d3a53a; --b-fin:#2fae7a; --b-support:#e07a3e; --b-ops:#2a8f96;
-  --mono:'JetBrains Mono',ui-monospace,monospace;
+  --b-mkt:#05bcc4; --b-hr:#8b7fd4; --b-kpi:#d3a53a; --b-fin:#2fae7a; --b-log:#e07a3e; --b-road:#2a8f96;
+  /* rodina appiek = Geist + Playfair (Inter je štandard reportov, JetBrains Mono decku) */
+  --mono:'Geist Mono',ui-monospace,monospace;
   --disp:'Playfair Display',Georgia,serif;
-  --body:'Inter',system-ui,sans-serif;
+  --body:'Geist',Inter,system-ui,sans-serif;
   --acc:var(--teal);
   --r:14px;
   --tnum:"tnum" 1,"lnum" 1;
@@ -462,7 +463,10 @@ const I={
   user:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0116 0"/>',
   logout:'<path d="M15 12H3M9 6l-6 6 6 6"/><path d="M13 4h6v16h-6"/>',
   swap:'<path d="M7 4l-4 4 4 4M3 8h13M17 20l4-4-4-4M21 16H8"/>',
-  inbox:'<path d="M3 12h5l2 3h4l2-3h5"/><path d="M3 12l3-8h12l3 8v6H3z"/>'
+  inbox:'<path d="M3 12h5l2 3h4l2-3h5"/><path d="M3 12l3-8h12l3 8v6H3z"/>',
+  gauge:'<path d="M4 15a8 8 0 1116 0"/><path d="M12 15l4-5"/><path d="M4 19h16"/><circle cx="12" cy="15" r="1.4"/>',
+  truck:'<rect x="1.5" y="6.5" width="12.5" height="9" rx="1.2"/><path d="M14 10h4l3.5 3.5V15.5h-3"/><circle cx="6" cy="17.5" r="1.8"/><circle cx="16.5" cy="17.5" r="1.8"/><path d="M8 17.5h6.5"/>',
+  flag:'<path d="M6 21V4"/><path d="M6 4h11l-2.6 3.8L17 11.5H6"/>'
 };
 const svg=(p,w=18)=>`<svg width="${w}" height="${w}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
 
@@ -495,7 +499,7 @@ function donut(pctv,label){
     <circle cx="52" cy="52" r="${r}" fill="none" stroke="color-mix(in srgb,var(--acc) 16%,var(--line))" stroke-width="11"/>
     <circle cx="52" cy="52" r="${r}" fill="none" stroke="var(--acc)" stroke-width="11" stroke-linecap="round"
       stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}" transform="rotate(-90 52 52)"/>
-    <text x="52" y="57" text-anchor="middle" font-family="var(--disp)" font-size="21" font-weight="700" fill="var(--ink)" font-feature-settings='"tnum"'>${pctv}%</text></svg>
+    <text x="52" y="57" text-anchor="middle" font-family="var(--disp)" font-size="21" font-weight="700" fill="var(--ink)" font-feature-settings='"tnum"'>${decs(pctv)}%</text></svg>
     <div class="dl">${tr(label)}</div></div>`;
 }
 
@@ -505,258 +509,264 @@ function donut(pctv,label){
 const MODULES=[
 {
   key:'marketing', acc:'var(--b-mkt)', icon:I.megaphone, name:'Aura Marketing',
-  tag:L('Kampane, obsah a analytika s vlastným AI jadrom.','Campaigns, content and analytics on your own AI core.'),
-  feat:[L('Generovanie copy a variantov v tóne značky','Brand-voice copy and variant generation'),
-        L('Obsahový kalendár naprieč kanálmi','Cross-channel content calendar'),
-        L('Atribúcia konverzií a náklad na výsledok','Conversion attribution and cost per result')],
+  tag:L('Marketingový kokpit: ads hierarchia s ROAS pásmami a AI banner štúdio s campaign lockom.','E-shop marketing cockpit: ads hierarchy with ROAS bands and an AI banner studio with campaign lock.'),
+  feat:[L('Strom Platforma → Kampaň → Zostava → Reklama s rollupom a ROAS pásmami','Platform → Campaign → Ad set → Ad tree with rollups and ROAS bands'),
+        L('Bannery 8 jazykov × 5 rozmerov, render HTML/CSS → PNG → ZIP','Banners in 8 languages × 5 sizes, HTML/CSS → PNG → ZIP render'),
+        L('Campaign lock (svet + modelka), QA gates a learning do KB','Campaign lock (world + model), QA gates and a KB learning loop')],
   list:L('Kampane','Campaigns'), one:L('Kampaň','Campaign'),
-  kpis:[{l:L('Aktívne kampane','Active campaigns'),v:int(12),d:{n:3}},
-        {l:L('Dosah (30 dní)','Reach (30d)'),v:L('248 k','248k'),d:{n:18,u:'%'}},
-        {l:L('Konverzie','Conversions'),v:int(3942),d:{n:9,u:'%'}},
-        {l:L('Náklad / konverzia','Cost / conv.'),v:L('4,10 €','€4.10'),d:{n:-6,u:'%',inv:true}}],
-  chart:{title:L('Dosah podľa kanála','Reach by channel'),type:'bars',
-    data:[{l:L('Email','Email'),v:62,d:'62k'},{l:L('Sociálne','Social'),v:48,d:'48k'},{l:L('PPC','PPC'),v:71,d:'71k'},
-          {l:L('Web','Web'),v:39,d:'39k'},{l:L('Newsletter','News'),v:28,d:'28k'},{l:L('Influenceri','Infl.'),v:22,d:'22k'}]},
-  side:{title:L('Cieľ mesiaca','Monthly goal'),donut:68,dl:L('splnené · cieľ 5 800 konverzií','reached · goal 5,800 conv.')},
-  cols:[L('Kampaň','Campaign'),L('Kanál','Channel'),L('Stav','Status'),L('Dosah','Reach'),L('Konverzie','Conv.'),L('Rozpočet','Budget')],
+  kpis:[{l:L('Aktívne kampane','Active campaigns'),v:'4',d:{n:1}},
+        {l:L('Vygenerované bannery','Banners generated'),v:'320',sub:L('8 jazykov × 5 rozmerov','8 languages × 5 sizes')},
+        {l:L('AI budget','AI budget'),v:L('62 % z 300 €','62% of €300'),sub:L('provider: mock','provider: mock')},
+        {l:L('QA pass rate','QA pass rate'),v:L('91 %','91%'),d:{n:4,u:L(' p.b.',' pp')}}],
+  chart:{title:L('Bannery podľa rozmeru','Banners by size'),type:'bars',
+    data:[{l:'1080×1080',v:96},{l:'1080×1350',v:80},{l:'1080×1920',v:56},{l:'1200×628',v:48},{l:'970×250',v:40}]},
+  side:{title:L('Čerpanie AI budgetu','AI budget burn'),donut:62,dl:L('mesačný strop 300 € — pri prekročení sa generovanie zastaví','monthly cap €300 — generation halts at the limit')},
+  cols:[L('Kampaň','Campaign'),L('Svet','World'),L('Modelka','Model'),L('Jazyky','Languages'),L('Bannery','Banners'),L('Stav','Status')],
   rows:[
-    {id:'jar',active:true,c:['Jarná kolekcia 2026','Email · Web',['ok',L('Aktívna','Active')],int(84200),int(1240),cur(3500)]},
-    {id:'bw',c:['Black-Week teaser','PPC',['cond',L('Naplánovaná','Scheduled')],'—','—',cur(5000)]},
-    {id:'vern',c:['Vernostný program','Sociálne',['ok',L('Aktívna','Active')],int(51900),int(980),cur(2200)]},
-    {id:'kos',c:['Návrat košíka','Email',['ok',L('Aktívna','Active')],int(22400),int(610),cur(800)]},
-    {id:'b2b',c:['B2B webinár','Web',['q',L('Koncept','Draft')],'—','—',cur(1500)]},
-    {id:'let',c:['Letný výpredaj','PPC · Sociálne',['q',L('Ukončená','Ended')],int(96300),int(1112),cur(4800)]}],
-  detail:{title:'Jarná kolekcia 2026',badge:['ok',L('Aktívna','Active')],
-    sub:L('Email · Web · beží od 14. 3. 2026','Email · Web · running since Mar 14, 2026'),
-    fields:[[L('Kanály','Channels'),'Email, Web, Retargeting'],[L('Cieľové publikum','Audience'),L('Existujúci zákazníci','Existing customers')],
-            [L('Rozpočet','Budget'),L('3 500 € / 60 %','€3,500 / 60%')],[L('Dosah','Reach'),int(84200)],
-            [L('Konverzie','Conversions'),L('1 240 · 1,47 %','1,240 · 1.47%')],[L('Náklad / konv.','Cost / conv.'),L('2,82 €','€2.82')]],
-    time:[[L('Dnes 09:12','Today 09:12'),L('AI navrhol 3 varianty predmetu e-mailu','AI proposed 3 subject-line variants')],
-          [L('Včera','Yesterday'),L('A/B test spustený — variant B vedie o 12 %','A/B test started — variant B leads by 12%')],
-          [L('20. 3.','Mar 20'),L('Segment „vracajúci sa" pridaný','Segment "returning" added')],
-          [L('14. 3.','Mar 14'),L('Kampaň spustená','Campaign launched')]],
-    donut:74,dl:L('ku dennému cieľu','of daily goal')},
+    {id:'summer',active:true,c:['Summer Sale','Riviéra','Adela','8','40',['info',L('Lock aktívny','Lock active')]]},
+    {id:'svadba',c:[L('Svadobná sezóna','Wedding season'),'Atelier','Viktória','8','40',['cond','QA']]},
+    {id:'zlate',c:[L('Zlaté prstene','Gold rings'),'Quiet Luxury','Nikola','8','35',['cond','Render']]},
+    {id:'bf',c:['Black Friday',L('Nočné mesto','Night city'),'Nikola','8','—',['q',L('Návrh','Draft')]]},
+    {id:'gem',c:['New Gem','Botanika','Adela','8','40',['ok','Export ZIP']]},
+    {id:'doprava',c:[L('Doprava zadarmo','Free shipping'),'Studio','Viktória','3','15',['ok',L('Hotová','Done')]]}],
+  detail:{title:'Summer Sale',badge:['info',L('Lock aktívny','Lock active')],
+    sub:L('Jeden svet · jedna modelka · identity lock','One world · one model · identity lock'),
+    fields:[[L('Modelka','Model'),L('Adela (26–32, mediterránska)','Adela (26–32, Mediterranean)')],[L('Svet','World'),'Riviéra'],
+            [L('Copy manifest','Copy manifest'),L('8 jazykov','8 languages')],[L('Rozmery','Sizes'),'1080×1080 · 1080×1350 · 1080×1920 · 1200×628 · 970×250'],
+            ['Pipeline',L('HTML/CSS render → PNG → ZIP','HTML/CSS render → PNG → ZIP')],['Provider',L('mock · strop 300 €','mock · €300 cap')]],
+    time:[[L('Dnes','Today'),L('Export ZIP pripravený — 40 PNG v 5 rozmeroch','ZIP export ready — 40 PNGs in 5 sizes')],
+          [L('Včera','Yesterday'),L('QA hard gates: 2 bannery major deviation → re-render','QA hard gates: 2 banners major deviation → re-render')],
+          [L('Pred 3 dňami','3 days ago'),L('Render dokončený (HTML/CSS → PNG)','Render finished (HTML/CSS → PNG)')],
+          [L('Pred 5 dňami','5 days ago'),L('Campaign lock: svet Riviéra + modelka Adela','Campaign lock: world Riviéra + model Adela')]],
+    donut:91,dl:L('bannerov prešlo QA gates (minor/major deviation)','of banners passed QA gates (minor/major deviation)')},
   set:[
-    {h:L('Značka a tón','Brand & voice'),icon:I.tag,rows:[
-      {b:L('Tón hlasu','Voice'),s:L('Ako AI generuje texty','How AI writes copy'),sel:L('Priateľský, vecný','Friendly, factual')},
-      {b:L('Jazyk generovania','Output language'),s:L('Predvolený jazyk výstupov','Default output language'),sel:'SK · EN'},
-      {b:L('Schvaľovanie pred publikovaním','Approval before publishing'),s:L('Človek potvrdí každý výstup AI','Human confirms each AI output'),sw:true}]},
-    {h:L('Kanály a integrácie','Channels & integrations'),icon:I.megaphone,rows:[
-      {b:L('E-mail (SMTP)','Email (SMTP)'),s:L('Pripojené','Connected'),sw:true},
-      {b:L('Sociálne siete','Social networks'),s:L('Pripojené 3 účty','3 accounts connected'),sw:true},
-      {b:L('Automatické reporty','Automated reports'),s:L('Týždenný súhrn v pondelok','Weekly summary on Monday'),sw:false}]}]
+    {h:'AI provider',icon:I.brain,rows:[
+      {b:'Provider',s:'mock · openai (GPT) · gemini (3 Pro Image)',sel:'mock'},
+      {b:L('Budget strop','Budget cap'),s:L('Mesačný limit generovania','Monthly generation limit'),sel:'300 €'},
+      {b:L('API kľúče','API keys'),s:L('Zatiaľ nevyplnené','Not set yet'),sel:L('Doplniť','Add')}]},
+    {h:L('Render a znalostná báza','Render & knowledge base'),icon:I.tag,rows:[
+      {b:L('Rozmery a jazyky','Sizes & languages'),s:L('5 rozmerov · 8 jazykov','5 sizes · 8 languages'),sel:L('Upraviť','Edit')},
+      {b:'Export ZIP (PNG)',s:L('Deterministický render','Deterministic render'),sw:true},
+      {b:L('Learning loop do KB','KB learning loop'),s:L('Výsledky QA sa vracajú do znalostnej bázy','QA results feed back into the KB'),sw:true}]}],
+  alert:{tone:'cond',icon:I.warn,text:L('AI budget: čerpanie 62 % mesačného stropu 300 € — pri prekročení sa generovanie zastaví.','AI budget at 62% of the €300 monthly cap — generation halts at the limit.')}
+},
+{
+  key:'kpi', acc:'var(--b-kpi)', icon:I.gauge, name:'Aura KPI',
+  tag:L('Mesačné a ročné KPI 12 oddelení s pásmami, uzávierkou a Team score.','Monthly & yearly KPIs for 12 departments with bands, deadlines and Team score.'),
+  feat:[L('Plnenie (skutočnosť − Min) / (Max − Min), cap 100 % · 16 metrík · 38 vstupov · 48 pásiem','Attainment (actual − Min) / (Max − Min), capped at 100% · 16 metrics · 38 inputs · 48 bands'),
+        L('Heatmapa, A/B porovnanie a ročný pohľad','Heatmap, A/B compare and a yearly view'),
+        L('Uzávierka do 10. dňa, denníky a integrácie Logistika + SEO','Close by day 10, diaries and Logistics + SEO integrations')],
+  list:L('Oddelenia','Departments'), one:L('Oddelenie','Department'),
+  kpis:[{l:'Team score',v:L('61,9 %','61.9%'),sub:L('priemer 6 zložiek','average of 6 components')},
+        {l:L('Vyplnené oddelenia','Departments filled'),v:'7 / 12',d:{n:1}},
+        {l:L('Najlepšie oddelenie','Top department'),v:'Copywriter',sub:L('plnenie 100 %','100% attainment')},
+        {l:L('Po termíne','Overdue'),v:'3',d:{n:-2,inv:true}}],
+  chart:{title:L('Plnenie oddelení — jún 2026 (%)','Department attainment — June 2026 (%)'),type:'bars',
+    data:[{l:'Copywriter',v:100},{l:L('Nahrávanie','Uploads'),v:88.5,d:'88,5'},{l:'Performance',v:87.2,d:'87,2'},{l:'Newsletter-AI',v:84.6,d:'84,6'},{l:L('Fotografka','Photo'),v:68.1,d:'68,1'},{l:'IT',v:5,d:'5,0'}]},
+  side:{title:L('Kompletnosť vyplnenia','Fill completeness'),donut:58,dl:L('vstupov v stave Kompletné za otvorený mesiac','of inputs marked Complete for the open month')},
+  cols:[L('Oddelenie','Department'),L('Plnenie','Attainment'),L('Mesiac','Month'),L('Vyplnenie','Fill'),L('Váhy','Weights'),'Trend'],
+  rows:[
+    {id:'copy',active:true,c:['Copywriter',['ok','100 %'],['ok',L('Uzavretý','Closed')],['ok',L('Kompletné','Complete')],'60/20/20','↑']},
+    {id:'nahr',c:[L('Nahrávanie','Uploads'),['cond','88,5 %'],['ok',L('Uzavretý','Closed')],['ok',L('Kompletné','Complete')],'60/20/20','↑']},
+    {id:'perf',c:['Performance',['cond','87,2 %'],['ok',L('Uzavretý','Closed')],['ok',L('Kompletné','Complete')],'60/20/20','→']},
+    {id:'news',c:['Newsletter-AI',['cond','84,6 %'],['info',L('Otvorený','Open')],['cond',L('Rozpracované','In progress')],'60/20/20','↑']},
+    {id:'foto',c:[L('Fotografka','Photographer'),['cond','68,1 %'],['no',L('Po termíne','Overdue')],['cond',L('Rozpracované','In progress')],'60/20/20','↓']},
+    {id:'hosp',c:[L('Hospodársky','Business/finance'),['q',L('bez dát','no data')],['no',L('Po termíne','Overdue')],['q',L('Nevyplnené','Not filled')],'60/20/20','—']}],
+  detail:{title:L('Copywriter — jún 2026','Copywriter — June 2026'),badge:['ok',L('Uzavretý · Kompletné','Closed · Complete')],
+    sub:L('Plnenie 100 % · váhy 60/20/20 · uzávierka 10. 7. 2026','Attainment 100% · weights 60/20/20 · close July 10, 2026'),
+    fields:[[L('Top 100 KW v TOP 3','Top 100 KWs in TOP 3'),L('pásmo 20–35 % · váha 60 %','band 20–35% · weight 60%')],
+            [L('Hustota KW 1–3','KW density 1–3'),L('pásmo 150–250 · váha 20 %','band 150–250 · weight 20%')],
+            ['CTR',L('pásmo 1–2 % · váha 20 %','band 1–2% · weight 20%')],
+            [L('Zdroj dát','Data source'),L('SEO appka (automaticky)','SEO app (automatic)')],
+            ['Editor','copywriter@sperky-aura.sk'],
+            [L('Uzávierka','Close'),L('10. 7. 2026','Jul 10, 2026')]],
+    time:[[L('11. 7.','Jul 11'),L('Mesiac uzavretý (po 10. dni)','Month closed (after day 10)')],
+          [L('8. 7.','Jul 8'),L('Kompletné — všetky vstupy vyplnené','Complete — all inputs filled')],
+          [L('3. 7.','Jul 3'),L('Rozpracované — vyplnené prvé vstupy','In progress — first inputs filled')],
+          [L('1. 7.','Jul 1'),L('Mesiac otvorený','Month opened')]],
+    donut:100,dl:L('plnenie za jún 2026','attainment for June 2026')},
+  set:[
+    {h:L('Vzhľad a jazyk','Appearance & language'),icon:I.gear,rows:[
+      {b:'Dark mode',s:L('Predvolená tmavá téma','Dark theme by default'),sw:true},
+      {b:L('Jazyk','Language'),s:'SK · EN',sel:'SK'},
+      {b:L('Zmena hesla','Change password'),s:L('Self-service pre každý účet','Self-service for every account'),sel:L('Zmeniť','Change')}]},
+    {h:L('Práva a integrácie','Access & integrations'),icon:I.shield,rows:[
+      {b:L('Roly','Roles'),s:L('Admin · Editor · Prehliadač + M:N práva na oddelenia','Admin · Editor · Viewer + M:N department rights'),sel:L('Upraviť','Edit')},
+      {b:L('Hospodársky — obmedzený prístup','Business dept — restricted'),s:L('Vidí len Admin + manažment','Admin + management only'),sw:true},
+      {b:L('Integrácie Logistika + SEO','Logistics + SEO integrations'),s:L('Read-only, graceful fallback','Read-only, graceful fallback'),sw:true}]}],
+  alert:{tone:'no',icon:I.warn,text:L('Po termíne: 3 oddelenia nevyplnili jún — uzávierka bola 10. 7.','Overdue: 3 departments missed the June close (day 10).')}
+},
+{
+  key:'logistika', acc:'var(--b-log)', icon:I.truck, name:'Aura Logistika',
+  tag:L('Týždenná evidencia zásielok a reklamácií naprieč 8 krajinami a 5 prepravcami.','Weekly shipment & claims tracking across 8 countries and 5 carriers.'),
+  feat:[L('Súhrny za ISO-týždeň × krajina × prepravca s upsertom a auditom','ISO-week × country × carrier summaries with upsert and audit'),
+        L('Reklamačné prípady so životným cyklom a ∅/medián časom riešenia','Claim cases with a lifecycle and avg/median resolution time'),
+        L('CSV import, XLSX export, tlač a SVG grafy s kĺzavým priemerom','CSV import, XLSX export, print and SVG charts with a moving average')],
+  list:L('Zásielky','Shipments'), one:L('Záznam','Record'),
+  kpis:[{l:L('Odoslané (W31)','Shipped (W31)'),v:L('2 340','2,340'),d:{n:6.2,u:' %'}},
+        {l:L('Doručenosť','Delivery rate'),v:L('94,1 %','94.1%'),d:{n:0.8,u:L(' p.b.',' pp')}},
+        {l:L('Otvorené reklamácie','Open claims'),v:'37',d:{n:-5,inv:true}},
+        {l:L('Poštovné (júl)','Postage (July)'),v:L('11 603 €','€11,603'),sub:L('náklad dopravy z e-shop dát','shipping cost from e-shop data')}],
+  chart:{title:L('Odoslané podľa krajín — W31','Shipped by country — W31'),type:'bars',
+    data:[{l:'SK',v:512},{l:'HU',v:401},{l:'CZ',v:348},{l:'RO',v:265},{l:'PL',v:190},{l:'BG',v:88}]},
+  side:{title:L('Stavy zásielok','Shipment states'),donut:94,dl:L('doručené · slovník: odoslané / na ceste / vrátené / stratené / výdajňa','delivered · vocabulary: shipped / in transit / returned / lost / pickup point')},
+  cols:[L('Týždeň','Week'),L('Krajina','Country'),L('Prepravca','Carrier'),L('Odoslané','Shipped'),L('Stav','State'),L('Hodnota','Value')],
+  rows:[
+    {id:'w31sk',active:true,c:['W31','SK','packeta','512',['ok',L('doručené','delivered')],L('18 400 €','€18,400')]},
+    {id:'w31hu',c:['W31','HU','gls','401',['ok',L('doručené','delivered')],L('15 900 €','€15,900')]},
+    {id:'w31cz',c:['W31','CZ','gls','348',['cond',L('na ceste','in transit')],L('12 100 €','€12,100')]},
+    {id:'w31ro',c:['W31','RO','sps','265',['info',L('výdajňa','pickup point')],L('9 700 €','€9,700')]},
+    {id:'w30pl',c:['W30','PL','dpd','190',['cond',L('vrátené','returned')],L('6 300 €','€6,300')]},
+    {id:'w30bg',c:['W30','BG','posta','88',['no',L('stratené','lost')],L('2 900 €','€2,900')]}],
+  detail:{title:L('Reklamácia R-2026-0312','Claim R-2026-0312'),badge:['cond',L('zahájené','opened')],
+    sub:L('HU · GLS · W30 · v riešení 4 dni','HU · GLS · W30 · 4 days in resolution'),
+    fields:[[L('Krajina','Country'),'HU'],[L('Prepravca','Carrier'),'GLS'],
+            [L('Stav','State'),L('zahájené','opened')],[L('Výsledok','Outcome'),'—'],
+            [L('Vinník','Fault'),L('prepravca','carrier')],[L('Čas riešenia','Resolution time'),L('4 dni · ∅ a medián sa počíta po vyriešení','4 days · avg and median computed on resolve')]],
+    time:[[L('Dnes','Today'),L('Čaká sa na vyjadrenie prepravcu','Waiting for the carrier statement')],
+          [L('Pred 2 dňami','2 days ago'),L('Zásielka doručená späť na sklad','Parcel delivered back to the warehouse')],
+          [L('Pred 4 dňami','4 days ago'),L('Reklamácia zahájená (cyklus: zahájené → doručené → vyriešené / stratené)','Claim opened (lifecycle: opened → delivered → resolved / lost)')],
+          ['W30',L('Zásielka označená ako vrátená','Shipment marked returned')]],
+    donut:87,dl:L('reklamácií vyriešených v SLA 5 dní','of claims resolved within the 5-day SLA')},
+  set:[
+    {h:L('Evidencia','Registry'),icon:I.list,rows:[
+      {b:L('Povinné krajiny','Required countries'),s:'SK · CZ · HU · RO · SI · HR · PL · BG',sel:'8'},
+      {b:L('Prepravcovia','Carriers'),s:'packeta · posta · gls · sps · dpd',sel:'5'},
+      {b:'Upsert + audit',s:L('Unikátny kľúč týždeň × krajina × prepravca','Unique key week × country × carrier'),sw:true}]},
+    {h:L('Dáta a výstupy','Data & outputs'),icon:I.doc,rows:[
+      {b:'CSV import',s:L('Týždenné súhrny','Weekly summaries'),sw:true},
+      {b:L('XLSX export + tlač','XLSX export + print'),s:L('Výstupy pre týždennú poradu','Outputs for the weekly meeting'),sw:true},
+      {b:L('Zálohy','Backups'),s:L('Skript s testovaným restore','Script with a tested restore'),sw:true}]}],
+  alert:{tone:'cond',icon:I.warn,text:L('GLS vyžaduje min. 80 % zo zmluvného objemu 350 zásielok/deň (~280/deň) v auguste — inak hrozí zdraženie.','GLS requires at least 80% of the contracted 350 parcels/day (~280/day) in August — otherwise prices may rise.')}
 },
 {
   key:'hr', acc:'var(--b-hr)', icon:I.people, name:'Aura HR',
-  tag:L('Nábor, dochádzka a hodnotenia — s ochranou osobných údajov.','Recruiting, attendance and reviews — privacy-first.'),
-  feat:[L('Predtriedenie CV s anonymizáciou','CV pre-screening with anonymisation'),
-        L('Dochádzka, dovolenky a schvaľovanie','Attendance, leave and approvals'),
-        L('Podklady na hodnotenie a rozvoj','Review and development drafts')],
+  tag:L('Interná evidencia: ľudia, pozície, zdieľané schránky a firemné aplikácie s nákladmi.','Internal registry: people, roles, shared mailboxes and company apps with costs.'),
+  feat:[L('32 pozícií s náplňou práce — štruktúrované bloky + knižnica činností','32 positions with duty blocks + a shared activity library'),
+        L('~90 rolových mailov s aliasmi · heslá šifrované, viditeľné len Admin','~90 role mailboxes with aliases · passwords encrypted, Admin-only'),
+        L('Org-strom firmy a register aplikácií s nákladmi','Company org tree and an app register with costs')],
   list:L('Zamestnanci','Employees'), one:L('Zamestnanec','Employee'),
-  kpis:[{l:L('Zamestnanci','Employees'),v:int(128),d:{n:4}},
-        {l:L('Otvorené pozície','Open roles'),v:int(7),d:null},
-        {l:L('Dochádzka','Attendance'),v:pc(96.4),d:{n:0.8}},
-        {l:L('Fluktuácia (rok)','Turnover (yr)'),v:pc(5.2),d:{n:-1.1,inv:true}}],
-  chart:{title:L('Počet ľudí podľa oddelenia','Headcount by department'),type:'bars',
-    data:[{l:L('Vývoj','Eng.'),v:42},{l:L('Obchod','Sales'),v:24},{l:L('Marketing','Mkt'),v:14},
-          {l:L('Podpora','Support'),v:22},{l:L('Financie','Fin.'),v:9},{l:L('Ops','Ops'),v:17}]},
-  side:{title:L('Nábor','Hiring'),donut:57,dl:L('7 otvorených pozícií · 4 vo fáze pohovoru','7 open roles · 4 in interview')},
-  cols:[L('Meno','Name'),L('Oddelenie','Department'),L('Pozícia','Role'),L('Nástup','Start'),L('Stav','Status')],
+  kpis:[{l:L('Zamestnanci','Employees'),v:'18',d:{n:1}},
+        {l:L('Pozície','Positions'),v:'32',sub:L('s náplňou práce','with duty blocks')},
+        {l:L('Zdieľané maily','Shared mailboxes'),v:'~90',d:{n:2}},
+        {l:L('Aplikácie — náklady/mes.','Apps — monthly cost'),v:L('1 240 €','€1,240'),d:{n:-4,u:' %',inv:true}}],
+  chart:{title:L('Ľudia podľa oddelení','People by department'),type:'bars',
+    data:[{l:L('Expedícia','Dispatch'),v:5},{l:'Marketing',v:4},{l:'IT',v:3},{l:L('Sklad','Warehouse'),v:3},{l:L('Reklamácie','Claims'),v:2},{l:L('Vedenie','Leadership'),v:1}]},
+  side:{title:L('Pokrytie náplní práce','Duty coverage'),donut:85,dl:L('činností pozícií pokrytých knižnicou','of position activities covered by the library')},
+  cols:[L('Meno','Name'),L('Pozícia','Position'),L('Oddelenie','Department'),'Mail',L('Úväzok','Contract'),L('Krajina','Country')],
   rows:[
-    {id:'kov',active:true,c:['Jana Kováčová',L('Vývoj','Eng.'),'Senior developer',dt('2023-04-01'),['ok',L('Aktívny','Active')]]},
-    {id:'nov',c:['Martin Novák',L('Obchod','Sales'),'Account manager',dt('2024-09-16'),['ok',L('Aktívny','Active')]]},
-    {id:'hor',c:['Eva Horváthová','Marketing','Content lead',dt('2025-02-03'),['ok',L('Aktívny','Active')]]},
-    {id:'bal',c:['Peter Baláž',L('Podpora','Support'),'Support agent',dt('2026-08-18'),['cond',L('Onboarding','Onboarding')]]},
-    {id:'tot',c:['Lucia Tóthová',L('Financie','Finance'),L('Účtovníčka','Accountant'),dt('2022-11-07'),['ok',L('Aktívny','Active')]]},
-    {id:'var',c:['Tomáš Varga','Ops',L('SRE inžinier','SRE engineer'),'—',['q',L('Kandidát','Candidate')]]}],
-  detail:{title:'Jana Kováčová',badge:['ok',L('Aktívny','Active')],
-    sub:L('Senior developer · Vývoj · v tíme 3 roky','Senior developer · Eng. · 3 years'),
-    fields:[[L('Oddelenie','Department'),L('Vývoj','Engineering')],[L('Manažér','Manager'),'Michal Šimko'],
-            [L('Nástup','Start date'),dt('2023-04-01')],[L('Typ úväzku','Contract'),L('Plný úväzok','Full-time')],
-            [L('Zostatok dovolenky','Leave balance'),L('12 dní','12 days')],[L('Posledné hodnotenie','Last review'),L('4,6 / 5','4.6 / 5')]],
-    time:[[L('Dnes','Today'),L('AI pripravil podklad na polročné hodnotenie','AI drafted the semi-annual review')],
-          [L('15. 7.','Jul 15'),L('Žiadosť o dovolenku schválená (5 dní)','Leave request approved (5 days)')],
-          [L('1. 6.','Jun 1'),L('Povýšenie na Senior developer','Promoted to Senior developer')],
-          [L('1. 4. 2023','Apr 1, 2023'),L('Nástup do firmy','Joined the company')]],
-    donut:96,dl:L('dochádzka (kvartál)','attendance (quarter)')},
+    {id:'delaja',active:true,c:['Delaja',L('CTO – Technický riaditeľ','CTO – Technical director'),L('Vedenie','Leadership'),'cto@sperky-aura.sk',['ok','TPP'],'SK']},
+    {id:'daniel',c:['Daniel',L('Vývojár','Developer'),'IT','dev@sperky-aura.sk',['ok','TPP'],'SK']},
+    {id:'kiko',c:['Kiko',L('Vývojár','Developer'),'IT','dev2@sperky-aura.sk',['ok','TPP'],'SK']},
+    {id:'ema',c:['Ema',L('Newsletter & projekty','Newsletter & projects'),'Marketing','newsletter@sperky-aura.sk',['ok','TPP'],'SK']},
+    {id:'gabika',c:['Gabika','SEO / Copywriter + CS','Marketing','seo@sperky-aura.sk',['ok','TPP'],'SK']},
+    {id:'hajnalka',c:['Hajnalka','Team Leader CS',L('Zákaznícky servis','Customer service'),'cs@sperky-aura.sk',['cond',L('dohoda','part-time')],'HU']}],
+  detail:{title:L('CTO – Technický riaditeľ','CTO – Technical director'),badge:['ok',L('Vedenie','Leadership')],
+    sub:L('Pozícia 1 z 32 · náplň = štruktúrované bloky + knižnica činností','Position 1 of 32 · duties = structured blocks + activity library'),
+    fields:[[L('Oddelenie','Department'),L('Vedenie','Leadership')],[L('Nadriadený','Reports to'),'CEO'],
+            [L('Náplň práce','Duties'),L('bloky + knižnica činností','blocks + activity library')],[L('Priradený mail','Assigned mail'),'cto@sperky-aura.sk'],
+            [L('Úväzok','Contract'),'TPP'],[L('Krajina','Country'),'SK']],
+    time:[[L('Dnes','Today'),L('Mail priradený k pozícii','Mailbox assigned to the position')],
+          [L('Minulý týždeň','Last week'),L('Náplň práce doplnená z knižnice činností','Duties completed from the activity library')],
+          [L('Jún','June'),L('Pozícia vytvorená (1 z 32)','Position created (1 of 32)')],
+          [L('Jún','June'),L('Org-strom aktualizovaný','Org tree updated')]],
+    donut:85,dl:L('činností pokrytých knižnicou','of activities covered by the library')},
   set:[
-    {h:L('Organizácia','Organisation'),icon:I.people,rows:[
-      {b:L('Štruktúra oddelení','Department structure'),s:L('6 oddelení, 12 tímov','6 departments, 12 teams'),sel:L('Upraviť','Edit')},
-      {b:L('Pracovný kalendár','Work calendar'),s:L('Sviatky SR + firemné dni','SK holidays + company days'),sel:'2026'},
-      {b:L('Samoobsluha zamestnanca','Employee self-service'),s:L('Žiadosti a dokumenty online','Requests & documents online'),sw:true}]},
-    {h:L('Ochrana údajov a AI','Privacy & AI'),icon:I.shield,rows:[
-      {b:L('Anonymizácia CV pri triedení','Anonymise CVs on screening'),s:L('Skryť meno, vek, foto','Hide name, age, photo'),sw:true},
-      {b:L('AI podklady na hodnotenie','AI review drafts'),s:L('Návrh, ktorý manažér upraví','Draft the manager edits'),sw:true},
-      {b:L('Ukladanie mimo firmy','Off-site storage'),s:L('Osobné údaje neopúšťajú firmu','Personal data stays in-house'),sw:false}]}]
+    {h:L('Prístup a bezpečnosť','Access & security'),icon:I.shield,rows:[
+      {b:L('Roly','Roles'),s:L('Admin · Editor · Prehliadač','Admin · Editor · Viewer'),sel:L('Upraviť','Edit')},
+      {b:L('Heslá mailov len Admin','Mail passwords Admin-only'),s:L('Šifrované · ~90 schránok','Encrypted · ~90 mailboxes'),sw:true},
+      {b:'Audit log',s:L('Každá zmena evidencie','Every registry change'),sw:true}]},
+    {h:L('Lokalizácia a vzhľad','Locale & appearance'),icon:I.gear,rows:[
+      {b:L('Jazyk','Language'),s:'SK · EN',sel:'SK'},
+      {b:'Dark mode',s:L('Štýl Evidencie + org-strom','Registry style + org tree'),sw:true},
+      {b:L('Org-strom','Org tree'),s:L('Oddelenia → pozície → ľudia','Departments → positions → people'),sel:L('Zobraziť','View')}]}],
+  alert:{tone:'cond',icon:I.shield,text:L('Heslá zdieľaných schránok vidí len Admin — pri zmene roly skontrolujte prístup k ~90 mailom.','Shared mailbox passwords are Admin-only — check access to ~90 mailboxes when changing a role.')}
 },
 {
-  key:'sales', acc:'var(--b-sales)', icon:I.trend, name:'Aura Sales',
-  tag:L('Pipeline, obchody a ponuky s AI skórovaním.','Pipeline, deals and quotes with AI scoring.'),
-  feat:[L('Skórovanie leadov podľa pravdepodobnosti','Lead scoring by win probability'),
-        L('Návrh ďalšieho kroku pre každý obchod','Next-best-action per deal'),
-        L('Ponuky a cenníky z jedného zdroja','Quotes and price lists from one source')],
-  list:L('Obchody','Deals'), one:L('Obchod','Deal'),
-  kpis:[{l:L('Pipeline','Pipeline'),v:cur(412000),d:{n:7,u:'%'}},
-        {l:L('Uzavreté (kvartál)','Closed (Q)'),v:cur(128500),d:{n:11,u:'%'}},
-        {l:L('Win rate','Win rate'),v:pc(34),d:{n:3}},
-        {l:L('Priem. cyklus','Avg. cycle'),v:L('21 dní','21 days'),d:{n:-2,inv:true}}],
-  chart:{title:L('Pipeline podľa fázy','Pipeline by stage'),type:'bars',
-    data:[{l:L('Nový','New'),v:22},{l:L('Kvalifik.','Qualif.'),v:15},{l:L('Ponuka','Proposal'),v:9},
-          {l:L('Rokovanie','Negotiat.'),v:6},{l:L('Uzavretie','Closing'),v:4}]},
-  side:{title:L('Plnenie kvóty','Quota'),donut:62,dl:L('kvartálnej kvóty · 19 dní do konca','of quarterly quota · 19 days left')},
-  cols:[L('Obchod','Deal'),L('Klient','Client'),L('Fáza','Stage'),L('Hodnota','Value'),L('Pravdep.','Prob.'),L('Vlastník','Owner')],
+  key:'roadmap', acc:'var(--b-road)', icon:I.flag, name:'Aura Roadmap',
+  tag:L('Plánovanie, evidencia pre reporting a rozhodovacia fronta.','Planning, reporting evidence and a decision queue.'),
+  feat:[L('Checkpoint readiness → nemenné rozhodnutie + baseline snapshot','Checkpoint readiness → immutable decision + baseline snapshot'),
+        L('Timeline: 3 režimy (Roadmap / Sprinty / Rozhodnutia) × 3 zoomy × 2 hustoty','Timeline: 3 modes (Roadmap / Sprints / Decisions) × 3 zooms × 2 densities'),
+        L('Šprinty draft → commit → close s carry-over','Sprints draft → commit → close with carry-over')],
+  list:L('Úlohy','Work items'), one:L('Úloha','Work item'),
+  kpis:[{l:L('Aktívne projekty','Active projects'),v:'6',sub:L('3 piliere: plán · evidencia · rozhodnutia','3 pillars: plan · evidence · decisions')},
+        {l:L('Úlohy v behu','Items in progress'),v:'5',sub:'in_progress'},
+        {l:L('Rozhodnutia vo fronte','Decisions queued'),v:'2',sub:L('čakajú na go / no-go','awaiting go / no-go')},
+        {l:L('Checkpointy po termíne','Checkpoints overdue'),v:'1',d:{n:1,inv:true}}],
+  chart:{title:L('Práca naprieč šprintami (položky)','Work across sprints (items)'),type:'bars',
+    data:[{l:'S-28',v:9},{l:'S-29',v:12},{l:'S-30',v:14},{l:'S-31',v:11},{l:'S-32',v:6}]},
+  side:{title:L('Rozloženie stavov','State distribution'),donut:52,dl:L('done · zvyšok: in_progress / waiting / backlog','done · rest: in_progress / waiting / backlog')},
+  cols:[L('Položka','Item'),L('Typ','Type'),L('Projekt','Project'),'Sprint',L('Stav','State'),L('Termín','Due')],
   rows:[
-    {id:'roll',active:true,c:['Rollout Aura Core','TechnoDom s.r.o.',['cond',L('Rokovanie','Negotiation')],cur(86000),pc(70),'M. Novák']},
-    {id:'lic',c:[L('Ročná licencia','Annual licence'),'Alfa Group',['ok',L('Ponuka','Proposal')],cur(42000),pc(55),'M. Novák']},
-    {id:'pil',c:[L('Pilotný projekt','Pilot project'),'MediaVin',['info',L('Kvalifikácia','Qualification')],cur(18000),pc(35),'K. Malá']},
-    {id:'ext',c:[L('Rozšírenie tímu','Team expansion'),'Nord Logistics',['ok',L('Uzavretý','Won')],cur(54000),pc(100),'K. Malá']},
-    {id:'nah',c:[L('Náhrada systému','System replacement'),'BioFarm',['q',L('Nový','New')],cur(30000),pc(15),'M. Novák']},
-    {id:'ser',c:[L('Servisná zmluva','Service contract'),'Kovo Plus',['no',L('Prehratý','Lost')],cur(12000),pc(0),'K. Malá']}],
-  detail:{title:'Rollout Aura Core',badge:['cond',L('Rokovanie','Negotiation')],
-    sub:L('TechnoDom s.r.o. · 86 000 € · zatvorenie ~15. 9. 2026','TechnoDom · €86,000 · close ~Sep 15, 2026'),
-    fields:[[L('Klient','Client'),'TechnoDom s.r.o.'],[L('Hodnota','Value'),cur(86000)],
-            [L('Fáza','Stage'),L('Rokovanie','Negotiation')],[L('Pravdepodobnosť','Probability'),pc(70)],
-            [L('Vlastník','Owner'),'Martin Novák'],[L('Očak. zatvorenie','Expected close'),dt('2026-09-15')]],
-    time:[[L('Dnes','Today'),L('AI odporúča: poslať upravenú ponuku s 3-ročným TCO','AI suggests: send revised quote with 3-yr TCO')],
-          [L('28. 7.','Jul 28'),L('Prezentácia u klienta — pozitívna odozva','Client demo — positive feedback')],
-          [L('12. 7.','Jul 12'),L('Zaslaná prvá ponuka','First quote sent')],
-          [L('1. 7.','Jul 1'),L('Príležitosť vytvorená z leadu','Opportunity created from lead')]],
-    donut:70,dl:L('pravdepodobnosť výhry','win probability')},
+    {id:'pay',active:true,c:[L('Migrácia platobnej brány','Payment gateway migration'),'task','E-shop','S-31 · commit',['info','in_progress'],L('9. 8.','Aug 9')]},
+    {id:'bug409',c:[L('Bug: 409 pri uložení checkpointu','Bug: 409 on checkpoint save'),'bug','Aura Roadmap','S-31 · commit',['cond','waiting'],L('6. 8.','Aug 6')]},
+    {id:'onb',c:[L('Návrh onboarding flowu','Onboarding flow idea'),'idea','—','—',['q','backlog'],'—']},
+    {id:'zod',c:[L('Podúloha: zod kontrakt API','Subtask: zod API contract'),'task','Aura Roadmap','S-30 · close',['ok','done'],L('28. 7.','Jul 28')]},
+    {id:'audit',c:[L('Audit prístupov Q3','Q3 access audit'),'task',L('Bezpečnosť','Security'),'S-32 · draft',['q','backlog'],L('20. 8.','Aug 20')]},
+    {id:'axe',c:['Carry-over: e2e axe','task','Aura Roadmap','S-31 · commit',['info','in_progress'],L('9. 8.','Aug 9')]}],
+  detail:{title:L('Checkpoint: Go-live brána','Checkpoint: Go-live gate'),badge:['cond','conditional_go'],
+    sub:L('Rozhodnutie je po zápise nemenné · baseline snapshot + audit + follow-up','The decision is immutable once recorded · baseline snapshot + audit + follow-up'),
+    fields:[[L('Projekt','Project'),'Aura KPI'],['Readiness',L('78 %','78%')],
+            [L('Rozhodnutie','Decision'),'conditional_go'],['Baseline snapshot',L('uložený','stored')],
+            ['Follow-up',L('založený → backlog','created → backlog')],[L('Súbežnosť','Concurrency'),'optimistic · 409 VERSION_CONFLICT']],
+    time:[[L('Dnes','Today'),L('Follow-up úloha založená do backlogu','Follow-up item created in the backlog')],
+          [L('Včera','Yesterday'),L('Rozhodnutie conditional_go (nemenné) + baseline + audit','Decision conditional_go (immutable) + baseline + audit')],
+          [L('Pred 3 dňami','3 days ago'),L('Readiness vyhodnotená','Readiness evaluated')],
+          [L('Pred týždňom','A week ago'),L('Checkpoint vytvorený','Checkpoint created')]],
+    donut:52,dl:L('rozhodnutí z fronty uzavretých tento kvartál','of queued decisions closed this quarter')},
   set:[
-    {h:L('Pipeline a fázy','Pipeline & stages'),icon:I.trend,rows:[
-      {b:L('Fázy obchodu','Deal stages'),s:L('5 fáz · vlastné poradie','5 stages · custom order'),sel:L('Upraviť','Edit')},
-      {b:L('Cenníky','Price lists'),s:L('2 aktívne cenníky','2 active price lists'),sel:'EUR'},
-      {b:L('Automatické pripomienky','Auto reminders'),s:L('Ak sa obchod nehýbe 7 dní','If a deal stalls 7 days'),sw:true}]},
-    {h:L('AI asistent','AI assistant'),icon:I.brain,rows:[
-      {b:L('Skórovanie leadov','Lead scoring'),s:L('Pravdepodobnosť z histórie','Probability from history'),sw:true},
-      {b:L('Návrh ďalšieho kroku','Next-best-action'),s:L('Odporúčanie pri každom obchode','Suggestion per deal'),sw:true}]}]
+    {h:'Timeline',icon:I.cal,rows:[
+      {b:L('Režim','Mode'),s:L('Roadmap · Sprinty · Rozhodnutia','Roadmap · Sprints · Decisions'),sel:'Roadmap'},
+      {b:'Zoom',s:L('kvartál · mesiac · týždeň','quarter · month · week'),sel:L('mesiac','month')},
+      {b:L('Hustota','Density'),s:'cozy · compact',sel:'cozy'}]},
+    {h:L('Proces a roly','Process & roles'),icon:I.people,rows:[
+      {b:L('Stavový model','State model'),s:'backlog → in_progress → waiting → done',sw:true},
+      {b:L('Šprinty s carry-over','Sprints with carry-over'),s:'draft → commit → close',sw:true},
+      {b:L('Roly','Roles'),s:L('Admin · Editor · Prehliadač','Admin · Editor · Viewer'),sel:L('Upraviť','Edit')}]}],
+  alert:{tone:'cond',icon:I.warn,text:L('1 checkpoint po termíne — čaká na rozhodnutie vo fronte.','1 checkpoint overdue — awaiting a decision in the queue.')}
 },
 {
-  key:'finance', acc:'var(--b-fin)', icon:I.coins, name:'Aura Finance',
-  tag:L('Faktúry, cashflow a náklady pod kontrolou.','Invoices, cashflow and costs under control.'),
-  feat:[L('Vystavovanie a sledovanie faktúr','Invoice issuing and tracking'),
-        L('Kategorizácia nákladov cez AI','AI expense categorisation'),
-        L('Prehľad cashflow a splatností','Cashflow and due-date overview')],
-  list:L('Faktúry','Invoices'), one:L('Faktúra','Invoice'),
-  alert:{tone:'cond',icon:I.warn,text:L('2 faktúry sú po splatnosti (spolu 6 500 €). AI pripravil upomienky na odoslanie.','2 invoices are overdue (€6,500 total). AI has drafted reminders to send.')},
-  kpis:[{l:L('Príjmy (mesiac)','Revenue (mo.)'),v:cur(96400),d:{n:5,u:'%'}},
-        {l:L('Náklady','Costs'),v:cur(61200),d:{n:2,u:'%',inv:true}},
-        {l:L('Cashflow','Cashflow'),v:L('+35 200 €','+€35,200'),d:{n:9,u:'%'}},
-        {l:L('Po splatnosti','Overdue'),v:cur(8900),d:{n:-12,u:'%',inv:true}}],
-  chart:{title:L('Cashflow za 6 mesiacov (€ tis.)','Cashflow, last 6 months (€k)'),type:'area',data:[18,22,19,27,24,35]},
-  side:{title:L('Štruktúra nákladov','Cost split'),donut:64,dl:L('fixné · 36 % variabilné','fixed · 36% variable')},
-  cols:[L('Číslo','No.'),L('Klient','Client'),L('Vystavené','Issued'),L('Splatnosť','Due'),L('Suma','Amount'),L('Stav','Status')],
+  key:'trzby', acc:'var(--b-fin)', icon:I.coins, name:'Aura Tržby',
+  tag:L('E-shop report tržieb — júl 2026 (1.–27.), 5 679 objednávok.','E-shop revenue report — July 2026 (1–27), 5,679 orders.'),
+  feat:[L('Klientske filtre prepočítavajú celý report (trh, platba, kov, zákazník, zľava)','Client-side filters recompute the entire report (market, payment, metal, customer, discount)'),
+        L('Denný graf s prepínačom tržba / zisk / objednávky + kumulatív','Daily chart with a revenue / profit / orders toggle + cumulative'),
+        L('Zoraditeľné tabuľky, riadok = filter, CSV export','Sortable tables, row-as-filter, CSV export')],
+  list:L('Segmenty','Segments'), one:L('Segment','Segment'),
+  kpis:[{l:L('Tržba','Revenue'),v:L('217 016 €','€217,016'),sub:L('run-rate 31 dní: 250 822 €','31-day run-rate: €250,822')},
+        {l:L('Zisk','Profit'),v:L('126 541 €','€126,541'),sub:L('58,3 % z tržby','58.3% of revenue')},
+        {l:L('Marža','Margin'),v:L('66,1 %','66.1%'),sub:L('zlato 54,6 % vs ostatné 77,4 %','gold 54.6% vs others 77.4%')},
+        {l:'AOV',v:L('38,21 €','€38.21'),sub:L('medián 25,41 €','median €25.41')}],
+  chart:{title:L('Kľúčové podiely na tržbe (%)','Key revenue shares (%)'),type:'bars',
+    data:[{l:L('Dobierka','COD'),v:65.8,d:'65,8'},{l:'HU+RO+SK',v:63.9,d:'63,9'},{l:L('Zlato','Gold'),v:49.8,d:'49,8'},{l:L('Opakovaní','Repeat'),v:45.6,d:'45,6'},{l:L('Koše > 60 €','Baskets > €60'),v:44.4,d:'44,4'},{l:L('Zľavy','Discounts'),v:6.7,d:'6,7'}]},
+  side:{title:L('Expedícia do 24 h','Dispatch within 24h'),donut:69.6,dl:L('medián 18,7 h · Ø 25,4 h','median 18.7h · avg 25.4h')},
+  cols:[L('Segment','Segment'),L('Podiel obj.','Order share'),L('Podiel tržby','Revenue share'),'AOV',L('Marža','Margin'),L('Stav','Status')],
   rows:[
-    {id:'i412',active:true,c:['2026-0412','TechnoDom s.r.o.',dt('2026-07-20'),dt('2026-08-19'),cur(12400),['cond',L('Čaká','Pending')]]},
-    {id:'i411',c:['2026-0411','Alfa Group',dt('2026-07-14'),dt('2026-07-28'),cur(8600),['ok',L('Uhradená','Paid')]]},
-    {id:'i408',c:['2026-0408','MediaVin',dt('2026-06-30'),dt('2026-07-14'),cur(4200),['no',L('Po splatnosti','Overdue')]]},
-    {id:'i407',c:['2026-0407','Nord Logistics',dt('2026-07-02'),dt('2026-08-01'),cur(21000),['ok',L('Uhradená','Paid')]]},
-    {id:'i405',c:['2026-0405','BioFarm',dt('2026-07-25'),dt('2026-08-24'),cur(3900),['cond',L('Čaká','Pending')]]},
-    {id:'i402',c:['2026-0402','Kovo Plus',dt('2026-06-18'),dt('2026-07-02'),cur(2300),['no',L('Po splatnosti','Overdue')]]}],
-  detail:{title:L('Faktúra 2026-0412','Invoice 2026-0412'),badge:['cond',L('Čaká na úhradu','Pending')],
-    sub:L('TechnoDom s.r.o. · splatnosť 19. 8. 2026','TechnoDom · due Aug 19, 2026'),
-    fields:[[L('Odberateľ','Customer'),'TechnoDom s.r.o.'],[L('Variabilný symbol','Ref.'),'20260412'],
-            [L('Vystavené','Issued'),dt('2026-07-20')],[L('Splatnosť','Due'),dt('2026-08-19')],
-            [L('Základ / DPH','Net / VAT'),L('10 333 € / 2 067 €','€10,333 / €2,067')],[L('Spolu','Total'),cur(12400)]],
-    time:[[L('Dnes','Today'),L('AI: platba zvyčajne prichádza deň pred splatnosťou','AI: payment usually arrives a day before due')],
-          [L('22. 7.','Jul 22'),L('Faktúra otvorená klientom','Invoice opened by client')],
-          [L('20. 7.','Jul 20'),L('Faktúra odoslaná e-mailom','Invoice sent by email')],
-          [L('20. 7.','Jul 20'),L('Vytvorená z obchodu „Rollout Aura Core"','Created from deal "Rollout Aura Core"')]],
-    donut:0,dl:L('uhradené · 17 dní do splatnosti','paid · 17 days to due')},
+    {id:'zlato',active:true,c:[L('Zlato (AU)','Gold (AU)'),'22,4 %','49,8 %','—','54,6 %',['cond',L('nižšia marža','lower margin')]]},
+    {id:'kovy',c:[L('Ostatné kovy','Other metals'),'77,6 %','50,2 %','—','77,4 %',['ok','OK']]},
+    {id:'cod',c:[L('Dobierka','COD'),'—','65,8 %','—','—',['cond',L('riziko neprevzatia','non-pickup risk')]]},
+    {id:'zlava',c:[L('So zľavou','Discounted'),'—',L('zľavy 6,7 %','discounts 6.7%'),'59,82 €','57,5 %',['cond',L('sleduj maržu','watch margin')]]},
+    {id:'plna',c:[L('Bez zľavy','Full price'),'—','—','30,35 €','72,2 %',['ok','OK']]},
+    {id:'opak',c:[L('Opakovaní zákazníci','Repeat customers'),'44,2 %','45,6 %','—','—',['ok','OK']]}],
+  detail:{title:L('Júl 2026 · 1.–27.','July 2026 · 1–27'),badge:['info',L('beží · 26 plných dní','running · 26 full days')],
+    sub:L('5 679 objednávok · export stats CSV 27. 7.','5,679 orders · stats CSV export Jul 27'),
+    fields:[[L('Tržba','Revenue'),L('217 016 €','€217,016')],[L('Zisk','Profit'),L('126 541 € (58,3 %)','€126,541 (58.3%)')],
+            [L('Ø plný deň','Avg full day'),L('8 091 €','€8,091')],[L('Run-rate (31 dní)','Run-rate (31 days)'),L('250 822 €','€250,822')],
+            [L('Zľavy','Discounts'),L('14 602 € (6,7 %)','€14,602 (6.7%)')],[L('Expedícia','Dispatch'),L('medián 18,7 h · 69,6 % do 24 h','median 18.7h · 69.6% within 24h')]],
+    time:[[L('27. 7.','Jul 27'),L('Export dát a prepočet reportu','Data export and report build')],
+          [L('t29 → t30','w29 → w30'),L('Pokles tržby −18,2 % (64 033 € → 52 384 €)','Revenue drop −18.2% (€64,033 → €52,384)')],
+          [L('Priebežne','Ongoing'),L('Denná špička 11:00 · sobota najslabšia (5 774 € vs Ø 8 091 €)','Daily peak 11:00 · Saturday weakest (€5,774 vs avg €8,091)')],
+          [L('1. 7.','Jul 1'),L('Štart sledovaného obdobia','Tracking period start')]],
+    donut:87,dl:L('objednávok v stave Tovar odoslaný (4 928) · Doručené 751','of orders in Shipped state (4,928) · Delivered 751')},
   set:[
-    {h:L('Fakturačné údaje','Billing details'),icon:I.coins,rows:[
-      {b:L('Firemné údaje','Company details'),s:L('IČO, DIČ, IBAN','Reg. no., VAT, IBAN'),sel:L('Upraviť','Edit')},
-      {b:L('Sadzba DPH','VAT rate'),s:L('Predvolená sadzba','Default rate'),sel:'23 %'},
-      {b:L('Číselný rad','Numbering'),s:L('Formát RRRR-NNNN','Format YYYY-NNNN'),sel:'2026-####'}]},
-    {h:L('Automatizácia a AI','Automation & AI'),icon:I.brain,rows:[
-      {b:L('Kategorizácia nákladov','Expense categorisation'),s:L('AI zaradí položky','AI classifies items'),sw:true},
-      {b:L('Upomienky po splatnosti','Overdue reminders'),s:L('Automatický e-mail po 3 dňoch','Auto email after 3 days'),sw:true},
-      {b:L('Mesačný účtovný export','Monthly export'),s:L('Do účtovného softvéru','To accounting software'),sw:false}]}]
-},
-{
-  key:'support', acc:'var(--b-support)', icon:I.lifebuoy, name:'Aura Support',
-  tag:L('Tickety, SLA a znalostná báza s návrhom odpovede.','Tickets, SLA and knowledge base with reply drafts.'),
-  feat:[L('Zjednotená schránka pre všetky kanály','Unified inbox for every channel'),
-        L('Návrh odpovede zo znalostnej bázy','Reply drafts from the knowledge base'),
-        L('Sledovanie SLA a spokojnosti (CSAT)','SLA and CSAT tracking')],
-  list:L('Tickety','Tickets'), one:L('Ticket','Ticket'),
-  kpis:[{l:L('Otvorené tickety','Open tickets'),v:int(34),d:{n:-5,inv:true}},
-        {l:L('Priem. čas odpovede','Avg. response'),v:L('1 h 12 m','1h 12m'),d:{n:-14,u:'%',inv:true}},
-        {l:L('Plnenie SLA','SLA met'),v:pc(97),d:{n:1}},
-        {l:L('CSAT','CSAT'),v:L('4,6 / 5','4.6 / 5'),d:{n:0.2}}],
-  chart:{title:L('Tickety podľa kanála','Tickets by channel'),type:'bars',
-    data:[{l:L('Email','Email'),v:41},{l:L('Chat','Chat'),v:33},{l:L('Telefón','Phone'),v:12},{l:L('Formulár','Form'),v:19},{l:L('Sociálne','Social'),v:8}]},
-  side:{title:L('Plnenie SLA','SLA'),donut:97,dl:L('v rámci SLA · 1 ticket po termíne','within SLA · 1 breached')},
-  cols:[L('ID','ID'),L('Predmet','Subject'),L('Zákazník','Customer'),L('Priorita','Priority'),L('Stav','Status'),L('Priradené','Assignee')],
-  rows:[
-    {id:'t4821',active:true,c:['#4821',L('Chyba pri prihlásení','Login error'),'Alfa Group',['no prio',L('Vysoká','High')],['cond',L('Otvorený','Open')],'P. Baláž']},
-    {id:'t4820',c:['#4820',L('Otázka k fakturácii','Billing question'),'MediaVin',['cond prio',L('Stredná','Medium')],['info',L('Čaká na zákazníka','Waiting')],'P. Baláž']},
-    {id:'t4818',c:['#4818',L('Žiadosť o funkciu','Feature request'),'Nord Logistics',['q prio',L('Nízka','Low')],['cond',L('Otvorený','Open')],'—']},
-    {id:'t4815',c:['#4815',L('Export nefunguje','Export fails'),'BioFarm',['no prio',L('Vysoká','High')],['ok',L('Vyriešený','Resolved')],'P. Baláž']},
-    {id:'t4812',c:['#4812',L('Zmena hesla','Password reset'),'Kovo Plus',['q prio',L('Nízka','Low')],['ok',L('Vyriešený','Resolved')],L('AI · auto','AI · auto')]},
-    {id:'t4810',c:['#4810',L('Pomalé načítanie','Slow loading'),'TechnoDom',['cond prio',L('Stredná','Medium')],['ok',L('Vyriešený','Resolved')],'M. Kraus']}],
-  detail:{title:L('#4821 · Chyba pri prihlásení','#4821 · Login error'),badge:['cond',L('Otvorený','Open')],
-    sub:L('Alfa Group · vysoká priorita · SLA 4 h (zostáva 2 h 40 m)','Alfa Group · high · SLA 4h (2h 40m left)'),
-    fields:[[L('Zákazník','Customer'),'Alfa Group'],[L('Kanál','Channel'),'Email'],
-            [L('Priorita','Priority'),L('Vysoká','High')],[L('Priradené','Assignee'),'Peter Baláž'],
-            [L('Vytvorený','Created'),L('Dnes 08:30','Today 08:30')],[L('SLA','SLA'),L('4 h · zostáva 2 h 40 m','4h · 2h 40m left')]],
-    time:[[L('Dnes 09:05','Today 09:05'),L('AI navrhol odpoveď z článku „Reset 2FA"','AI drafted a reply from "Reset 2FA"')],
-          [L('Dnes 08:41','Today 08:41'),L('Ticket priradený Petrovi Balážovi','Assigned to Peter Baláž')],
-          [L('Dnes 08:32','Today 08:32'),L('AI klasifikoval: Prihlásenie / 2FA','AI classified: Login / 2FA')],
-          [L('Dnes 08:30','Today 08:30'),L('Ticket vytvorený z e-mailu','Ticket created from email')]],
-    donut:88,dl:L('SLA času ešte k dispozícii','of SLA time remaining')},
-  set:[
-    {h:L('Tímy a fronty','Teams & queues'),icon:I.people,rows:[
-      {b:L('Fronty podpory','Support queues'),s:L('3 fronty · smerovanie podľa kanála','3 queues · channel routing'),sel:L('Upraviť','Edit')},
-      {b:L('Pracovný čas','Business hours'),s:L('Po–Pia 8:00–17:00','Mon–Fri 8am–5pm'),sel:'CET'},
-      {b:L('Pravidlá SLA','SLA rules'),s:L('Podľa priority a plánu','By priority and plan'),sw:true}]},
-    {h:L('AI asistent','AI assistant'),icon:I.brain,rows:[
-      {b:L('Návrh odpovede','Reply suggestions'),s:L('Zo znalostnej bázy','From the knowledge base'),sw:true},
-      {b:L('Automatická klasifikácia','Auto classification'),s:L('Téma a priorita','Topic and priority'),sw:true},
-      {b:L('Autoodpoveď na bežné otázky','Auto-reply to FAQs'),s:L('Len nízka priorita, s dohľadom','Low priority only, supervised'),sw:false}]}]
-},
-{
-  key:'ops', acc:'var(--b-ops)', icon:I.server, name:'Aura Ops',
-  tag:L('Prevádzka jadra: workeri, GPU, pamäť a hranica dát.','Core operations: workers, GPU, memory and the data boundary.'),
-  feat:[L('Stav jadra, workerov a fronty úloh','Core, worker and queue status'),
-        L('Vyťaženie GPU, VRAM a latencia','GPU, VRAM and latency load'),
-        L('Kontrola hranice dát a zón spracovania','Data boundary and processing zones')],
-  list:L('Uzly','Nodes'), one:L('Uzol','Node'),
-  alert:{tone:'no',icon:I.warn,text:L('Worker C hlási zvýšenú latenciu (1 020 ms) a je zaťažený na 92 %. Odporúčané zapnúť škálovanie.','Worker C reports elevated latency (1,020 ms) and is 92% loaded. Scaling recommended.')},
-  kpis:[{l:L('Dostupnosť (30 dní)','Uptime (30d)'),v:pc(99.95),d:{n:0.02}},
-        {l:L('Využitie VRAM','VRAM usage'),v:pc(78),d:{n:6,inv:true}},
-        {l:L('Fronta úloh','Task queue'),v:int(12),d:{n:-3,inv:true}},
-        {l:L('Priem. latencia','Avg. latency'),v:L('840 ms','840 ms'),d:{n:-40,u:' ms',inv:true}}],
-  chart:{title:L('Vyťaženie workerov (%)','Worker load (%)'),type:'bars',
-    data:[{l:L('Worker A','Worker A'),v:71},{l:L('Worker B','Worker B'),v:66},{l:L('Worker C','Worker C'),v:92},{l:L('Brána dát','Gateway'),v:24},{l:'NAS',v:41}]},
-  side:{title:L('Zdravie jadra','Core health'),donut:78,dl:L('VRAM · 22 % rezerva','VRAM · 22% headroom')},
-  cols:[L('Uzol','Node'),L('Rola','Role'),'GPU','VRAM',L('Latencia','Latency'),L('Stav','Status')],
-  rows:[
-    {id:'wa',active:true,c:['Worker A',L('Inferencia 70B','70B inference'),L('2× RTX','2× RTX'),pc(78),L('810 ms','810 ms'),['ok',L('Beží','Running')]]},
-    {id:'wb',c:['Worker B','Embeddings',L('1× RTX','1× RTX'),pc(61),L('240 ms','240 ms'),['ok',L('Beží','Running')]]},
-    {id:'wc',c:['Worker C','Sandbox',L('1× RTX','1× RTX'),pc(92),L('1 020 ms','1,020 ms'),['no',L('Zaťažený','Overloaded')]]},
-    {id:'gw',c:[L('Brána dát','Gateway'),L('Hranica dát','Data boundary'),'—','—','—',['ok',L('Beží','Running')]]},
-    {id:'nas',c:[L('NAS záloha','NAS backup'),L('Úložisko','Storage'),'—','—','—',['ok',L('Beží','Running')]]},
-    {id:'off',c:[L('Off-site kópia','Off-site copy'),L('Záloha','Backup'),'—','—','—',['cond',L('Synchronizuje','Syncing')]]}],
-  detail:{title:'Worker A',badge:['ok',L('Beží','Running')],
-    sub:L('Inferencia jadra 70B · 2× RTX · uptime 41 dní','70B inference · 2× RTX · uptime 41 days'),
-    fields:[[L('Rola','Role'),L('Inferencia 70B','70B inference')],['GPU',L('2× RTX (48 GB)','2× RTX (48 GB)')],
-            [L('Využitie VRAM','VRAM usage'),L('78 % · 37,4 GB','78% · 37.4 GB')],[L('Priem. latencia','Avg. latency'),'810 ms'],
-            [L('Fronta','Queue'),L('7 úloh','7 tasks')],[L('Zóna','Zone'),L('Interná (dôverná)','Internal (confidential)')]],
-    time:[[L('Teraz','Now'),L('Spracúva dávku 7 úloh · 810 ms/req','Processing batch of 7 · 810 ms/req')],
-          [L('Pred 2 h','2h ago'),L('Model prehriaty na 74 °C — v norme','Model at 74 °C — within limits')],
-          [L('Dnes 03:00','Today 03:00'),L('Nočná údržba dokončená','Nightly maintenance done')],
-          [L('Pred 41 dňami','41 days ago'),L('Uzol nasadený','Node deployed')]],
-    donut:78,dl:L('VRAM · rezerva 22 %','VRAM · 22% headroom')},
-  set:[
-    {h:L('Uzly a workeri','Nodes & workers'),icon:I.server,rows:[
-      {b:L('Smerovanie modelu','Model routing'),s:L('Ktorý worker berie ktoré úlohy','Which worker takes which tasks'),sel:L('Upraviť','Edit')},
-      {b:L('Limit kontextu','Context limit'),s:L('Max. tokenov na požiadavku','Max tokens per request'),sel:'32k'},
-      {b:L('Automatické škálovanie','Auto-scaling'),s:L('Zapnúť worker pri fronte > 20','Spin up a worker if queue > 20'),sw:true}]},
-    {h:L('Hranica dát','Data boundary'),icon:I.shield,rows:[
-      {b:L('Zóny spracovania','Processing zones'),s:L('4 zóny · verejná → dôverná','4 zones · public → confidential'),sel:L('Zobraziť','View')},
-      {b:L('Blokovať odchádzajúce dáta','Block outbound data'),s:L('Dôverná zóna neopúšťa sieť','Confidential zone stays on-net'),sw:true},
-      {b:L('Audit prístupov','Access audit'),s:L('Log každého dopytu na jadro','Log every core query'),sw:true}]}]
+    {h:L('Filtre reportu','Report filters'),icon:I.filter,rows:[
+      {b:L('Trh','Market'),s:L('klik na riadok tabuľky = filter','clicking a table row = filter'),sel:L('Všetky','All')},
+      {b:L('Platba','Payment'),s:L('dobierka · karta · prevod','COD · card · transfer'),sel:L('Všetky','All')},
+      {b:L('Kov','Metal'),s:L('zlato · ostatné','gold · other'),sel:L('Všetky','All')}]},
+    {h:L('Segmenty a výstupy','Segments & outputs'),icon:I.doc,rows:[
+      {b:L('Nový / opakovaný zákazník','New / repeat customer'),s:L('opakovaní 44,2 % obj. / 45,6 % tržby','repeat 44.2% of orders / 45.6% of revenue'),sel:L('Všetci','All')},
+      {b:L('Zľava áno / nie','Discount y/n'),s:L('so zľavou AOV 59,82 € vs 30,35 €','discounted AOV €59.82 vs €30.35'),sel:L('Všetky','All')},
+      {b:L('CSV export tabuliek','Table CSV export'),s:L('BOM + „;" pre Excel SK','BOM + ";" for Excel SK'),sw:true}]}],
+  alert:{tone:'cond',icon:I.warn,text:L('Týždeň 30 klesol o −18,2 % oproti t29 · sobota je systematicky najslabší deň (5 774 € vs Ø 8 091 €).','Week 30 dropped −18.2% vs w29 · Saturday is systematically the weakest day (€5,774 vs avg €8,091).')}
 }
 ];
 const MOD=Object.fromEntries(MODULES.map((m,i)=>[m.key,{...m,idx:i+1}]));
@@ -764,10 +774,10 @@ const SCREENS=['dashboard','list','detail','settings'];
 
 /* notifikácie + workspaces + ⌘K index (demo) */
 const NOTIFS=[
-  {tone:'var(--red)',t:L('Worker C zaťažený na 92 %','Worker C at 92% load'),s:L('Aura Ops · pred 4 min','Aura Ops · 4 min ago')},
-  {tone:'var(--amber)',t:L('Faktúra 2026-0408 po splatnosti','Invoice 2026-0408 overdue'),s:L('Aura Finance · pred 1 h','Aura Finance · 1h ago')},
-  {tone:'var(--good)',t:L('Obchod „Rozšírenie tímu" uzavretý','Deal "Team expansion" won'),s:L('Aura Sales · pred 3 h','Aura Sales · 3h ago')},
-  {tone:'var(--b-hr)',t:L('Nový kandidát na SRE pozíciu','New candidate for SRE role'),s:L('Aura HR · dnes','Aura HR · today')}];
+  {tone:'var(--red)',t:L('KPI: 3 oddelenia po termíne za jún','KPI: 3 departments overdue for June'),s:L('Aura KPI · uzávierka 10. 7.','Aura KPI · close July 10')},
+  {tone:'var(--amber)',t:L('GLS: objem pod zmluvným minimom (~280/deň)','GLS: volume below the contracted minimum (~280/day)'),s:L('Aura Logistika · dnes','Aura Logistics · today')},
+  {tone:'var(--amber)',t:L('AI budget na 62 % stropu 300 €','AI budget at 62% of the €300 cap'),s:L('Aura Marketing · pred 2 h','Aura Marketing · 2h ago')},
+  {tone:'var(--violet)',t:L('Checkpoint čaká na rozhodnutie (go / no-go)','Checkpoint awaiting a decision (go / no-go)'),s:L('Aura Roadmap · včera','Aura Roadmap · yesterday')}];
 const WORKSPACES=[
   {n:'Sperky s.r.o.',s:L('Produkčný priestor · 128 členov','Production · 128 members'),c:'var(--teal)',i:'S'},
   {n:'Sperky — Staging',s:L('Testovací priestor','Staging environment'),c:'var(--b-sales)',i:'T'},
@@ -783,7 +793,8 @@ function kpiCard(k){
   let val=(k.v&&k.v.t)?fmtCell(k.v):tr(k.v);
   let d='<div class="d flat">—</div>';
   if(k.d){const up=k.d.n>0,down=k.d.n<0,good=k.d.inv?down:up,ar=up?'▲':down?'▼':'',sign=up?'+':down?'−':'';
-    d=`<div class="d ${good?'up':'down'}">${ar} ${sign}${decs(Math.abs(k.d.n))}${k.d.u||''}</div>`;}
+    d=`<div class="d ${good?'up':'down'}">${ar} ${sign}${decs(Math.abs(k.d.n))}${k.d.u?tr(k.d.u):''}</div>`;}
+  else if(k.sub){d=`<div class="d flat">${tr(k.sub)}</div>`;}
   return `<div class="kpi"><div class="l">${tr(k.l)}</div><div class="v">${val}</div>${d}</div>`;
 }
 
@@ -791,9 +802,9 @@ function renderHub(){
   setAcc('var(--teal)');
   view.innerHTML=`<div class="hub an">
     <div class="eb">${state.lang==='sk'?'Ekosystém Aura':'The Aura ecosystem'}</div>
-    <h1>${state.lang==='sk'?'Jedno jadro, <em>šesť aplikácií</em>.':'One core, <em>six applications</em>.'}</h1>
-    <p class="lead">${state.lang==='sk'?'Marketing, HR, obchod, financie, podpora a prevádzka — postavené na vlastnom AI jadre Aura. Dáta zostávajú doma.':'Marketing, HR, sales, finance, support and operations — built on the local Aura AI core. Your data stays home.'}</p>
-    <p class="note">${state.lang==='sk'?'Náhľad používateľského rozhrania. Klik na modul → intro, potom prehľad, zoznam (klikni riadok), detail a nastavenia. Všetky čísla sú ukážkové.':'A preview of the UI. Click a module → intro, then overview, list (click a row), detail and settings. All figures are illustrative.'}</p>
+    <h1>${state.lang==='sk'?'Jedna rodina, <em>šesť aplikácií</em>.':'One family, <em>six applications</em>.'}</h1>
+    <p class="lead">${state.lang==='sk'?'Marketing, KPI, logistika, evidencia, roadmap a tržby — reálne aplikácie rodiny Aura v jednom zjednotenom náhľade.':'Marketing, KPIs, logistics, registry, roadmap and revenue — the real Aura app family in one unified preview.'}</p>
+    <p class="note">${state.lang==='sk'?'Rozhrania vychádzajú z reálnych aplikácií (C:\\Aura). Overené čísla sú prenesené 1:1, neoverené sú ukážkové. Klik na modul → intro → prehľad → zoznam (klikni riadok) → detail → nastavenia.':'The screens mirror the real apps (C:\\Aura). Verified figures are carried over 1:1, the rest is illustrative. Click a module → intro → overview → list (click a row) → detail → settings.'}</p>
     <div class="grid6">${MODULES.map((m,i)=>`
       <button class="mcard" style="--ac:${m.acc}" onclick="go('#${m.key}')">
         <span class="num">0${i+1}</span>
@@ -970,8 +981,8 @@ function renderLogin(){
   view.innerHTML=`<div class="auth an">
     <div class="aside-brand"><div class="glow"></div>
       <div style="position:relative"><svg class="crown" style="width:34px;height:34px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 8l4 4 5-7 5 7 4-4-2 12H5L3 8z"/></svg></div>
-      <h1>${state.lang==='sk'?'Vaše AI, <em>vaše dáta</em> — doma.':'Your AI, <em>your data</em> — at home.'}</h1>
-      <p>${state.lang==='sk'?'Prihláste sa do ekosystému Aura. Šesť aplikácií na jednom lokálnom jadre.':'Sign in to the Aura ecosystem. Six applications on one local core.'}</p></div>
+      <h1>${state.lang==='sk'?'Jedna rodina, <em>vaše dáta</em> — doma.':'One family, <em>your data</em> — at home.'}</h1>
+      <p>${state.lang==='sk'?'Prihláste sa do rodiny aplikácií Aura. Marketing, KPI, logistika, evidencia, roadmap a tržby.':'Sign in to the Aura app family. Marketing, KPIs, logistics, registry, roadmap and revenue.'}</p></div>
     <div class="apane"><div class="acard">
       <div class="eb">Aura Suite</div>
       <h2>${state.lang==='sk'?'Prihlásenie':'Sign in'}</h2>

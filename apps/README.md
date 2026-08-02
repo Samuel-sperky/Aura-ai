@@ -1,13 +1,16 @@
-# Aura Suite — náhľad aplikácií
+# Aura Suite — náhľad rodiny aplikácií
 
-Obrazovky pre ostatné aplikácie ekosystému Aura (Marketing, HR, Sales, Finance,
-Support, Ops), postavené na rovnakom dizajnovom systéme ako prezentácia v `../presentation/`.
+Zjednotený náhľad **reálnych aplikácií rodiny Aura** (C:\Aura na produkčnom PC):
+Aura Marketing, Aura KPI, Aura Logistika, Aura HR/Interná evidencia, Aura Roadmap
+a Report tržieb. Štruktúra obrazoviek, KPI karty, grafy a stavové slovníky vychádzajú
+z reálnych appiek (rekonštruované z Hades pamäte 3 agentmi, 2. 8. 2026).
 
 ## Čo to je
 
 Jeden **self-contained HTML hub** (`aura-apps-hub.html`) — rozcestník na 6 modulov,
 každý s 5 obrazovkami. Náhľad používateľského rozhrania, nie funkčný backend.
-Všetky dáta sú **ukážkové (demo)** a slúžia len na predvedenie obrazoviek.
+**Overené čísla z reálnych appiek sú prenesené 1:1** (napr. plnenia KPI jún 2026,
+tržby júl 2026); neoverené hodnoty sú ukážkové a v celej appke platí demo odznak.
 
 ```
 apps/
@@ -22,17 +25,17 @@ apps/
 
 Každý modul: **intro** (cover) → **Prehľad** (dashboard) → **zoznam** → **detail** → **Nastavenia**.
 
-| # | Modul | Akcent | Zameranie (demo) |
+| # | Modul | Reálna appka (port) | Kľúčové reálne prvky |
 |---|---|---|---|
-| 01 | Aura Marketing | teal | kampane, obsah/copy, dosah, konverzie |
-| 02 | Aura HR | violet | zamestnanci, nábor, dochádzka, hodnotenia |
-| 03 | Aura Sales | gold | pipeline, obchody, ponuky, win rate |
-| 04 | Aura Finance | green | faktúry, cashflow, náklady, splatnosti |
-| 05 | Aura Support | amber | tickety, SLA, priorita, CSAT |
-| 06 | Aura Ops | deep teal | jadro 70B, workeri, GPU/VRAM, hranica dát |
+| 01 | Aura Marketing | sperky-ai (3000) + Banner Studio (8091) | ads strom s ROAS pásmami, 3 modelky, campaign lock, 8 jazykov × 5 rozmerov, QA gates, budget strop 300 € |
+| 02 | Aura KPI | aura-kpi (3030) | plnenie (skutočnosť−Min)/(Max−Min) cap 100 %, farby ≥100/60–99/<60/sivá, monthPill + fillPill, Team score 61,9 %, reálne plnenia jún 2026 |
+| 03 | Aura Logistika | aura-logistika (3020) | ISO-týždeň × krajina (8) × prepravca (5), stavy odoslané/doručené/na ceste/vrátené/stratené/výdajňa, reklamácie zahájené→vyriešené, GLS alert |
+| 04 | Aura HR | interná evidencia | 32 pozícií s náplňou, ~90 rolových mailov (heslá admin-only), org-strom, aplikácie s nákladmi |
+| 05 | Aura Roadmap | aura-roadmap (3040) | checkpointy go/conditional_go/no_go/deferred (nemenné), šprinty draft→commit→close, stavy backlog→in_progress→waiting→done |
+| 06 | Aura Tržby | report tržieb (HTML) | reálne čísla júl 2026: tržba 217 016 €, zisk 126 541 €, marža 66,1 %, AOV 38,21 €, dobierka 65,8 %, expedícia 69,6 % do 24 h |
 
-Modulové akcenty používajú **existujúce sémantické tokeny** z prezentácie
-(`--teal`, `--violet`, `--gold`, `--good`, `--amber`, `--teal-2`). Nové farby sa nevymýšľajú.
+Fonty podľa štandardu rodiny appiek: **Geist + Playfair Display** (Inter je štandard
+reportov, JetBrains Mono decku). Farby plnenia KPI prebraté 1:1.
 
 ## Interakcie (klientske, bez backendu)
 
