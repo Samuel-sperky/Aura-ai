@@ -1,0 +1,836 @@
+<!doctype html>
+<html lang="sk" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aura · Ekosystém aplikácií</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root{
+  --teal:#05bcc4; --teal-2:#03797e; --teal-3:#7fd0d4;
+  --gold:#d8b878; --gold-t:#c9a869;
+  --paper:#0e1413; --card:#131b1a; --card-2:#1b2523; --line:#22302e;
+  --ink:#e8f0ef; --ink-2:#b9c9c7; --ink-3:#829896;
+  --good:#3fbf7f; --amber:#e8a33d; --red:#e0554e; --violet:#8b7fd4;
+  --mono:'JetBrains Mono',ui-monospace,monospace;
+  --disp:'Playfair Display',Georgia,serif;
+  --body:'Inter',system-ui,sans-serif;
+  --acc:var(--teal);
+  --r:14px;
+}
+:root[data-theme="light"]{
+  --paper:#f8f4f7; --card:#fffdfe; --card-2:#ece6ea; --line:#e2dae0;
+  --ink:#131b1a; --ink-2:#3b4a48; --ink-3:#667574; --gold-t:#8a6417;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:var(--body); background:var(--paper); color:var(--ink);
+  -webkit-font-smoothing:antialiased; line-height:1.5;
+  min-height:100vh;
+}
+a{color:inherit;text-decoration:none}
+.mono{font-family:var(--mono)}
+
+/* ── global control bar ─────────────────────────────────────── */
+.gbar{
+  position:fixed; top:0; left:0; right:0; height:52px; z-index:50;
+  display:flex; align-items:center; gap:14px; padding:0 18px;
+  background:color-mix(in srgb,var(--paper) 86%,transparent);
+  backdrop-filter:saturate(140%) blur(10px);
+  border-bottom:1px solid var(--line);
+}
+.brand{display:flex;align-items:center;gap:9px;cursor:pointer;font-weight:700;letter-spacing:.2px}
+.crown{width:20px;height:20px;color:var(--gold)}
+.brand .w{font-family:var(--disp);font-size:18px}
+.brand .w b{color:var(--teal)}
+.demo-tag{
+  font:600 10px/1 var(--mono); letter-spacing:.14em; color:var(--amber);
+  border:1px solid color-mix(in srgb,var(--amber) 45%,var(--line));
+  padding:5px 8px; border-radius:20px; text-transform:uppercase;
+  background:color-mix(in srgb,var(--amber) 10%,transparent);
+}
+.gspace{flex:1}
+.ctl{display:flex;align-items:center;gap:6px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden;background:var(--card)}
+.seg button{
+  font:600 12px var(--body); color:var(--ink-3); background:transparent;
+  border:0; padding:7px 11px; cursor:pointer; letter-spacing:.02em;
+}
+.seg button.on{color:var(--paper);background:var(--acc)}
+:root[data-theme="light"] .seg button.on{color:#fff}
+.icon-btn{
+  width:34px;height:34px;border-radius:9px;border:1px solid var(--line);
+  background:var(--card); color:var(--ink-2); cursor:pointer;
+  display:grid;place-items:center;
+}
+.icon-btn:hover{color:var(--ink);border-color:color-mix(in srgb,var(--acc) 40%,var(--line))}
+.icon-btn svg{width:17px;height:17px}
+
+.view{padding-top:52px;min-height:100vh}
+
+/* ── HUB landing ────────────────────────────────────────────── */
+.hub{max-width:1120px;margin:0 auto;padding:56px 26px 80px}
+.hub .eb{font:600 12px var(--mono);letter-spacing:.2em;color:var(--teal);text-transform:uppercase}
+.hub h1{font-family:var(--disp);font-weight:800;font-size:clamp(34px,5vw,54px);line-height:1.05;margin:16px 0 10px;letter-spacing:-.5px}
+.hub h1 em{color:var(--teal);font-style:normal}
+.hub .lead{color:var(--ink-2);font-size:18px;max-width:620px;margin:0 0 12px}
+.hub .note{color:var(--ink-3);font-size:13.5px;max-width:640px;margin:0 0 40px}
+.grid6{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+@media(max-width:900px){.grid6{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:600px){.grid6{grid-template-columns:1fr}}
+.mcard{
+  position:relative; background:var(--card); border:1px solid var(--line);
+  border-radius:var(--r); padding:22px 20px 20px; cursor:pointer; overflow:hidden;
+  transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease;
+}
+.mcard::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--ac)}
+.mcard:hover{transform:translateY(-3px);border-color:color-mix(in srgb,var(--ac) 55%,var(--line));box-shadow:0 14px 34px -20px var(--ac)}
+.mcard .ico{width:40px;height:40px;border-radius:11px;display:grid;place-items:center;color:var(--ac);background:color-mix(in srgb,var(--ac) 14%,transparent);margin-bottom:14px}
+.mcard .ico svg{width:22px;height:22px}
+.mcard .num{position:absolute;top:18px;right:18px;font:600 12px var(--mono);color:var(--ink-3)}
+.mcard h3{font-family:var(--disp);font-weight:700;font-size:21px;margin:0 0 6px}
+.mcard p{color:var(--ink-2);font-size:13.5px;margin:0 0 14px;min-height:40px}
+.mcard .meta{display:flex;align-items:center;gap:8px;color:var(--ink-3);font:600 11.5px var(--mono);letter-spacing:.04em}
+.mcard .go{margin-left:auto;color:var(--ac);display:inline-flex;align-items:center;gap:4px}
+
+/* ── module INTRO cover ─────────────────────────────────────── */
+.intro{min-height:calc(100vh - 52px);display:grid;place-items:center;padding:40px 26px;position:relative;overflow:hidden}
+.intro .glow{position:absolute;inset:0;background:radial-gradient(60% 60% at 22% 18%,color-mix(in srgb,var(--acc) 16%,transparent),transparent 70%);pointer-events:none}
+.intro-in{max-width:960px;width:100%;position:relative;display:grid;grid-template-columns:1.3fr .9fr;gap:44px;align-items:center}
+@media(max-width:820px){.intro-in{grid-template-columns:1fr}}
+.intro .eb{font:600 12px var(--mono);letter-spacing:.2em;color:var(--acc);text-transform:uppercase;display:flex;align-items:center;gap:10px}
+.intro .eb .n{color:var(--ink-3)}
+.intro h1{font-family:var(--disp);font-weight:800;font-size:clamp(32px,5.4vw,52px);line-height:1.04;margin:18px 0 14px;letter-spacing:-.5px}
+.intro .tag{color:var(--ink-2);font-size:18px;margin:0 0 24px;max-width:460px}
+.feat{list-style:none;padding:0;margin:0 0 30px;display:grid;gap:12px}
+.feat li{display:flex;gap:12px;align-items:flex-start;color:var(--ink-2);font-size:14.5px}
+.feat .dot{margin-top:6px;width:8px;height:8px;border-radius:3px;background:var(--acc);flex:none}
+.cta{display:inline-flex;align-items:center;gap:9px;background:var(--acc);color:var(--paper);font-weight:600;font-size:14px;padding:12px 20px;border-radius:11px;border:0;cursor:pointer}
+:root[data-theme="light"] .cta{color:#fff}
+.intro-art{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:20px;box-shadow:0 30px 60px -40px #000}
+.intro-art .mini-h{display:flex;align-items:center;gap:8px;margin-bottom:14px}
+.intro-art .mini-h .d{width:9px;height:9px;border-radius:50%}
+.intro-art .mini-h .d:nth-child(1){background:var(--red)}
+.intro-art .mini-h .d:nth-child(2){background:var(--amber)}
+.intro-art .mini-h .d:nth-child(3){background:var(--good)}
+
+/* ── APP shell (dashboard/list/detail/settings) ────────────── */
+.shell{display:grid;grid-template-columns:230px 1fr;min-height:calc(100vh - 52px)}
+@media(max-width:780px){.shell{grid-template-columns:64px 1fr}}
+.side{border-right:1px solid var(--line);background:var(--card);display:flex;flex-direction:column;padding:16px 12px;gap:16px}
+.mrail{display:flex;gap:6px;flex-wrap:wrap}
+.mrail a{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;color:var(--ink-3);border:1px solid transparent}
+.mrail a svg{width:17px;height:17px}
+.mrail a.on{color:var(--ac);background:color-mix(in srgb,var(--ac) 14%,transparent);border-color:color-mix(in srgb,var(--ac) 40%,var(--line))}
+.mrail a:hover{color:var(--ink)}
+.side .mname{font-family:var(--disp);font-weight:700;font-size:16px;padding:0 6px}
+.side .mname small{display:block;font-family:var(--mono);font-weight:500;font-size:10px;color:var(--ink-3);letter-spacing:.12em;text-transform:uppercase;margin-top:2px}
+.nav{display:flex;flex-direction:column;gap:3px}
+.nav a{display:flex;align-items:center;gap:11px;padding:9px 11px;border-radius:10px;color:var(--ink-2);font-size:13.5px;font-weight:500}
+.nav a svg{width:17px;height:17px;color:var(--ink-3)}
+.nav a.on{background:color-mix(in srgb,var(--acc) 13%,transparent);color:var(--ink)}
+.nav a.on svg{color:var(--acc)}
+.nav a:hover:not(.on){background:var(--card-2)}
+@media(max-width:780px){.side .mname,.nav a span,.side .hubl span{display:none}.nav a{justify-content:center;padding:9px}}
+.side .hubl{margin-top:auto;display:flex;align-items:center;gap:9px;color:var(--ink-3);font-size:12.5px;padding:8px 11px;border-top:1px solid var(--line)}
+.side .hubl svg{width:15px;height:15px}
+
+.main{min-width:0;display:flex;flex-direction:column}
+.topb{display:flex;align-items:center;gap:14px;padding:16px 24px;border-bottom:1px solid var(--line)}
+.crumb{font:500 12.5px var(--mono);color:var(--ink-3);letter-spacing:.03em}
+.crumb b{color:var(--ink)}
+.topb .search{margin-left:auto;display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:7px 11px;color:var(--ink-3);font-size:13px;min-width:180px}
+.topb .search svg{width:15px;height:15px}
+.avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--acc),var(--teal-2));display:grid;place-items:center;color:#fff;font-weight:700;font-size:12px}
+.content{padding:24px;overflow:auto}
+.phead{display:flex;align-items:flex-end;gap:14px;margin-bottom:20px;flex-wrap:wrap}
+.phead h2{font-family:var(--disp);font-weight:700;font-size:24px;margin:0}
+.phead .sub{color:var(--ink-3);font-size:13px}
+.phead .actions{margin-left:auto;display:flex;gap:9px}
+.btn{border:1px solid var(--line);background:var(--card);color:var(--ink-2);font:600 12.5px var(--body);padding:8px 13px;border-radius:9px;cursor:pointer;display:inline-flex;align-items:center;gap:7px}
+.btn svg{width:14px;height:14px}
+.btn.pri{background:var(--acc);color:var(--paper);border-color:var(--acc)}
+:root[data-theme="light"] .btn.pri{color:#fff}
+
+/* KPI */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+@media(max-width:900px){.kpis{grid-template-columns:repeat(2,1fr)}}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:15px 16px}
+.kpi .l{color:var(--ink-3);font-size:12px;font-weight:500;margin-bottom:9px}
+.kpi .v{font-family:var(--disp);font-weight:700;font-size:26px;line-height:1}
+.kpi .d{margin-top:9px;font:600 11.5px var(--mono);display:inline-flex;align-items:center;gap:4px}
+.kpi .d.up{color:var(--good)} .kpi .d.down{color:var(--red)} .kpi .d.flat{color:var(--ink-3)}
+
+.cols{display:grid;grid-template-columns:1.6fr 1fr;gap:16px}
+@media(max-width:900px){.cols{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px}
+.card .ch{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+.card .ch h3{font-size:14px;font-weight:600;margin:0}
+.card .ch .sp{margin-left:auto;font:600 11px var(--mono);color:var(--ink-3)}
+
+/* bar chart */
+.bars{display:flex;align-items:flex-end;gap:12px;height:170px;padding-top:8px}
+.bars .bar{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:8px;height:100%}
+.bars .bar .col{width:100%;max-width:38px;border-radius:6px 6px 3px 3px;background:linear-gradient(180deg,var(--acc),color-mix(in srgb,var(--acc) 45%,var(--card)));min-height:4px}
+.bars .bar .bl{font-size:10.5px;color:var(--ink-3);text-align:center;line-height:1.2}
+.bars .bar .bv{font:600 11px var(--mono);color:var(--ink-2)}
+
+/* area chart */
+.area{width:100%;height:150px;display:block}
+
+/* donut */
+.donut{display:flex;align-items:center;gap:16px}
+.donut svg{width:104px;height:104px;flex:none}
+.donut .dl{font-size:12.5px;color:var(--ink-2)}
+.donut .dl b{display:block;font-family:var(--disp);font-size:22px;color:var(--ink);margin-bottom:2px}
+
+/* list of small rows */
+.rows{display:flex;flex-direction:column}
+.rows .rw{display:flex;align-items:center;gap:12px;padding:11px 2px;border-top:1px solid var(--line);font-size:13px}
+.rows .rw:first-child{border-top:0}
+.rows .rw .t{flex:1;min-width:0}
+.rows .rw .t b{display:block;font-weight:600}
+.rows .rw .t small{color:var(--ink-3)}
+.rows .rw .val{font:600 12.5px var(--mono);color:var(--ink-2)}
+
+/* table */
+.tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--r);background:var(--card)}
+table.t{width:100%;border-collapse:collapse;font-size:13px;min-width:640px}
+table.t th{text-align:left;font:600 11px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);padding:12px 14px;border-bottom:1px solid var(--line)}
+table.t td{padding:12px 14px;border-bottom:1px solid var(--line);color:var(--ink-2)}
+table.t tr:last-child td{border-bottom:0}
+table.t tr:hover td{background:var(--card-2)}
+table.t td b{color:var(--ink);font-weight:600}
+.num{text-align:right;font-family:var(--mono)}
+.badge{display:inline-flex;align-items:center;gap:5px;font:600 11px var(--body);padding:3px 9px;border-radius:20px;white-space:nowrap}
+.badge::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.badge.ok{color:var(--good);background:color-mix(in srgb,var(--good) 14%,transparent)}
+.badge.cond{color:var(--amber);background:color-mix(in srgb,var(--amber) 14%,transparent)}
+.badge.no{color:var(--red);background:color-mix(in srgb,var(--red) 14%,transparent)}
+.badge.q{color:var(--ink-3);background:color-mix(in srgb,var(--ink-3) 16%,transparent)}
+.badge.info{color:var(--violet);background:color-mix(in srgb,var(--violet) 16%,transparent)}
+
+.toolbar{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+.chips{display:flex;gap:7px;flex-wrap:wrap}
+.chip{font:600 12px var(--body);padding:6px 12px;border-radius:20px;border:1px solid var(--line);color:var(--ink-3);cursor:pointer}
+.chip.on{color:var(--acc);border-color:color-mix(in srgb,var(--acc) 45%,var(--line));background:color-mix(in srgb,var(--acc) 10%,transparent)}
+.pager{display:flex;align-items:center;gap:6px;justify-content:flex-end;margin-top:14px;color:var(--ink-3);font:600 12px var(--mono)}
+.pager span{width:28px;height:28px;border:1px solid var(--line);border-radius:8px;display:grid;place-items:center}
+.pager span.on{color:var(--acc);border-color:var(--acc)}
+
+/* detail */
+.dcols{display:grid;grid-template-columns:1.5fr 1fr;gap:16px}
+@media(max-width:900px){.dcols{grid-template-columns:1fr}}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:2px 20px}
+@media(max-width:560px){.fields{grid-template-columns:1fr}}
+.field{padding:11px 0;border-bottom:1px solid var(--line)}
+.field .fl{color:var(--ink-3);font-size:11.5px;margin-bottom:3px}
+.field .fv{font-size:14px;font-weight:500}
+.time{display:flex;flex-direction:column;gap:0}
+.time .ti{display:flex;gap:13px;padding:10px 0}
+.time .ti .mk{position:relative;flex:none;width:12px}
+.time .ti .mk::before{content:"";position:absolute;left:3px;top:5px;width:8px;height:8px;border-radius:50%;background:var(--acc)}
+.time .ti .mk::after{content:"";position:absolute;left:6px;top:13px;bottom:-10px;width:1px;background:var(--line)}
+.time .ti:last-child .mk::after{display:none}
+.time .ti .tt{font-size:13px}
+.time .ti .tt small{display:block;color:var(--ink-3);font:500 11px var(--mono);margin-top:2px}
+
+/* settings */
+.set-group{margin-bottom:16px}
+.set-group>.gh{font-size:13.5px;font-weight:600;margin:0 0 10px;display:flex;align-items:center;gap:9px}
+.set-group>.gh svg{width:16px;height:16px;color:var(--acc)}
+.set-row{display:flex;align-items:center;gap:14px;padding:13px 0;border-top:1px solid var(--line)}
+.set-row:first-of-type{border-top:0}
+.set-row .sl{flex:1}
+.set-row .sl b{display:block;font-size:13.5px;font-weight:500}
+.set-row .sl small{color:var(--ink-3);font-size:12px}
+.sw{width:42px;height:24px;border-radius:20px;background:var(--card-2);border:1px solid var(--line);position:relative;cursor:pointer;flex:none}
+.sw::after{content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:var(--ink-3);transition:.16s}
+.sw.on{background:color-mix(in srgb,var(--acc) 30%,transparent);border-color:var(--acc)}
+.sw.on::after{left:20px;background:var(--acc)}
+.selbox{border:1px solid var(--line);background:var(--card);border-radius:9px;padding:7px 11px;font:500 13px var(--body);color:var(--ink-2);display:inline-flex;align-items:center;gap:8px}
+.selbox svg{width:14px;height:14px;color:var(--ink-3)}
+.inp{border:1px solid var(--line);background:var(--card);border-radius:9px;padding:8px 11px;font:500 13px var(--body);color:var(--ink);min-width:160px}
+
+.an{animation:fade .5s ease both}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media print{.gbar{display:none}.view{padding-top:0}}
+</style>
+</head>
+<body>
+<div class="gbar">
+  <div class="brand" onclick="location.hash='#hub'">
+    <svg class="crown" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 8l4 4 5-7 5 7 4-4-2 12H5L3 8z"/></svg>
+    <span class="w"><b>Aura</b> <span data-i="suite">Suite</span></span>
+  </div>
+  <span class="demo-tag" data-i="demo">Demo · ukážkové dáta</span>
+  <div class="gspace"></div>
+  <div class="ctl">
+    <div class="seg" id="langseg">
+      <button data-lang="sk" class="on">SK</button>
+      <button data-lang="en">EN</button>
+    </div>
+    <button class="icon-btn" id="themebtn" title="Téma">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"/></svg>
+    </button>
+  </div>
+</div>
+<div class="view" id="view"></div>
+
+<script>
+/* ══════════════════════════════════════════════════════════════
+   Aura Suite — náhľad ekosystému aplikácií (self-contained)
+   Bez CDN skriptov, bez localStorage, bez analytiky. Grafy sú SVG/CSS.
+   Všetky dáta sú DEMO a slúžia len na ukážku obrazoviek.
+   ══════════════════════════════════════════════════════════════ */
+const L=(sk,en)=>({sk,en});
+const state={lang:'sk',theme:'dark'};
+const tr=o=>o&&typeof o==='object'&&'sk'in o?o[state.lang]:o;
+
+/* ── ikony ─────────────────────────────────────────────────── */
+const I={
+  megaphone:'<path d="M3 11v2a1 1 0 001 1h1l3 4V6L5 10H4a1 1 0 00-1 1z"/><path d="M8 6l9-3v14l-9-3"/><path d="M17 8a3 3 0 010 6"/>',
+  people:'<circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0112 0"/><path d="M16 6a3 3 0 010 6"/><path d="M15 20a6 6 0 013-5"/>',
+  trend:'<path d="M4 18l6-6 3 3 7-7"/><path d="M17 8h4v4"/>',
+  coins:'<ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v6c0 1.7 3.1 3 7 3s7-1.3 7-3V6"/><path d="M5 12v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6"/>',
+  lifebuoy:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><path d="M5 5l4 4M15 15l4 4M19 5l-4 4M9 15l-4 4"/>',
+  server:'<rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="13" width="18" height="7" rx="2"/><path d="M7 7.5h.01M7 16.5h.01"/>',
+  grid:'<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
+  list:'<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>',
+  doc:'<path d="M6 2h8l4 4v16H6z"/><path d="M14 2v4h4M9 13h6M9 17h6"/>',
+  gear:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/>',
+  search:'<circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/>',
+  home:'<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/>',
+  plus:'<path d="M12 5v14M5 12h14"/>',
+  arrow:'<path d="M5 12h14M13 6l6 6-6 6"/>',
+  filter:'<path d="M3 5h18l-7 8v6l-4-2v-4z"/>',
+  bell:'<path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9z"/><path d="M13.7 21a2 2 0 01-3.4 0"/>',
+  shield:'<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/>',
+  brain:'<path d="M12 5a3 3 0 00-6 0 3 3 0 00-2 5 3 3 0 001 5 3 3 0 006 1zM12 5a3 3 0 016 0 3 3 0 012 5 3 3 0 01-1 5 3 3 0 01-6 1z"/>',
+  cal:'<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/>',
+  tag:'<path d="M3 3h8l10 10-8 8L3 11z"/><circle cx="7.5" cy="7.5" r="1.3"/>'
+};
+const svg=(p,w=18)=>`<svg width="${w}" height="${w}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+
+/* ── grafové pomôcky ───────────────────────────────────────── */
+function bars(items){
+  const max=Math.max(...items.map(i=>i.v));
+  return `<div class="bars">${items.map(i=>`
+    <div class="bar"><span class="bv">${i.d??i.v}</span>
+      <div class="col" style="height:${Math.max(6,i.v/max*100)}%"></div>
+      <span class="bl">${tr(i.l)}</span></div>`).join('')}</div>`;
+}
+function area(vals){
+  const max=Math.max(...vals),min=Math.min(...vals),w=560,h=150,pad=6;
+  const rng=(max-min)||1;
+  const pts=vals.map((v,i)=>[pad+i*(w-2*pad)/(vals.length-1), h-8-((v-min)/rng)*(h-24)]);
+  const line=pts.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ');
+  const fill=line+` L${pts[pts.length-1][0].toFixed(1)} ${h} L${pts[0][0].toFixed(1)} ${h} Z`;
+  return `<svg class="area" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
+    <defs><linearGradient id="ag" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="var(--acc)" stop-opacity=".35"/>
+      <stop offset="1" stop-color="var(--acc)" stop-opacity="0"/></linearGradient></defs>
+    <path d="${fill}" fill="url(#ag)"/>
+    <path d="${line}" fill="none" stroke="var(--acc)" stroke-width="2.4" stroke-linejoin="round"/>
+    ${pts.map(p=>`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="2.6" fill="var(--acc)"/>`).join('')}
+  </svg>`;
+}
+function donut(pct,label){
+  const r=42,c=2*Math.PI*r,off=c*(1-pct/100);
+  return `<div class="donut">
+    <svg viewBox="0 0 104 104"><circle cx="52" cy="52" r="${r}" fill="none" stroke="var(--line)" stroke-width="11"/>
+    <circle cx="52" cy="52" r="${r}" fill="none" stroke="var(--acc)" stroke-width="11" stroke-linecap="round"
+      stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}" transform="rotate(-90 52 52)"/>
+    <text x="52" y="57" text-anchor="middle" font-family="var(--disp)" font-size="21" font-weight="700" fill="var(--ink)">${pct}%</text></svg>
+    <div class="dl">${label}</div></div>`;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   DÁTA MODULOV  (všetko demo)
+   ══════════════════════════════════════════════════════════════ */
+const B={ok:'ok',cond:'cond',no:'no',q:'q',info:'info'};
+const MODULES=[
+{
+  key:'marketing', acc:'var(--teal)', icon:I.megaphone,
+  name:'Aura Marketing',
+  tag:L('Kampane, obsah a analytika s vlastným AI jadrom.','Campaigns, content and analytics on your own AI core.'),
+  desc:L('Plánovanie kampaní, generovanie copy a vyhodnotenie výkonu na jednom mieste.','Campaign planning, copy generation and performance in one place.'),
+  feat:[L('Generovanie copy a variantov v tóne značky','Brand-voice copy and variant generation'),
+        L('Obsahový kalendár naprieč kanálmi','Cross-channel content calendar'),
+        L('Atribúcia konverzií a náklad na výsledok','Conversion attribution and cost per result')],
+  list:L('Kampane','Campaigns'), one:L('Kampaň','Campaign'),
+  kpis:[{l:L('Aktívne kampane','Active campaigns'),v:'12',d:'+3',t:'up'},
+        {l:L('Dosah (30 dní)','Reach (30d)'),v:'248 k',d:'+18 %',t:'up'},
+        {l:L('Konverzie','Conversions'),v:'3 942',d:'+9 %',t:'up'},
+        {l:L('Náklad / konverzia','Cost / conv.'),v:'4,10 €',d:'−6 %',t:'up'}],
+  chart:{title:L('Dosah podľa kanála','Reach by channel'),type:'bars',
+    data:[{l:L('Email','Email'),v:62,d:'62k'},{l:L('Sociálne','Social'),v:48,d:'48k'},{l:L('PPC','PPC'),v:71,d:'71k'},
+          {l:L('Web','Web'),v:39,d:'39k'},{l:L('Newsletter','News'),v:28,d:'28k'},{l:L('Influenceri','Infl.'),v:22,d:'22k'}]},
+  side:{title:L('Cieľ mesiaca','Monthly goal'),donut:68,dl:L('<b>68 %</b>splnené · cieľ 5 800 konverzií','<b>68%</b>reached · goal 5,800 conv.')},
+  cols:[L('Kampaň','Campaign'),L('Kanál','Channel'),L('Stav','Status'),L('Dosah','Reach'),L('Konverzie','Conv.'),L('Rozpočet','Budget')],
+  rows:[
+    {c:['Jarná kolekcia 2026','Email · Web',['ok',L('Aktívna','Active')],'84 200','1 240','3 500 €'],active:true},
+    {c:['Black-Week teaser','PPC',['cond',L('Naplánovaná','Scheduled')],'—','—','5 000 €']},
+    {c:['Vernostný program','Sociálne',['ok',L('Aktívna','Active')],'51 900','980','2 200 €']},
+    {c:['Návrat košíka','Email',['ok',L('Aktívna','Active')],'22 400','610','800 €']},
+    {c:['B2B webinár','Web',['q',L('Koncept','Draft')],'—','—','1 500 €']},
+    {c:['Letný výpredaj','PPC · Sociálne',['q',L('Ukončená','Ended')],'96 300','1 112','4 800 €']}],
+  detail:{
+    title:'Jarná kolekcia 2026', badge:['ok',L('Aktívna','Active')],
+    sub:L('Email · Web · beží od 14. 3. 2026','Email · Web · running since Mar 14, 2026'),
+    fields:[[L('Kanály','Channels'),'Email, Web, Retargeting'],[L('Cieľové publikum','Audience'),L('Existujúci zákazníci','Existing customers')],
+            [L('Rozpočet','Budget'),'3 500 € / 60 %'],[L('Dosah','Reach'),'84 200'],
+            [L('Konverzie','Conversions'),'1 240 · 1,47 %'],[L('Náklad / konv.','Cost / conv.'),'2,82 €']],
+    time:[[L('Dnes 09:12','Today 09:12'),L('AI navrhol 3 varianty predmetu e-mailu','AI proposed 3 subject-line variants')],
+          [L('Včera','Yesterday'),L('A/B test spustený — variant B vedie o 12 %','A/B test started — variant B leads by 12%')],
+          ['20. 3.',L('Segment „vracajúci sa" pridaný','Segment "returning" added')],
+          ['14. 3.',L('Kampaň spustená','Campaign launched')]],
+    donut:74, dl:L('<b>74 %</b>ku dennému cieľu','<b>74%</b>of daily goal')},
+  set:[
+    {h:L('Značka a tón','Brand & voice'),icon:I.tag,rows:[
+      {b:L('Tón hlasu','Voice'),s:L('Ako AI generuje texty','How AI writes copy'),ctl:{sel:L('Priateľský, vecný','Friendly, factual')}},
+      {b:L('Jazyk generovania','Output language'),s:L('Predvolený jazyk výstupov','Default output language'),ctl:{sel:'SK · EN'}},
+      {b:L('Schvaľovanie pred publikovaním','Approval before publishing'),s:L('Človek potvrdí každý výstup AI','Human confirms each AI output'),ctl:{sw:true}}]},
+    {h:L('Kanály a integrácie','Channels & integrations'),icon:I.megaphone,rows:[
+      {b:L('E-mail (SMTP)','Email (SMTP)'),s:L('Pripojené','Connected'),ctl:{sw:true}},
+      {b:L('Sociálne siete','Social networks'),s:L('Pripojené 3 účty','3 accounts connected'),ctl:{sw:true}},
+      {b:L('Automatické reporty','Automated reports'),s:L('Týždenný súhrn v pondelok','Weekly summary on Monday'),ctl:{sw:false}}]}]
+},
+{
+  key:'hr', acc:'var(--violet)', icon:I.people,
+  name:'Aura HR',
+  tag:L('Nábor, dochádzka a hodnotenia — s ochranou osobných údajov.','Recruiting, attendance and reviews — privacy-first.'),
+  desc:L('Celý životný cyklus zamestnanca s AI podkladmi a dátami doma.','Full employee lifecycle with AI drafts and data at home.'),
+  feat:[L('Predtriedenie CV s anonymizáciou','CV pre-screening with anonymisation'),
+        L('Dochádzka, dovolenky a schvaľovanie','Attendance, leave and approvals'),
+        L('Podklady na hodnotenie a rozvoj','Review and development drafts')],
+  list:L('Zamestnanci','Employees'), one:L('Zamestnanec','Employee'),
+  kpis:[{l:L('Zamestnanci','Employees'),v:'128',d:'+4',t:'up'},
+        {l:L('Otvorené pozície','Open roles'),v:'7',d:'',t:'flat'},
+        {l:L('Dochádzka','Attendance'),v:'96,4 %',d:'+0,8',t:'up'},
+        {l:L('Fluktuácia (rok)','Turnover (yr)'),v:'5,2 %',d:'−1,1',t:'up'}],
+  chart:{title:L('Počet ľudí podľa oddelenia','Headcount by department'),type:'bars',
+    data:[{l:L('Vývoj','Eng.'),v:42},{l:L('Obchod','Sales'),v:24},{l:L('Marketing','Mkt'),v:14},
+          {l:L('Podpora','Support'),v:22},{l:L('Financie','Fin.'),v:9},{l:L('Ops','Ops'),v:17}]},
+  side:{title:L('Nábor','Hiring'),donut:57,dl:L('<b>7</b>otvorených pozícií · 4 vo fáze pohovoru','<b>7</b>open roles · 4 in interview')},
+  cols:[L('Meno','Name'),L('Oddelenie','Department'),L('Pozícia','Role'),L('Nástup','Start'),L('Stav','Status')],
+  rows:[
+    {c:['Jana Kováčová','Vývoj','Senior developer','2023-04-01',['ok',L('Aktívny','Active')]],active:true},
+    {c:['Martin Novák','Obchod','Account manager','2024-09-16',['ok',L('Aktívny','Active')]]},
+    {c:['Eva Horváthová','Marketing','Content lead','2025-02-03',['ok',L('Aktívny','Active')]]},
+    {c:['Peter Baláž','Podpora','Support agent','2026-08-18',['cond',L('Onboarding','Onboarding')]]},
+    {c:['Lucia Tóthová','Financie','Účtovníčka','2022-11-07',['ok',L('Aktívny','Active')]]},
+    {c:['Tomáš Varga','Ops','SRE inžinier','—',['q',L('Kandidát','Candidate')]]}],
+  detail:{
+    title:'Jana Kováčová', badge:['ok',L('Aktívny','Active')],
+    sub:L('Senior developer · Vývoj · v tíme 3 roky','Senior developer · Eng. · 3 years'),
+    fields:[[L('Oddelenie','Department'),'Vývoj'],[L('Manažér','Manager'),'Michal Šimko'],
+            [L('Nástup','Start date'),'1. 4. 2023'],[L('Typ úväzku','Contract'),L('Plný úväzok','Full-time')],
+            [L('Zostatok dovolenky','Leave balance'),L('12 dní','12 days')],[L('Posledné hodnotenie','Last review'),'4,6 / 5']],
+    time:[[L('Dnes','Today'),L('AI pripravil podklad na polročné hodnotenie','AI drafted the semi-annual review')],
+          ['15. 7.',L('Žiadosť o dovolenku schválená (5 dní)','Leave request approved (5 days)')],
+          ['1. 6.',L('Povýšenie na Senior developer','Promoted to Senior developer')],
+          ['1. 4. 2023',L('Nástup do firmy','Joined the company')]],
+    donut:96, dl:L('<b>96 %</b>dochádzka (kvartál)','<b>96%</b>attendance (quarter)')},
+  set:[
+    {h:L('Organizácia','Organisation'),icon:I.people,rows:[
+      {b:L('Štruktúra oddelení','Department structure'),s:L('6 oddelení, 12 tímov','6 departments, 12 teams'),ctl:{sel:L('Upraviť','Edit')}},
+      {b:L('Pracovný kalendár','Work calendar'),s:L('Sviatky SR + firemné dni','SK holidays + company days'),ctl:{sel:'2026'}},
+      {b:L('Samoobsluha zamestnanca','Employee self-service'),s:L('Žiadosti a dokumenty online','Requests & documents online'),ctl:{sw:true}}]},
+    {h:L('Ochrana údajov a AI','Privacy & AI'),icon:I.shield,rows:[
+      {b:L('Anonymizácia CV pri triedení','Anonymise CVs on screening'),s:L('Skryť meno, vek, foto','Hide name, age, photo'),ctl:{sw:true}},
+      {b:L('AI podklady na hodnotenie','AI review drafts'),s:L('Návrh, ktorý manažér upraví','Draft the manager edits'),ctl:{sw:true}},
+      {b:L('Ukladanie mimo firmy','Off-site storage'),s:L('Osobné údaje neopúšťajú firmu','Personal data stays in-house'),ctl:{sw:false}}]}]
+},
+{
+  key:'sales', acc:'var(--gold)', icon:I.trend,
+  name:'Aura Sales',
+  tag:L('Pipeline, obchody a ponuky s AI skórovaním.','Pipeline, deals and quotes with AI scoring.'),
+  desc:L('Prehľad obchodných príležitostí od leadu po uzavretie.','Opportunities from lead to close.'),
+  feat:[L('Skórovanie leadov podľa pravdepodobnosti','Lead scoring by win probability'),
+        L('Návrh ďalšieho kroku pre každý obchod','Next-best-action per deal'),
+        L('Ponuky a cenníky z jedného zdroja','Quotes and price lists from one source')],
+  list:L('Obchody','Deals'), one:L('Obchod','Deal'),
+  kpis:[{l:L('Pipeline','Pipeline'),v:'412 000 €',d:'+7 %',t:'up'},
+        {l:L('Uzavreté (kvartál)','Closed (Q)'),v:'128 500 €',d:'+11 %',t:'up'},
+        {l:L('Win rate','Win rate'),v:'34 %',d:'+3',t:'up'},
+        {l:L('Priem. cyklus','Avg. cycle'),v:'21 dní',d:'−2',t:'up'}],
+  chart:{title:L('Pipeline podľa fázy','Pipeline by stage'),type:'bars',
+    data:[{l:L('Nový','New'),v:22},{l:L('Kvalifik.','Qualif.'),v:15},{l:L('Ponuka','Proposal'),v:9},
+          {l:L('Rokovanie','Negotiat.'),v:6},{l:L('Uzavretie','Closing'),v:4}]},
+  side:{title:L('Plnenie kvóty','Quota'),donut:62,dl:L('<b>62 %</b>kvartálnej kvóty · 19 dní do konca','<b>62%</b>of quota · 19 days left')},
+  cols:[L('Obchod','Deal'),L('Klient','Client'),L('Fáza','Stage'),L('Hodnota','Value'),L('Pravdep.','Prob.'),L('Vlastník','Owner')],
+  rows:[
+    {c:['Rollout Aura Core','TechnoDom s.r.o.',['cond',L('Rokovanie','Negotiation')],'86 000 €','70 %','M. Novák'],active:true},
+    {c:['Ročná licencia','Alfa Group',['ok',L('Ponuka','Proposal')],'42 000 €','55 %','M. Novák']},
+    {c:['Pilotný projekt','MediaVin',['info',L('Kvalifikácia','Qualification')],'18 000 €','35 %','K. Malá']},
+    {c:['Rozšírenie tímu','Nord Logistics',['ok',L('Uzavretý','Won')],'54 000 €','100 %','K. Malá']},
+    {c:['Náhrada systému','BioFarm',['q',L('Nový','New')],'30 000 €','15 %','M. Novák']},
+    {c:['Servisná zmluva','Kovo Plus',['no',L('Prehratý','Lost')],'12 000 €','0 %','K. Malá']}],
+  detail:{
+    title:'Rollout Aura Core', badge:['cond',L('Rokovanie','Negotiation')],
+    sub:L('TechnoDom s.r.o. · 86 000 € · zatvorenie ~15. 9. 2026','TechnoDom · €86,000 · close ~Sep 15, 2026'),
+    fields:[[L('Klient','Client'),'TechnoDom s.r.o.'],[L('Hodnota','Value'),'86 000 €'],
+            [L('Fáza','Stage'),L('Rokovanie','Negotiation')],[L('Pravdepodobnosť','Probability'),'70 %'],
+            [L('Vlastník','Owner'),'Martin Novák'],[L('Očak. zatvorenie','Expected close'),'15. 9. 2026']],
+    time:[[L('Dnes','Today'),L('AI odporúča: poslať upravenú ponuku s 3-ročným TCO','AI suggests: send revised quote with 3-yr TCO')],
+          ['28. 7.',L('Prezentácia u klienta — pozitívna odozva','Client demo — positive feedback')],
+          ['12. 7.',L('Zaslaná prvá ponuka','First quote sent')],
+          ['1. 7.',L('Príležitosť vytvorená z leadu','Opportunity created from lead')]],
+    donut:70, dl:L('<b>70 %</b>pravdepodobnosť výhry','<b>70%</b>win probability')},
+  set:[
+    {h:L('Pipeline a fázy','Pipeline & stages'),icon:I.trend,rows:[
+      {b:L('Fázy obchodu','Deal stages'),s:L('5 fáz · vlastné poradie','5 stages · custom order'),ctl:{sel:L('Upraviť','Edit')}},
+      {b:L('Cenníky','Price lists'),s:L('2 aktívne cenníky','2 active price lists'),ctl:{sel:'EUR'}},
+      {b:L('Automatické pripomienky','Auto reminders'),s:L('Ak sa obchod nehýbe 7 dní','If a deal stalls 7 days'),ctl:{sw:true}}]},
+    {h:L('AI asistent','AI assistant'),icon:I.brain,rows:[
+      {b:L('Skórovanie leadov','Lead scoring'),s:L('Pravdepodobnosť z histórie','Probability from history'),ctl:{sw:true}},
+      {b:L('Návrh ďalšieho kroku','Next-best-action'),s:L('Odporúčanie pri každom obchode','Suggestion per deal'),ctl:{sw:true}}]}]
+},
+{
+  key:'finance', acc:'var(--good)', icon:I.coins,
+  name:'Aura Finance',
+  tag:L('Faktúry, cashflow a náklady pod kontrolou.','Invoices, cashflow and costs under control.'),
+  desc:L('Prehľad o peniazoch firmy s AI kategorizáciou a upomienkami.','Company cash overview with AI categorisation and dunning.'),
+  feat:[L('Vystavovanie a sledovanie faktúr','Invoice issuing and tracking'),
+        L('Kategorizácia nákladov cez AI','AI expense categorisation'),
+        L('Prehľad cashflow a splatností','Cashflow and due-date overview')],
+  list:L('Faktúry','Invoices'), one:L('Faktúra','Invoice'),
+  kpis:[{l:L('Príjmy (mesiac)','Revenue (mo.)'),v:'96 400 €',d:'+5 %',t:'up'},
+        {l:L('Náklady','Costs'),v:'61 200 €',d:'+2 %',t:'down'},
+        {l:L('Cashflow','Cashflow'),v:'+35 200 €',d:'+9 %',t:'up'},
+        {l:L('Po splatnosti','Overdue'),v:'8 900 €',d:'−12 %',t:'up'}],
+  chart:{title:L('Cashflow za 6 mesiacov (€ tis.)','Cashflow, last 6 months (€k)'),type:'area',
+    data:[18,22,19,27,24,35]},
+  side:{title:L('Štruktúra nákladov','Cost split'),donut:64,dl:L('<b>64 %</b>fixné · 36 % variabilné','<b>64%</b>fixed · 36% variable')},
+  cols:[L('Číslo','No.'),L('Klient','Client'),L('Vystavené','Issued'),L('Splatnosť','Due'),L('Suma','Amount'),L('Stav','Status')],
+  rows:[
+    {c:['2026-0412','TechnoDom s.r.o.','2026-07-20','2026-08-19','12 400 €',['cond',L('Čaká','Pending')]],active:true},
+    {c:['2026-0411','Alfa Group','2026-07-14','2026-07-28','8 600 €',['ok',L('Uhradená','Paid')]]},
+    {c:['2026-0408','MediaVin','2026-06-30','2026-07-14','4 200 €',['no',L('Po splatnosti','Overdue')]]},
+    {c:['2026-0407','Nord Logistics','2026-07-02','2026-08-01','21 000 €',['ok',L('Uhradená','Paid')]]},
+    {c:['2026-0405','BioFarm','2026-07-25','2026-08-24','3 900 €',['cond',L('Čaká','Pending')]]},
+    {c:['2026-0402','Kovo Plus','2026-06-18','2026-07-02','2 300 €',['no',L('Po splatnosti','Overdue')]]}],
+  detail:{
+    title:L('Faktúra 2026-0412','Invoice 2026-0412'), badge:['cond',L('Čaká na úhradu','Pending')],
+    sub:L('TechnoDom s.r.o. · splatnosť 19. 8. 2026','TechnoDom · due Aug 19, 2026'),
+    fields:[[L('Odberateľ','Customer'),'TechnoDom s.r.o.'],[L('Variabilný symbol','Ref.'),'20260412'],
+            [L('Vystavené','Issued'),'20. 7. 2026'],[L('Splatnosť','Due'),'19. 8. 2026'],
+            [L('Základ / DPH','Net / VAT'),'10 333 € / 2 067 €'],[L('Spolu','Total'),'12 400 €']],
+    time:[[L('Dnes','Today'),L('AI: platba zvyčajne prichádza deň pred splatnosťou','AI: payment usually arrives a day before due')],
+          ['22. 7.',L('Faktúra otvorená klientom','Invoice opened by client')],
+          ['20. 7.',L('Faktúra odoslaná e-mailom','Invoice sent by email')],
+          ['20. 7.',L('Vytvorená z obchodu „Rollout Aura Core"','Created from deal "Rollout Aura Core"')]],
+    donut:0, dl:L('<b>0 %</b>uhradené · 17 dní do splatnosti','<b>0%</b>paid · 17 days to due')},
+  set:[
+    {h:L('Fakturačné údaje','Billing details'),icon:I.coins,rows:[
+      {b:L('Firemné údaje','Company details'),s:L('IČO, DIČ, IBAN','Reg. no., VAT, IBAN'),ctl:{sel:L('Upraviť','Edit')}},
+      {b:L('Sadzba DPH','VAT rate'),s:L('Predvolená sadzba','Default rate'),ctl:{sel:'23 %'}},
+      {b:L('Číselný rad','Numbering'),s:L('Formát RRRR-NNNN','Format YYYY-NNNN'),ctl:{sel:'2026-####'}}]},
+    {h:L('Automatizácia a AI','Automation & AI'),icon:I.brain,rows:[
+      {b:L('Kategorizácia nákladov','Expense categorisation'),s:L('AI zaradí položky','AI classifies items'),ctl:{sw:true}},
+      {b:L('Upomienky po splatnosti','Overdue reminders'),s:L('Automatický e-mail po 3 dňoch','Auto email after 3 days'),ctl:{sw:true}},
+      {b:L('Mesačný účtovný export','Monthly export'),s:L('Do účtovného softvéru','To accounting software'),ctl:{sw:false}}]}]
+},
+{
+  key:'support', acc:'var(--amber)', icon:I.lifebuoy,
+  name:'Aura Support',
+  tag:L('Tickety, SLA a znalostná báza s návrhom odpovede.','Tickets, SLA and knowledge base with reply drafts.'),
+  desc:L('Zákaznícka podpora naprieč kanálmi s AI asistentom agenta.','Cross-channel customer support with an AI agent assistant.'),
+  feat:[L('Zjednotená schránka pre všetky kanály','Unified inbox for every channel'),
+        L('Návrh odpovede zo znalostnej bázy','Reply drafts from the knowledge base'),
+        L('Sledovanie SLA a spokojnosti (CSAT)','SLA and CSAT tracking')],
+  list:L('Tickety','Tickets'), one:L('Ticket','Ticket'),
+  kpis:[{l:L('Otvorené tickety','Open tickets'),v:'34',d:'−5',t:'up'},
+        {l:L('Priem. čas odpovede','Avg. response'),v:'1 h 12 m',d:'−14 %',t:'up'},
+        {l:L('Plnenie SLA','SLA met'),v:'97 %',d:'+1',t:'up'},
+        {l:L('CSAT','CSAT'),v:'4,6 / 5',d:'+0,2',t:'up'}],
+  chart:{title:L('Tickety podľa kanála','Tickets by channel'),type:'bars',
+    data:[{l:L('Email','Email'),v:41},{l:L('Chat','Chat'),v:33},{l:L('Telefón','Phone'),v:12},
+          {l:L('Formulár','Form'),v:19},{l:L('Sociálne','Social'),v:8}]},
+  side:{title:L('Plnenie SLA','SLA'),donut:97,dl:L('<b>97 %</b>v rámci SLA · 1 ticket po termíne','<b>97%</b>within SLA · 1 breached')},
+  cols:[L('ID','ID'),L('Predmet','Subject'),L('Zákazník','Customer'),L('Priorita','Priority'),L('Stav','Status'),L('Priradené','Assignee')],
+  rows:[
+    {c:['#4821',L('Chyba pri prihlásení','Login error'),'Alfa Group',['no',L('Vysoká','High')],['cond',L('Otvorený','Open')],'P. Baláž'],active:true},
+    {c:['#4820',L('Otázka k fakturácii','Billing question'),'MediaVin',['cond',L('Stredná','Medium')],['info',L('Čaká na zákazníka','Waiting')],'P. Baláž']},
+    {c:['#4818',L('Žiadosť o funkciu','Feature request'),'Nord Logistics',['q',L('Nízka','Low')],['cond',L('Otvorený','Open')],'—']},
+    {c:['#4815',L('Export nefunguje','Export fails'),'BioFarm',['no',L('Vysoká','High')],['ok',L('Vyriešený','Resolved')],'P. Baláž']},
+    {c:['#4812',L('Zmena hesla','Password reset'),'Kovo Plus',['q',L('Nízka','Low')],['ok',L('Vyriešený','Resolved')],'AI · auto']},
+    {c:['#4810',L('Pomalé načítanie','Slow loading'),'TechnoDom',['cond',L('Stredná','Medium')],['ok',L('Vyriešený','Resolved')],'M. Kraus']}],
+  detail:{
+    title:'#4821 · '+'Chyba pri prihlásení', badge:['cond',L('Otvorený','Open')],
+    sub:L('Alfa Group · vysoká priorita · SLA 4 h (zostáva 2 h 40 m)','Alfa Group · high · SLA 4h (2h 40m left)'),
+    fields:[[L('Zákazník','Customer'),'Alfa Group'],[L('Kanál','Channel'),'Email'],
+            [L('Priorita','Priority'),L('Vysoká','High')],[L('Priradené','Assignee'),'Peter Baláž'],
+            [L('Vytvorený','Created'),L('Dnes 08:30','Today 08:30')],[L('SLA','SLA'),L('4 h · zostáva 2 h 40 m','4h · 2h 40m left')]],
+    time:[[L('Dnes 09:05','Today 09:05'),L('AI navrhol odpoveď z článku „Reset 2FA"','AI drafted a reply from "Reset 2FA"')],
+          [L('Dnes 08:41','Today 08:41'),L('Ticket priradený Petrovi Balážovi','Assigned to Peter Baláž')],
+          [L('Dnes 08:32','Today 08:32'),L('AI klasifikoval: Prihlásenie / 2FA','AI classified: Login / 2FA')],
+          [L('Dnes 08:30','Today 08:30'),L('Ticket vytvorený z e-mailu','Ticket created from email')]],
+    donut:88, dl:L('<b>88 %</b>SLA času ešte k dispozícii','<b>88%</b>of SLA time remaining')},
+  set:[
+    {h:L('Tímy a fronty','Teams & queues'),icon:I.people,rows:[
+      {b:L('Fronty podpory','Support queues'),s:L('3 fronty · smerovanie podľa kanála','3 queues · channel routing'),ctl:{sel:L('Upraviť','Edit')}},
+      {b:L('Pracovný čas','Business hours'),s:L('Po–Pia 8:00–17:00','Mon–Fri 8am–5pm'),ctl:{sel:'CET'}},
+      {b:L('Pravidlá SLA','SLA rules'),s:L('Podľa priority a plánu','By priority and plan'),ctl:{sw:true}}]},
+    {h:L('AI asistent','AI assistant'),icon:I.brain,rows:[
+      {b:L('Návrh odpovede','Reply suggestions'),s:L('Zo znalostnej bázy','From the knowledge base'),ctl:{sw:true}},
+      {b:L('Automatická klasifikácia','Auto classification'),s:L('Téma a priorita','Topic and priority'),ctl:{sw:true}},
+      {b:L('Autoodpoveď na bežné otázky','Auto-reply to FAQs'),s:L('Len nízka priorita, s dohľadom','Low priority only, supervised'),ctl:{sw:false}}]}]
+},
+{
+  key:'ops', acc:'var(--teal-2)', icon:I.server,
+  name:'Aura Ops',
+  tag:L('Prevádzka jadra: workeri, GPU, pamäť a hranica dát.','Core operations: workers, GPU, memory and the data boundary.'),
+  desc:L('Monitoring vlastného 70B jadra a troch izolovaných workerov.','Monitoring of the local 70B core and three isolated workers.'),
+  feat:[L('Stav jadra, workerov a fronty úloh','Core, worker and queue status'),
+        L('Vyťaženie GPU, VRAM a latencia','GPU, VRAM and latency load'),
+        L('Kontrola hranice dát a zón spracovania','Data boundary and processing zones')],
+  list:L('Uzly','Nodes'), one:L('Uzol','Node'),
+  kpis:[{l:L('Dostupnosť (30 dní)','Uptime (30d)'),v:'99,95 %',d:'+0,02',t:'up'},
+        {l:L('Využitie VRAM','VRAM usage'),v:'78 %',d:'+6',t:'down'},
+        {l:L('Fronta úloh','Task queue'),v:'12',d:'−3',t:'up'},
+        {l:L('Priem. latencia','Avg. latency'),v:'840 ms',d:'−40 ms',t:'up'}],
+  chart:{title:L('Vyťaženie workerov (%)','Worker load (%)'),type:'bars',
+    data:[{l:L('Worker A','Worker A'),v:71},{l:L('Worker B','Worker B'),v:66},{l:L('Worker C','Worker C'),v:58},
+          {l:L('Brána dát','Gateway'),v:24},{l:L('NAS','NAS'),v:41}]},
+  side:{title:L('Zdravie jadra','Core health'),donut:78,dl:L('<b>78 %</b>VRAM · 22 % rezerva','<b>78%</b>VRAM · 22% headroom')},
+  cols:[L('Uzol','Node'),L('Rola','Role'),L('GPU','GPU'),L('VRAM','VRAM'),L('Latencia','Latency'),L('Stav','Status')],
+  rows:[
+    {c:['Worker A',L('Inferencia 70B','70B inference'),'2× RTX','78 %','810 ms',['ok',L('Beží','Running')]],active:true},
+    {c:['Worker B',L('Embeddings','Embeddings'),'1× RTX','61 %','240 ms',['ok',L('Beží','Running')]]},
+    {c:['Worker C',L('Sandbox','Sandbox'),'1× RTX','58 %','1 020 ms',['cond',L('Zaťažený','Loaded')]]},
+    {c:[L('Brána dát','Gateway'),L('Hranica dát','Data boundary'),'—','—','—',['ok',L('Beží','Running')]]},
+    {c:[L('NAS záloha','NAS backup'),L('Úložisko','Storage'),'—','—','—',['ok',L('Beží','Running')]]},
+    {c:[L('Off-site kópia','Off-site copy'),L('Záloha','Backup'),'—','—','—',['cond',L('Synchronizuje','Syncing')]]}],
+  detail:{
+    title:'Worker A', badge:['ok',L('Beží','Running')],
+    sub:L('Inferencia jadra 70B · 2× RTX · uptime 41 dní','70B inference · 2× RTX · uptime 41 days'),
+    fields:[[L('Rola','Role'),L('Inferencia 70B','70B inference')],[L('GPU','GPU'),'2× RTX (48 GB)'],
+            [L('Využitie VRAM','VRAM usage'),'78 % · 37,4 GB'],[L('Priem. latencia','Avg. latency'),'810 ms'],
+            [L('Fronta','Queue'),L('7 úloh','7 tasks')],[L('Zóna','Zone'),L('Interná (dôverná)','Internal (confidential)')]],
+    time:[[L('Teraz','Now'),L('Spracúva dávku 7 úloh · 810 ms/req','Processing batch of 7 · 810 ms/req')],
+          [L('Pred 2 h','2h ago'),L('Model prehriaty na 74 °C — v norme','Model at 74 °C — within limits')],
+          [L('Dnes 03:00','Today 03:00'),L('Nočná údržba dokončená','Nightly maintenance done')],
+          [L('Pred 41 dňami','41 days ago'),L('Uzol nasadený','Node deployed')]],
+    donut:78, dl:L('<b>78 %</b>VRAM · rezerva 22 %','<b>78%</b>VRAM · 22% headroom')},
+  set:[
+    {h:L('Uzly a workeri','Nodes & workers'),icon:I.server,rows:[
+      {b:L('Smerovanie modelu','Model routing'),s:L('Ktorý worker berie ktoré úlohy','Which worker takes which tasks'),ctl:{sel:L('Upraviť','Edit')}},
+      {b:L('Limit kontextu','Context limit'),s:L('Max. tokenov na požiadavku','Max tokens per request'),ctl:{sel:'32k'}},
+      {b:L('Automatické škálovanie','Auto-scaling'),s:L('Zapnúť worker C pri fronte > 20','Spin up worker C if queue > 20'),ctl:{sw:true}}]},
+    {h:L('Hranica dát','Data boundary'),icon:I.shield,rows:[
+      {b:L('Zóny spracovania','Processing zones'),s:L('4 zóny · verejná → dôverná','4 zones · public → confidential'),ctl:{sel:L('Zobraziť','View')}},
+      {b:L('Blokovať odchádzajúce dáta','Block outbound data'),s:L('Dôverná zóna neopúšťa sieť','Confidential zone stays on-net'),ctl:{sw:true}},
+      {b:L('Audit prístupov','Access audit'),s:L('Log každého dopytu na jadro','Log every core query'),ctl:{sw:true}}]}]
+}
+];
+const MOD=Object.fromEntries(MODULES.map((m,i)=>[m.key,{...m,idx:i+1}]));
+const SCREENS=['dashboard','list','detail','settings'];
+
+/* ══════════════════════════════════════════════════════════════
+   RENDER
+   ══════════════════════════════════════════════════════════════ */
+const view=document.getElementById('view');
+
+function renderHub(){
+  document.documentElement.style.setProperty('--acc','var(--teal)');
+  view.innerHTML=`<div class="hub an">
+    <div class="eb" data-i="hubEb">Ekosystém Aura</div>
+    <h1>${state.lang==='sk'?'Jedno jadro, <em>šesť aplikácií</em>.':'One core, <em>six applications</em>.'}</h1>
+    <p class="lead">${state.lang==='sk'
+      ?'Marketing, HR, obchod, financie, podpora a prevádzka — postavené na vlastnom AI jadre Aura. Dáta zostávajú doma.'
+      :'Marketing, HR, sales, finance, support and operations — built on the local Aura AI core. Your data stays home.'}</p>
+    <p class="note">${state.lang==='sk'
+      ?'Náhľad používateľských obrazoviek. Každý modul má úvod, prehľad, zoznam, detail a nastavenia. Všetky čísla sú ukážkové.'
+      :'A preview of the user-facing screens. Each module has an intro, overview, list, detail and settings. All figures are illustrative.'}</p>
+    <div class="grid6">${MODULES.map((m,i)=>`
+      <div class="mcard" style="--ac:${m.acc}" onclick="location.hash='#${m.key}'">
+        <span class="num mono">0${i+1}</span>
+        <div class="ico">${svg(m.icon)}</div>
+        <h3>${m.name}</h3>
+        <p>${tr(m.tag)}</p>
+        <div class="meta"><span>${state.lang==='sk'?'5 obrazoviek':'5 screens'}</span>
+          <span class="go">${state.lang==='sk'?'Otvoriť':'Open'} ${svg(I.arrow)}</span></div>
+      </div>`).join('')}</div>
+  </div>`;
+}
+
+function renderIntro(m){
+  document.documentElement.style.setProperty('--acc',m.acc);
+  view.innerHTML=`<div class="intro an">
+    <div class="glow"></div>
+    <div class="intro-in">
+      <div>
+        <div class="eb"><span class="n">0${m.idx} / 06</span> · ${state.lang==='sk'?'Modul':'Module'}</div>
+        <h1>${m.name}</h1>
+        <p class="tag">${tr(m.tag)}</p>
+        <ul class="feat">${m.feat.map(f=>`<li><span class="dot"></span><span>${tr(f)}</span></li>`).join('')}</ul>
+        <button class="cta" onclick="location.hash='#${m.key}/dashboard'">
+          ${state.lang==='sk'?'Vstúpiť do aplikácie':'Enter the app'} ${svg(I.arrow)}</button>
+      </div>
+      <div class="intro-art">
+        <div class="mini-h"><span class="d"></span><span class="d"></span><span class="d"></span>
+          <span style="margin-left:6px;font:600 11px var(--mono);color:var(--ink-3)">${m.name} · ${state.lang==='sk'?'prehľad':'overview'}</span></div>
+        <div class="kpis" style="grid-template-columns:1fr 1fr;gap:10px;margin:0 0 14px">
+          ${m.kpis.slice(0,2).map(k=>kpiCard(k,true)).join('')}</div>
+        ${m.chart.type==='area'?area(m.chart.data):bars(m.chart.data.slice(0,5))}
+      </div>
+    </div>
+  </div>`;
+}
+
+function kpiCard(k,mini){
+  const cls=k.t==='up'?'up':k.t==='down'?'down':'flat';
+  const ar=k.t==='up'?'▲':k.t==='down'?'▼':'';
+  return `<div class="kpi"><div class="l">${tr(k.l)}</div><div class="v">${k.v}</div>
+    ${k.d?`<div class="d ${cls}">${ar} ${k.d}</div>`:'<div class="d flat">—</div>'}</div>`;
+}
+
+function shell(m,screen,inner){
+  document.documentElement.style.setProperty('--acc',m.acc);
+  const navItems=[['dashboard',I.grid,L('Prehľad','Overview')],['list',I.list,m.list],
+                  ['detail',I.doc,m.one],['settings',I.gear,L('Nastavenia','Settings')]];
+  const crumbName={dashboard:L('Prehľad','Overview'),list:m.list,detail:m.one,settings:L('Nastavenia','Settings')}[screen];
+  return `<div class="shell an">
+    <aside class="side">
+      <div class="mrail">${MODULES.map(x=>`<a href="#${x.key}/dashboard" class="${x.key===m.key?'on':''}" style="--ac:${x.acc}" title="${x.name}">${svg(x.icon)}</a>`).join('')}</div>
+      <div class="mname">${m.name.replace('Aura ','')}<small>Aura Suite</small></div>
+      <nav class="nav">${navItems.map(([k,ic,lb])=>`<a href="#${m.key}/${k}" class="${k===screen?'on':''}">${svg(ic)}<span>${tr(lb)}</span></a>`).join('')}</nav>
+      <a class="hubl" href="#hub">${svg(I.home)}<span>${state.lang==='sk'?'Späť na rozcestník':'Back to hub'}</span></a>
+    </aside>
+    <div class="main">
+      <div class="topb">
+        <div class="crumb">Aura ⁄ ${m.name.replace('Aura ','')} ⁄ <b>${tr(crumbName)}</b></div>
+        <div class="search">${svg(I.search)}<span>${state.lang==='sk'?'Hľadať…':'Search…'}</span></div>
+        <button class="icon-btn">${svg(I.bell)}</button>
+        <div class="avatar">SP</div>
+      </div>
+      <div class="content">${inner}</div>
+    </div>
+  </div>`;
+}
+
+function renderDashboard(m){
+  const chart=m.chart.type==='area'?area(m.chart.data):bars(m.chart.data);
+  const inner=`
+    <div class="phead"><h2>${state.lang==='sk'?'Prehľad':'Overview'}</h2>
+      <span class="sub">${state.lang==='sk'?'Aktualizované pred chvíľou · ukážkové dáta':'Updated moments ago · sample data'}</span>
+      <div class="actions"><button class="btn">${svg(I.cal)} ${state.lang==='sk'?'30 dní':'30 days'}</button>
+        <button class="btn pri">${svg(I.plus)} ${tr(m.one)}</button></div></div>
+    <div class="kpis">${m.kpis.map(k=>kpiCard(k)).join('')}</div>
+    <div class="cols">
+      <div class="card"><div class="ch"><h3>${tr(m.chart.title)}</h3><span class="sp">${state.lang==='sk'?'posledné obdobie':'latest period'}</span></div>${chart}</div>
+      <div class="card"><div class="ch"><h3>${tr(m.side.title)}</h3></div>${donut(m.side.donut,tr(m.side.dl))}
+        <div class="rows" style="margin-top:16px">${m.rows.slice(0,3).map(r=>rowMini(m,r)).join('')}</div></div>
+    </div>`;
+  view.innerHTML=shell(m,'dashboard',inner);
+}
+function rowMini(m,r){
+  const badge=r.c.find(x=>Array.isArray(x));
+  const name=r.c[0];
+  return `<div class="rw"><div class="t"><b>${tr(name)}</b></div>
+    ${badge?`<span class="badge ${badge[0]}">${tr(badge[1])}</span>`:''}</div>`;
+}
+
+function renderList(m){
+  const chips=state.lang==='sk'?['Všetko','Aktívne','Tento mesiac']:['All','Active','This month'];
+  const inner=`
+    <div class="phead"><h2>${tr(m.list)}</h2>
+      <span class="sub">${m.rows.length} ${state.lang==='sk'?'záznamov · ukážka':'records · sample'}</span>
+      <div class="actions"><button class="btn">${svg(I.filter)} ${state.lang==='sk'?'Filter':'Filter'}</button>
+        <button class="btn pri">${svg(I.plus)} ${state.lang==='sk'?'Nový':'New'}</button></div></div>
+    <div class="toolbar"><div class="search" style="min-width:220px">${svg(I.search)}<span>${state.lang==='sk'?'Hľadať v zozname…':'Search list…'}</span></div>
+      <div class="chips">${chips.map((c,i)=>`<span class="chip ${i===0?'on':''}">${c}</span>`).join('')}</div></div>
+    <div class="tbl-wrap"><table class="t"><thead><tr>${m.cols.map(c=>`<th>${tr(c)}</th>`).join('')}</tr></thead>
+      <tbody>${m.rows.map(r=>`<tr>${r.c.map((cell,i)=>tcell(cell,i)).join('')}</tr>`).join('')}</tbody></table></div>
+    <div class="pager"><span>‹</span><span class="on">1</span><span>2</span><span>3</span><span>›</span></div>`;
+  view.innerHTML=shell(m,'list',inner);
+}
+function tcell(cell,i){
+  if(Array.isArray(cell))return `<td><span class="badge ${cell[0]}">${tr(cell[1])}</span></td>`;
+  return `<td${i===0?' data-b':''}>${i===0?`<b>${tr(cell)}</b>`:tr(cell)}</td>`;
+}
+
+function renderDetail(m){
+  const d=m.detail;
+  const inner=`
+    <div class="phead"><h2>${tr(d.title)}</h2>
+      <span class="badge ${d.badge[0]}" style="margin-bottom:4px">${tr(d.badge[1])}</span>
+      <div class="actions"><button class="btn">${svg(I.doc)} ${state.lang==='sk'?'Export':'Export'}</button>
+        <button class="btn pri">${state.lang==='sk'?'Upraviť':'Edit'}</button></div></div>
+    <p class="sub" style="color:var(--ink-3);font-size:13px;margin:-10px 0 20px">${tr(d.sub)}</p>
+    <div class="dcols">
+      <div class="card"><div class="ch"><h3>${state.lang==='sk'?'Údaje':'Details'}</h3></div>
+        <div class="fields">${d.fields.map(f=>`<div class="field"><div class="fl">${tr(f[0])}</div><div class="fv">${tr(f[1])}</div></div>`).join('')}</div></div>
+      <div class="card"><div class="ch"><h3>${state.lang==='sk'?'Stav':'Status'}</h3></div>${donut(d.donut,tr(d.dl))}</div>
+    </div>
+    <div class="card" style="margin-top:16px"><div class="ch"><h3>${state.lang==='sk'?'Aktivita':'Activity'}</h3><span class="sp">${state.lang==='sk'?'vrátane krokov AI':'incl. AI steps'}</span></div>
+      <div class="time">${d.time.map(t=>`<div class="ti"><div class="mk"></div><div class="tt">${tr(t[1])}<small>${tr(t[0])}</small></div></div>`).join('')}</div></div>`;
+  view.innerHTML=shell(m,'detail',inner);
+}
+
+function renderSettings(m){
+  const inner=`
+    <div class="phead"><h2>${state.lang==='sk'?'Nastavenia':'Settings'}</h2>
+      <span class="sub">${m.name} · ${state.lang==='sk'?'ukážka':'sample'}</span>
+      <div class="actions"><button class="btn pri">${state.lang==='sk'?'Uložiť':'Save'}</button></div></div>
+    ${m.set.map(g=>`<div class="card set-group"><div class="gh">${svg(g.icon)} ${tr(g.h)}</div>
+      ${g.rows.map(r=>`<div class="set-row"><div class="sl"><b>${tr(r.b)}</b><small>${tr(r.s)}</small></div>
+        ${r.ctl.sw!==undefined?`<div class="sw ${r.ctl.sw?'on':''}"></div>`:''}
+        ${r.ctl.sel?`<div class="selbox">${tr(r.ctl.sel)} ${svg('<path d="M6 9l6 6 6-6"/>')}</div>`:''}
+      </div>`).join('')}</div>`).join('')}`;
+  view.innerHTML=shell(m,'settings',inner);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   ROUTER
+   ══════════════════════════════════════════════════════════════ */
+function route(){
+  const h=location.hash.replace(/^#/,'')||'hub';
+  const [key,screen]=h.split('/');
+  if(key==='hub'||!MOD[key]){renderHub();window.scrollTo(0,0);return;}
+  const m=MOD[key];
+  if(!screen){renderIntro(m);window.scrollTo(0,0);return;}
+  ({dashboard:renderDashboard,list:renderList,detail:renderDetail,settings:renderSettings}[screen]||renderIntro)(m);
+  document.querySelector('.content')?.scrollTo(0,0);
+}
+window.addEventListener('hashchange',route);
+
+/* i18n statické popisky + prepínače */
+function applyStatic(){
+  document.querySelectorAll('[data-i]').forEach(el=>{
+    const k=el.getAttribute('data-i');
+    const dict={suite:{sk:'Suite',en:'Suite'},demo:{sk:'Demo · ukážkové dáta',en:'Demo · sample data'}};
+    if(dict[k])el.textContent=dict[k][state.lang];
+  });
+  document.documentElement.lang=state.lang;
+}
+document.getElementById('langseg').addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;
+  state.lang=b.dataset.lang;
+  document.querySelectorAll('#langseg button').forEach(x=>x.classList.toggle('on',x===b));
+  applyStatic();route();
+});
+document.getElementById('themebtn').addEventListener('click',()=>{
+  state.theme=state.theme==='dark'?'light':'dark';
+  document.documentElement.dataset.theme=state.theme;
+});
+
+/* klávesnica: ←/→ medzi obrazovkami modulu, Esc na rozcestník, 1–6 moduly */
+window.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){location.hash='#hub';return;}
+  if(/^[1-6]$/.test(e.key)){location.hash='#'+MODULES[+e.key-1].key;return;}
+  const [key,screen]=(location.hash.replace(/^#/,'')||'hub').split('/');
+  if(!MOD[key]||!screen)return;
+  const i=SCREENS.indexOf(screen);
+  if(e.key==='ArrowRight'&&i<SCREENS.length-1)location.hash=`#${key}/${SCREENS[i+1]}`;
+  if(e.key==='ArrowLeft'){ if(i>0)location.hash=`#${key}/${SCREENS[i-1]}`; else location.hash='#'+key; }
+});
+
+applyStatic();route();
+</script>
+</body>
+</html>
