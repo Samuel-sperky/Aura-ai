@@ -59,7 +59,7 @@ async function main(){
   const url = pathToFileURL(HTML).href;
   const routes = [['hub', 'hub'], ['login', 'login'], ['workspace', 'workspace'], ['profile', 'profile']];
   for (const m of MODULES){ routes.push([m, `${m}`]); for (const s of SCREENS) routes.push([`${m}-${s}`, `${m}/${s}`]); }
-  routes.push([`marketing-detail-summer`, 'marketing/detail/summer']);
+  routes.push(['logistika-claims', 'logistika/claims'], ['kpi-detail-foto', 'kpi/detail/foto']);
 
   console.log('\nFáza A — verifikácia');
   await page.goto(url, { waitUntil: 'networkidle' });
@@ -117,8 +117,9 @@ async function main(){
     shots.push(file); ok(`${slug}-light.png`);
   }
   await page.evaluate(() => document.getElementById('themebtn').click()); // späť na dark
-  await page.evaluate(() => document.querySelector('#langseg [data-lang="en"]').click());
   await page.evaluate(() => { location.hash = '#hub'; });
+  await sleep(ANIM);
+  await page.evaluate(() => document.querySelector('#langseg [data-lang="en"]').click());
   await sleep(ANIM);
   await page.screenshot({ path: join(OUT, 'hub-en.png'), fullPage: true });
   shots.push(join(OUT, 'hub-en.png')); ok('hub-en.png');

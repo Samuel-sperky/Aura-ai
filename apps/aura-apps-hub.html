@@ -24,7 +24,11 @@
   --acc:var(--teal);
   --r:14px;
   --tnum:"tnum" 1,"lnum" 1;
+  --ease-out:cubic-bezier(.22,1,.36,1);
+  --dur-1:150ms; --dur-2:250ms;
 }
+html.noanim *,html.noanim *::before,html.noanim *::after{animation:none!important;transition:none!important}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 :root[data-theme="light"]{
   --paper:#f4f0f3; --card:#ffffff; --card-2:#eae3e8; --line:#ded5dc;
   --ink:#131b1a; --ink-2:#37423f; --ink-3:#5a6968; --gold-t:#8a6417;
@@ -57,11 +61,15 @@ button{font-family:inherit}
 .brand .w{font-family:var(--disp);font-size:18px}
 .brand .w b{color:var(--teal)}
 .demo-tag{
-  font:600 10px/1 var(--mono); letter-spacing:.14em; color:var(--amber);
-  border:1px solid color-mix(in srgb,var(--amber) 45%,var(--line));
-  padding:5px 8px; border-radius:20px; text-transform:uppercase;
-  background:color-mix(in srgb,var(--amber) 10%,transparent); white-space:nowrap;
+  font:600 9px/1 var(--mono); letter-spacing:.12em; color:color-mix(in srgb,var(--amber) 75%,var(--ink-3));
+  border:1px solid color-mix(in srgb,var(--amber) 28%,var(--line));
+  padding:4px 8px; border-radius:20px; text-transform:uppercase;
+  background:none; white-space:nowrap; opacity:.85;
 }
+.crown.pulse{animation:crownp .45s var(--ease-out) 2}
+@keyframes crownp{50%{transform:scale(1.18)}}
+.goldline{border-bottom:1px solid color-mix(in srgb,var(--gold) 45%,transparent)!important}
+.btn:active,.chip:active,.icon-btn:active{transform:translateY(1px) scale(.98)}
 .gspace{flex:1}
 .ctl{display:flex;align-items:center;gap:6px}
 .seg{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden;background:var(--card)}
@@ -97,6 +105,20 @@ button{font-family:inherit}
 .mcard p{color:var(--ink-2);font-size:13.5px;margin:0 0 14px;min-height:40px}
 .mcard .meta{display:flex;align-items:center;gap:8px;color:var(--ink-3);font:600 11.5px var(--mono);letter-spacing:.04em}
 .mcard .go{margin-left:auto;color:var(--ac);display:inline-flex;align-items:center;gap:4px}
+.mcard .go svg{transition:transform var(--dur-1) var(--ease-out)}
+.mcard:hover .go svg{transform:translateX(3px)}
+.mcard:hover{box-shadow:0 16px 40px -18px color-mix(in srgb,var(--ac) 45%,#000)}
+.mcard .livebar{display:flex;align-items:center;gap:9px;margin:0 0 12px;font:600 12px var(--body);color:var(--ink-2)}
+.mcard .livebar .sdot{width:8px;height:8px;border-radius:50%;flex:none}
+.mcard .livebar .spark{margin-left:auto;flex:none;opacity:.9}
+.sdot.ok{background:var(--good)}.sdot.cond{background:var(--amber)}.sdot.no{background:var(--red)}
+.att{display:flex;gap:9px;flex-wrap:wrap;margin:0 0 26px}
+.att .ach{display:inline-flex;align-items:center;gap:8px;font:600 12px var(--body);padding:8px 13px;border-radius:999px;border:1px solid;cursor:pointer;background:none}
+.att .ach.no{color:var(--red);border-color:color-mix(in srgb,var(--red) 40%,var(--line));background:color-mix(in srgb,var(--red) 8%,transparent)}
+.att .ach.cond{color:var(--amber);border-color:color-mix(in srgb,var(--amber) 40%,var(--line));background:color-mix(in srgb,var(--amber) 8%,transparent)}
+.att .ach svg{width:13px;height:13px}
+.att .atl{font:600 10px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);align-self:center;margin-right:4px}
+@media(max-width:480px){.mcard p{display:none}}
 
 /* ── module INTRO cover ─────────────────────────────────────── */
 .intro{min-height:calc(100vh - 52px);display:grid;padding:12vh 26px 40px;position:relative;overflow:hidden}
@@ -147,9 +169,11 @@ button{font-family:inherit}
 .topb .search svg{width:15px;height:15px;flex:none}
 .topb .search .kbd{margin-left:auto;font:600 10px var(--mono);border:1px solid var(--line);border-radius:5px;padding:1px 5px;color:var(--ink-3)}
 .content{padding:22px;overflow:auto}
-.phead{display:flex;align-items:flex-end;gap:14px;margin-bottom:20px;flex-wrap:wrap}
+.phead{display:flex;align-items:flex-end;gap:14px;margin-bottom:22px;flex-wrap:wrap}
+.phead:has(.sub){display:grid;grid-template-columns:1fr auto;gap:3px 14px;align-items:center}
+.phead:has(.sub) .actions{grid-column:2;grid-row:1/span 2}
 .phead h1,.phead h2{font-family:var(--disp);font-weight:700;font-size:24px;margin:0}
-.phead .sub{color:var(--ink-3);font-size:13px}
+.phead .sub{color:var(--ink-3);font-size:12.5px}
 .phead .actions{margin-left:auto;display:flex;gap:9px;flex-wrap:wrap}
 .btn{border:1px solid var(--line);background:var(--card);color:var(--ink-2);font:600 12.5px var(--body);padding:8px 13px;border-radius:9px;cursor:pointer;display:inline-flex;align-items:center;gap:7px}
 .btn svg{width:14px;height:14px}
@@ -173,9 +197,13 @@ button{font-family:inherit}
 .kpi{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:15px 16px}
 :root[data-theme="light"] .kpi{box-shadow:0 1px 2px rgba(20,20,30,.05)}
 .kpi .l{color:var(--ink-3);font-size:12px;font-weight:500;margin-bottom:9px}
-.kpi .v{font-family:var(--disp);font-weight:700;font-size:26px;line-height:1;font-feature-settings:var(--tnum)}
-.kpi .d{margin-top:9px;font:600 11.5px var(--mono);display:inline-flex;align-items:center;gap:4px}
-.kpi .d.up{color:var(--good)} .kpi .d.down{color:var(--red)} .kpi .d.flat{color:var(--ink-3)}
+.kpi .v{font-family:var(--body);font-weight:700;font-size:26px;line-height:1.1;font-feature-settings:var(--tnum);letter-spacing:-.3px}
+.kpi.hero{background:color-mix(in srgb,var(--acc) 6%,var(--card));border-color:color-mix(in srgb,var(--acc) 30%,var(--line))}
+.kpi.hero .v{font-size:35px}
+.kpi .d{margin-top:9px;font:600 11px var(--mono);display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:999px}
+.kpi .d.up{color:var(--good);background:color-mix(in srgb,var(--good) 12%,transparent)}
+.kpi .d.down{color:var(--red);background:color-mix(in srgb,var(--red) 12%,transparent)}
+.kpi .d.flat{color:var(--ink-3);background:none;padding:3px 0}
 
 .cols{display:grid;grid-template-columns:1.6fr 1fr;gap:16px}
 @media(max-width:900px){.cols{grid-template-columns:1fr}}
@@ -186,21 +214,68 @@ button{font-family:inherit}
 .card .ch .sp{margin-left:auto;font:600 11px var(--mono);color:var(--ink-3)}
 
 /* bar chart */
-.bars{display:flex;align-items:flex-end;gap:12px;height:172px;padding-top:8px;border-bottom:1px solid var(--line)}
-.bars .bar{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:8px;height:100%}
-.bars .bar .col{width:100%;max-width:38px;border-radius:6px 6px 0 0;background:linear-gradient(180deg,var(--acc),color-mix(in srgb,var(--acc) 68%,transparent));min-height:8px}
+.chartw{position:relative}
+.grid{position:absolute;left:0;right:34px;top:8px;bottom:26px;pointer-events:none}
+.grid i{position:absolute;left:0;right:0;border-top:1px dashed color-mix(in srgb,var(--line) 80%,transparent)}
+.grid i b{position:absolute;right:-34px;top:-7px;font:500 9px var(--mono);color:var(--ink-3);font-style:normal;font-weight:500}
+.bars{display:flex;align-items:flex-end;gap:12px;height:172px;padding:8px 34px 0 0;border-bottom:1px solid var(--line);position:relative}
+.bars .bar{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:8px;height:100%;cursor:default}
+.bars .bar .col{width:100%;max-width:38px;border-radius:6px 6px 0 0;background:linear-gradient(180deg,var(--acc),color-mix(in srgb,var(--acc) 68%,transparent));min-height:8px;transform-origin:bottom;animation:colin .45s var(--ease-out) both;animation-delay:calc(var(--i)*40ms);transition:filter .15s ease}
+.bars .bar:hover .col{filter:brightness(1.18)}
 .bars .bar.mx .col{background:linear-gradient(180deg,var(--acc),color-mix(in srgb,var(--acc) 78%,transparent));box-shadow:0 0 0 1px color-mix(in srgb,var(--acc) 40%,transparent)}
 .bars .bar .bl{font-size:10.5px;color:var(--ink-3);text-align:center;line-height:1.2}
-.bars .bar .bv{font:600 11px var(--mono);color:var(--ink-2)}
-.axis0{font:500 10px var(--mono);color:var(--ink-3);margin-top:4px}
+.bars .bar .bv{font:600 11px var(--mono);color:var(--ink-2);font-feature-settings:var(--tnum)}
+@keyframes colin{from{transform:scaleY(0)}}
+.ctip{position:fixed;z-index:90;background:var(--card-2);border:1px solid var(--line);border-radius:9px;padding:7px 11px;font:600 12px var(--body);color:var(--ink);box-shadow:0 12px 30px -12px #000;pointer-events:none;white-space:nowrap}
+.ctip small{display:block;font:500 10.5px var(--mono);color:var(--ink-3)}
+/* segarea */
+.segrow{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.segrow .note{margin-left:auto;font:500 10px var(--mono);color:var(--ink-3)}
 
 .area{width:100%;height:150px;display:block}
 
 /* donut */
 .donut{display:flex;align-items:center;gap:16px}
-.donut svg{width:104px;height:104px;flex:none}
+.donut svg{width:84px;height:84px;flex:none}
+.donut circle:last-of-type{animation:donin .7s var(--ease-out) both}
+@keyframes donin{from{stroke-dashoffset:264}}
 .donut .dl{font-size:12.5px;color:var(--ink-2)}
-.donut .dl b{display:block;font-family:var(--disp);font-size:16px;color:var(--ink);margin-bottom:2px}
+.lgd{display:flex;flex-direction:column;gap:7px;margin-top:14px}
+.lgd .lr{display:flex;align-items:center;gap:9px;font-size:12.5px;color:var(--ink-2)}
+.lgd .lr i{width:9px;height:9px;border-radius:3px;flex:none}
+.lgd .lr b{margin-left:auto;font:600 12px var(--mono);color:var(--ink);font-feature-settings:var(--tnum)}
+/* widgets */
+.wrow{margin-top:16px}
+.icards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+@media(max-width:900px){.icards{grid-template-columns:1fr}}
+.icard{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--tone);border-radius:var(--r);padding:15px 16px}
+.icard b{display:block;font-size:13.5px;margin-bottom:5px}
+.icard small{color:var(--ink-3);font-size:12px}
+.hm{display:grid;gap:4px;overflow-x:auto}
+.hm .hrow{display:grid;grid-template-columns:110px repeat(6,1fr);gap:4px;align-items:center;min-width:480px}
+.hm .hl{font-size:11.5px;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hm .cell{height:30px;border-radius:6px;display:grid;place-items:center;font:600 10.5px var(--mono);color:var(--ink);font-feature-settings:var(--tnum)}
+.hm .mh{font:600 9.5px var(--mono);color:var(--ink-3);text-align:center;text-transform:uppercase;letter-spacing:.06em}
+.hm-note{margin-top:10px;font:500 10.5px var(--mono);color:var(--ink-3)}
+.gantt{display:flex;flex-direction:column;gap:9px}
+.gantt .grow{display:grid;grid-template-columns:52px 1fr 92px;gap:12px;align-items:center}
+.gantt .gl{font:600 11px var(--mono);color:var(--ink-2)}
+.gantt .gtrack{height:14px;border-radius:7px;background:var(--card-2);overflow:hidden}
+.gantt .gfill{height:100%;border-radius:7px;background:linear-gradient(90deg,color-mix(in srgb,var(--acc) 70%,transparent),var(--acc));transition:width .5s var(--ease-out)}
+.gantt .gst{font:600 10px var(--mono);color:var(--ink-3)}
+.dcards{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+@media(max-width:700px){.dcards{grid-template-columns:1fr}}
+.dcard{border:1px solid var(--line);border-radius:12px;padding:13px 15px;background:var(--card-2)}
+.dcard .dt{display:flex;align-items:center;gap:9px;margin-bottom:5px}
+.dcard .dt b{font-size:13px}
+.dcard small{color:var(--ink-3);font-size:11.5px}
+/* mini table widget */
+.mtbl{width:100%;border-collapse:collapse;font-size:12.5px}
+.mtbl td{padding:9px 10px;border-top:1px solid var(--line);color:var(--ink-2)}
+.mtbl tr:first-child td{border-top:0}
+.mtbl td b{color:var(--ink)}
+.mtbl tr[data-go]{cursor:pointer}
+.mtbl tr[data-go]:hover td{background:var(--card-2)}
 
 /* mini rows */
 .rows{display:flex;flex-direction:column}
@@ -217,9 +292,17 @@ table.t th{text-align:left;font:600 11px var(--mono);letter-spacing:.06em;text-t
 table.t td{padding:12px 14px;border-bottom:1px solid var(--line);color:var(--ink-2)}
 table.t tr:last-child td{border-bottom:0}
 table.t tbody tr{cursor:pointer}
-table.t tbody tr:hover td{background:var(--card-2)}
+table.t tbody tr:hover td{background:var(--card-2);transition:background .12s}
+table.t tbody tr:hover td:first-child{box-shadow:inset 3px 0 0 var(--acc)}
 table.t td b{color:var(--ink);font-weight:600}
-table.t td.n{font-family:var(--mono);font-feature-settings:var(--tnum)}
+table.t td.n{font-family:var(--mono);font-feature-settings:var(--tnum);text-align:right}
+table.t th.n{text-align:right}
+.kebab{opacity:0;width:26px;height:26px;border-radius:7px;border:1px solid var(--line);background:var(--card);color:var(--ink-2);cursor:pointer;font-size:14px;line-height:1;transition:opacity .15s}
+table.t tbody tr:hover .kebab,.kebab:focus-visible{opacity:1}
+.plnw{display:inline-flex;align-items:center;gap:8px}
+.plnbar{width:44px;height:6px;border-radius:4px;background:var(--card-2);overflow:hidden;flex:none}
+.plnbar i{display:block;height:100%;border-radius:4px}
+.tr-up{color:var(--good);font-weight:700}.tr-dn{color:var(--red);font-weight:700}.tr-fl{color:var(--ink-3)}
 .badge{display:inline-flex;align-items:center;gap:5px;font:600 11px var(--body);padding:3px 9px;border-radius:20px;white-space:nowrap}
 .badge::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
 .badge.ok{color:var(--good);background:color-mix(in srgb,var(--good) 14%,transparent)}
@@ -371,7 +454,7 @@ table.t td.n{font-family:var(--mono);font-feature-settings:var(--tnum)}
   .shell{grid-template-columns:1fr}
   .side{position:fixed;top:52px;bottom:0;left:0;width:250px;z-index:55;transform:translateX(-100%);transition:transform .22s ease;box-shadow:0 0 40px -10px #000}
   body.drawer .side{transform:none}
-  .drawer-scrim{display:none;position:fixed;top:52px;inset:52px 0 0 0;background:color-mix(in srgb,#000 45%,transparent);z-index:54}
+  .drawer-scrim{display:none;position:fixed;top:52px;inset:52px 0 0 0;background:color-mix(in srgb,#000 50%,transparent);backdrop-filter:blur(4px);z-index:54}
   body.drawer .drawer-scrim{display:block}
   .topb .search{max-width:none}
 }
@@ -473,11 +556,24 @@ const svg=(p,w=18)=>`<svg width="${w}" height="${w}" viewBox="0 0 24 24" fill="n
 /* ── grafové pomôcky ───────────────────────────────────────── */
 function bars(items){
   if(!items||!items.length)return '';
-  const max=Math.max(...items.map(i=>i.v),1);
-  const b=items.map(i=>`<div class="bar${i.v===max?' mx':''}"><span class="bv">${i.d??grp(i.v)}</span>
-    <div class="col" style="height:${Math.max(8,i.v/max*100)}%"></div>
+  const max=Math.max(...items.map(i=>i.v||0),1),total=items.reduce((s,i)=>s+(i.v||0),0);
+  const b=items.map((i,ix)=>`<div class="bar${i.v===max?' mx':''}" data-tip="${esc(tr(i.l))}" data-val="${i.d??grp(i.v)}" data-sh="${total?decs(Math.round(i.v/total*1000)/10):0}"><span class="bv">${i.d??grp(i.v)}</span>
+    <div class="col" style="height:${Math.max(8,i.v/max*100)}%;--i:${ix}"></div>
     <span class="bl">${tr(i.l)}</span></div>`).join('');
-  return `<div class="bars">${b}</div><div class="axis0">0 — ${grp(max)}</div>`;
+  const grid=[75,50,25].map(p=>`<i style="top:${100-p}%"><b>${decs(Math.round(max*p/100*10)/10)}</b></i>`).join('');
+  return `<div class="chartw"><div class="grid">${grid}</div><div class="bars">${b}</div></div>`;
+}
+function sparkmini(vals,tone){
+  if(!vals||vals.length<2)return '';
+  const w=64,h=22,max=Math.max(...vals),min=Math.min(...vals),rng=(max-min)||1;
+  const pts=vals.map((v,i)=>`${(i*(w-2)/(vals.length-1)+1).toFixed(1)},${(h-3-((v-min)/rng)*(h-6)).toFixed(1)}`).join(' ');
+  const c=tone==='no'?'var(--red)':tone==='cond'?'var(--amber)':'var(--good)';
+  return `<svg class="spark" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"><polyline points="${pts}" fill="none" stroke="${c}" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
+}
+function segarea(m){
+  const key=state.tseg||'trzba';const s=m.chart.series[key];
+  const segs=Object.entries(m.chart.series).map(([k,v])=>`<button class="chip ${k===key?'on':''}" onclick="state.tseg='${k}';renderDashboard(MOD['${m.key}'])">${tr(v.l)}</button>`).join('');
+  return `<div class="segrow"><div class="chips">${segs}</div><span class="note">${tr(m.chart.note)}</span></div>${area(s.v)}`;
 }
 let agN=0;
 function area(vals){
@@ -513,22 +609,39 @@ const MODULES=[
   feat:[L('Strom Platforma → Kampaň → Zostava → Reklama s rollupom a ROAS pásmami','Platform → Campaign → Ad set → Ad tree with rollups and ROAS bands'),
         L('Bannery 8 jazykov × 5 rozmerov, render HTML/CSS → PNG → ZIP','Banners in 8 languages × 5 sizes, HTML/CSS → PNG → ZIP render'),
         L('Campaign lock (svet + modelka), QA gates a learning do KB','Campaign lock (world + model), QA gates and a KB learning loop')],
-  list:L('Kampane','Campaigns'), one:L('Kampaň','Campaign'),
+  list:L('Kampane','Campaigns'), one:L('Kampaň','Campaign'), newLabel:L('Nová kampaň','New campaign'),
+  live:{v:L('4 kampane · budget 62 %','4 campaigns · budget 62%'),tone:'cond',spark:[2,3,3,4,4,4,4]},
   kpis:[{l:L('Aktívne kampane','Active campaigns'),v:'4',d:{n:1}},
         {l:L('Vygenerované bannery','Banners generated'),v:'320',sub:L('8 jazykov × 5 rozmerov','8 languages × 5 sizes')},
         {l:L('AI budget','AI budget'),v:L('62 % z 300 €','62% of €300'),sub:L('provider: mock','provider: mock')},
         {l:L('QA pass rate','QA pass rate'),v:L('91 %','91%'),d:{n:4,u:L(' p.b.',' pp')}}],
   chart:{title:L('Bannery podľa rozmeru','Banners by size'),type:'bars',
     data:[{l:'1080×1080',v:96},{l:'1080×1350',v:80},{l:'1080×1920',v:56},{l:'1200×628',v:48},{l:'970×250',v:40}]},
-  side:{title:L('Čerpanie AI budgetu','AI budget burn'),donut:62,dl:L('mesačný strop 300 € — pri prekročení sa generovanie zastaví','monthly cap €300 — generation halts at the limit')},
+  side:{title:L('Čerpanie AI budgetu','AI budget burn'),donut:62,
+    lgd:[['var(--amber)',L('vyčerpané','used'),'186 €'],['var(--line)',L('rezerva','headroom'),'114 €']],
+    dl:L('strop 300 € / mesiac','€300 monthly cap')},
+  widget:{type:'actions',title:L('Kampane vyžadujúce akciu','Campaigns needing action'),
+    rows:[['bf',L('Black Friday','Black Friday'),['q',L('Návrh','Draft')],L('manifest nedokončený','manifest unfinished')],
+          ['svadba',L('Svadobná sezóna','Wedding season'),['cond','QA'],L('2 bannery major deviation','2 banners major deviation')],
+          ['zlate',L('Zlaté prstene','Gold rings'),['cond','Render'],L('render beží — 35/40 PNG','render running — 35/40 PNGs')]]},
   cols:[L('Kampaň','Campaign'),L('Svet','World'),L('Modelka','Model'),L('Jazyky','Languages'),L('Bannery','Banners'),L('Stav','Status')],
   rows:[
     {id:'summer',active:true,c:['Summer Sale','Riviéra','Adela','8','40',['info',L('Lock aktívny','Lock active')]]},
-    {id:'svadba',c:[L('Svadobná sezóna','Wedding season'),'Atelier','Viktória','8','40',['cond','QA']]},
-    {id:'zlate',c:[L('Zlaté prstene','Gold rings'),'Quiet Luxury','Nikola','8','35',['cond','Render']]},
-    {id:'bf',c:['Black Friday',L('Nočné mesto','Night city'),'Nikola','8','—',['q',L('Návrh','Draft')]]},
-    {id:'gem',c:['New Gem','Botanika','Adela','8','40',['ok','Export ZIP']]},
-    {id:'doprava',c:[L('Doprava zadarmo','Free shipping'),'Studio','Viktória','3','15',['ok',L('Hotová','Done')]]}],
+    {id:'svadba',c:[L('Svadobná sezóna','Wedding season'),'Atelier','Viktória','8','40',['cond','QA']],
+      d:{sub:L('QA hard gates — 2 bannery major deviation','QA hard gates — 2 banners major deviation'),donut:76,dl:L('bannerov prešlo QA','of banners passed QA'),
+         time:[[L('Dnes','Today'),L('QA: 2 × major deviation → re-render','QA: 2 × major deviation → re-render')],[L('Včera','Yesterday'),L('Render 40 PNG dokončený','40 PNG render finished')]]}},
+    {id:'zlate',c:[L('Zlaté prstene','Gold rings'),'Quiet Luxury','Nikola','8','35',['cond','Render']],
+      d:{sub:L('Render beží — 35 z 40 PNG','Render running — 35 of 40 PNGs'),donut:88,dl:L('renderu hotovo','of render done'),
+         time:[[L('Teraz','Now'),L('HTML/CSS → PNG render (35/40)','HTML/CSS → PNG render (35/40)')],[L('Pred 2 h','2h ago'),L('Campaign lock: Quiet Luxury + Nikola','Campaign lock: Quiet Luxury + Nikola')]]}},
+    {id:'bf',c:['Black Friday',L('Nočné mesto','Night city'),'Nikola','8','—',['q',L('Návrh','Draft')]],
+      d:{sub:L('Koncept — manifest sa pripravuje','Draft — manifest in preparation'),donut:15,dl:L('manifestu hotového','of manifest done'),
+         time:[[L('Dnes','Today'),L('Návrh copy manifestu (8 jazykov)','Copy manifest draft (8 languages)')]]}},
+    {id:'gem',c:['New Gem','Botanika','Adela','8','40',['ok','Export ZIP']],
+      d:{sub:L('Hotovo — ZIP so 40 PNG exportovaný','Done — ZIP with 40 PNGs exported'),donut:100,dl:L('QA prešlo, export hotový','QA passed, export done'),
+         time:[[L('Včera','Yesterday'),L('Export ZIP (40 PNG · 5 rozmerov)','ZIP export (40 PNGs · 5 sizes)')],[L('Pred 3 dňami','3 days ago'),L('QA gates prešli bez deviation','QA gates passed without deviation')]]}},
+    {id:'doprava',c:[L('Doprava zadarmo','Free shipping'),'Studio','Viktória','3','15',['ok',L('Hotová','Done')]],
+      d:{sub:L('Ukončená kampaň — 3 jazyky, 15 bannerov','Finished campaign — 3 languages, 15 banners'),donut:100,dl:L('kampaň uzavretá','campaign closed'),
+         time:[[L('Minulý týždeň','Last week'),L('Kampaň ukončená a archivovaná','Campaign finished and archived')]]}}],
   detail:{title:'Summer Sale',badge:['info',L('Lock aktívny','Lock active')],
     sub:L('Jeden svet · jedna modelka · identity lock','One world · one model · identity lock'),
     fields:[[L('Modelka','Model'),L('Adela (26–32, mediterránska)','Adela (26–32, Mediterranean)')],[L('Svet','World'),'Riviéra'],
@@ -538,11 +651,11 @@ const MODULES=[
           [L('Včera','Yesterday'),L('QA hard gates: 2 bannery major deviation → re-render','QA hard gates: 2 banners major deviation → re-render')],
           [L('Pred 3 dňami','3 days ago'),L('Render dokončený (HTML/CSS → PNG)','Render finished (HTML/CSS → PNG)')],
           [L('Pred 5 dňami','5 days ago'),L('Campaign lock: svet Riviéra + modelka Adela','Campaign lock: world Riviéra + model Adela')]],
-    donut:91,dl:L('bannerov prešlo QA gates (minor/major deviation)','of banners passed QA gates (minor/major deviation)')},
+    donut:91,dl:L('bannerov prešlo QA gates','of banners passed QA gates')},
   set:[
     {h:'AI provider',icon:I.brain,rows:[
-      {b:'Provider',s:'mock · openai (GPT) · gemini (3 Pro Image)',sel:'mock'},
-      {b:L('Budget strop','Budget cap'),s:L('Mesačný limit generovania','Monthly generation limit'),sel:'300 €'},
+      {b:'Provider',s:'mock · openai (GPT) · gemini (3 Pro Image)',sel:'mock',opts:['mock','openai','gemini']},
+      {b:L('Budget strop','Budget cap'),s:L('Mesačný limit generovania','Monthly generation limit'),sel:'300 €',opts:['100 €','200 €','300 €']},
       {b:L('API kľúče','API keys'),s:L('Zatiaľ nevyplnené','Not set yet'),sel:L('Doplniť','Add')}]},
     {h:L('Render a znalostná báza','Render & knowledge base'),icon:I.tag,rows:[
       {b:L('Rozmery a jazyky','Sizes & languages'),s:L('5 rozmerov · 8 jazykov','5 sizes · 8 languages'),sel:L('Upraviť','Edit')},
@@ -556,22 +669,41 @@ const MODULES=[
   feat:[L('Plnenie (skutočnosť − Min) / (Max − Min), cap 100 % · 16 metrík · 38 vstupov · 48 pásiem','Attainment (actual − Min) / (Max − Min), capped at 100% · 16 metrics · 38 inputs · 48 bands'),
         L('Heatmapa, A/B porovnanie a ročný pohľad','Heatmap, A/B compare and a yearly view'),
         L('Uzávierka do 10. dňa, denníky a integrácie Logistika + SEO','Close by day 10, diaries and Logistics + SEO integrations')],
-  list:L('Oddelenia','Departments'), one:L('Oddelenie','Department'),
+  list:L('Oddelenia','Departments'), one:L('Oddelenie','Department'), newLabel:L('Nové oddelenie','New department'),
+  live:{v:L('7/12 vyplnených · 3 po termíne','7/12 filled · 3 overdue'),tone:'no',spark:[55,58,60,57,62,60,62]},
   kpis:[{l:'Team score',v:L('61,9 %','61.9%'),sub:L('priemer 6 zložiek','average of 6 components')},
         {l:L('Vyplnené oddelenia','Departments filled'),v:'7 / 12',d:{n:1}},
         {l:L('Najlepšie oddelenie','Top department'),v:'Copywriter',sub:L('plnenie 100 %','100% attainment')},
         {l:L('Po termíne','Overdue'),v:'3',d:{n:-2,inv:true}}],
   chart:{title:L('Plnenie oddelení — jún 2026 (%)','Department attainment — June 2026 (%)'),type:'bars',
     data:[{l:'Copywriter',v:100},{l:L('Nahrávanie','Uploads'),v:88.5,d:'88,5'},{l:'Performance',v:87.2,d:'87,2'},{l:'Newsletter-AI',v:84.6,d:'84,6'},{l:L('Fotografka','Photo'),v:68.1,d:'68,1'},{l:'IT',v:5,d:'5,0'}]},
-  side:{title:L('Kompletnosť vyplnenia','Fill completeness'),donut:58,dl:L('vstupov v stave Kompletné za otvorený mesiac','of inputs marked Complete for the open month')},
-  cols:[L('Oddelenie','Department'),L('Plnenie','Attainment'),L('Mesiac','Month'),L('Vyplnenie','Fill'),L('Váhy','Weights'),'Trend'],
+  side:{title:L('Kompletnosť vyplnenia','Fill completeness'),donut:58,
+    lgd:[['var(--good)',L('Kompletné','Complete'),'22'],['var(--amber)',L('Rozpracované','In progress'),'9'],['var(--ink-3)',L('Nevyplnené','Not filled'),'7']],
+    dl:L('vstupov za otvorený mesiac','inputs for the open month')},
+  widget:{type:'heatmap',title:L('Plnenie oddelení × mesiac (H1 2026)','Attainment by department × month (H1 2026)'),
+    months:['Jan','Feb','Mar','Apr',L('Máj','May'),L('Jún','Jun')],
+    rows:[{l:'Copywriter',v:[86,91,95,89,97,100]},{l:L('Nahrávanie','Uploads'),v:[72,80,85,78,84,88.5]},
+          {l:'Performance',v:[90,83,88,92,85,87.2]},{l:'Newsletter-AI',v:[65,71,78,80,82,84.6]},
+          {l:L('Fotografka','Photo'),v:[75,70,62,74,71,68.1]},{l:'IT',v:[40,55,48,52,null,5]}],
+    note:L('Jún = reálne plnenia · staršie mesiace ukážkové','June = real attainment · earlier months illustrative')},
+  cols:[L('Oddelenie','Department'),L('Plnenie','Attainment'),L('Mesiac','Month'),L('Vyplnenie','Fill'),L('Vstupy','Inputs'),'Trend'],
   rows:[
-    {id:'copy',active:true,c:['Copywriter',['ok','100 %'],['ok',L('Uzavretý','Closed')],['ok',L('Kompletné','Complete')],'60/20/20','↑']},
-    {id:'nahr',c:[L('Nahrávanie','Uploads'),['cond','88,5 %'],['ok',L('Uzavretý','Closed')],['ok',L('Kompletné','Complete')],'60/20/20','↑']},
-    {id:'perf',c:['Performance',['cond','87,2 %'],['ok',L('Uzavretý','Closed')],['ok',L('Kompletné','Complete')],'60/20/20','→']},
-    {id:'news',c:['Newsletter-AI',['cond','84,6 %'],['info',L('Otvorený','Open')],['cond',L('Rozpracované','In progress')],'60/20/20','↑']},
-    {id:'foto',c:[L('Fotografka','Photographer'),['cond','68,1 %'],['no',L('Po termíne','Overdue')],['cond',L('Rozpracované','In progress')],'60/20/20','↓']},
-    {id:'hosp',c:[L('Hospodársky','Business/finance'),['q',L('bez dát','no data')],['no',L('Po termíne','Overdue')],['q',L('Nevyplnené','Not filled')],'60/20/20','—']}],
+    {id:'copy',active:true,c:['Copywriter',{pln:100},['ok',L('Uzavretý','Closed')],['ok',L('Kompletné','Complete')],'5/5','↑']},
+    {id:'nahr',c:[L('Nahrávanie','Uploads'),{pln:88.5},['ok',L('Uzavretý','Closed')],['ok',L('Kompletné','Complete')],'4/4','↑'],
+      d:{sub:L('Plnenie 88,5 % · jún uzavretý','Attainment 88.5% · June closed'),donut:88.5,dl:L('plnenie za jún','June attainment'),
+         time:[[L('11. 7.','Jul 11'),L('Mesiac uzavretý','Month closed')],[L('9. 7.','Jul 9'),L('Všetky vstupy vyplnené','All inputs filled')]]}},
+    {id:'perf',c:['Performance',{pln:87.2},['ok',L('Uzavretý','Closed')],['ok',L('Kompletné','Complete')],'6/6','→'],
+      d:{sub:L('Plnenie 87,2 % · jún uzavretý','Attainment 87.2% · June closed'),donut:87.2,dl:L('plnenie za jún','June attainment'),
+         time:[[L('10. 7.','Jul 10'),L('Uzávierka splnená v termíne','Close met on time')]]}},
+    {id:'news',c:['Newsletter-AI',{pln:84.6},['info',L('Otvorený','Open')],['cond',L('Rozpracované','In progress')],'3/5','↑'],
+      d:{sub:L('Júl otvorený — 3 z 5 vstupov vyplnených','July open — 3 of 5 inputs filled'),donut:60,dl:L('vstupov vyplnených','of inputs filled'),
+         time:[[L('Dnes','Today'),L('Doplnený vstup: konverzie newslettera','Input added: newsletter conversions')],[L('1. 8.','Aug 1'),L('Mesiac otvorený','Month opened')]]}},
+    {id:'foto',c:[L('Fotografka','Photographer'),{pln:68.1},['no',L('Po termíne','Overdue')],['cond',L('Rozpracované','In progress')],'2/4','↓'],
+      d:{sub:L('Po termíne — 2 zo 4 vstupov chýbajú','Overdue — 2 of 4 inputs missing'),donut:50,dl:L('vstupov vyplnených','of inputs filled'),
+         time:[[L('11. 7.','Jul 11'),L('Uzávierka zmeškaná (10. deň)','Close missed (day 10)')],[L('8. 7.','Jul 8'),L('Pripomienka odoslaná','Reminder sent')]]}},
+    {id:'hosp',c:[L('Hospodársky','Business/finance'),{pln:null},['no',L('Po termíne','Overdue')],['q',L('Nevyplnené','Not filled')],'0/6','—'],
+      d:{sub:L('Bez dát — vidí len Admin + manažment','No data — Admin + management only'),donut:0,dl:L('vstupov vyplnených','of inputs filled'),
+         time:[[L('11. 7.','Jul 11'),L('Uzávierka zmeškaná — oddelenie nevyplnilo','Close missed — department did not fill')]]}}],
   detail:{title:L('Copywriter — jún 2026','Copywriter — June 2026'),badge:['ok',L('Uzavretý · Kompletné','Closed · Complete')],
     sub:L('Plnenie 100 % · váhy 60/20/20 · uzávierka 10. 7. 2026','Attainment 100% · weights 60/20/20 · close July 10, 2026'),
     fields:[[L('Top 100 KW v TOP 3','Top 100 KWs in TOP 3'),L('pásmo 20–35 % · váha 60 %','band 20–35% · weight 60%')],
@@ -588,7 +720,7 @@ const MODULES=[
   set:[
     {h:L('Vzhľad a jazyk','Appearance & language'),icon:I.gear,rows:[
       {b:'Dark mode',s:L('Predvolená tmavá téma','Dark theme by default'),sw:true},
-      {b:L('Jazyk','Language'),s:'SK · EN',sel:'SK'},
+      {b:L('Jazyk','Language'),s:'SK · EN',sel:'SK',opts:['SK','EN']},
       {b:L('Zmena hesla','Change password'),s:L('Self-service pre každý účet','Self-service for every account'),sel:L('Zmeniť','Change')}]},
     {h:L('Práva a integrácie','Access & integrations'),icon:I.shield,rows:[
       {b:L('Roly','Roles'),s:L('Admin · Editor · Prehliadač + M:N práva na oddelenia','Admin · Editor · Viewer + M:N department rights'),sel:L('Upraviť','Edit')},
@@ -602,32 +734,71 @@ const MODULES=[
   feat:[L('Súhrny za ISO-týždeň × krajina × prepravca s upsertom a auditom','ISO-week × country × carrier summaries with upsert and audit'),
         L('Reklamačné prípady so životným cyklom a ∅/medián časom riešenia','Claim cases with a lifecycle and avg/median resolution time'),
         L('CSV import, XLSX export, tlač a SVG grafy s kĺzavým priemerom','CSV import, XLSX export, print and SVG charts with a moving average')],
-  list:L('Zásielky','Shipments'), one:L('Záznam','Record'),
+  list:L('Zásielky','Shipments'), one:L('Záznam','Record'), newLabel:L('Nový záznam','New record'),
+  live:{v:L('2 340 zásielok · 37 reklamácií','2,340 shipped · 37 claims'),tone:'cond',spark:[2.1,2.2,2.0,2.3,2.25,2.3,2.34]},
   kpis:[{l:L('Odoslané (W31)','Shipped (W31)'),v:L('2 340','2,340'),d:{n:6.2,u:' %'}},
         {l:L('Doručenosť','Delivery rate'),v:L('94,1 %','94.1%'),d:{n:0.8,u:L(' p.b.',' pp')}},
         {l:L('Otvorené reklamácie','Open claims'),v:'37',d:{n:-5,inv:true}},
         {l:L('Poštovné (júl)','Postage (July)'),v:L('11 603 €','€11,603'),sub:L('náklad dopravy z e-shop dát','shipping cost from e-shop data')}],
   chart:{title:L('Odoslané podľa krajín — W31','Shipped by country — W31'),type:'bars',
     data:[{l:'SK',v:512},{l:'HU',v:401},{l:'CZ',v:348},{l:'RO',v:265},{l:'PL',v:190},{l:'BG',v:88}]},
-  side:{title:L('Stavy zásielok','Shipment states'),donut:94,dl:L('doručené · slovník: odoslané / na ceste / vrátené / stratené / výdajňa','delivered · vocabulary: shipped / in transit / returned / lost / pickup point')},
+  side:{title:L('Reklamácie v riešení','Open claims'),donut:87,
+    lgd:[['var(--good)',L('v SLA 5 dní','within 5-day SLA'),'32'],['var(--red)',L('po SLA','past SLA'),'5']],
+    dl:L('vyriešené v SLA (30 dní)','resolved within SLA (30 days)')},
+  widget:{type:'carriers',title:L('Prepravcovia — W31','Carriers — W31'),
+    rows:[['packeta','512',L('96,1 %','96.1%'),L('2,1 d','2.1 d'),['ok',L('doručené','delivered')]],
+          ['gls','749',L('93,4 %','93.4%'),L('2,8 d','2.8 d'),['cond',L('sleduj objem','watch volume')]],
+          ['sps','265',L('94,7 %','94.7%'),L('3,0 d','3.0 d'),['ok',L('doručené','delivered')]],
+          ['dpd','190',L('91,2 %','91.2%'),L('3,4 d','3.4 d'),['cond',L('vrátené ↑','returns ↑')]],
+          ['posta','88',L('88,5 %','88.5%'),L('4,2 d','4.2 d'),['no',L('1 stratená','1 lost')]]],
+    note:L('Doručenosť a Ø dni sú ukážkové','Delivery rate and avg days are illustrative')},
   cols:[L('Týždeň','Week'),L('Krajina','Country'),L('Prepravca','Carrier'),L('Odoslané','Shipped'),L('Stav','State'),L('Hodnota','Value')],
   rows:[
     {id:'w31sk',active:true,c:['W31','SK','packeta','512',['ok',L('doručené','delivered')],L('18 400 €','€18,400')]},
-    {id:'w31hu',c:['W31','HU','gls','401',['ok',L('doručené','delivered')],L('15 900 €','€15,900')]},
-    {id:'w31cz',c:['W31','CZ','gls','348',['cond',L('na ceste','in transit')],L('12 100 €','€12,100')]},
-    {id:'w31ro',c:['W31','RO','sps','265',['info',L('výdajňa','pickup point')],L('9 700 €','€9,700')]},
-    {id:'w30pl',c:['W30','PL','dpd','190',['cond',L('vrátené','returned')],L('6 300 €','€6,300')]},
-    {id:'w30bg',c:['W30','BG','posta','88',['no',L('stratené','lost')],L('2 900 €','€2,900')]}],
-  detail:{title:L('Reklamácia R-2026-0312','Claim R-2026-0312'),badge:['cond',L('zahájené','opened')],
-    sub:L('HU · GLS · W30 · v riešení 4 dni','HU · GLS · W30 · 4 days in resolution'),
-    fields:[[L('Krajina','Country'),'HU'],[L('Prepravca','Carrier'),'GLS'],
-            [L('Stav','State'),L('zahájené','opened')],[L('Výsledok','Outcome'),'—'],
-            [L('Vinník','Fault'),L('prepravca','carrier')],[L('Čas riešenia','Resolution time'),L('4 dni · ∅ a medián sa počíta po vyriešení','4 days · avg and median computed on resolve')]],
-    time:[[L('Dnes','Today'),L('Čaká sa na vyjadrenie prepravcu','Waiting for the carrier statement')],
-          [L('Pred 2 dňami','2 days ago'),L('Zásielka doručená späť na sklad','Parcel delivered back to the warehouse')],
-          [L('Pred 4 dňami','4 days ago'),L('Reklamácia zahájená (cyklus: zahájené → doručené → vyriešené / stratené)','Claim opened (lifecycle: opened → delivered → resolved / lost)')],
-          ['W30',L('Zásielka označená ako vrátená','Shipment marked returned')]],
-    donut:87,dl:L('reklamácií vyriešených v SLA 5 dní','of claims resolved within the 5-day SLA')},
+    {id:'w31hu',c:['W31','HU','gls','401',['ok',L('doručené','delivered')],L('15 900 €','€15,900')],
+      d:{sub:L('Súhrn W31 · HU · GLS','W31 · HU · GLS summary'),donut:95,dl:L('doručených z odoslaných','delivered of shipped'),
+         time:[[L('Piatok','Friday'),L('Súhrn týždňa uzavretý (upsert + audit)','Weekly summary closed (upsert + audit)')]]}},
+    {id:'w31cz',c:['W31','CZ','gls','348',['cond',L('na ceste','in transit')],L('12 100 €','€12,100')],
+      d:{sub:L('Súhrn W31 · CZ · GLS — časť zásielok na ceste','W31 · CZ · GLS — part in transit'),donut:71,dl:L('doručených, zvyšok na ceste','delivered, rest in transit'),
+         time:[[L('Dnes','Today'),L('98 zásielok stále na ceste','98 parcels still in transit')]]}},
+    {id:'w31ro',c:['W31','RO','sps','265',['info',L('výdajňa','pickup point')],L('9 700 €','€9,700')],
+      d:{sub:L('Súhrn W31 · RO · SPS — výdajňové zásielky','W31 · RO · SPS — pickup point parcels'),donut:64,dl:L('vyzdvihnutých z výdajní','picked up at points'),
+         time:[[L('Dnes','Today'),L('82 zásielok čaká na výdajni','82 parcels waiting at pickup points')]]}},
+    {id:'w30pl',c:['W30','PL','dpd','190',['cond',L('vrátené','returned')],L('6 300 €','€6,300')],
+      d:{sub:L('Súhrn W30 · PL · DPD — zvýšené vratky','W30 · PL · DPD — elevated returns'),donut:9,dl:L('vrátených z odoslaných','returned of shipped'),
+         time:[[L('W30','W30'),L('17 zásielok vrátených — neprevzatie dobierky','17 parcels returned — COD not collected')]]}},
+    {id:'w30bg',c:['W30','BG','posta','88',['no',L('stratené','lost')],L('2 900 €','€2,900')],
+      d:{sub:L('Súhrn W30 · BG · pošta — 1 stratená zásielka','W30 · BG · post — 1 lost parcel'),donut:1,dl:L('stratené (1 z 88)','lost (1 of 88)'),
+         time:[[L('W30','W30'),L('Zásielka označená ako stratená → reklamácia R-2026-0311','Parcel marked lost → claim R-2026-0311')]]}}],
+  claims:{title:L('Reklamácie','Claims'),
+    cols:['ID',L('Krajina','Country'),L('Prepravca','Carrier'),L('Stav','State'),L('Vinník','Fault'),L('Čas riešenia','Resolution')],
+    rows:[
+      {id:'r312',active:true,c:['R-2026-0312','HU','gls',['cond',L('zahájené','opened')],L('prepravca','carrier'),L('4 dni','4 days')]},
+      {id:'r311',c:['R-2026-0311','BG','posta',['cond',L('zahájené','opened')],L('prepravca','carrier'),L('2 dni','2 days')],
+        d:{sub:L('Stratená zásielka z W30','Lost parcel from W30'),donut:40,dl:L('SLA času vyčerpaného','of SLA time used'),
+           time:[[L('Pred 2 dňami','2 days ago'),L('Reklamácia zahájená za stratenú zásielku','Claim opened for a lost parcel')]]}},
+      {id:'r309',c:['R-2026-0309','SK','packeta',['info',L('doručené','delivered')],L('e-shop','e-shop'),L('3 dni','3 days')],
+        d:{sub:L('Tovar doručený späť — čaká na posúdenie','Returned to warehouse — awaiting assessment'),donut:60,dl:L('SLA času vyčerpaného','of SLA time used'),
+           time:[[L('Včera','Yesterday'),L('Zásielka doručená späť na sklad','Parcel delivered back to the warehouse')]]}},
+      {id:'r305',c:['R-2026-0305','CZ','gls',['ok',L('vyriešené','resolved')],L('prepravca','carrier'),L('4 dni','4 days')],
+        d:{sub:L('Vyriešené v SLA — náhrada od prepravcu','Resolved within SLA — carrier compensation'),donut:100,dl:L('vyriešené v SLA 5 dní','resolved within 5-day SLA'),
+           time:[[L('Pred 3 dňami','3 days ago'),L('Prepravca uznal škodu, náhrada schválená','Carrier accepted fault, compensation approved')]]}},
+      {id:'r301',c:['R-2026-0301','RO','sps',['ok',L('vyriešené','resolved')],L('zákazník','customer'),L('6 dní','6 days')],
+        d:{sub:L('Vyriešené po SLA — chyba adresy zákazníka','Resolved past SLA — customer address error'),donut:100,dl:L('vyriešené (po SLA)','resolved (past SLA)'),
+           time:[[L('Minulý týždeň','Last week'),L('Opätovné doručenie na správnu adresu','Redelivered to the correct address')]]}},
+      {id:'r298',c:['R-2026-0298','PL','dpd',['no',L('stratené','lost')],L('prepravca','carrier'),L('12 dní','12 days')],
+        d:{sub:L('Uzavreté ako stratené — plná náhrada','Closed as lost — full compensation'),donut:100,dl:L('prípad uzavretý','case closed'),
+           time:[[L('Pred 2 týždňami','2 weeks ago'),L('Prípad uzavretý so stavom stratené','Case closed as lost')]]}}]},
+  detail:{title:L('Zásielky W31 · SK · packeta','Shipments W31 · SK · packeta'),badge:['ok',L('doručené','delivered')],
+    sub:L('512 zásielok · hodnota 18 400 € · súhrn týždňa','512 parcels · value €18,400 · weekly summary'),
+    fields:[[L('ISO-týždeň','ISO week'),'W31'],[L('Krajina','Country'),'SK'],
+            [L('Prepravca','Carrier'),'packeta'],[L('Odoslané','Shipped'),'512'],
+            [L('Poštovné','Postage'),L('2 620 €','€2,620')],[L('Hodnota','Value'),L('18 400 €','€18,400')]],
+    time:[[L('Piatok','Friday'),L('Súhrn týždňa uzavretý (upsert + audit)','Weekly summary closed (upsert + audit)')],
+          [L('Štvrtok','Thursday'),L('492 doručených · 20 na ceste','492 delivered · 20 in transit')],
+          [L('Pondelok','Monday'),L('CSV import týždenných dát','Weekly data CSV import')],
+          ['W31',L('Riadok vytvorený (kľúč týždeň × krajina × prepravca)','Row created (week × country × carrier key)')]],
+    donut:96,dl:L('doručenosť súhrnu (492 z 512)','delivery rate (492 of 512)')},
   set:[
     {h:L('Evidencia','Registry'),icon:I.list,rows:[
       {b:L('Povinné krajiny','Required countries'),s:'SK · CZ · HU · RO · SI · HR · PL · BG',sel:'8'},
@@ -645,39 +816,59 @@ const MODULES=[
   feat:[L('32 pozícií s náplňou práce — štruktúrované bloky + knižnica činností','32 positions with duty blocks + a shared activity library'),
         L('~90 rolových mailov s aliasmi · heslá šifrované, viditeľné len Admin','~90 role mailboxes with aliases · passwords encrypted, Admin-only'),
         L('Org-strom firmy a register aplikácií s nákladmi','Company org tree and an app register with costs')],
-  list:L('Zamestnanci','Employees'), one:L('Zamestnanec','Employee'),
+  list:L('Zamestnanci','Employees'), one:L('Zamestnanec','Employee'), newLabel:L('Nový zamestnanec','New employee'),
+  live:{v:L('18 ľudí · 32 pozícií','18 people · 32 positions'),tone:'ok',spark:[16,16,17,17,17,18,18]},
   kpis:[{l:L('Zamestnanci','Employees'),v:'18',d:{n:1}},
         {l:L('Pozície','Positions'),v:'32',sub:L('s náplňou práce','with duty blocks')},
         {l:L('Zdieľané maily','Shared mailboxes'),v:'~90',d:{n:2}},
         {l:L('Aplikácie — náklady/mes.','Apps — monthly cost'),v:L('1 240 €','€1,240'),d:{n:-4,u:' %',inv:true}}],
   chart:{title:L('Ľudia podľa oddelení','People by department'),type:'bars',
     data:[{l:L('Expedícia','Dispatch'),v:5},{l:'Marketing',v:4},{l:'IT',v:3},{l:L('Sklad','Warehouse'),v:3},{l:L('Reklamácie','Claims'),v:2},{l:L('Vedenie','Leadership'),v:1}]},
-  side:{title:L('Pokrytie náplní práce','Duty coverage'),donut:85,dl:L('činností pozícií pokrytých knižnicou','of position activities covered by the library')},
+  side:{title:L('Pokrytie náplní práce','Duty coverage'),donut:85,
+    lgd:[['var(--good)',L('pokryté knižnicou','covered by library'),'27'],['var(--ink-3)',L('vlastné bloky','custom blocks'),'5']],
+    dl:L('z 32 pozícií','of 32 positions')},
+  widget:{type:'apps',title:L('Aplikácie podľa nákladov (top 5 z 1 240 €/mes.)','Apps by cost (top 5 of €1,240/mo)'),
+    rows:[['Asana',L('projekty','projects'),L('280 €','€280'),'Delaja'],
+          ['Shoptet',L('e-shop platforma','e-shop platform'),L('240 €','€240'),'Delaja'],
+          ['Ahrefs','SEO',L('220 €','€220'),'Gabika'],
+          ['Google Workspace',L('maily + dokumenty','mail + docs'),L('180 €','€180'),'Delaja'],
+          ['Adobe CC',L('grafika + foto','design + photo'),L('120 €','€120'),'Ema']],
+    note:L('Sumy a vlastníci sú ukážkové','Costs and owners are illustrative')},
   cols:[L('Meno','Name'),L('Pozícia','Position'),L('Oddelenie','Department'),'Mail',L('Úväzok','Contract'),L('Krajina','Country')],
   rows:[
     {id:'delaja',active:true,c:['Delaja',L('CTO – Technický riaditeľ','CTO – Technical director'),L('Vedenie','Leadership'),'cto@sperky-aura.sk',['ok','TPP'],'SK']},
-    {id:'daniel',c:['Daniel',L('Vývojár','Developer'),'IT','dev@sperky-aura.sk',['ok','TPP'],'SK']},
-    {id:'kiko',c:['Kiko',L('Vývojár','Developer'),'IT','dev2@sperky-aura.sk',['ok','TPP'],'SK']},
-    {id:'ema',c:['Ema',L('Newsletter & projekty','Newsletter & projects'),'Marketing','newsletter@sperky-aura.sk',['ok','TPP'],'SK']},
-    {id:'gabika',c:['Gabika','SEO / Copywriter + CS','Marketing','seo@sperky-aura.sk',['ok','TPP'],'SK']},
-    {id:'hajnalka',c:['Hajnalka','Team Leader CS',L('Zákaznícky servis','Customer service'),'cs@sperky-aura.sk',['cond',L('dohoda','part-time')],'HU']}],
-  detail:{title:L('CTO – Technický riaditeľ','CTO – Technical director'),badge:['ok',L('Vedenie','Leadership')],
-    sub:L('Pozícia 1 z 32 · náplň = štruktúrované bloky + knižnica činností','Position 1 of 32 · duties = structured blocks + activity library'),
-    fields:[[L('Oddelenie','Department'),L('Vedenie','Leadership')],[L('Nadriadený','Reports to'),'CEO'],
-            [L('Náplň práce','Duties'),L('bloky + knižnica činností','blocks + activity library')],[L('Priradený mail','Assigned mail'),'cto@sperky-aura.sk'],
-            [L('Úväzok','Contract'),'TPP'],[L('Krajina','Country'),'SK']],
-    time:[[L('Dnes','Today'),L('Mail priradený k pozícii','Mailbox assigned to the position')],
-          [L('Minulý týždeň','Last week'),L('Náplň práce doplnená z knižnice činností','Duties completed from the activity library')],
-          [L('Jún','June'),L('Pozícia vytvorená (1 z 32)','Position created (1 of 32)')],
-          [L('Jún','June'),L('Org-strom aktualizovaný','Org tree updated')]],
-    donut:85,dl:L('činností pokrytých knižnicou','of activities covered by the library')},
+    {id:'daniel',c:['Daniel',L('Vývojár','Developer'),'IT','dev@sperky-aura.sk',['ok','TPP'],'SK'],
+      d:{sub:L('Vývojár · IT · plný úväzok','Developer · IT · full-time'),donut:90,dl:L('náplň pokrytá knižnicou','duties covered by the library'),
+         time:[[L('Júl','July'),L('Priradený k projektu Aura KPI','Assigned to the Aura KPI project')]]}},
+    {id:'kiko',c:['Kiko',L('Vývojár','Developer'),'IT','dev2@sperky-aura.sk',['ok','TPP'],'SK'],
+      d:{sub:L('Vývojár · IT · plný úväzok','Developer · IT · full-time'),donut:90,dl:L('náplň pokrytá knižnicou','duties covered by the library'),
+         time:[[L('Júl','July'),L('Priradený k projektu Aura Roadmap','Assigned to the Aura Roadmap project')]]}},
+    {id:'ema',c:['Ema',L('Newsletter & projekty','Newsletter & projects'),'Marketing','newsletter@sperky-aura.sk',['ok','TPP'],'SK'],
+      d:{sub:L('Newsletter & projekty · Marketing','Newsletter & projects · Marketing'),donut:80,dl:L('náplň pokrytá knižnicou','duties covered by the library'),
+         time:[[L('Jún','June'),L('Prevzala KPI vstupy Newsletter-AI','Took over Newsletter-AI KPI inputs')]]}},
+    {id:'gabika',c:['Gabika','SEO / Copywriter + CS','Marketing','seo@sperky-aura.sk',['ok','TPP'],'SK'],
+      d:{sub:L('SEO / Copywriter + CS · Marketing','SEO / Copywriter + CS · Marketing'),donut:85,dl:L('náplň pokrytá knižnicou','duties covered by the library'),
+         time:[[L('Júl','July'),L('KPI Copywriter za jún: plnenie 100 %','June Copywriter KPI: 100% attainment')]]}},
+    {id:'hajnalka',c:['Hajnalka','Team Leader CS',L('Zákaznícky servis','Customer service'),'cs@sperky-aura.sk',['cond',L('dohoda','part-time')],'HU'],
+      d:{sub:L('Team Leader CS · dohoda · HU','CS Team Leader · part-time · HU'),donut:75,dl:L('náplň pokrytá knižnicou','duties covered by the library'),
+         time:[[L('Júl','July'),L('Prevzala 3 zdieľané CS schránky','Took over 3 shared CS mailboxes')]]}}],
+  detail:{title:'Delaja',badge:['ok',L('Aktívny','Active')],
+    sub:L('CTO – Technický riaditeľ · Vedenie · pozícia 1 z 32','CTO – Technical director · Leadership · position 1 of 32'),
+    fields:[[L('Pozícia','Position'),L('CTO – Technický riaditeľ','CTO – Technical director')],[L('Oddelenie','Department'),L('Vedenie','Leadership')],
+            [L('Nadriadený','Reports to'),'CEO'],[L('Priradený mail','Assigned mail'),'cto@sperky-aura.sk'],
+            [L('Zdieľané schránky','Shared mailboxes'),L('4 (prístup Admin)','4 (Admin access)')],[L('Úväzok · krajina','Contract · country'),'TPP · SK']],
+    time:[[L('Dnes','Today'),L('Schválil prístupy k 2 aplikáciám','Approved access to 2 apps')],
+          [L('Minulý týždeň','Last week'),L('Náplň pozície doplnená z knižnice činností','Position duties completed from the activity library')],
+          [L('Jún','June'),L('Org-strom aktualizovaný — Vedenie → IT','Org tree updated — Leadership → IT')],
+          [L('2023','2023'),L('Nástup do firmy','Joined the company')]],
+    donut:85,dl:L('činností pozície pokrytých knižnicou','of position activities covered by the library')},
   set:[
     {h:L('Prístup a bezpečnosť','Access & security'),icon:I.shield,rows:[
       {b:L('Roly','Roles'),s:L('Admin · Editor · Prehliadač','Admin · Editor · Viewer'),sel:L('Upraviť','Edit')},
       {b:L('Heslá mailov len Admin','Mail passwords Admin-only'),s:L('Šifrované · ~90 schránok','Encrypted · ~90 mailboxes'),sw:true},
       {b:'Audit log',s:L('Každá zmena evidencie','Every registry change'),sw:true}]},
     {h:L('Lokalizácia a vzhľad','Locale & appearance'),icon:I.gear,rows:[
-      {b:L('Jazyk','Language'),s:'SK · EN',sel:'SK'},
+      {b:L('Jazyk','Language'),s:'SK · EN',sel:'SK',opts:['SK','EN']},
       {b:'Dark mode',s:L('Štýl Evidencie + org-strom','Registry style + org tree'),sw:true},
       {b:L('Org-strom','Org tree'),s:L('Oddelenia → pozície → ľudia','Departments → positions → people'),sel:L('Zobraziť','View')}]}],
   alert:{tone:'cond',icon:I.shield,text:L('Heslá zdieľaných schránok vidí len Admin — pri zmene roly skontrolujte prístup k ~90 mailom.','Shared mailbox passwords are Admin-only — check access to ~90 mailboxes when changing a role.')}
@@ -688,22 +879,40 @@ const MODULES=[
   feat:[L('Checkpoint readiness → nemenné rozhodnutie + baseline snapshot','Checkpoint readiness → immutable decision + baseline snapshot'),
         L('Timeline: 3 režimy (Roadmap / Sprinty / Rozhodnutia) × 3 zoomy × 2 hustoty','Timeline: 3 modes (Roadmap / Sprints / Decisions) × 3 zooms × 2 densities'),
         L('Šprinty draft → commit → close s carry-over','Sprints draft → commit → close with carry-over')],
-  list:L('Úlohy','Work items'), one:L('Úloha','Work item'),
+  list:L('Úlohy','Work items'), one:L('Úloha','Work item'), newLabel:L('Nová úloha','New work item'),
+  live:{v:L('11 úloh v S-31 · 2 rozhodnutia','11 items in S-31 · 2 decisions'),tone:'cond',spark:[9,12,14,14,12,11,11]},
   kpis:[{l:L('Aktívne projekty','Active projects'),v:'6',sub:L('3 piliere: plán · evidencia · rozhodnutia','3 pillars: plan · evidence · decisions')},
         {l:L('Úlohy v behu','Items in progress'),v:'5',sub:'in_progress'},
         {l:L('Rozhodnutia vo fronte','Decisions queued'),v:'2',sub:L('čakajú na go / no-go','awaiting go / no-go')},
         {l:L('Checkpointy po termíne','Checkpoints overdue'),v:'1',d:{n:1,inv:true}}],
   chart:{title:L('Práca naprieč šprintami (položky)','Work across sprints (items)'),type:'bars',
     data:[{l:'S-28',v:9},{l:'S-29',v:12},{l:'S-30',v:14},{l:'S-31',v:11},{l:'S-32',v:6}]},
-  side:{title:L('Rozloženie stavov','State distribution'),donut:52,dl:L('done · zvyšok: in_progress / waiting / backlog','done · rest: in_progress / waiting / backlog')},
+  side:{title:L('Rozloženie stavov','State distribution'),donut:52,
+    lgd:[['var(--good)','done','27'],['var(--violet)','in_progress','5'],['var(--amber)','waiting','3'],['var(--ink-3)','backlog','17']],
+    dl:L('položiek celkom','items in total')},
+  widget:{type:'gantt',title:L('Šprinty (draft → commit → close)','Sprints (draft → commit → close)'),
+    sprints:[{l:'S-28',done:100,st:'close'},{l:'S-29',done:100,st:'close'},{l:'S-30',done:100,st:'close'},{l:'S-31',done:55,st:'commit'},{l:'S-32',done:0,st:'draft'}],
+    decisions:{title:L('Rozhodnutia vo fronte','Decisions queued'),
+      cards:[{t:L('Checkpoint: Go-live brána','Checkpoint: Go-live gate'),p:'Aura KPI',b:['cond','conditional_go'],s:L('readiness 78 % · follow-up založený','readiness 78% · follow-up created')},
+             {t:L('Checkpoint: Q3 rozpočet infra','Checkpoint: Q3 infra budget'),p:L('Bezpečnosť','Security'),b:['q','deferred'],s:L('odložené — čaká na cenové ponuky','deferred — awaiting quotes')}]}},
   cols:[L('Položka','Item'),L('Typ','Type'),L('Projekt','Project'),'Sprint',L('Stav','State'),L('Termín','Due')],
   rows:[
     {id:'pay',active:true,c:[L('Migrácia platobnej brány','Payment gateway migration'),'task','E-shop','S-31 · commit',['info','in_progress'],L('9. 8.','Aug 9')]},
-    {id:'bug409',c:[L('Bug: 409 pri uložení checkpointu','Bug: 409 on checkpoint save'),'bug','Aura Roadmap','S-31 · commit',['cond','waiting'],L('6. 8.','Aug 6')]},
-    {id:'onb',c:[L('Návrh onboarding flowu','Onboarding flow idea'),'idea','—','—',['q','backlog'],'—']},
-    {id:'zod',c:[L('Podúloha: zod kontrakt API','Subtask: zod API contract'),'task','Aura Roadmap','S-30 · close',['ok','done'],L('28. 7.','Jul 28')]},
-    {id:'audit',c:[L('Audit prístupov Q3','Q3 access audit'),'task',L('Bezpečnosť','Security'),'S-32 · draft',['q','backlog'],L('20. 8.','Aug 20')]},
-    {id:'axe',c:['Carry-over: e2e axe','task','Aura Roadmap','S-31 · commit',['info','in_progress'],L('9. 8.','Aug 9')]}],
+    {id:'bug409',c:[L('Bug: 409 pri uložení checkpointu','Bug: 409 on checkpoint save'),'bug','Aura Roadmap','S-31 · commit',['cond','waiting'],L('6. 8.','Aug 6')],
+      d:{sub:L('Čaká na reprodukciu — optimistic concurrency','Waiting for repro — optimistic concurrency'),donut:30,dl:L('analýzy hotovej','of analysis done'),
+         time:[[L('Včera','Yesterday'),L('409 VERSION_CONFLICT zachytený v logu','409 VERSION_CONFLICT captured in the log')]]}},
+    {id:'onb',c:[L('Návrh onboarding flowu','Onboarding flow idea'),'idea','—','—',['q','backlog'],'—'],
+      d:{sub:L('Idea v zásobníku — bez šprintu','Idea in backlog — no sprint'),donut:0,dl:L('zatiaľ nenaplánované','not scheduled yet'),
+         time:[[L('Minulý týždeň','Last week'),L('Idea zapísaná do backlogu','Idea recorded in the backlog')]]}},
+    {id:'zod',c:[L('Podúloha: zod kontrakt API','Subtask: zod API contract'),'task','Aura Roadmap','S-30 · close',['ok','done'],L('28. 7.','Jul 28')],
+      d:{sub:L('Hotové v S-30 — kontrakty server aj klient','Done in S-30 — server & client contracts'),donut:100,dl:L('úloha uzavretá','item closed'),
+         time:[[L('28. 7.','Jul 28'),L('Hotovo — 535 unit testov zelených','Done — 535 unit tests green')]]}},
+    {id:'audit',c:[L('Audit prístupov Q3','Q3 access audit'),'task',L('Bezpečnosť','Security'),'S-32 · draft',['q','backlog'],L('20. 8.','Aug 20')],
+      d:{sub:L('Naplánované do S-32 (draft)','Planned for S-32 (draft)'),donut:0,dl:L('šprint ešte nezačal','sprint not started'),
+         time:[[L('Tento týždeň','This week'),L('Zaradené do draftu šprintu S-32','Added to the S-32 sprint draft')]]}},
+    {id:'axe',c:['Carry-over: e2e axe','task','Aura Roadmap','S-31 · commit',['info','in_progress'],L('9. 8.','Aug 9')],
+      d:{sub:L('Prenesené z S-30 (carry-over)','Carried over from S-30'),donut:60,dl:L('scenárov pokrytých','of scenarios covered'),
+         time:[[L('Dnes','Today'),L('47/47 e2e beží, axe dopĺňa 3 obrazovky','47/47 e2e running, axe covers 3 more screens')]]}}],
   detail:{title:L('Checkpoint: Go-live brána','Checkpoint: Go-live gate'),badge:['cond','conditional_go'],
     sub:L('Rozhodnutie je po zápise nemenné · baseline snapshot + audit + follow-up','The decision is immutable once recorded · baseline snapshot + audit + follow-up'),
     fields:[[L('Projekt','Project'),'Aura KPI'],['Readiness',L('78 %','78%')],
@@ -716,9 +925,9 @@ const MODULES=[
     donut:52,dl:L('rozhodnutí z fronty uzavretých tento kvartál','of queued decisions closed this quarter')},
   set:[
     {h:'Timeline',icon:I.cal,rows:[
-      {b:L('Režim','Mode'),s:L('Roadmap · Sprinty · Rozhodnutia','Roadmap · Sprints · Decisions'),sel:'Roadmap'},
-      {b:'Zoom',s:L('kvartál · mesiac · týždeň','quarter · month · week'),sel:L('mesiac','month')},
-      {b:L('Hustota','Density'),s:'cozy · compact',sel:'cozy'}]},
+      {b:L('Režim','Mode'),s:L('Roadmap · Sprinty · Rozhodnutia','Roadmap · Sprints · Decisions'),sel:'Roadmap',opts:['Roadmap',L('Sprinty','Sprints'),L('Rozhodnutia','Decisions')]},
+      {b:'Zoom',s:L('kvartál · mesiac · týždeň','quarter · month · week'),sel:L('mesiac','month'),opts:[L('kvartál','quarter'),L('mesiac','month'),L('týždeň','week')]},
+      {b:L('Hustota','Density'),s:'cozy · compact',sel:'cozy',opts:['cozy','compact']}]},
     {h:L('Proces a roly','Process & roles'),icon:I.people,rows:[
       {b:L('Stavový model','State model'),s:'backlog → in_progress → waiting → done',sw:true},
       {b:L('Šprinty s carry-over','Sprints with carry-over'),s:'draft → commit → close',sw:true},
@@ -731,22 +940,43 @@ const MODULES=[
   feat:[L('Klientske filtre prepočítavajú celý report (trh, platba, kov, zákazník, zľava)','Client-side filters recompute the entire report (market, payment, metal, customer, discount)'),
         L('Denný graf s prepínačom tržba / zisk / objednávky + kumulatív','Daily chart with a revenue / profit / orders toggle + cumulative'),
         L('Zoraditeľné tabuľky, riadok = filter, CSV export','Sortable tables, row-as-filter, CSV export')],
-  list:L('Segmenty','Segments'), one:L('Segment','Segment'),
+  list:L('Segmenty','Segments'), one:L('Segment','Segment'), noCreate:true,
+  live:{v:L('217 016 € · zisk 58,3 %','€217,016 · profit 58.3%'),tone:'ok',spark:[7.9,8.4,8.1,5.8,6.6,8.3,8.1]},
   kpis:[{l:L('Tržba','Revenue'),v:L('217 016 €','€217,016'),sub:L('run-rate 31 dní: 250 822 €','31-day run-rate: €250,822')},
         {l:L('Zisk','Profit'),v:L('126 541 €','€126,541'),sub:L('58,3 % z tržby','58.3% of revenue')},
         {l:L('Marža','Margin'),v:L('66,1 %','66.1%'),sub:L('zlato 54,6 % vs ostatné 77,4 %','gold 54.6% vs others 77.4%')},
         {l:'AOV',v:L('38,21 €','€38.21'),sub:L('medián 25,41 €','median €25.41')}],
-  chart:{title:L('Kľúčové podiely na tržbe (%)','Key revenue shares (%)'),type:'bars',
-    data:[{l:L('Dobierka','COD'),v:65.8,d:'65,8'},{l:'HU+RO+SK',v:63.9,d:'63,9'},{l:L('Zlato','Gold'),v:49.8,d:'49,8'},{l:L('Opakovaní','Repeat'),v:45.6,d:'45,6'},{l:L('Koše > 60 €','Baskets > €60'),v:44.4,d:'44,4'},{l:L('Zľavy','Discounts'),v:6.7,d:'6,7'}]},
-  side:{title:L('Expedícia do 24 h','Dispatch within 24h'),donut:69.6,dl:L('medián 18,7 h · Ø 25,4 h','median 18.7h · avg 25.4h')},
+  chart:{title:L('Denný vývoj — júl 2026','Daily trend — July 2026'),type:'segarea',
+    note:L('tvar kriviek ukážkový · súčty reálne','curve shape illustrative · totals real'),
+    series:{
+      trzba:{l:L('Tržba','Revenue'),v:[8340,8720,8510,5774,6620,8480,8390,8610,8290,8830,5774,6540,8720,8460,8380,8550,8240,8690,5774,6470,7020,7180,6890,7240,5010,5620]},
+      zisk:{l:L('Zisk','Profit'),v:[4860,5080,4960,3370,3860,4940,4890,5020,4830,5150,3370,3810,5080,4930,4880,4980,4800,5060,3370,3770,4090,4190,4020,4220,2920,3280]},
+      obj:{l:L('Objednávky','Orders'),v:[218,228,223,151,173,222,220,225,217,231,151,171,228,221,219,224,216,227,151,169,184,188,180,190,131,147]}}},
+  side:{title:L('Expedícia do 24 h','Dispatch within 24h'),donut:69.6,
+    lgd:[['var(--good)',L('do 24 h','≤ 24h'),L('69,6 %','69.6%')],['var(--amber)',L('nad 24 h','> 24h'),L('30,4 %','30.4%')]],
+    dl:L('medián 18,7 h · Ø 25,4 h','median 18.7h · avg 25.4h')},
+  widget:{type:'insights',title:L('Zistenia','Findings'),
+    cards:[{tone:'var(--red)',t:L('Sobota je systematicky najslabší deň','Saturday is systematically the weakest day'),s:L('5 774 € vs Ø plného dňa 8 091 €','€5,774 vs €8,091 full-day average')},
+           {tone:'var(--gold)',t:L('Zlato = 49,8 % tržby pri 22,4 % objednávok','Gold = 49.8% of revenue at 22.4% of orders'),s:L('marža zlata 54,6 % vs ostatné 77,4 %','gold margin 54.6% vs others 77.4%')},
+           {tone:'var(--b-fin)',t:L('Zľavy zdvíhajú AOV, ale režú maržu','Discounts lift AOV but cut margin'),s:L('AOV 59,82 € vs 30,35 € · marža 57,5 % vs 72,2 %','AOV €59.82 vs €30.35 · margin 57.5% vs 72.2%')}]},
   cols:[L('Segment','Segment'),L('Podiel obj.','Order share'),L('Podiel tržby','Revenue share'),'AOV',L('Marža','Margin'),L('Stav','Status')],
   rows:[
-    {id:'zlato',active:true,c:[L('Zlato (AU)','Gold (AU)'),'22,4 %','49,8 %','—','54,6 %',['cond',L('nižšia marža','lower margin')]]},
-    {id:'kovy',c:[L('Ostatné kovy','Other metals'),'77,6 %','50,2 %','—','77,4 %',['ok','OK']]},
-    {id:'cod',c:[L('Dobierka','COD'),'—','65,8 %','—','—',['cond',L('riziko neprevzatia','non-pickup risk')]]},
-    {id:'zlava',c:[L('So zľavou','Discounted'),'—',L('zľavy 6,7 %','discounts 6.7%'),'59,82 €','57,5 %',['cond',L('sleduj maržu','watch margin')]]},
-    {id:'plna',c:[L('Bez zľavy','Full price'),'—','—','30,35 €','72,2 %',['ok','OK']]},
-    {id:'opak',c:[L('Opakovaní zákazníci','Repeat customers'),'44,2 %','45,6 %','—','—',['ok','OK']]}],
+    {id:'zlato',active:true,c:[L('Zlato (AU)','Gold (AU)'),L('22,4 %','22.4%'),L('49,8 %','49.8%'),'—',L('54,6 %','54.6%'),['cond',L('nižšia marža','lower margin')]]},
+    {id:'kovy',c:[L('Ostatné kovy','Other metals'),L('77,6 %','77.6%'),L('50,2 %','50.2%'),'—',L('77,4 %','77.4%'),['ok','OK']],
+      d:{sub:L('Striebro a chirurgická oceľ — jadro objemu','Silver & surgical steel — the volume core'),donut:77,dl:L('marža segmentu','segment margin'),
+         time:[[L('Júl','July'),L('50,2 % tržby pri 77,6 % objednávok','50.2% of revenue at 77.6% of orders')]]}},
+    {id:'cod',c:[L('Dobierka','COD'),'—',L('65,8 %','65.8%'),'—','—',['cond',L('riziko neprevzatia','non-pickup risk')]],
+      d:{sub:L('Dominantná platba — 65,8 % tržby','Dominant payment — 65.8% of revenue'),donut:66,dl:L('tržby cez dobierku','of revenue via COD'),
+         time:[[L('Júl','July'),L('Vratky pri neprevzatí viditeľné v Logistike (PL W30)','Non-pickup returns visible in Logistics (PL W30)')]]}},
+    {id:'zlava',c:[L('So zľavou','Discounted'),'—',L('zľavy 6,7 %','discounts 6.7%'),L('59,82 €','€59.82'),L('57,5 %','57.5%'),['cond',L('sleduj maržu','watch margin')]],
+      d:{sub:L('Zľavy 14 602 € (6,7 % tržby)','Discounts €14,602 (6.7% of revenue)'),donut:57,dl:L('marža zľavnených objednávok','margin of discounted orders'),
+         time:[[L('Júl','July'),L('AOV so zľavou 59,82 € vs 30,35 € bez','Discounted AOV €59.82 vs €30.35 full price')]]}},
+    {id:'plna',c:[L('Bez zľavy','Full price'),'—','—',L('30,35 €','€30.35'),L('72,2 %','72.2%'),['ok','OK']],
+      d:{sub:L('Plná cena — zdravá marža 72,2 %','Full price — healthy 72.2% margin'),donut:72,dl:L('marža segmentu','segment margin'),
+         time:[[L('Júl','July'),L('Typická objednávka: medián 25,41 €','Typical order: median €25.41')]]}},
+    {id:'opak',c:[L('Opakovaní zákazníci','Repeat customers'),L('44,2 %','44.2%'),L('45,6 %','45.6%'),'—','—',['ok','OK']],
+      d:{sub:L('Takmer polovica objednávok sa vracia','Nearly half of orders are repeat'),donut:44,dl:L('podiel opakovaných objednávok','share of repeat orders'),
+         time:[[L('Júl','July'),L('44,2 % obj. / 45,6 % tržby od vracajúcich sa','44.2% of orders / 45.6% of revenue from repeat buyers')]]}}],
   detail:{title:L('Júl 2026 · 1.–27.','July 2026 · 1–27'),badge:['info',L('beží · 26 plných dní','running · 26 full days')],
     sub:L('5 679 objednávok · export stats CSV 27. 7.','5,679 orders · stats CSV export Jul 27'),
     fields:[[L('Tržba','Revenue'),L('217 016 €','€217,016')],[L('Zisk','Profit'),L('126 541 € (58,3 %)','€126,541 (58.3%)')],
@@ -759,12 +989,12 @@ const MODULES=[
     donut:87,dl:L('objednávok v stave Tovar odoslaný (4 928) · Doručené 751','of orders in Shipped state (4,928) · Delivered 751')},
   set:[
     {h:L('Filtre reportu','Report filters'),icon:I.filter,rows:[
-      {b:L('Trh','Market'),s:L('klik na riadok tabuľky = filter','clicking a table row = filter'),sel:L('Všetky','All')},
-      {b:L('Platba','Payment'),s:L('dobierka · karta · prevod','COD · card · transfer'),sel:L('Všetky','All')},
-      {b:L('Kov','Metal'),s:L('zlato · ostatné','gold · other'),sel:L('Všetky','All')}]},
+      {b:L('Trh','Market'),s:L('klik na riadok tabuľky = filter','clicking a table row = filter'),sel:L('Všetky','All'),opts:[L('Všetky','All'),'HU','RO','SK','CZ']},
+      {b:L('Platba','Payment'),s:L('dobierka · karta · prevod','COD · card · transfer'),sel:L('Všetky','All'),opts:[L('Všetky','All'),L('Dobierka','COD'),L('Karta','Card')]},
+      {b:L('Kov','Metal'),s:L('zlato · ostatné','gold · other'),sel:L('Všetky','All'),opts:[L('Všetky','All'),L('Zlato','Gold'),L('Ostatné','Other')]}]},
     {h:L('Segmenty a výstupy','Segments & outputs'),icon:I.doc,rows:[
-      {b:L('Nový / opakovaný zákazník','New / repeat customer'),s:L('opakovaní 44,2 % obj. / 45,6 % tržby','repeat 44.2% of orders / 45.6% of revenue'),sel:L('Všetci','All')},
-      {b:L('Zľava áno / nie','Discount y/n'),s:L('so zľavou AOV 59,82 € vs 30,35 €','discounted AOV €59.82 vs €30.35'),sel:L('Všetky','All')},
+      {b:L('Nový / opakovaný zákazník','New / repeat customer'),s:L('opakovaní 44,2 % obj. / 45,6 % tržby','repeat 44.2% of orders / 45.6% of revenue'),sel:L('Všetci','All'),opts:[L('Všetci','All'),L('Noví','New'),L('Opakovaní','Repeat')]},
+      {b:L('Zľava áno / nie','Discount y/n'),s:L('so zľavou AOV 59,82 € vs 30,35 €','discounted AOV €59.82 vs €30.35'),sel:L('Všetky','All'),opts:[L('Všetky','All'),L('So zľavou','Discounted'),L('Bez zľavy','Full price')]},
       {b:L('CSV export tabuliek','Table CSV export'),s:L('BOM + „;" pre Excel SK','BOM + ";" for Excel SK'),sw:true}]}],
   alert:{tone:'cond',icon:I.warn,text:L('Týždeň 30 klesol o −18,2 % oproti t29 · sobota je systematicky najslabší deň (5 774 € vs Ø 8 091 €).','Week 30 dropped −18.2% vs w29 · Saturday is systematically the weakest day (€5,774 vs avg €8,091).')}
 }
@@ -789,13 +1019,35 @@ const WORKSPACES=[
 const view=document.getElementById('view');
 const setAcc=v=>document.documentElement.style.setProperty('--acc',v);
 
-function kpiCard(k){
+function kpiCard(k,i){
   let val=(k.v&&k.v.t)?fmtCell(k.v):tr(k.v);
   let d='<div class="d flat">—</div>';
   if(k.d){const up=k.d.n>0,down=k.d.n<0,good=k.d.inv?down:up,ar=up?'▲':down?'▼':'',sign=up?'+':down?'−':'';
     d=`<div class="d ${good?'up':'down'}">${ar} ${sign}${decs(Math.abs(k.d.n))}${k.d.u?tr(k.d.u):''}</div>`;}
   else if(k.sub){d=`<div class="d flat">${tr(k.sub)}</div>`;}
-  return `<div class="kpi"><div class="l">${tr(k.l)}</div><div class="v">${val}</div>${d}</div>`;
+  return `<div class="kpi${i===0?' hero':''}"><div class="l">${tr(k.l)}</div><div class="v">${val}</div>${d}</div>`;
+}
+/* widgety modulov */
+function widget(m){
+  const w=m.widget;if(!w)return '';
+  let inner='';
+  if(w.type==='insights') inner=`<div class="icards">${w.cards.map(c=>`<div class="icard" style="--tone:${c.tone}"><b>${tr(c.t)}</b><small>${tr(c.s)}</small></div>`).join('')}</div>`;
+  else if(w.type==='heatmap'){
+    const cell=v=>{if(v==null)return `<div class="cell" style="background:color-mix(in srgb,var(--ink-3) 14%,var(--card-2));color:var(--ink-3)">—</div>`;
+      const tok=v>=100?'var(--good)':v>=60?'var(--amber)':'var(--red)';
+      return `<div class="cell" style="background:color-mix(in srgb,${tok} ${v>=100?'42':v>=60?'30':'26'}%,var(--card-2))" title="${decs(v)} %">${decs(v)}</div>`;};
+    inner=`<div class="hm"><div class="hrow"><span></span>${w.months.map(mo=>`<span class="mh">${tr(mo)}</span>`).join('')}</div>
+      ${w.rows.map(r=>`<div class="hrow"><span class="hl">${tr(r.l)}</span>${r.v.map(cell).join('')}</div>`).join('')}</div>
+      <div class="hm-note">${tr(w.note)}</div>`;}
+  else if(w.type==='gantt'){
+    inner=`<div class="gantt">${w.sprints.map(s=>`<div class="grow"><span class="gl">${s.l}</span><div class="gtrack"><div class="gfill" style="width:${s.done}%"></div></div><span class="gst">${s.st} · ${s.done} %</span></div>`).join('')}</div>
+      <div class="ch" style="margin:18px 0 0"><h3>${tr(w.decisions.title)}</h3></div>
+      <div class="dcards">${w.decisions.cards.map(c=>`<div class="dcard"><div class="dt"><b>${tr(c.t)}</b><span class="badge ${c.b[0]} mono">${tr(c.b[1])}</span></div><small>${tr(c.p)} · ${tr(c.s)}</small></div>`).join('')}</div>`;}
+  else if(w.type==='actions'){
+    inner=`<table class="mtbl">${w.rows.map(r=>`<tr data-go="#${m.key}/detail/${r[0]}" onclick="go(this.dataset.go)"><td><b>${tr(r[1])}</b></td><td><span class="badge ${r[2][0]}">${tr(r[2][1])}</span></td><td>${tr(r[3])}</td><td style="text-align:right;color:var(--acc)">${state.lang==='sk'?'Otvoriť':'Open'} →</td></tr>`).join('')}</table>`;}
+  else if(w.type==='carriers'||w.type==='apps'){
+    inner=`<table class="mtbl">${w.rows.map(r=>`<tr>${r.map((c,i)=>Array.isArray(c)?`<td><span class="badge ${c[0]}">${tr(c[1])}</span></td>`:`<td${i===0?'':i>=2?' class="n" style="font-family:var(--mono)"':''}>${i===0?`<b>${tr(c)}</b>`:tr(c)}</td>`).join('')}</tr>`).join('')}</table>${w.note?`<div class="hm-note">${tr(w.note)}</div>`:''}`;}
+  return `<div class="card wrow"><div class="ch"><h3>${tr(w.title)}</h3></div>${inner}</div>`;
 }
 
 function renderHub(){
@@ -804,14 +1056,20 @@ function renderHub(){
     <div class="eb">${state.lang==='sk'?'Ekosystém Aura':'The Aura ecosystem'}</div>
     <h1>${state.lang==='sk'?'Jedna rodina, <em>šesť aplikácií</em>.':'One family, <em>six applications</em>.'}</h1>
     <p class="lead">${state.lang==='sk'?'Marketing, KPI, logistika, evidencia, roadmap a tržby — reálne aplikácie rodiny Aura v jednom zjednotenom náhľade.':'Marketing, KPIs, logistics, registry, roadmap and revenue — the real Aura app family in one unified preview.'}</p>
-    <p class="note">${state.lang==='sk'?'Rozhrania vychádzajú z reálnych aplikácií (C:\\Aura). Overené čísla sú prenesené 1:1, neoverené sú ukážkové. Klik na modul → intro → prehľad → zoznam (klikni riadok) → detail → nastavenia.':'The screens mirror the real apps (C:\\Aura). Verified figures are carried over 1:1, the rest is illustrative. Click a module → intro → overview → list (click a row) → detail → settings.'}</p>
+    <p class="note">${state.lang==='sk'?'Rozhrania vychádzajú z reálnych produkčných aplikácií. Overené čísla sú prenesené 1:1, neoverené sú ukážkové. Klik na modul → intro → prehľad → zoznam (klikni riadok) → detail → nastavenia.':'The screens mirror the real production apps. Verified figures are carried over 1:1, the rest is illustrative. Click a module → intro → overview → list (click a row) → detail → settings.'}</p>
+    <div class="att"><span class="atl">${state.lang==='sk'?'Vyžaduje pozornosť':'Needs attention'}</span>
+      <button class="ach no" onclick="go('#kpi/list')">${svg(I.warn,13)} ${state.lang==='sk'?'KPI: 3 oddelenia po termíne':'KPI: 3 departments overdue'}</button>
+      <button class="ach cond" onclick="go('#logistika/dashboard')">${svg(I.truck,13)} ${state.lang==='sk'?'GLS: objem pod zmluvným minimom':'GLS: volume below contract'}</button>
+      <button class="ach cond" onclick="go('#marketing/dashboard')">${svg(I.brain,13)} ${state.lang==='sk'?'AI budget na 62 %':'AI budget at 62%'}</button>
+    </div>
     <div class="grid6">${MODULES.map((m,i)=>`
       <button class="mcard" style="--ac:${m.acc}" onclick="go('#${m.key}')">
         <span class="num">0${i+1}</span>
         <div class="ico">${svg(m.icon)}</div>
         <h3>${m.name}</h3>
         <p>${tr(m.tag)}</p>
-        <div class="meta"><span>${state.lang==='sk'?'5 obrazoviek':'5 screens'}</span>
+        ${m.live?`<div class="livebar"><span class="sdot ${m.live.tone}"></span><span>${tr(m.live.v)}</span>${sparkmini(m.live.spark,m.live.tone)}</div>`:''}
+        <div class="meta"><span>${state.lang==='sk'?(m.claims?'6 obrazoviek':'5 obrazoviek'):(m.claims?'6 screens':'5 screens')}</span>
           <span class="go">${state.lang==='sk'?'Otvoriť':'Open'} ${svg(I.arrow)}</span></div>
       </button>`).join('')}</div></div>`;
 }
@@ -830,20 +1088,23 @@ function renderIntro(m){
       <div class="intro-art">
         <div class="mini-h"><span class="d"></span><span class="d"></span><span class="d"></span>
           <span style="margin-left:6px;font:600 11px var(--mono);color:var(--ink-3)">${m.name} · ${state.lang==='sk'?'prehľad':'overview'}</span></div>
-        <div class="kpis" style="grid-template-columns:1fr 1fr;gap:10px;margin:0 0 14px">${m.kpis.slice(0,2).map(kpiCard).join('')}</div>
-        ${m.chart.type==='area'?area(m.chart.data):bars(m.chart.data.slice(0,5))}
+        <div class="kpis" style="grid-template-columns:1fr 1fr;gap:10px;margin:0 0 14px">${m.kpis.slice(0,2).map((k,i)=>kpiCard(k,-1)).join('')}</div>
+        ${m.chart.type==='segarea'?area(m.chart.series.trzba.v):m.chart.type==='area'?area(m.chart.data):bars(m.chart.data.slice(0,5))}
       </div>
     </div></div>`;
 }
 
 function crumb(m,screen,extra){
-  const sn={dashboard:L('Prehľad','Overview'),list:m.list,detail:L('Detail','Detail'),settings:L('Nastavenia','Settings')}[screen];
+  const sn={dashboard:L('Prehľad','Overview'),list:m.list,claims:m.claims&&m.claims.title,detail:L('Detail','Detail'),settings:L('Nastavenia','Settings')}[screen];
   return `<nav class="crumb" aria-label="breadcrumb"><a onclick="go('#hub')">Aura</a> ⁄ <a onclick="go('#${m.key}/dashboard')">${m.name.replace('Aura ','')}</a> ⁄ <b>${tr(sn)}${extra?' · '+extra:''}</b></nav>`;
 }
 
+function screensFor(m){return m.claims?['dashboard','list','claims','detail','settings']:SCREENS;}
 function shell(m,screen,inner){
   setAcc(m.acc);
-  const navItems=[['dashboard',I.grid,L('Prehľad','Overview')],['list',I.list,m.list],['detail',I.doc,L('Detail','Detail')],['settings',I.gear,L('Nastavenia','Settings')]];
+  const navItems=[['dashboard',I.grid,L('Prehľad','Overview')],['list',I.list,m.list]];
+  if(m.claims)navItems.push(['claims',I.inbox,m.claims.title]);
+  navItems.push(['detail',I.doc,L('Detail','Detail')],['settings',I.gear,L('Nastavenia','Settings')]);
   return `<div class="shell an">
     <aside class="side" id="side">
       <div class="mrail">${MODULES.map(x=>`<a onclick="go('#${x.key}/dashboard')" class="${x.key===m.key?'on':''}" style="--ac:${x.acc}" title="${x.name}" aria-label="${x.name}">${svg(x.icon)}</a>`).join('')}</div>
@@ -864,9 +1125,9 @@ function shell(m,screen,inner){
 }
 
 /* filtre */
-function chipsFor(m){return [{l:L('Všetko','All'),f:()=>true},{l:L('Aktívne','Active'),f:r=>badgeOf(r)&&['ok','cond'].includes(badgeOf(r)[0].split(' ')[0])},{l:L('Vyžaduje pozornosť','Needs attention'),f:r=>badgeOf(r)&&['no'].includes(badgeOf(r)[0].split(' ')[0])}];}
-function badgeOf(r){return r.c.find(x=>Array.isArray(x)&&x[0]&&!x[0].includes('prio'));}
-function rowText(m,r){return r.c.map(c=>Array.isArray(c)?tr(c[1]):fmtCell(c)).join(' ').toLowerCase();}
+function chipsFor(m){return [{l:L('Všetko','All'),f:()=>true},{l:L('Aktívne','Active'),f:r=>badgeOf(r)&&['ok','cond','info'].includes(badgeOf(r)[0].split(' ')[0])},{l:L('Vyžaduje pozornosť','Needs attention'),f:r=>badgeOf(r)&&['no','cond'].includes(badgeOf(r)[0].split(' ')[0])}];}
+function badgeOf(r){return r.c.find(x=>Array.isArray(x)&&typeof x[0]==='string');}
+function rowText(m,r){return r.c.map(c=>Array.isArray(c)?tr(c[1]):(c&&c.pln!==undefined?String(c.pln):fmtCell(c))).join(' ').toLowerCase();}
 function allRows(m){return (state.extra[m.key]||[]).concat(m.rows);}
 function filteredRows(m){
   const ci=state.filter[m.key]||0, q=(state.query[m.key]||'').toLowerCase().trim();
@@ -876,20 +1137,23 @@ function filteredRows(m){
 
 function renderDashboard(m){
   if(state.emptyDemo&&m.key==='marketing') return renderOnboarding(m);
-  const chart=m.chart.type==='area'?area(m.chart.data):bars(m.chart.data);
-  const banner=m.alert?`<div class="banner ${m.alert.tone}">${svg(m.alert.icon)}<span>${tr(m.alert.text)}</span><button class="bx" onclick="this.closest('.banner').remove()">${state.lang==='sk'?'Zavrieť':'Dismiss'}</button></div>`:'';
+  const chart=m.chart.type==='segarea'?segarea(m):m.chart.type==='area'?area(m.chart.data):bars(m.chart.data);
+  const banner=m.alert?`<div class="banner ${m.alert.tone}">${svg(m.alert.icon)}<span>${tr(m.alert.text)}</span><button class="bx" onclick="this.closest('.banner').remove()">${state.lang==='sk'?'Zavrie\u0165':'Dismiss'}</button></div>`:'';
+  const cta=m.noCreate
+    ?`<button class="btn pri" onclick="toast('${state.lang==='sk'?'Export pripraven\u00fd (demo)':'Export ready (demo)'}')">${svg(I.doc)} Export</button>`
+    :`<button class="btn pri" onclick="openModal('${m.key}')">${svg(I.plus)} ${tr(m.newLabel||m.one)}</button>`;
+  const lgd=m.side.lgd?`<div class="lgd">${m.side.lgd.map(r=>`<div class="lr"><i style="background:${r[0]}"></i><span>${tr(r[1])}</span><b>${tr(r[2])}</b></div>`).join('')}</div>`:'';
   const html=`
     ${banner}
-    <div class="phead"><h1>${state.lang==='sk'?'Prehľad':'Overview'}</h1>
-      <span class="sub">${state.lang==='sk'?'Aktualizované 09:12 · ukážkové dáta':'Updated 09:12 · sample data'}</span>
-      <div class="actions"><button class="btn">${svg(I.cal)} ${state.lang==='sk'?'30 dní':'30 days'}</button>
-        <button class="btn pri" onclick="openModal('${m.key}')">${svg(I.plus)} ${tr(m.one)}</button></div></div>
-    <div class="kpis">${m.kpis.map(kpiCard).join('')}</div>
+    <div class="phead"><h1>${state.lang==='sk'?'Preh\u013ead':'Overview'}</h1>
+      <span class="sub">${state.lang==='sk'?'J\u00fal 2026 \u00b7 uk\u00e1\u017ekov\u00e9 d\u00e1ta':'July 2026 \u00b7 sample data'}</span>
+      <div class="actions"><span class="btn" style="cursor:default">${svg(I.cal)} ${state.lang==='sk'?'J\u00fal 2026':'July 2026'}</span>${cta}</div></div>
+    <div class="kpis">${m.kpis.map((k,i)=>kpiCard(k,i)).join('')}</div>
     <div class="cols">
-      <div class="card"><div class="ch"><h3>${tr(m.chart.title)}</h3><span class="sp">${state.lang==='sk'?'posledné obdobie':'latest period'}</span></div>${chart}</div>
-      <div class="card"><div class="ch"><h3>${tr(m.side.title)}</h3></div>${donut(m.side.donut,m.side.dl)}
-        <div class="rows" style="margin-top:16px">${m.rows.slice(0,3).map(r=>{const b=badgeOf(r);return `<div class="rw" onclick="go('#${m.key}/detail/${r.id}')"><div class="t"><b>${tr(r.c[0])}</b></div>${b?`<span class="badge ${b[0]}">${tr(b[1])}</span>`:''}</div>`;}).join('')}</div></div>
-    </div>`;
+      <div class="card"><div class="ch"><h3>${tr(m.chart.title)}</h3></div>${chart}</div>
+      <div class="card"><div class="ch"><h3>${tr(m.side.title)}</h3></div>${donut(m.side.donut,m.side.dl)}${lgd}</div>
+    </div>
+    ${widget(m)}`;
   view.innerHTML=shell(m,'dashboard',{html});
 }
 function renderOnboarding(m){
@@ -907,59 +1171,98 @@ function renderList(m){
   let body;
   if(!rows.length){
     body=`<div class="empty"><div class="ei">${svg(I.search,26)}</div>
-      <h3>${state.lang==='sk'?'Žiadne výsledky':'No results'}</h3>
-      <p>${state.lang==='sk'?'Pre zvolený filter alebo hľadaný výraz sa nenašiel žiadny záznam.':'No records match the selected filter or search.'}</p>
-      <button class="btn" onclick="clearFilters('${m.key}')">${state.lang==='sk'?'Zrušiť filtre':'Clear filters'}</button></div>`;
+      <h3>${state.lang==='sk'?'\u017diadne v\u00fdsledky':'No results'}</h3>
+      <p>${state.lang==='sk'?'Pre zvolen\u00fd filter alebo h\u013eadan\u00fd v\u00fdraz sa nena\u0161iel \u017eiadny z\u00e1znam.':'No records match the selected filter or search.'}</p>
+      <button class="btn" onclick="clearFilters('${m.key}')">${state.lang==='sk'?'Zru\u0161i\u0165 filtre':'Clear filters'}</button></div>`;
   }else{
-    body=`<div class="tbl-wrap"><table class="t"><thead><tr>${m.cols.map(c=>`<th scope="col">${tr(c)}</th>`).join('')}</tr></thead>
-      <tbody>${rows.map(r=>`<tr onclick="go('#${m.key}/detail/${r.id}')">${r.c.map((cell,i)=>tcell(cell,i)).join('')}</tr>`).join('')}</tbody></table></div>
-      <div class="pager"><button aria-label="prev">‹</button><button class="on">1</button><button>2</button><button>3</button><button aria-label="next">›</button></div>`;
+    body=`<div class="tbl-wrap"><table class="t"><thead><tr>${m.cols.map(c=>`<th scope="col">${tr(c)}</th>`).join('')}<th scope="col" style="width:36px"></th></tr></thead>
+      <tbody>${rows.map(r=>`<tr onclick="go('#${m.key}/detail/${r.id}')">${r.c.map((cell,i)=>tcell(cell,i,m)).join('')}<td><button class="kebab" aria-label="menu" onclick="event.stopPropagation();openRowMenu(event,'${m.key}','${r.id}')">\u22ef</button></td></tr>`).join('')}</tbody></table></div>`;
   }
+  const cta=m.noCreate
+    ?`<button class="btn pri" onclick="toast('${state.lang==='sk'?'Export pripraven\u00fd (demo)':'Export ready (demo)'}')">${svg(I.doc)} Export</button>`
+    :`<button class="btn pri" onclick="openModal('${m.key}')">${svg(I.plus)} ${state.lang==='sk'?'Nov\u00fd':'New'}</button>`;
   const html=`
     <div class="phead"><h1>${tr(m.list)}</h1>
-      <span class="sub">${rows.length} ${state.lang==='sk'?'z':'of'} ${allRows(m).length} ${state.lang==='sk'?'záznamov':'records'}</span>
-      <div class="actions"><button class="btn">${svg(I.filter)} ${state.lang==='sk'?'Filter':'Filter'}</button>
-        <button class="btn pri" onclick="openModal('${m.key}')">${svg(I.plus)} ${state.lang==='sk'?'Nový':'New'}</button></div></div>
+      <span class="sub">${rows.length} ${state.lang==='sk'?'z':'of'} ${allRows(m).length} ${state.lang==='sk'?'z\u00e1znamov':'records'}</span>
+      <div class="actions"><button class="btn" onclick="pulseChips()">${svg(I.filter)} Filter</button>${cta}</div></div>
     <div class="toolbar">
-      <div class="tsearch">${svg(I.search)}<input type="search" placeholder="${state.lang==='sk'?'Hľadať v zozname…':'Search list…'}" value="${esc(q)}" oninput="onSearch('${m.key}',this.value)" aria-label="${state.lang==='sk'?'Hľadať v zozname':'Search list'}"></div>
-      <div class="chips">${chips.map((c,i)=>`<button class="chip ${i===ci?'on':''}" onclick="setFilter('${m.key}',${i})">${tr(c.l)}</button>`).join('')}</div></div>
+      <div class="tsearch">${svg(I.search)}<input type="search" placeholder="${state.lang==='sk'?'H\u013eada\u0165 v zozname\u2026':'Search list\u2026'}" value="${esc(q)}" oninput="onSearch('${m.key}',this.value)" aria-label="${state.lang==='sk'?'H\u013eada\u0165 v zozname':'Search list'}"></div>
+      <div class="chips" id="listChips">${chips.map((c,i)=>`<button class="chip ${i===ci?'on':''}" onclick="setFilter('${m.key}',${i})">${tr(c.l)}</button>`).join('')}</div></div>
     ${body}`;
   view.innerHTML=shell(m,'list',{html});
 }
-function tcell(cell,i){
-  if(Array.isArray(cell)){const cls=cell[0];return `<td><span class="badge ${cls}">${tr(cell[1])}</span></td>`;}
-  const num=isNumCell(cell);
-  return `<td class="${num?'n':''}">${i===0?`<b>${fmtCell(cell)}</b>`:fmtCell(cell)}</td>`;
+function renderClaims(m){
+  const c=m.claims;
+  const html=`
+    <div class="phead"><h1>${tr(c.title)}</h1>
+      <span class="sub">${c.rows.length} ${state.lang==='sk'?'pr\u00edpadov \u00b7 \u2205 + medi\u00e1n \u010dasu rie\u0161enia po vyrie\u0161en\u00ed':'cases \u00b7 avg + median resolution time on resolve'}</span>
+      <div class="actions"><button class="btn" onclick="toast('XLSX (demo)')">${svg(I.doc)} XLSX</button>
+        <button class="btn pri" onclick="openModal('${m.key}')">${svg(I.plus)} ${state.lang==='sk'?'Nov\u00e1 reklam\u00e1cia':'New claim'}</button></div></div>
+    <div class="tbl-wrap"><table class="t"><thead><tr>${c.cols.map(cc=>`<th scope="col">${tr(cc)}</th>`).join('')}</tr></thead>
+      <tbody>${c.rows.map(r=>`<tr onclick="go('#${m.key}/detail/${r.id}')">${r.c.map((cell,i)=>tcell(cell,i,m)).join('')}</tr>`).join('')}</tbody></table></div>`;
+  view.innerHTML=shell(m,'claims',{html});
 }
-
+function pulseChips(){const el=document.getElementById('listChips');if(!el)return;el.style.outline='2px solid var(--acc)';el.style.outlineOffset='4px';el.style.borderRadius='10px';setTimeout(()=>{el.style.outline='';},900);}
+function openRowMenu(e,k,id){closeOverlay();scrim();state.overlay='rowmenu';
+  const d=document.createElement('div');d.className='dropdown';d.style.width='200px';
+  const y=Math.min(e.clientY,window.innerHeight-180),x=Math.min(e.clientX,window.innerWidth-220);
+  d.style.top=y+'px';d.style.left=x+'px';d.style.right='auto';
+  d.innerHTML=`<button class="mitem" onclick="closeOverlay();go('#${k}/detail/${id}')">${svg(I.doc)} ${state.lang==='sk'?'Otvori\u0165':'Open'}</button>
+    <button class="mitem" onclick="closeOverlay();openModal('${k}','${id}')">${svg(I.gear)} ${state.lang==='sk'?'Upravi\u0165':'Edit'}</button>
+    <button class="mitem" onclick="closeOverlay();toast('Export (demo)')">${svg(I.inbox)} Export</button>`;
+  document.body.appendChild(d);}
+function tcell(cell,i,m){
+  if(cell&&cell.pln!==undefined){
+    const v=cell.pln;
+    if(v===null)return `<td><span class="badge q">${state.lang==='sk'?'bez d\u00e1t':'no data'}</span></td>`;
+    const tok=v>=100?'var(--good)':v>=60?'var(--amber)':'var(--red)';
+    return `<td><span class="plnw"><span class="plnbar"><i style="width:${Math.min(v,100)}%;background:${tok}"></i></span><span class="n" style="font-family:var(--mono);font-feature-settings:var(--tnum)">${decs(v)}\u00a0%</span></span></td>`;
+  }
+  if(Array.isArray(cell)){const cls=cell[0];const mono=/^(in_progress|waiting|done|backlog|conditional_go|go|no_go|deferred|QA|Render|Export ZIP)$/.test(typeof cell[1]==='string'?cell[1]:'');return `<td><span class="badge ${cls}${mono?' mono':''}">${tr(cell[1])}</span></td>`;}
+  if(typeof cell==='string'&&/^[\u2191\u2192\u2193\u2014]$/.test(cell)){const c=cell==='\u2191'?'tr-up':cell==='\u2193'?'tr-dn':'tr-fl';return `<td class="${c}" style="font-size:15px">${cell}</td>`;}
+  const s=fmtCell(cell);
+  const num=isNumCell(cell)||(typeof s==='string'&&/^[~\u2248\u2212+\u20ac\u2014-]?[\d\s.,:%\u20ac\u2044/dh\u00a0-]+$/.test(s)&&/\d/.test(s));
+  return `<td class="${num?'n':''}">${i===0?`<b>${s}</b>`:s}</td>`;
+}
 function renderDetail(m,id){
-  const rows=allRows(m); const row=rows.find(r=>r.id===id);
+  const rows=allRows(m).concat(m.claims?m.claims.rows:[]);
+  const row=rows.find(r=>r.id===id);
   let d, extraName;
   if(!row || row.active){ d=m.detail; }
   else{
-    const badge=badgeOf(row)||row.c.find(x=>Array.isArray(x));
-    d={title:tr(row.c[0]),badge:badge||['q',L('Záznam','Record')],
-       sub:m.cols.slice(1,3).map((c,i)=>fmtCell(row.c[i+1])).filter(x=>x&&x!=='—').join(' · '),
-       fields:m.cols.map((c,i)=>[c,row.c[i]]).filter(f=>!Array.isArray(f[1])||f[1][0]),
-       time:m.detail.time, donut:m.detail.donut, dl:m.detail.dl};
+    const cols=(m.claims&&m.claims.rows.includes(row))?m.claims.cols:m.cols;
+    const badge=badgeOf(row)||['q',L('Z\u00e1znam','Record')];
+    const rd=row.d||{};
+    d={title:tr(row.c[0]),badge,
+       sub:rd.sub||cols.slice(1,3).map((c,i)=>fmtCell(row.c[i+1])).filter(x=>x&&x!=='\u2014').join(' \u00b7 '),
+       fields:cols.map((c,i)=>[c,row.c[i]]).filter(f=>f[1]&&f[1].pln===undefined),
+       time:rd.time||[[L('Teraz','Now'),L('Z\u00e1znam otvoren\u00fd na \u010d\u00edtanie','Record opened for reading')]],
+       donut:rd.donut, dl:rd.dl};
     extraName=tr(row.c[0]);
   }
   const steps=(state.steps[m.key+'/'+(id||'active')]||[]);
+  const statusCard=(d.donut!==undefined&&d.donut!==null)
+    ?donut(d.donut,d.dl)
+    :`<div style="display:flex;align-items:center;gap:12px;padding:8px 0"><span class="badge ${d.badge[0]}" style="font-size:13px;padding:6px 14px">${tr(d.badge[1])}</span><span style="color:var(--ink-3);font-size:12.5px">${state.lang==='sk'?'aktu\u00e1lny stav z\u00e1znamu':'current record state'}</span></div>`;
+  const others=rows.filter(r=>r!==row&&!(row===undefined&&r.active)).slice(0,3);
+  const related=`<div class="card" style="margin-top:16px"><div class="ch"><h3>${state.lang==='sk'?'S\u00favisiace z\u00e1znamy':'Related records'}</h3><span class="sp">${tr(m.list)}</span></div>
+    <table class="mtbl">${others.map(r=>{const b=badgeOf(r);return `<tr data-go="#${m.key}/detail/${r.id}" onclick="go(this.dataset.go)"><td><b>${tr(r.c[0])}</b></td><td>${b?`<span class="badge ${b[0]}">${tr(b[1])}</span>`:''}</td><td style="text-align:right;color:var(--acc)">${state.lang==='sk'?'Otvori\u0165':'Open'} \u2192</td></tr>`;}).join('')}</table></div>`;
   const html=`
     <div class="phead"><h1>${tr(d.title)}</h1>
-      <span class="badge ${d.badge[0]}" style="margin-bottom:4px">${tr(d.badge[1])}</span>
-      <div class="actions"><button class="btn" onclick="toast('${state.lang==='sk'?'Export pripravený (demo)':'Export ready (demo)'}')">${svg(I.doc)} ${state.lang==='sk'?'Export':'Export'}</button>
-        <button class="btn pri" onclick="openModal('${m.key}','${id||''}')">${state.lang==='sk'?'Upraviť':'Edit'}</button></div></div>
-    <p class="sub" style="color:var(--ink-3);font-size:13px;margin:-10px 0 20px">${tr(d.sub)}</p>
+      <span class="sub">${tr(d.sub)}</span>
+      <div class="actions"><button class="btn" onclick="toast('${state.lang==='sk'?'Export pripraven\u00fd (demo)':'Export ready (demo)'}')">${svg(I.doc)} Export</button>
+        <button class="btn pri" onclick="openModal('${m.key}','${id||''}')">${state.lang==='sk'?'Upravi\u0165':'Edit'}</button></div></div>
     <div class="dcols">
-      <div class="card"><div class="ch"><h3>${state.lang==='sk'?'Údaje':'Details'}</h3></div>
+      <div class="card"><div class="ch"><h3>${state.lang==='sk'?'\u00dadaje':'Details'}</h3><span class="badge ${d.badge[0]}">${tr(d.badge[1])}</span></div>
         <div class="fields">${d.fields.map(f=>`<div class="field"><div class="fl">${tr(f[0])}</div><div class="fv">${Array.isArray(f[1])?`<span class="badge ${f[1][0]}">${tr(f[1][1])}</span>`:fmtCell(f[1])}</div></div>`).join('')}</div></div>
-      <div class="card"><div class="ch"><h3>${state.lang==='sk'?'Stav':'Status'}</h3></div>${donut(d.donut,d.dl)}</div>
+      <div class="card"><div class="ch"><h3>${state.lang==='sk'?'Stav':'Status'}</h3></div>${statusCard}
+        <div class="ch" style="margin:18px 0 10px"><h3>${state.lang==='sk'?'Aktivita':'Activity'}</h3><span class="sp">${state.lang==='sk'?'vr\u00e1tane krokov AI':'incl. AI steps'}</span></div>
+        <div class="time" id="tl">${steps.map(s=>`<div class="ti"><div class="mk"></div><div class="tt">${esc(s)}<small>${state.lang==='sk'?'pr\u00e1ve teraz \u00b7 vy':'just now \u00b7 you'}</small></div></div>`).join('')}${d.time.map(t=>`<div class="ti"><div class="mk"></div><div class="tt">${tr(t[1])}<small>${tr(t[0])}</small></div></div>`).join('')}</div>
+        <div class="addstep"><input id="stepIn" placeholder="${state.lang==='sk'?'Prida\u0165 koment\u00e1r alebo krok\u2026':'Add a comment or step\u2026'}" onkeydown="if(event.key==='Enter')addStep('${m.key}','${id||'active'}')" aria-label="${state.lang==='sk'?'Prida\u0165 krok':'Add step'}"><button class="btn pri" onclick="addStep('${m.key}','${id||'active'}')">${svg(I.plus)} ${state.lang==='sk'?'Prida\u0165':'Add'}</button></div></div>
     </div>
-    <div class="card" style="margin-top:16px"><div class="ch"><h3>${state.lang==='sk'?'Aktivita':'Activity'}</h3><span class="sp">${state.lang==='sk'?'vrátane krokov AI':'incl. AI steps'}</span></div>
-      <div class="time" id="tl">${steps.map(s=>`<div class="ti"><div class="mk"></div><div class="tt">${esc(s)}<small>${state.lang==='sk'?'práve teraz · vy':'just now · you'}</small></div></div>`).join('')}${d.time.map(t=>`<div class="ti"><div class="mk"></div><div class="tt">${tr(t[1])}<small>${tr(t[0])}</small></div></div>`).join('')}</div>
-      <div class="addstep"><input id="stepIn" placeholder="${state.lang==='sk'?'Pridať komentár alebo krok…':'Add a comment or step…'}" onkeydown="if(event.key==='Enter')addStep('${m.key}','${id||'active'}')" aria-label="${state.lang==='sk'?'Pridať krok':'Add step'}"><button class="btn pri" onclick="addStep('${m.key}','${id||'active'}')">${svg(I.plus)} ${state.lang==='sk'?'Pridať':'Add'}</button></div></div>`;
+    ${related}`;
   view.innerHTML=shell(m,'detail',{html,crumbExtra:extraName});
+  if(d.donut===100){const c=document.querySelector('.crown');if(c){c.classList.add('pulse');setTimeout(()=>c.classList.remove('pulse'),1200);}document.querySelector('.topb')?.classList.add('goldline');}
 }
 
 function renderSettings(m){
@@ -971,7 +1274,7 @@ function renderSettings(m){
       ${g.rows.map((r,ri)=>{const key=`${m.key}.${gi}.${ri}`;const on=(state.toggles[key]!==undefined)?state.toggles[key]:r.sw;
         return `<div class="set-row"><div class="sl"><b>${tr(r.b)}</b><small>${tr(r.s)}</small></div>
         ${r.sw!==undefined?`<button class="sw" role="switch" aria-checked="${on}" aria-label="${tr(r.b)}" onclick="toggleSw(this,'${key}','${tr(r.b)}')"></button>`:''}
-        ${r.sel?`<button class="selbox">${tr(r.sel)} ${svg('<path d="M6 9l6 6 6-6"/>')}</button>`:''}</div>`;}).join('')}</div>`).join('')}`;
+        ${r.sel?`<button class="selbox" onclick="cycleSel(this,'${m.key}.${gi}.${ri}','${esc(tr(r.b))}')" data-opts="${r.opts?esc(JSON.stringify(r.opts.map(o=>tr(o)))):''}">${tr(r.sel)} ${svg('<path d=\"M6 9l6 6 6-6\"/>')}</button>`:''}</div>`;}).join('')}</div>`).join('')}`;
   view.innerHTML=shell(m,'settings',{html});
 }
 
@@ -1039,6 +1342,14 @@ function onSearch(k,v){state.query[k]=v;const m=MOD[k];const ci=state.filter[k]|
 function clearFilters(k){state.filter[k]=0;state.query[k]='';renderList(MOD[k]);}
 function toggleSw(el,key,label){const on=el.getAttribute('aria-checked')==='true';el.setAttribute('aria-checked',String(!on));state.toggles[key]=!on;
   toast((state.lang==='sk'?'Uložené: ':'Saved: ')+label);}
+function cycleSel(el,key,label){
+  const opts=el.dataset.opts?JSON.parse(el.dataset.opts):null;
+  if(!opts||!opts.length){toast((state.lang==='sk'?'Demo nastavenie: ':'Demo setting: ')+label);return;}
+  const cur=el.childNodes[0].textContent.trim();
+  const i=(opts.indexOf(cur)+1)%opts.length;
+  el.childNodes[0].textContent=opts[i]+' ';
+  toast((state.lang==='sk'?'Nastaven\u00e9: ':'Set: ')+label+' \u2192 '+opts[i]);
+}
 function addStep(k,id){const inp=document.getElementById('stepIn');const v=inp&&inp.value.trim();if(!v)return;
   const kk=k+'/'+id;(state.steps[kk]=state.steps[kk]||[]).unshift(v);
   const m=MOD[k];const cur=location.hash.split('/');renderDetail(m,cur[2]||undefined);toast(state.lang==='sk'?'Krok pridaný do aktivity':'Step added to activity');}
@@ -1048,8 +1359,10 @@ function closeOverlay(){document.querySelectorAll('.scrim,.dropdown,.cmdk,.modal
 function scrim(){const s=document.createElement('div');s.className='scrim';s.onclick=closeOverlay;document.body.appendChild(s);return s;}
 function openNotif(){if(state.overlay==='notif'){closeOverlay();return;}closeOverlay();scrim();state.overlay='notif';
   const d=document.createElement('div');d.className='dropdown';d.style.right='58px';
-  d.innerHTML=`<div class="dh">${state.lang==='sk'?'Notifikácie':'Notifications'}<span class="sp">${NOTIFS.length}</span></div>
-    ${NOTIFS.map(n=>`<div class="nitem"><span class="nd" style="background:${n.tone}"></span><div class="nt">${tr(n.t)}<small>${tr(n.s)}</small></div></div>`).join('')}`;
+  const GOTO=['#kpi/list','#logistika/dashboard','#marketing/dashboard','#roadmap/dashboard'];
+  d.innerHTML=`<div class="dh">${state.lang==='sk'?'Notifik\u00e1cie':'Notifications'}<span class="sp">${state.notifRead?0:NOTIFS.length}</span>
+      <button class="btn" style="margin-left:8px;padding:4px 9px;font-size:11px" onclick="state.notifRead=true;closeOverlay();document.querySelector('#notifBtn .dotb')?.remove();toast('${state.lang==='sk'?'Ozna\u010den\u00e9 ako pre\u010d\u00edtan\u00e9':'Marked as read'}')">${state.lang==='sk'?'Pre\u010d\u00edta\u0165 v\u0161etko':'Mark all read'}</button></div>
+    ${NOTIFS.map((n,i)=>`<button class="mitem" onclick="closeOverlay();go('${GOTO[i]}')" style="align-items:flex-start"><span class="nd" style="background:${n.tone};width:8px;height:8px;border-radius:50%;margin-top:5px;flex:none"></span><span class="nt" style="text-align:left">${tr(n.t)}<small>${tr(n.s)}</small></span></button>`).join('')}`;
   document.body.appendChild(d);}
 function openUser(){if(state.overlay==='user'){closeOverlay();return;}closeOverlay();scrim();state.overlay='user';
   const d=document.createElement('div');d.className='dropdown';d.style.right='16px';d.style.width='260px';
@@ -1063,7 +1376,7 @@ function openUser(){if(state.overlay==='user'){closeOverlay();return;}closeOverl
 /* command palette */
 function cmdkIndex(){const out=[];MODULES.forEach(m=>{
   out.push({cc:m.acc,ic:m.icon,t:m.name,s:tr(m.tag),kind:L('Modul','Module'),go:'#'+m.key});
-  out.push({cc:m.acc,ic:I.grid,t:(state.lang==='sk'?'Prehľad — ':'Overview — ')+m.name.replace('Aura ',''),s:tr(m.list),kind:L('Obrazovka','Screen'),go:'#'+m.key+'/dashboard'});
+  out.push({cc:m.acc,ic:I.grid,t:(state.lang==='sk'?'Preh\u013ead \u2014 ':'Overview \u2014 ')+m.name.replace('Aura ',''),s:'Dashboard',kind:L('Obrazovka','Screen'),go:'#'+m.key+'/dashboard'});
   allRows(m).slice(0,2).forEach(r=>out.push({cc:m.acc,ic:m.icon,t:tr(r.c[0]),s:m.name,kind:tr(m.one),go:'#'+m.key+'/detail/'+r.id}));});
   return out;}
 function openCmdk(){closeOverlay();scrim();state.overlay='cmdk';
@@ -1076,16 +1389,18 @@ function openCmdk(){closeOverlay();scrim();state.overlay='cmdk';
   draw('');const inp=document.getElementById('cmdkIn');inp.oninput=e=>draw(e.target.value);inp.focus();}
 
 /* modal create/edit */
-function openModal(k,id){closeOverlay();scrim();state.overlay='modal';const m=MOD[k];
-  const editing=!!id;const row=editing?allRows(m).find(r=>r.id===id):null;
-  const fields=m.cols.slice(0,3);
+function openModal(k,id){const m=MOD[k];if(m.noCreate&&!id){toast(state.lang==='sk'?'Report je len na \u010d\u00edtanie \u2014 pou\u017eite Export':'Report is read-only \u2014 use Export');return;}
+  closeOverlay();scrim();state.overlay='modal';
+  const editing=!!id;const row=editing?allRows(m).concat(m.claims?m.claims.rows:[]).find(r=>r.id===id):null;
+  const srcRow=row||m.rows[0];
+  const idxs=m.cols.map((c,i)=>i).filter(i=>{const cell=srcRow.c[i];return !Array.isArray(cell)&&!(cell&&cell.pln!==undefined);}).slice(0,3);
   const el=document.createElement('div');el.className='modal';el.setAttribute('role','dialog');el.setAttribute('aria-modal','true');
-  el.innerHTML=`<div class="mh"><h3>${editing?(state.lang==='sk'?'Upraviť ':'Edit ')+tr(m.one):(state.lang==='sk'?'Nový ':'New ')+tr(m.one)}</h3><button class="x" onclick="closeOverlay()" aria-label="${state.lang==='sk'?'Zavrieť':'Close'}">${svg(I.x,16)}</button></div>
-    <div class="mb">${fields.map((c,i)=>{const val=row?(Array.isArray(row.c[i])?tr(row.c[i][1]):fmtCell(row.c[i])):'';
-      return `<div class="fgroup"><label>${tr(c)}</label><input id="mf${i}" value="${esc(val)}" placeholder="${tr(c)}"></div>`;}).join('')}
-      <div class="fgroup"><label>${state.lang==='sk'?'Poznámka':'Note'}</label><input placeholder="${state.lang==='sk'?'Voliteľné…':'Optional…'}"></div></div>
-    <div class="mf"><button class="btn" onclick="closeOverlay()">${state.lang==='sk'?'Zrušiť':'Cancel'}</button>
-      <button class="btn pri" onclick="submitModal('${k}',${editing?`'${id}'`:'null'})">${editing?(state.lang==='sk'?'Uložiť':'Save'):(state.lang==='sk'?'Vytvoriť':'Create')}</button></div>`;
+  el.innerHTML=`<div class="mh"><h3>${editing?(state.lang==='sk'?'Upravi\u0165: ':'Edit: ')+tr(srcRow.c[0]):tr(m.newLabel||m.one)}</h3><button class="x" onclick="closeOverlay()" aria-label="${state.lang==='sk'?'Zavrie\u0165':'Close'}">${svg(I.x,16)}</button></div>
+    <div class="mb">${idxs.map((ci,n)=>{const val=row?fmtCell(row.c[ci]):'';
+      return `<div class="fgroup"><label>${tr(m.cols[ci])}</label><input id="mf${n}" data-ci="${ci}" value="${esc(val)}" placeholder="${tr(m.cols[ci])}"></div>`;}).join('')}
+      <div class="fgroup"><label>${state.lang==='sk'?'Pozn\u00e1mka':'Note'}</label><input placeholder="${state.lang==='sk'?'Volite\u013en\u00e9\u2026':'Optional\u2026'}"></div></div>
+    <div class="mf"><button class="btn" onclick="closeOverlay()">${state.lang==='sk'?'Zru\u0161i\u0165':'Cancel'}</button>
+      <button class="btn pri" onclick="submitModal('${k}',${editing?`'${id}'`:'null'})">${editing?(state.lang==='sk'?'Ulo\u017ei\u0165':'Save'):(state.lang==='sk'?'Vytvori\u0165':'Create')}</button></div>`;
   document.body.appendChild(el);const f=el.querySelector('input');if(f)f.focus();}
 function submitModal(k,id){const m=MOD[k];const name=(document.getElementById('mf0')||{}).value||tr(m.one);
   if(!id){const nid='new'+((state.extra[k]||[]).length+1);
@@ -1123,8 +1438,8 @@ function route(){
   if(key==='hub'||!MOD[key]){state.emptyDemo=false;renderHub();window.scrollTo(0,0);return;}
   const m=MOD[key];const screen=seg[1];
   if(!screen){renderIntro(m);window.scrollTo(0,0);return;}
-  const R={dashboard:()=>renderDashboard(m),list:()=>renderList(m),detail:()=>renderDetail(m,seg[2]),settings:()=>renderSettings(m)}[screen]||(()=>renderIntro(m));
-  if((screen==='dashboard'||screen==='list'||screen==='detail')&&!skTimer){
+  const R={dashboard:()=>renderDashboard(m),list:()=>renderList(m),claims:()=>m.claims?renderClaims(m):renderList(m),detail:()=>renderDetail(m,seg[2]),settings:()=>renderSettings(m)}[screen]||(()=>renderIntro(m));
+  if((screen==='dashboard'||screen==='list'||screen==='claims'||screen==='detail')&&!skTimer){
     view.innerHTML=`<div class="shell"><aside class="side" id="side"></aside><main class="main"><div class="content">${skeleton(screen)}</div></main></div>`;
     setAcc(m.acc);
     skTimer=setTimeout(()=>{skTimer=null;R();document.querySelector('.content')?.scrollTo(0,0);},260);
@@ -1135,16 +1450,20 @@ window.addEventListener('hashchange',route);
 /* prepínače */
 function applyStatic(){
   document.querySelectorAll('[data-i]').forEach(el=>{const k=el.getAttribute('data-i');
-    const dict={demo:{sk:'Demo · ukážkové dáta',en:'Demo · sample data'}};if(dict[k])el.textContent=dict[k][state.lang];});
+    const dict={demo:{sk:'Demo \u00b7 uk\u00e1\u017ekov\u00e9 d\u00e1ta',en:'Demo \u00b7 sample data'}};if(dict[k])el.textContent=dict[k][state.lang];});
   document.documentElement.lang=state.lang;
-  const tb=document.getElementById('themebtn');tb.setAttribute('aria-label',state.lang==='sk'?'Prepnúť tému':'Toggle theme');
+  document.title=state.lang==='sk'?'Aura \u00b7 Rodina aplik\u00e1ci\u00ed':'Aura \u00b7 App family';
+  const tb=document.getElementById('themebtn');tb.setAttribute('aria-label',state.lang==='sk'?'Prepn\u00fa\u0165 t\u00e9mu':'Toggle theme');
+  tb.innerHTML=state.theme==='dark'
+    ?svg('<path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"/>',17)
+    :svg('<circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.6 4.6l1.8 1.8M17.6 17.6l1.8 1.8M19.4 4.6l-1.8 1.8M6.4 17.6l-1.8 1.8"/>',17);
 }
 document.getElementById('langseg').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
   state.lang=b.dataset.lang;
   document.querySelectorAll('#langseg button').forEach(x=>{const on=x===b;x.classList.toggle('on',on);x.setAttribute('aria-pressed',on);});
   applyStatic();route();});
 document.getElementById('themebtn').addEventListener('click',function(){state.theme=state.theme==='dark'?'light':'dark';
-  document.documentElement.dataset.theme=state.theme;this.setAttribute('aria-pressed',state.theme==='light');});
+  document.documentElement.dataset.theme=state.theme;this.setAttribute('aria-pressed',state.theme==='light');applyStatic();});
 document.getElementById('hambBtn').addEventListener('click',toggleDrawer);
 document.body.addEventListener('click',e=>{
   if(e.target.closest('#notifBtn'))return openNotif();
@@ -1153,15 +1472,31 @@ document.body.addEventListener('click',e=>{
 
 /* klávesnica */
 window.addEventListener('keydown',e=>{
+  const tag=(e.target.tagName||'').toLowerCase();
   if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){e.preventDefault();openCmdk();return;}
-  if(e.key==='Escape'){if(state.overlay){closeOverlay();return;}if(document.body.classList.contains('drawer')){closeDrawer();return;}go('#hub');return;}
-  const tag=(e.target.tagName||'').toLowerCase();if(tag==='input'||tag==='textarea'||e.metaKey||e.ctrlKey||e.altKey)return;
+  if(e.key==='Escape'){
+    if(tag==='input'||tag==='textarea'){e.target.blur();return;}
+    if(state.overlay){closeOverlay();return;}
+    if(document.body.classList.contains('drawer')){closeDrawer();return;}
+    go('#hub');return;}
+  if(tag==='input'||tag==='textarea'||e.metaKey||e.ctrlKey||e.altKey)return;
   if(/^[1-6]$/.test(e.key)){go('#'+MODULES[+e.key-1].key);return;}
-  const seg=(location.hash.replace(/^#/,'')||'hub').split('/');if(!MOD[seg[0]]||!seg[1])return;
-  const i=SCREENS.indexOf(seg[1]);if(i<0)return;
-  if(e.key==='ArrowRight'&&i<SCREENS.length-1)go(`#${seg[0]}/${SCREENS[i+1]}`);
-  if(e.key==='ArrowLeft'){if(i>0)go(`#${seg[0]}/${SCREENS[i-1]}`);else go('#'+seg[0]);}
+  const seg=(location.hash.replace(/^#/,'')||'hub').split('/');const mm=MOD[seg[0]];if(!mm||!seg[1])return;
+  const SC=screensFor(mm);
+  const i=SC.indexOf(seg[1]);if(i<0)return;
+  if(e.key==='ArrowRight'&&i<SC.length-1)go(`#${seg[0]}/${SC[i+1]}`);
+  if(e.key==='ArrowLeft'){if(i>0)go(`#${seg[0]}/${SC[i-1]}`);else go('#'+seg[0]);}
 });
+/* tooltip grafov */
+document.body.addEventListener('mousemove',e=>{
+  const bar=e.target.closest('.bar');let tip=document.getElementById('ctip');
+  if(!bar){if(tip)tip.remove();return;}
+  if(!tip){tip=document.createElement('div');tip.className='ctip';tip.id='ctip';document.body.appendChild(tip);}
+  tip.innerHTML=`${esc(bar.dataset.val)}<small>${esc(bar.dataset.tip)} \u00b7 ${bar.dataset.sh} %</small>`;
+  tip.style.left=Math.min(e.clientX+14,window.innerWidth-170)+'px';tip.style.top=(e.clientY-14)+'px';
+});
+/* screenshot re\u017eim bez anim\u00e1ci\u00ed */
+if(navigator.webdriver)document.documentElement.classList.add('noanim');
 
 applyStatic();route();
 /* expozícia pre náhľadový/screenshot skript (const nie sú automaticky na window) */
