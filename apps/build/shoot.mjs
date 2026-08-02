@@ -57,8 +57,9 @@ async function main(){
   page.on('console', m => { if (m.type() === 'error') jsErrors.push(m.text()); });
 
   const url = pathToFileURL(HTML).href;
-  const routes = [['hub', 'hub']];
+  const routes = [['hub', 'hub'], ['login', 'login'], ['workspace', 'workspace'], ['profile', 'profile']];
   for (const m of MODULES){ routes.push([m, `${m}`]); for (const s of SCREENS) routes.push([`${m}-${s}`, `${m}/${s}`]); }
+  routes.push([`marketing-detail-jar`, 'marketing/detail/jar']);
 
   console.log('\nFáza A — verifikácia');
   await page.goto(url, { waitUntil: 'networkidle' });
@@ -74,6 +75,37 @@ async function main(){
     await page.screenshot({ path: file, fullPage: true });
     shots.push(file); ok(`${slug}.png`);
   }
+
+  console.log('\nFáza B2 — interakčné stavy (overlay/modál)');
+  const states = [
+    ['state-cmdk', 'marketing/dashboard', () => window.openCmdk()],
+    ['state-modal', 'sales/list', () => window.openModal('sales')],
+    ['state-notif', 'ops/dashboard', () => window.openNotif()],
+    ['state-usermenu', 'hr/dashboard', () => window.openUser()],
+    ['state-empty', 'finance/list', () => { window.state.query.finance = 'zzz'; window.renderList(window.MOD.finance); }],
+  ];
+  for (const [slug, hash, fn] of states){
+    await page.evaluate(h => { location.hash = '#' + h; }, hash);
+    await sleep(ANIM);
+    await page.evaluate(fn);
+    await sleep(260);
+    const file = join(OUT, `${slug}.png`);
+    await page.screenshot({ path: file, fullPage: true });
+    shots.push(file); ok(`${slug}.png`);
+    await page.evaluate(() => window.closeOverlay && window.closeOverlay());
+    await page.evaluate(() => { window.state.query = {}; });
+  }
+  // mobilná ukážka
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.evaluate(() => { location.hash = '#hub'; });
+  await sleep(ANIM);
+  await page.screenshot({ path: join(OUT, 'mobile-hub.png'), fullPage: true }); shots.push(join(OUT, 'mobile-hub.png')); ok('mobile-hub.png');
+  await page.evaluate(() => { location.hash = '#marketing/list'; });
+  await sleep(ANIM + 260);
+  await page.evaluate(() => document.getElementById('hambBtn').click());
+  await sleep(200);
+  await page.screenshot({ path: join(OUT, 'mobile-drawer.png'), fullPage: true }); shots.push(join(OUT, 'mobile-drawer.png')); ok('mobile-drawer.png');
+  await page.setViewportSize({ width: W, height: H });
 
   console.log('\nFáza C — svetlá téma (ukážky) + EN rozcestník');
   await page.evaluate(() => document.getElementById('themebtn').click());
@@ -93,7 +125,8 @@ async function main(){
   await page.evaluate(() => document.querySelector('#langseg [data-lang="sk"]').click());
 
   console.log('\nFáza D — PDF (všetky obrazovky za sebou)');
-  const darkShots = shots.filter(s => !s.includes('-light') && !s.includes('-en'));
+  const darkShots = shots.filter(s => typeof s === 'string' && s.endsWith('.png')
+    && !s.includes('-light') && !s.includes('-en') && !s.includes('state-') && !s.includes('mobile-'));
   const galleryItems = darkShots.map(f => {
     const b64 = readFileSync(f).toString('base64');
     return `<div class="pg"><img src="data:image/png;base64,${b64}"></div>`;

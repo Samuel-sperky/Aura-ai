@@ -34,13 +34,35 @@ Každý modul: **intro** (cover) → **Prehľad** (dashboard) → **zoznam** →
 Modulové akcenty používajú **existujúce sémantické tokeny** z prezentácie
 (`--teal`, `--violet`, `--gold`, `--good`, `--amber`, `--teal-2`). Nové farby sa nevymýšľajú.
 
+## Interakcie (klientske, bez backendu)
+
+Náhľad je simulovateľný — nie je to len statická galéria:
+
+- **Klikateľné riadky** zoznamu → otvoria konkrétny detail (cez `#modul/detail/<id>`).
+- **Reálne filtre** (chips) a **vyhľadávanie** v zozname zúžia tabuľku; prázdny výsledok → empty stav.
+- **Vytváranie/úprava** cez modálny formulár (`Nový` / `Upraviť`) → nový záznam sa pridá do tabuľky + toast.
+- **Prepínače** v Nastaveniach reálne prepnú stav (+ toast). **Pridávanie krokov** do timeline v detaile.
+- **Chybové stavy**: banner v Aura Ops (Worker C zaťažený) a Aura Finance (faktúry po splatnosti).
+- **Globálne prvky**: ⌘K vyhľadávanie naprieč modulmi, panel notifikácií (zvonček), profilové menu (avatar).
+- **Skeleton loading** pri prepínaní obrazoviek, **toasty** po akciách, **onboarding** prázdny štart.
+- **Vstupné obrazovky**: `#login` → `#workspace` (výber pracovného priestoru) → hub; `#profile`.
+
 ## Ovládanie
 
-- **Prepínač SK / EN** vpravo hore — celé rozhranie je dvojjazyčné.
-- **Dark / Light** prepínač (ikona mesiaca).
-- Klávesnica: `1`–`6` skočí na modul, `←`/`→` prepína obrazovky v module, `Esc` na rozcestník.
+- **Prepínač SK / EN** vpravo hore — celé rozhranie vrátane formátu čísel a dátumov je dvojjazyčné.
+- **Dark / Light** prepínač (ikona mesiaca); light téma spĺňa AA kontrast.
+- Klávesnica: `⌘K` / `Ctrl+K` vyhľadávanie, `1`–`6` skok na modul, `←`/`→` obrazovky v module, `Esc` zavrie overlay / rozcestník.
+- Prístupnosť: `:focus-visible`, `role=switch`, ARIA popisy, landmarky `<header>/<main>/<aside>`, `scope` na tabuľkách.
+- Plne responzívne — na mobile hamburger + off-canvas drawer.
 - Bez `localStorage`, bez analytiky, bez CDN skriptov. Grafy sú ručné SVG/CSS.
   Jediná externá závislosť sú Google Fonts so systémovým fallbackom.
+
+## Farebný systém
+
+Brand akcenty modulov sú **oddelené od stavových farieb** (aby sa napr. „pozor" nemýlilo s brandom):
+Marketing `--b-mkt` (teal), HR `--b-hr` (violet), Sales `--b-sales` (jantár), Finance `--b-fin` (zelená),
+Support `--b-support` (oranžová), Ops `--b-ops` `#2a8f96`. Stavové `good/amber/red/violet` sú len pre badge.
+Chrome (topbar, SK/EN) drží fixný teal nezávisle od modulu.
 
 ## Ako prestavať screenshoty a PDF
 
