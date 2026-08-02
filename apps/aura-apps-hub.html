@@ -1189,6 +1189,13 @@ function heatmapHTML(w,m){
   return `<div class="hm"><div class="hrow"><span></span>${w.months.map(mo=>`<span class="mh">${tr(mo)}</span>`).join('')}</div>
     ${w.rows.map(r=>`<div class="hrow"><span class="hl">${tr(r.l)}</span>${r.v.map(v=>hmCell(v,r.id?`#${m.key}/detail/${r.id}`:null)).join('')}</div>`).join('')}</div>
     <div class="hm-note">${tr(w.note)}</div>`;}
+function renderExtra(m,ex){
+  let h='';
+  if(ex.kpis)h+=`<div class="kpis" style="margin-top:16px">${ex.kpis.map((k,i)=>kpiCard(k,-1)).join('')}</div>`;
+  if(ex.table)h+=`<div class="card" style="margin-top:16px"><div class="ch"><h3>${tr(ex.table.title)}</h3></div>
+    <table class="mtbl">${ex.table.rows.map(r=>`<tr${r.go?` data-go="${r.go}" onclick="go(this.dataset.go)" style="cursor:pointer"`:''}>${r.c.map((c,i)=>Array.isArray(c)?`<td><span class="badge ${c[0]}">${tr(c[1])}</span></td>`:`<td${i===0?'':' class="n" style="font-family:var(--mono)"'}>${i===0?`<b>${tr(c)}</b>`:tr(c)}</td>`).join('')}</tr>`).join('')}</table>
+    ${ex.table.note?`<div class="hm-note">${tr(ex.table.note)}</div>`:''}</div>`;
+  return h;}
 function renderPage(m,pg){
   let body='';
   if(pg.type==='analyza'){
@@ -1214,9 +1221,31 @@ function renderPage(m,pg){
         <div style="position:absolute;left:calc(52px + (100% - 144px)*${pg.today/100});top:-6px;bottom:-6px;width:1px;background:var(--gold);opacity:.7"></div>
         ${pg.rows.map(r=>`<div class="grow" data-go="#${m.key}/detail/${r.id}" onclick="go(this.dataset.go)" style="cursor:pointer"><span class="gl">${tr(r.l)}</span><div class="gtrack"><div class="gfill" style="margin-left:${r.s}%;width:${r.w}%"></div></div><span class="gst"><span class="badge ${r.b[0]} mono" style="font-size:10px">${tr(r.b[1])}</span></span></div>`).join('')}
       </div></div>`;
+  }else if(pg.type==='lines'){
+    const W=560,H=180,pad=8,n=pg.labels.length;
+    const allv=pg.series.flatMap(s=>s.v),mx=Math.max(...allv),mn=Math.min(...allv),rng=(mx-mn)||1;
+    const X=i=>pad+i*(W-2*pad)/(n-1), Y=v=>H-18-((v-mn)/rng)*(H-40);
+    const line=(vs)=>vs.map((v,i)=>(i?'L':'M')+X(i).toFixed(1)+' '+Y(v).toFixed(1)).join(' ');
+    const mavg=vs=>vs.map((_,i)=>{const a=vs.slice(Math.max(0,i-2),i+1);return a.reduce((s,x)=>s+x,0)/a.length;});
+    const paths=pg.series.map(s=>`<path d="${line(s.v)}" fill="none" stroke="${s.color}" stroke-width="2" stroke-linejoin="round"/>`).join('');
+    const avg=pg.avg?`<path d="${line(mavg(pg.series[0].v))}" fill="none" stroke="var(--ink-3)" stroke-width="1.6" stroke-dasharray="5 4"/>`:'';
+    const lbl=pg.labels.map((l,i)=>`<text x="${X(i).toFixed(1)}" y="${H-4}" text-anchor="middle" font-size="9" fill="var(--ink-3)" font-family="var(--mono)">${tr(l)}</text>`).join('');
+    const lg=`<div class="lgd" style="flex-direction:row;flex-wrap:wrap;gap:14px">${pg.series.map(s=>`<div class="lr" style="gap:6px"><i style="background:${s.color}"></i><span>${tr(s.l)}</span></div>`).join('')}${pg.avg?`<div class="lr" style="gap:6px"><i style="background:var(--ink-3)"></i><span>${state.lang==='sk'?'k\u013dzav\u00fd priemer':'moving average'}</span></div>`:''}</div>`;
+    body=`<div class="card"><div class="ch"><h3>${tr(pg.chartTitle||pg.title)}</h3></div>
+      <svg class="area" style="height:${H}px" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">${paths}${avg}${lbl}</svg>${lg}
+      ${pg.note?`<div class="hm-note">${tr(pg.note)}</div>`:''}</div>${pg.extra?renderExtra(m,pg.extra):''}`;
+  }else if(pg.type==='stack'){
+    const totals=pg.labels.map((_,i)=>pg.series.reduce((s,sr)=>s+sr.v[i],0));const mx=Math.max(...totals);
+    body=`<div class="card"><div class="ch"><h3>${tr(pg.chartTitle||pg.title)}</h3></div>
+      <div class="bars" style="height:190px">${pg.labels.map((l,i)=>`<div class="bar"><span class="bv">${grp(totals[i])}</span>
+        <div class="col" style="height:${Math.max(8,totals[i]/mx*100)}%;--i:${i};background:none;display:flex;flex-direction:column-reverse;gap:1px">
+          ${pg.series.map(sr=>`<div title="${esc(tr(sr.l))}: ${grp(sr.v[i])}" style="height:${totals[i]?sr.v[i]/totals[i]*100:0}%;background:color-mix(in srgb,${sr.tone} 70%,var(--card));border-radius:2px"></div>`).join('')}
+        </div><span class="bl">${tr(l)}</span></div>`).join('')}</div>
+      <div class="lgd" style="flex-direction:row;flex-wrap:wrap;gap:14px;margin-top:12px">${pg.series.map(sr=>`<div class="lr" style="gap:6px"><i style="background:${sr.tone}"></i><span>${tr(sr.l)}</span></div>`).join('')}</div>
+      ${pg.note?`<div class="hm-note">${tr(pg.note)}</div>`:''}</div>${pg.extra?renderExtra(m,pg.extra):''}`;
   }else if(pg.type==='table'){
     body=`<div class="tbl-wrap"><table class="t"><thead><tr>${pg.cols.map(c=>`<th scope="col">${tr(c)}</th>`).join('')}</tr></thead>
-      <tbody>${pg.rows.map(r=>`<tr onclick="go('#${m.key}/detail/${r.id}')">${r.c.map((cell,i)=>tcell(cell,i,m)).join('')}</tr>`).join('')}</tbody></table></div>`;
+      <tbody>${pg.rows.map(r=>`<tr onclick="go('#${m.key}/detail/${r.id}')">${r.c.map((cell,i)=>tcell(cell,i,m)).join('')}</tr>`).join('')}</tbody></table></div>${pg.note?`<div class="hm-note" style="margin-top:10px">${tr(pg.note)}</div>`:''}${pg.extra?renderExtra(m,pg.extra):''}`;
   }
   const html=`<div class="phead"><h1>${tr(pg.title)}</h1><span class="sub">${pg.sub?tr(pg.sub):tr(m.name)+' \u00b7 '+(state.lang==='sk'?'uk\u00e1\u017eka':'sample')}</span>
     <div class="actions"><button class="btn" onclick="toast('XLSX (demo)')">${svg(I.doc)} XLSX</button></div></div>${body}`;
