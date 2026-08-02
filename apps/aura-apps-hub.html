@@ -1809,7 +1809,10 @@ function applyStatic(){
 document.getElementById('langseg').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
   state.lang=b.dataset.lang;
   document.querySelectorAll('#langseg button').forEach(x=>{const on=x===b;x.classList.toggle('on',on);x.setAttribute('aria-pressed',on);});
-  applyStatic();route();});
+  window.POST=window.POST||[];
+function runPost(){const seg=(location.hash.replace(/^#/,'')||'hub').split('/');const m=MOD[seg[0]]||null;POST.forEach(h=>{try{h(m,seg[1]||seg[0]);}catch(e){console.error('POST hook',e);}});}
+const _route=route;route=function(){_route();setTimeout(runPost,300);};
+applyStatic();route();});
 document.getElementById('themebtn').addEventListener('click',function(){state.theme=state.theme==='dark'?'light':'dark';
   document.documentElement.dataset.theme=state.theme;this.setAttribute('aria-pressed',state.theme==='light');applyStatic();});
 document.getElementById('hambBtn').addEventListener('click',toggleDrawer);
@@ -1846,6 +1849,9 @@ document.body.addEventListener('mousemove',e=>{
 /* screenshot re\u017eim bez anim\u00e1ci\u00ed */
 if(navigator.webdriver)document.documentElement.classList.add('noanim');
 
+window.POST=window.POST||[];
+function runPost(){const seg=(location.hash.replace(/^#/,'')||'hub').split('/');const m=MOD[seg[0]]||null;POST.forEach(h=>{try{h(m,seg[1]||seg[0]);}catch(e){console.error('POST hook',e);}});}
+const _route=route;route=function(){_route();setTimeout(runPost,300);};
 applyStatic();route();
 /* expozícia pre náhľadový/screenshot skript (const nie sú automaticky na window) */
 window.state=state;window.MOD=MOD;window.MODULES=MODULES;
