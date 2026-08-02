@@ -61,7 +61,12 @@ async function main(){
   for (const m of MODULES){ routes.push([m, `${m}`]); for (const s of SCREENS) routes.push([`${m}-${s}`, `${m}/${s}`]); }
   routes.push(['logistika-claims','logistika/claims'],['kpi-detail-foto','kpi/detail/foto'],
     ['kpi-analyza','kpi/analyza'],['marketing-bannery','marketing/bannery'],['logistika-vyvoj','logistika/vyvoj'],
-    ['hr-pozicie','hr/pozicie'],['roadmap-timeline','roadmap/timeline'],['trzby-trhy','trzby/trhy']);
+    ['hr-pozicie','hr/pozicie'],['roadmap-timeline','roadmap/timeline'],['trzby-trhy','trzby/trhy'],
+    ['marketing-ads','marketing/ads'],['kpi-rok','kpi/rok'],['kpi-missing','kpi/missing'],['kpi-seo','kpi/seo'],
+    ['logistika-vyvoj2','logistika/vyvoj'],['logistika-stavy','logistika/stavy'],['hr-maily','hr/maily'],
+    ['hr-aplikacie','hr/aplikacie'],['hr-org','hr/org'],['roadmap-projekty','roadmap/projekty'],
+    ['roadmap-rozhodnutia','roadmap/rozhodnutia'],['trzby-kose','trzby/kose'],['trzby-hodiny','trzby/hodiny'],
+    ['trzby-expedicia','trzby/expedicia'],['trzby-definicie','trzby/definicie']);
 
   console.log('\nFáza A — verifikácia');
   await page.goto(url, { waitUntil: 'networkidle' });
