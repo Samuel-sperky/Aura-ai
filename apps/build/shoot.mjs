@@ -59,7 +59,9 @@ async function main(){
   const url = pathToFileURL(HTML).href;
   const routes = [['hub', 'hub'], ['login', 'login'], ['workspace', 'workspace'], ['profile', 'profile']];
   for (const m of MODULES){ routes.push([m, `${m}`]); for (const s of SCREENS) routes.push([`${m}-${s}`, `${m}/${s}`]); }
-  routes.push(['logistika-claims', 'logistika/claims'], ['kpi-detail-foto', 'kpi/detail/foto']);
+  routes.push(['logistika-claims','logistika/claims'],['kpi-detail-foto','kpi/detail/foto'],
+    ['kpi-analyza','kpi/analyza'],['marketing-bannery','marketing/bannery'],['logistika-vyvoj','logistika/vyvoj'],
+    ['hr-pozicie','hr/pozicie'],['roadmap-timeline','roadmap/timeline'],['trzby-trhy','trzby/trhy']);
 
   console.log('\nFáza A — verifikácia');
   await page.goto(url, { waitUntil: 'networkidle' });

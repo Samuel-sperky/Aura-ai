@@ -1000,6 +1000,56 @@ const MODULES=[
 }
 ];
 const MOD=Object.fromEntries(MODULES.map((m,i)=>[m.key,{...m,idx:i+1}]));
+/* rozšírené stránky modulov (podľa obrazoviek reálnych appiek) */
+const PAGES={
+kpi:[{key:'analyza',icon:I.trend,title:L('Analýza','Analysis'),type:'analyza',
+  ab:{title:L('A/B porovnanie — Máj vs Jún','A/B compare — May vs June'),a:L('Máj','May'),b:L('Jún','Jun'),
+    rows:[{id:'copy',l:'Copywriter',a:97,b:100},{id:'nahr',l:L('Nahrávanie','Uploads'),a:84,b:88.5},{id:'perf',l:'Performance',a:85,b:87.2},{id:'news',l:'Newsletter-AI',a:82,b:84.6},{id:'foto',l:L('Fotografka','Photo'),a:71,b:68.1},{id:'hosp',l:L('Hospodársky','Business'),a:null,b:null}]}}],
+marketing:[{key:'bannery',icon:I.tag,title:L('Bannery','Banners'),type:'gallery',
+  note:L('8 jazykov × 5 rozmerov · render HTML/CSS → PNG → ZIP','8 languages × 5 sizes · HTML/CSS → PNG → ZIP render'),
+  cards:[{t:'1080×1080',n:96,qa:96,go:'#marketing/detail/summer'},{t:'1080×1350',n:80,qa:92,go:'#marketing/detail/summer'},{t:'1080×1920',n:56,qa:89,go:'#marketing/detail/svadba'},{t:'1200×628',n:48,qa:88,go:'#marketing/detail/zlate'},{t:'970×250',n:40,qa:90,go:'#marketing/detail/gem'}]}],
+logistika:[{key:'vyvoj',icon:I.trend,title:L('Vývoj','Trends'),type:'trend',
+  note:L('Odoslané spolu po ISO-týždňoch · hodnoty ukážkové','Total shipped by ISO week · values illustrative'),
+  weeks:['W26','W27','W28','W29','W30','W31'],total:[2050,2140,2210,2290,2180,2340],
+  states:{title:L('Mix stavov (W31)','State mix (W31)'),
+    rows:[[L('doručené','delivered'),'94,1 %','ok'],[L('na ceste','in transit'),'3,1 %','cond'],[L('výdajňa','pickup point'),'1,6 %','info'],[L('vrátené','returned'),'0,9 %','cond'],[L('stratené','lost'),'0,3 %','no']]}}],
+hr:[{key:'pozicie',icon:I.doc,title:L('Pozície','Positions'),type:'table',
+  sub:L('6 z 32 pozícií · náplň = bloky + knižnica činností','6 of 32 positions · duties = blocks + activity library'),
+  cols:[L('Pozícia','Position'),L('Oddelenie','Department'),L('Obsadenie','Filled'),L('Zdieľané maily','Shared mail'),L('Náplň','Duties')],
+  rows:[
+    {id:'delaja',c:[L('CTO – Technický riaditeľ','CTO – Technical director'),L('Vedenie','Leadership'),'1/1','4',['ok',L('kompletná','complete')]]},
+    {id:'daniel',c:[L('Vývojár','Developer'),'IT','2/2','2',['ok',L('kompletná','complete')]]},
+    {id:'gabika',c:['SEO / Copywriter','Marketing','1/1','3',['ok',L('kompletná','complete')]]},
+    {id:'ema',c:[L('Newsletter & projekty','Newsletter & projects'),'Marketing','1/1','2',['ok',L('kompletná','complete')]]},
+    {id:'hajnalka',c:['Team Leader CS',L('Zákaznícky servis','Customer service'),'1/1','3',['cond',L('dopĺňa sa','in progress')]]},
+    {id:'delaja',c:[L('Skladník','Warehouse operator'),L('Sklad','Warehouse'),'2/3','1',['cond',L('1 voľné miesto','1 open seat')]]}]}],
+roadmap:[{key:'timeline',icon:I.cal,title:'Timeline',type:'timeline',
+  modes:[L('Roadmap','Roadmap'),L('Sprinty','Sprints'),L('Rozhodnutia','Decisions')],
+  note:L('zoom: mesiac · hustota: cozy · čiara = dnes','zoom: month · density: cozy · line = today'),
+  rows:[{id:'pay',l:'E-shop',s:5,w:55,b:['info','in_progress']},{id:'zod',l:'Aura Roadmap',s:0,w:70,b:['ok','done']},{id:'bug409',l:L('Bezpečnosť','Security'),s:35,w:40,b:['cond','waiting']},{id:'onb',l:'Aura KPI',s:20,w:65,b:['cond','conditional_go']},{id:'audit',l:'Aura Banner Studio',s:55,w:35,b:['q','backlog']}],today:62}],
+trzby:[{key:'trhy',icon:I.trend,title:L('Trhy','Markets'),type:'table',
+  sub:L('HU+RO+SK = 63,9 % tržby (reálne) · jednotlivé podiely ukážkové','HU+RO+SK = 63.9% of revenue (real) · per-market shares illustrative'),
+  cols:[L('Trh','Market'),L('Podiel tržby','Revenue share'),'AOV',L('Objednávky','Orders'),L('Stav','Status')],
+  rows:[
+    {id:'zlato',c:['HU','26,4 %','41,20 €','1 390',['ok','OK']]},
+    {id:'kovy',c:['RO','19,8 %','39,80 €','1 080',['ok','OK']]},
+    {id:'cod',c:['SK','17,7 %','36,10 €','1 065',['ok','OK']]},
+    {id:'zlava',c:['CZ','13,2 %','35,60 €','805',['ok','OK']]},
+    {id:'plna',c:['PL','9,1 %','33,90 €','580',['cond',L('rast vratiek','returns rising')]]},
+    {id:'opak',c:[L('Ostatné (SI·HR·BG)','Other (SI·HR·BG)'),'13,8 %','34,40 €','759',['ok','OK']]}]}]
+};
+MODULES.forEach(mm=>{mm.pages=PAGES[mm.key]||[];});
+Object.values(MOD).forEach(mm=>{mm.pages=PAGES[mm.key]||[];});
+/* prekliky KPI kariet a widgetov */
+MOD.kpi.kpis[3].go={h:'#kpi/list',chip:2};
+MOD.kpi.kpis[1].go={h:'#kpi/list'};
+MOD.marketing.kpis[0].go={h:'#marketing/list'};
+MOD.logistika.kpis[2].go={h:'#logistika/claims'};
+MOD.roadmap.kpis[2].go={h:'#roadmap/dashboard'};
+MOD.trzby.kpis[0].go={h:'#trzby/detail'};
+if(MOD.trzby.widget)MOD.trzby.widget.cards.forEach((c,i)=>c.go=['#trzby/detail','#trzby/detail/zlato','#trzby/detail/zlava'][i]);
+if(MOD.kpi.widget)MOD.kpi.widget.rows.forEach((r,i)=>r.id=['copy','nahr','perf','news','foto','hosp'][i]);
+
 const SCREENS=['dashboard','list','detail','settings'];
 
 /* notifikácie + workspaces + ⌘K index (demo) */
@@ -1025,20 +1075,15 @@ function kpiCard(k,i){
   if(k.d){const up=k.d.n>0,down=k.d.n<0,good=k.d.inv?down:up,ar=up?'▲':down?'▼':'',sign=up?'+':down?'−':'';
     d=`<div class="d ${good?'up':'down'}">${ar} ${sign}${decs(Math.abs(k.d.n))}${k.d.u?tr(k.d.u):''}</div>`;}
   else if(k.sub){d=`<div class="d flat">${tr(k.sub)}</div>`;}
-  return `<div class="kpi${i===0?' hero':''}"><div class="l">${tr(k.l)}</div><div class="v">${val}</div>${d}</div>`;
+  const click=k.go?` onclick="${k.go.chip!==undefined?`state.filter['${k.go.h.split('/')[0].slice(1)}']=${k.go.chip};`:''}go('${k.go.h}')" style="cursor:pointer" role="link" tabindex="0"`:'';
+  return `<div class="kpi${i===0?' hero':''}"${click}><div class="l">${tr(k.l)}</div><div class="v">${val}</div>${d}</div>`;
 }
 /* widgety modulov */
 function widget(m){
   const w=m.widget;if(!w)return '';
   let inner='';
-  if(w.type==='insights') inner=`<div class="icards">${w.cards.map(c=>`<div class="icard" style="--tone:${c.tone}"><b>${tr(c.t)}</b><small>${tr(c.s)}</small></div>`).join('')}</div>`;
-  else if(w.type==='heatmap'){
-    const cell=v=>{if(v==null)return `<div class="cell" style="background:color-mix(in srgb,var(--ink-3) 14%,var(--card-2));color:var(--ink-3)">—</div>`;
-      const tok=v>=100?'var(--good)':v>=60?'var(--amber)':'var(--red)';
-      return `<div class="cell" style="background:color-mix(in srgb,${tok} ${v>=100?'42':v>=60?'30':'26'}%,var(--card-2))" title="${decs(v)} %">${decs(v)}</div>`;};
-    inner=`<div class="hm"><div class="hrow"><span></span>${w.months.map(mo=>`<span class="mh">${tr(mo)}</span>`).join('')}</div>
-      ${w.rows.map(r=>`<div class="hrow"><span class="hl">${tr(r.l)}</span>${r.v.map(cell).join('')}</div>`).join('')}</div>
-      <div class="hm-note">${tr(w.note)}</div>`;}
+  if(w.type==='insights') inner=`<div class="icards">${w.cards.map(c=>`<div class="icard" style="--tone:${c.tone}${c.go?';cursor:pointer':''}"${c.go?` onclick="go('${c.go}')"`:''}><b>${tr(c.t)}</b><small>${tr(c.s)}</small></div>`).join('')}</div>`;
+  else if(w.type==='heatmap'){inner=heatmapHTML(w,m);}
   else if(w.type==='gantt'){
     inner=`<div class="gantt">${w.sprints.map(s=>`<div class="grow"><span class="gl">${s.l}</span><div class="gtrack"><div class="gfill" style="width:${s.done}%"></div></div><span class="gst">${s.st} · ${s.done} %</span></div>`).join('')}</div>
       <div class="ch" style="margin:18px 0 0"><h3>${tr(w.decisions.title)}</h3></div>
@@ -1095,15 +1140,16 @@ function renderIntro(m){
 }
 
 function crumb(m,screen,extra){
-  const sn={dashboard:L('Prehľad','Overview'),list:m.list,claims:m.claims&&m.claims.title,detail:L('Detail','Detail'),settings:L('Nastavenia','Settings')}[screen];
+  const pg=(m.pages||[]).find(p=>p.key===screen);const sn=pg?pg.title:{dashboard:L('Prehľad','Overview'),list:m.list,claims:m.claims&&m.claims.title,detail:L('Detail','Detail'),settings:L('Nastavenia','Settings')}[screen];
   return `<nav class="crumb" aria-label="breadcrumb"><a onclick="go('#hub')">Aura</a> ⁄ <a onclick="go('#${m.key}/dashboard')">${m.name.replace('Aura ','')}</a> ⁄ <b>${tr(sn)}${extra?' · '+extra:''}</b></nav>`;
 }
 
-function screensFor(m){return m.claims?['dashboard','list','claims','detail','settings']:SCREENS;}
+function screensFor(m){const base=m.claims?['dashboard','list','claims']:['dashboard','list'];return base.concat((m.pages||[]).map(p=>p.key),['detail','settings']);}
 function shell(m,screen,inner){
   setAcc(m.acc);
   const navItems=[['dashboard',I.grid,L('Prehľad','Overview')],['list',I.list,m.list]];
   if(m.claims)navItems.push(['claims',I.inbox,m.claims.title]);
+  (m.pages||[]).forEach(pg=>navItems.push([pg.key,pg.icon,pg.title]));
   navItems.push(['detail',I.doc,L('Detail','Detail')],['settings',I.gear,L('Nastavenia','Settings')]);
   return `<div class="shell an">
     <aside class="side" id="side">
@@ -1135,6 +1181,47 @@ function filteredRows(m){
   return allRows(m).filter(r=>chip.f(r)&&(!q||rowText(m,r).includes(q)));
 }
 
+function hmCell(v,go){const oc=go?` onclick="event.stopPropagation();go('${go}')" style="cursor:pointer;`:` style="`;
+  if(v==null)return `<div class="cell"${oc}background:color-mix(in srgb,var(--ink-3) 14%,var(--card-2));color:var(--ink-3)">\u2014</div>`;
+  const tok=v>=100?'var(--good)':v>=60?'var(--amber)':'var(--red)';
+  return `<div class="cell"${oc}background:color-mix(in srgb,${tok} ${v>=100?'42':v>=60?'30':'26'}%,var(--card-2))" title="${decs(v)} %">${decs(v)}</div>`;}
+function heatmapHTML(w,m){
+  return `<div class="hm"><div class="hrow"><span></span>${w.months.map(mo=>`<span class="mh">${tr(mo)}</span>`).join('')}</div>
+    ${w.rows.map(r=>`<div class="hrow"><span class="hl">${tr(r.l)}</span>${r.v.map(v=>hmCell(v,r.id?`#${m.key}/detail/${r.id}`:null)).join('')}</div>`).join('')}</div>
+    <div class="hm-note">${tr(w.note)}</div>`;}
+function renderPage(m,pg){
+  let body='';
+  if(pg.type==='analyza'){
+    const ab=pg.ab;
+    body=`<div class="card"><div class="ch"><h3>${tr(m.widget.title)}</h3></div>${heatmapHTML(m.widget,m)}</div>
+      <div class="card" style="margin-top:16px"><div class="ch"><h3>${tr(ab.title)}</h3><span class="sp">${state.lang==='sk'?'klik na riadok \u2192 detail':'click a row \u2192 detail'}</span></div>
+      <table class="mtbl">${ab.rows.map(r=>{const da=r.a==null,db=r.b==null;const dd=(!da&&!db)?r.b-r.a:null;
+        const bar=v=>v==null?`<span class="badge q">${state.lang==='sk'?'bez d\u00e1t':'no data'}</span>`:`<span class="plnw"><span class="plnbar" style="width:64px"><i style="width:${Math.min(v,100)}%;background:${v>=100?'var(--good)':v>=60?'var(--amber)':'var(--red)'}"></i></span><span style="font-family:var(--mono)">${decs(v)}</span></span>`;
+        return `<tr data-go="#${m.key}/detail/${r.id}" onclick="go(this.dataset.go)"><td><b>${tr(r.l)}</b></td><td>${bar(r.a)}</td><td>${bar(r.b)}</td><td class="n" style="font-family:var(--mono);color:${dd==null?'var(--ink-3)':dd>=0?'var(--good)':'var(--red)'}">${dd==null?'\u2014':(dd>0?'+':'')+decs(Math.round(dd*10)/10)+' p.b.'}</td></tr>`;}).join('')}</table></div>`;
+  }else if(pg.type==='gallery'){
+    body=`<div class="kpis" style="grid-template-columns:repeat(5,1fr)">${pg.cards.map(c=>`<button class="kpi" style="cursor:pointer;text-align:left;font-family:inherit;color:inherit" onclick="go('${c.go}')">
+      <div class="l">${c.t}</div><div class="v">${c.n}</div><div class="d ${c.qa>=90?'up':'down'}">QA ${c.qa} %</div></button>`).join('')}</div>
+      <div class="card"><div class="ch"><h3>${state.lang==='sk'?'Pod\u013ea rozmeru':'By size'}</h3></div>${bars(pg.cards.map(c=>({l:c.t,v:c.n})))}</div>
+      <div class="hm-note" style="margin-top:10px">${tr(pg.note)}</div>`;
+  }else if(pg.type==='trend'){
+    body=`<div class="cols"><div class="card"><div class="ch"><h3>${state.lang==='sk'?'Odoslan\u00e9 spolu':'Total shipped'}</h3><span class="sp">${pg.weeks[0]} \u2013 ${pg.weeks[pg.weeks.length-1]}</span></div>${area(pg.total)}
+        <div class="hm-note">${tr(pg.note)}</div></div>
+      <div class="card"><div class="ch"><h3>${tr(pg.states.title)}</h3></div>
+        <table class="mtbl">${pg.states.rows.map(r=>`<tr><td><span class="badge ${r[2]}">${tr(r[0])}</span></td><td class="n" style="font-family:var(--mono);text-align:right">${tr(r[1])}</td></tr>`).join('')}</table></div></div>`;
+  }else if(pg.type==='timeline'){
+    body=`<div class="card"><div class="ch"><div class="chips">${pg.modes.map((mo,i)=>`<button class="chip ${i===0?'on':''}" onclick="toast('${state.lang==='sk'?'Re\u017eim (demo): ':'Mode (demo): '}'+this.textContent)">${tr(mo)}</button>`).join('')}</div><span class="sp">${tr(pg.note)}</span></div>
+      <div class="gantt" style="position:relative">
+        <div style="position:absolute;left:calc(52px + (100% - 144px)*${pg.today/100});top:-6px;bottom:-6px;width:1px;background:var(--gold);opacity:.7"></div>
+        ${pg.rows.map(r=>`<div class="grow" data-go="#${m.key}/detail/${r.id}" onclick="go(this.dataset.go)" style="cursor:pointer"><span class="gl">${tr(r.l)}</span><div class="gtrack"><div class="gfill" style="margin-left:${r.s}%;width:${r.w}%"></div></div><span class="gst"><span class="badge ${r.b[0]} mono" style="font-size:10px">${tr(r.b[1])}</span></span></div>`).join('')}
+      </div></div>`;
+  }else if(pg.type==='table'){
+    body=`<div class="tbl-wrap"><table class="t"><thead><tr>${pg.cols.map(c=>`<th scope="col">${tr(c)}</th>`).join('')}</tr></thead>
+      <tbody>${pg.rows.map(r=>`<tr onclick="go('#${m.key}/detail/${r.id}')">${r.c.map((cell,i)=>tcell(cell,i,m)).join('')}</tr>`).join('')}</tbody></table></div>`;
+  }
+  const html=`<div class="phead"><h1>${tr(pg.title)}</h1><span class="sub">${pg.sub?tr(pg.sub):tr(m.name)+' \u00b7 '+(state.lang==='sk'?'uk\u00e1\u017eka':'sample')}</span>
+    <div class="actions"><button class="btn" onclick="toast('XLSX (demo)')">${svg(I.doc)} XLSX</button></div></div>${body}`;
+  view.innerHTML=shell(m,pg.key,{html});
+}
 function renderDashboard(m){
   if(state.emptyDemo&&m.key==='marketing') return renderOnboarding(m);
   const chart=m.chart.type==='segarea'?segarea(m):m.chart.type==='area'?area(m.chart.data):bars(m.chart.data);
@@ -1438,8 +1525,8 @@ function route(){
   if(key==='hub'||!MOD[key]){state.emptyDemo=false;renderHub();window.scrollTo(0,0);return;}
   const m=MOD[key];const screen=seg[1];
   if(!screen){renderIntro(m);window.scrollTo(0,0);return;}
-  const R={dashboard:()=>renderDashboard(m),list:()=>renderList(m),claims:()=>m.claims?renderClaims(m):renderList(m),detail:()=>renderDetail(m,seg[2]),settings:()=>renderSettings(m)}[screen]||(()=>renderIntro(m));
-  if((screen==='dashboard'||screen==='list'||screen==='claims'||screen==='detail')&&!skTimer){
+  const pg=(m.pages||[]).find(p=>p.key===screen);const R=pg?()=>renderPage(m,pg):{dashboard:()=>renderDashboard(m),list:()=>renderList(m),claims:()=>m.claims?renderClaims(m):renderList(m),detail:()=>renderDetail(m,seg[2]),settings:()=>renderSettings(m)}[screen]||(()=>renderIntro(m));
+  if((screen!=='settings')&&!skTimer){
     view.innerHTML=`<div class="shell"><aside class="side" id="side"></aside><main class="main"><div class="content">${skeleton(screen)}</div></main></div>`;
     setAcc(m.acc);
     skTimer=setTimeout(()=>{skTimer=null;R();document.querySelector('.content')?.scrollTo(0,0);},260);
