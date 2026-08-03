@@ -198,14 +198,14 @@ async function contrast(theme) {
       const need = (size >= 18 || (size >= 14 && +cs.fontWeight >= 600)) ? 3 : 4.5;
       if (r < need) bad.push(el.className.split(' ')[0] + ' ' + r.toFixed(2) + ':1 @' + size + 'px');
     });
-    const small = [...document.querySelectorAll('.view.on *')].filter(e => e.children.length === 0 && e.textContent.trim() && parseFloat(getComputedStyle(e).fontSize) < 11).length;
+    const small = [...document.querySelectorAll('.view.on *')].filter(e => e.children.length === 0 && e.textContent.trim() && parseFloat(getComputedStyle(e).fontSize) < 12).length;
     return { bad: [...new Set(bad)].slice(0, 6), badN: bad.length, small };
   });
 }
 for (const t of ['dark', 'light']) {
   const c = await contrast(t);
   c.badN ? F(`kontrast ${t}: ${c.badN} prvkov pod normu — ${c.bad.join(' | ')}`) : O(`kontrast ${t} OK`);
-  c.small ? F(`${t}: ${c.small} prvkov pod 11 px`) : O(`${t}: žiadny text pod 11 px`);
+  c.small ? F(`${t}: ${c.small} prvkov pod 12 px`) : O(`${t}: žiadny text pod 12 px`);
 }
 await p.evaluate(() => window.Aura.setTheme('dark', true));
 
@@ -260,14 +260,14 @@ const typo = await p.evaluate(() => {
     sizes, n: Object.keys(sizes).length,
     h3: cardH3 ? parseFloat(getComputedStyle(cardH3).fontSize) : 0,
     body: body ? parseFloat(getComputedStyle(body).fontSize) : 0,
-    tiny: Object.entries(sizes).filter(([k]) => +k < 11).reduce((a, [, v]) => a + v, 0)
+    tiny: Object.entries(sizes).filter(([k]) => +k < 12).reduce((a, [, v]) => a + v, 0)
   };
 });
 typo.n <= 8 ? O(`typografia: ${typo.n} veľkostí (${Object.keys(typo.sizes).sort((a, b) => a - b).join(', ')})`)
   : F(`typografia: ${typo.n} rôznych veľkostí (max 8): ${Object.keys(typo.sizes).sort((a, b) => a - b).join(', ')}`);
 (typo.h3 - typo.body) >= 1.4 ? O(`nadpis karty ${typo.h3} px vs telo ${typo.body} px`)
   : F(`nadpis karty ${typo.h3} px je len o ${(typo.h3 - typo.body).toFixed(1)} px väčší než telo ${typo.body} px`);
-typo.tiny ? F(`${typo.tiny} prvkov pod 11 px`) : O('žiadny text pod 11 px');
+typo.tiny ? F(`${typo.tiny} prvkov pod 12 px`) : O('žiadny text pod 12 px');
 
 /* --- 11.–13. jeden prechod obrazovkami: kolízie, mŕtve tlačidlá, klávesnica --- */
 let collisions = 0, colEx = [], dead = [];
@@ -607,6 +607,163 @@ await p.waitForTimeout(500);
 const insApps = await p.evaluate(() => [...document.querySelectorAll('#dp-body [data-app]')].map(b => b.textContent.trim()));
 insApps.length ? O('pamäť: inšpektor ukazuje appky uzla (' + insApps.join(', ') + ')') : F('pamäť: inšpektor bez odznakov appiek');
 await p.evaluate(() => window.Aura.closeDetail());
+
+/* --- 18. v7 brány: graf, tokeny, mobil, toky --- */
+await p.setViewportSize({ width: 1600, height: 1000 });
+await go('pamat');
+await p.waitForTimeout(900);
+
+// graf: hierarchia + 0 tvrdých prekryvov + hover rozpočet
+const g7 = await p.evaluate(() => {
+  const svg = document.getElementById('pm-net');
+  const hubs = svg.querySelectorAll('.nt-hub .nt-n').length;
+  const leaves = svg.querySelectorAll('.nt-leaf .nt-n').length;
+  const ns = [...svg.querySelectorAll('.nt-n')].map(c => ({ x: +c.getAttribute('cx'), y: +c.getAttribute('cy'), r: +c.getAttribute('r') }));
+  let hard = 0;
+  for (let i = 0; i < ns.length; i++) for (let j = i + 1; j < ns.length; j++) {
+    if (Math.hypot(ns[i].x - ns[j].x, ns[i].y - ns[j].y) < (ns[i].r + ns[j].r) / 2) hard++;
+  }
+  const els = [...svg.querySelectorAll('.nt-lf')].slice(0, 40);
+  const t0 = performance.now();
+  for (const el of els) { el.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true })); el.dispatchEvent(new MouseEvent('mouseleave', { bubbles: true })); }
+  const per = (performance.now() - t0) / 80;
+  return { hubs, leaves, hard, hoverMs: +per.toFixed(2) };
+});
+(g7.hubs >= 20 && g7.leaves >= 60) ? O(`graf v7: hierarchia ${g7.hubs} hubov + ${g7.leaves} satelitov`) : F('graf v7: hierarchia chýba ' + JSON.stringify(g7));
+g7.hard === 0 ? O('graf v7: 0 tvrdých prekryvov uzlov') : F(`graf v7: ${g7.hard} tvrdých prekryvov`);
+g7.hoverMs < 8 ? O(`graf v7: hover ${g7.hoverMs} ms/op (rozpočet <8 ms)`) : F(`graf v7: hover ${g7.hoverMs} ms/op nad rozpočtom`);
+
+// zoom + lalok focus + Esc + search + vrstva bez rebuildov
+const g8 = await p.evaluate(async () => {
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  const svg = document.getElementById('pm-net'), cam = document.getElementById('pm-cam');
+  const r = svg.getBoundingClientRect();
+  svg.dispatchEvent(new WheelEvent('wheel', { bubbles: true, cancelable: true, deltaY: -120, clientX: r.left + r.width / 2, clientY: r.top + r.height / 2 }));
+  await sleep(120);
+  const zoomed = cam.getAttribute('transform') !== 'translate(0 0) scale(1)';
+  document.querySelector('#pm-net .nt-corec').dispatchEvent(new MouseEvent('click', { bubbles: true }));
+  await sleep(420);
+  const crumb = !document.getElementById('pm-gcrumb').hidden;
+  document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+  await sleep(420);
+  const back = cam.getAttribute('transform') === 'translate(0 0) scale(1)';
+  const q = document.getElementById('pm-gq'); q.value = 'ollama'; q.dispatchEvent(new Event('input', { bubbles: true }));
+  await sleep(240);
+  const hots = document.querySelectorAll('#pm-net .nt-n.hot').length;
+  q.value = ''; q.dispatchEvent(new Event('input', { bubbles: true })); await sleep(200);
+  const before = document.querySelector('#pm-net .nt-lf');
+  document.querySelector('#pm-layers [data-l="type"]').click();
+  await sleep(120);
+  const sameNode = before === document.querySelector('#pm-net .nt-lf');
+  document.querySelector('#pm-layers [data-l="all"]').click();
+  return { zoomed, crumb, back, hots, sameNode };
+});
+g8.zoomed && g8.back ? O('graf v7: zoom kolieskom + Esc reset') : F('graf v7: zoom/reset zlyhal ' + JSON.stringify(g8));
+g8.crumb ? O('graf v7: klik na jadro laloku = fokus s breadcrumb') : F('graf v7: fokus laloku nefunguje');
+g8.hots > 0 ? O(`graf v7: search zvýraznil ${g8.hots} zhôd`) : F('graf v7: search nič nezvýraznil');
+g8.sameNode ? O('graf v7: prepnutie vrstvy bez rebuildu DOM') : F('graf v7: vrstva prestavala DOM');
+
+// staged create: počet uzlov sa pred potvrdením nemení (Q81)
+const staged = await p.evaluate(async () => {
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  const before = window.Aura.mem.nodes().length;
+  document.getElementById('pm-new').click();
+  await sleep(400);
+  const during = window.Aura.mem.nodes().length;
+  const title = document.getElementById('dp-title').textContent;
+  window.Aura.closeDetail(); await sleep(150);
+  return { before, during, title };
+});
+staged.during === staged.before && /návrh/i.test(staged.title)
+  ? O('toky: nový uzol je staged draft (' + staged.title + ')')
+  : F('toky: uzol vzniká pred potvrdením ' + JSON.stringify(staged));
+
+// pauza appky kaskáduje (Q82) + undo toast
+const pause = await p.evaluate(async () => {
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  const app = window.Aura.apps.bySlug('eshop');
+  window.Aura.apps.setPaused(app, true);
+  await sleep(100);
+  const paused = window.Aura.autos.rows.filter(r => r.state === 'Pozastavená (appka)').length;
+  window.Aura.apps.setPaused(app, false);
+  await sleep(100);
+  const restored = window.Aura.autos.rows.filter(r => r.state === 'Pozastavená (appka)').length;
+  return { paused, restored };
+});
+pause.paused > 0 && pause.restored === 0
+  ? O(`toky: pauza appky kaskáduje na ${pause.paused} automatizácií a undo ich vráti`)
+  : F('toky: pauza nekaskáduje ' + JSON.stringify(pause));
+
+// zvonček derivovaný (Q74)
+const bell = await p.evaluate(() => ({
+  badge: +document.getElementById('bellCount').textContent,
+  sum: window.Aura.inbox().reduce((s, x) => s + x.n, 0)
+}));
+bell.badge === bell.sum && bell.sum > 0
+  ? O(`zvonček: derivovaný zo zdrojov (${bell.sum})`)
+  : F('zvonček: badge nesedí so zdrojmi ' + JSON.stringify(bell));
+
+// dirty guard Nastavení (Q78)
+await go('nastavenia');
+const guard = await p.evaluate(async () => {
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  const inp = document.getElementById('st-ctx');
+  inp.value = '16384'; inp.dispatchEvent(new Event('input', { bubbles: true })); inp.dispatchEvent(new Event('change', { bubbles: true }));
+  await sleep(200);
+  window.Aura.go('jadro');
+  await sleep(300);
+  const dialog = document.getElementById('confirm').classList.contains('on');
+  const stayed = window.Aura.state.screen === 'nastavenia';
+  if (dialog) document.getElementById('confirm-yes').click();
+  await sleep(300);
+  return { dialog, stayed, after: window.Aura.state.screen };
+});
+guard.dialog && guard.stayed && guard.after === 'jadro'
+  ? O('nastavenia: dirty guard zastaví odchod a potvrdenie pustí')
+  : W('nastavenia: dirty guard neoverený ' + JSON.stringify(guard));
+
+// mobil: spodná lišta + bottom sheet + graf zoznam/fullscreen
+await p.setViewportSize({ width: 390, height: 844 });
+await p.waitForTimeout(600);
+const mb = await p.evaluate(async () => {
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  const bn = document.getElementById('bnav');
+  const bnavOn = getComputedStyle(bn).display !== 'none';
+  document.querySelector('#bnav [data-b="pamat"]').click(); await sleep(500);
+  const svgHidden = getComputedStyle(document.getElementById('pm-net')).display === 'none';
+  const listOn = getComputedStyle(document.getElementById('pm-net-list')).display !== 'none';
+  document.getElementById('pm-gfull').click(); await sleep(400);
+  const fullOn = document.getElementById('pm-gcard').classList.contains('gfull') && getComputedStyle(document.getElementById('pm-net')).display !== 'none';
+  document.getElementById('pm-gfull').click(); await sleep(200);
+  window.Aura.detail('Sheet test', '<p>x</p>', []); await sleep(400);
+  const dp = document.getElementById('dp').getBoundingClientRect();
+  const sheet = dp.width >= 380 && dp.bottom >= 830 && dp.top > 100;
+  window.Aura.closeDetail();
+  return { bnavOn, svgHidden, listOn, fullOn, sheet };
+});
+mb.bnavOn ? O('mobil: spodná navigačná lišta aktívna') : F('mobil: spodná lišta chýba');
+mb.svgHidden && mb.listOn ? O('mobil: graf = zoznam lalokov') : F('mobil: graf zoznam zlyhal ' + JSON.stringify(mb));
+mb.fullOn ? O('mobil: „Celá obrazovka" ukáže interaktívny graf') : F('mobil: fullscreen graf zlyhal');
+mb.sheet ? O('mobil: peek = bottom sheet') : F('mobil: bottom sheet zlyhal ' + JSON.stringify(mb));
+await p.setViewportSize({ width: 1600, height: 1000 });
+
+// token lint: hardcoded hex v obrazovkových zdrojoch (build-time kontrola)
+import fsx from 'node:fs';
+import pathx from 'node:path';
+const srcDir = pathx.dirname(new URL(import.meta.url).pathname);
+let hexLeaks = [];
+for (const f of ['s-pamat.html','s-praca.html','s-system.html','s-appky.html','s-pamat.js','s-appky.js','boot.js']) {
+  const txt = fsx.readFileSync(pathx.join(srcDir, f), 'utf8');
+  const m = txt.match(/#[0-9a-fA-F]{6}\b/g) || [];
+  if (m.length) hexLeaks.push(f + ':' + m.length);
+}
+// s-praca.js má povolenú výnimku: MCP brand farby v MCP_META
+{
+  const txt = fsx.readFileSync(pathx.join(srcDir, 's-praca.js'), 'utf8').replace(/MCP_META = \{[^}]*\}/, '');
+  const m = txt.match(/#[0-9a-fA-F]{6}\b/g) || [];
+  if (m.length) hexLeaks.push('s-praca.js:' + m.length);
+}
+hexLeaks.length ? F('token lint: hardcoded hex — ' + hexLeaks.join(', ')) : O('token lint: 0 hardcoded hex v obrazovkách');
 
 /* --- výsledok --- */
 console.log('\n===== OK (' + ok.length + ') =====');

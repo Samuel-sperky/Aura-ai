@@ -632,7 +632,7 @@ body{position:relative;z-index:0}
 .gnote{padding:var(--sp-2) var(--sp-4) var(--sp-3)}
 
 /* fullscreen režim karty grafu */
-.gcard.gfull{position:fixed;inset:0;z-index:95;border-radius:0;max-height:none;overflow:auto}
+.gcard.gfull{position:fixed;inset:0;z-index:95;border-radius:0;max-height:none;overflow:auto;background:var(--paper)}
 .gcard.gfull .gnet{max-height:calc(100dvh - 130px);min-height:min(70vh,520px)}
 
 .cx-legend{display:flex;flex-direction:column;gap:var(--sp-1)}
@@ -775,6 +775,25 @@ body{position:relative;z-index:0}
   .sech{margin-top:var(--sp-6)}
   .cx-wrap{display:none}
   .cx-list{display:block}
+  /* graf v7: na telefóne zoznam + tlačidlo „Celá obrazovka" (Q52) */
+  .gcard:not(.gfull) .gnet,
+  .gcard:not(.gfull) .gcrumb,
+  .gcard:not(.gfull) .gbar input[type="search"],
+  .gcard:not(.gfull) .gbar .seg,
+  .gcard:not(.gfull) .gbar select,
+  .gcard:not(.gfull) #pm-filt-toggle{display:none}
+  .gcard.gfull .cx-list{display:none}
+  .gcard.gfull .gnet{display:block;min-height:56dvh}
+  /* peek panel = bottom sheet s drag-to-close (Q92) */
+  .dp{top:auto;left:0;right:0;bottom:0;width:100%;max-height:84dvh;
+    border-radius:var(--r-l) var(--r-l) 0 0;border-left:0;border-top:1px solid var(--glass-line);
+    transform:translateY(102%)}
+  .dp.on{transform:translateY(0)}
+  .dp::before{content:"";display:block;width:44px;height:4px;border-radius:99px;background:var(--line);
+    margin:8px auto 0}
+  /* spodná navigačná lišta (Q91) */
+  .bnav{display:flex}
+  .content{padding-bottom:calc(var(--sp-16) + 66px)}
 }
 /* užšie telefóny: Live preč (menej dôležité), titul kompaktný */
 @media(max-width:560px){
@@ -906,6 +925,20 @@ body{position:relative;z-index:0}
 /* kartové srcbadge stíchnu — pôvod dát nesie hlavička sekcie (Q37); karta drží len bodku s tooltipom */
 .srcbadge.src-quiet{padding:1px 4px;border:0;background:none;gap:0}
 .srcbadge.src-quiet::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:currentColor;opacity:.55}
+
+/* ===================== SPODNÁ LIŠTA (mobil) ===================== */
+.bnav{display:none;position:fixed;left:0;right:0;bottom:0;z-index:85;
+  background:var(--glass);backdrop-filter:blur(18px) saturate(1.3);-webkit-backdrop-filter:blur(18px) saturate(1.3);
+  border-top:1px solid var(--glass-line);padding:4px max(env(safe-area-inset-left),4px) max(env(safe-area-inset-bottom),4px)}
+@supports not (backdrop-filter:blur(1px)){.bnav{background:var(--card)}}
+.bnav button{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;border:0;background:none;
+  color:var(--ink-3);font-size:var(--fs-label);font-weight:600;padding:6px 2px;min-height:52px;border-radius:var(--r-m);cursor:pointer}
+.bnav button svg{width:20px;height:20px;stroke:currentColor;stroke-width:1.5;fill:none}
+.bnav button[aria-current="true"]{color:var(--accentText)}
+.bnav button[aria-current="true"] svg{filter:drop-shadow(0 0 6px var(--teal))}
+@media print{.bnav{display:none}}
+
+@media(max-width:900px){.bnav{display:flex}}
 </style>
 </head>
 <body>
@@ -2267,6 +2300,15 @@ body{position:relative;z-index:0}
     </main>
   </div>
 </div>
+
+<!-- spodná navigačná lišta (mobil) -->
+<nav class="bnav" id="bnav" aria-label="Rýchla navigácia">
+  <button data-b="pamat"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="7" cy="8" r="2"/><circle cx="17" cy="7" r="2"/><circle cx="12" cy="13" r="2.4"/><circle cx="6" cy="17" r="2"/><circle cx="18" cy="16" r="2"/></svg>Pamäť</button>
+  <button data-b="appky"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Appky</button>
+  <button data-b="chat"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-11.9 7.6L3 21l1.9-6.1A8.4 8.4 0 1 1 21 11.5z"/></svg>Chat</button>
+  <button data-b="jadro"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/></svg>Systém</button>
+  <button data-b="__more" aria-haspopup="true"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>Viac</button>
+</nav>
 
 <!-- panel detailu -->
 <div class="scrim" id="dp-scrim"></div>
@@ -9205,6 +9247,50 @@ body{position:relative;z-index:0}
   navBadges();
   if (A.mem) A.mem.onChange(navBadges);
   if (A.apps) A.apps.onChange(navBadges);
+
+  /* spodná lišta (mobil, Q91): 4 sekcie + Viac otvorí plný strom v drawri */
+  (function bnav() {
+    var host = $("#bnav"); if (!host) return;
+    host.addEventListener("click", function (e) {
+      var b = e.target.closest("button[data-b]"); if (!b) return;
+      var k = b.getAttribute("data-b");
+      if (k === "__more") { document.getElementById("side").classList.add("open"); document.getElementById("dp-scrim").classList.add("on"); return; }
+      A.go(k);
+    });
+    function sync() {
+      var cur = A.state.screen;
+      var map = { pamat: "pamat", appky: "appky", chat: "chat", smernica: "chat", automatizacie: "chat", jadro: "jadro", naklady: "jadro", observabilita: "jadro", nastavenia: "jadro" };
+      host.querySelectorAll("button[data-b]").forEach(function (b) {
+        b.setAttribute("aria-current", String(b.getAttribute("data-b") === map[cur]));
+      });
+    }
+    w.addEventListener("hashchange", function () { setTimeout(sync, 60); });
+    setTimeout(sync, 200);
+  })();
+
+  /* peek panel na mobile: drag-to-close (Q92) */
+  (function dpDrag() {
+    var dp = document.getElementById("dp"); if (!dp) return;
+    var startY = null, dy = 0;
+    dp.addEventListener("pointerdown", function (e) {
+      if (w.innerWidth > 900) return;
+      if (e.target.closest(".dp-b") && document.querySelector(".dp-b").scrollTop > 4) return;
+      startY = e.clientY; dy = 0;
+      dp.setPointerCapture(e.pointerId);
+    });
+    dp.addEventListener("pointermove", function (e) {
+      if (startY == null) return;
+      dy = Math.max(0, e.clientY - startY);
+      if (dy > 4) dp.style.transform = "translateY(" + dy + "px)";
+    });
+    function up() {
+      if (startY == null) return;
+      if (dy > 90) { dp.style.transform = ""; A.closeDetail(); }
+      else dp.style.transform = "";
+      startY = null; dy = 0;
+    }
+    dp.addEventListener("pointerup", up); dp.addEventListener("pointercancel", up);
+  })();
 
   /* zvonček: derivovaný zo zaregistrovaných zdrojov (Q74) + alerty s názvom appky (Q51) */
   $("#bellBtn").addEventListener("click", function () {

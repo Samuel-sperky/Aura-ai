@@ -214,6 +214,50 @@
   if (A.mem) A.mem.onChange(navBadges);
   if (A.apps) A.apps.onChange(navBadges);
 
+  /* spodná lišta (mobil, Q91): 4 sekcie + Viac otvorí plný strom v drawri */
+  (function bnav() {
+    var host = $("#bnav"); if (!host) return;
+    host.addEventListener("click", function (e) {
+      var b = e.target.closest("button[data-b]"); if (!b) return;
+      var k = b.getAttribute("data-b");
+      if (k === "__more") { document.getElementById("side").classList.add("open"); document.getElementById("dp-scrim").classList.add("on"); return; }
+      A.go(k);
+    });
+    function sync() {
+      var cur = A.state.screen;
+      var map = { pamat: "pamat", appky: "appky", chat: "chat", smernica: "chat", automatizacie: "chat", jadro: "jadro", naklady: "jadro", observabilita: "jadro", nastavenia: "jadro" };
+      host.querySelectorAll("button[data-b]").forEach(function (b) {
+        b.setAttribute("aria-current", String(b.getAttribute("data-b") === map[cur]));
+      });
+    }
+    w.addEventListener("hashchange", function () { setTimeout(sync, 60); });
+    setTimeout(sync, 200);
+  })();
+
+  /* peek panel na mobile: drag-to-close (Q92) */
+  (function dpDrag() {
+    var dp = document.getElementById("dp"); if (!dp) return;
+    var startY = null, dy = 0;
+    dp.addEventListener("pointerdown", function (e) {
+      if (w.innerWidth > 900) return;
+      if (e.target.closest(".dp-b") && document.querySelector(".dp-b").scrollTop > 4) return;
+      startY = e.clientY; dy = 0;
+      dp.setPointerCapture(e.pointerId);
+    });
+    dp.addEventListener("pointermove", function (e) {
+      if (startY == null) return;
+      dy = Math.max(0, e.clientY - startY);
+      if (dy > 4) dp.style.transform = "translateY(" + dy + "px)";
+    });
+    function up() {
+      if (startY == null) return;
+      if (dy > 90) { dp.style.transform = ""; A.closeDetail(); }
+      else dp.style.transform = "";
+      startY = null; dy = 0;
+    }
+    dp.addEventListener("pointerup", up); dp.addEventListener("pointercancel", up);
+  })();
+
   /* zvonček: derivovaný zo zaregistrovaných zdrojov (Q74) + alerty s názvom appky (Q51) */
   $("#bellBtn").addEventListener("click", function () {
     var srcs = A.inbox ? A.inbox() : [];

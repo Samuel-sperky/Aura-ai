@@ -584,7 +584,7 @@ body{position:relative;z-index:0}
 .gnote{padding:var(--sp-2) var(--sp-4) var(--sp-3)}
 
 /* fullscreen režim karty grafu */
-.gcard.gfull{position:fixed;inset:0;z-index:95;border-radius:0;max-height:none;overflow:auto}
+.gcard.gfull{position:fixed;inset:0;z-index:95;border-radius:0;max-height:none;overflow:auto;background:var(--paper)}
 .gcard.gfull .gnet{max-height:calc(100dvh - 130px);min-height:min(70vh,520px)}
 
 .cx-legend{display:flex;flex-direction:column;gap:var(--sp-1)}
@@ -727,6 +727,25 @@ body{position:relative;z-index:0}
   .sech{margin-top:var(--sp-6)}
   .cx-wrap{display:none}
   .cx-list{display:block}
+  /* graf v7: na telefóne zoznam + tlačidlo „Celá obrazovka" (Q52) */
+  .gcard:not(.gfull) .gnet,
+  .gcard:not(.gfull) .gcrumb,
+  .gcard:not(.gfull) .gbar input[type="search"],
+  .gcard:not(.gfull) .gbar .seg,
+  .gcard:not(.gfull) .gbar select,
+  .gcard:not(.gfull) #pm-filt-toggle{display:none}
+  .gcard.gfull .cx-list{display:none}
+  .gcard.gfull .gnet{display:block;min-height:56dvh}
+  /* peek panel = bottom sheet s drag-to-close (Q92) */
+  .dp{top:auto;left:0;right:0;bottom:0;width:100%;max-height:84dvh;
+    border-radius:var(--r-l) var(--r-l) 0 0;border-left:0;border-top:1px solid var(--glass-line);
+    transform:translateY(102%)}
+  .dp.on{transform:translateY(0)}
+  .dp::before{content:"";display:block;width:44px;height:4px;border-radius:99px;background:var(--line);
+    margin:8px auto 0}
+  /* spodná navigačná lišta (Q91) */
+  .bnav{display:flex}
+  .content{padding-bottom:calc(var(--sp-16) + 66px)}
 }
 /* užšie telefóny: Live preč (menej dôležité), titul kompaktný */
 @media(max-width:560px){
@@ -858,3 +877,17 @@ body{position:relative;z-index:0}
 /* kartové srcbadge stíchnu — pôvod dát nesie hlavička sekcie (Q37); karta drží len bodku s tooltipom */
 .srcbadge.src-quiet{padding:1px 4px;border:0;background:none;gap:0}
 .srcbadge.src-quiet::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:currentColor;opacity:.55}
+
+/* ===================== SPODNÁ LIŠTA (mobil) ===================== */
+.bnav{display:none;position:fixed;left:0;right:0;bottom:0;z-index:85;
+  background:var(--glass);backdrop-filter:blur(18px) saturate(1.3);-webkit-backdrop-filter:blur(18px) saturate(1.3);
+  border-top:1px solid var(--glass-line);padding:4px max(env(safe-area-inset-left),4px) max(env(safe-area-inset-bottom),4px)}
+@supports not (backdrop-filter:blur(1px)){.bnav{background:var(--card)}}
+.bnav button{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;border:0;background:none;
+  color:var(--ink-3);font-size:var(--fs-label);font-weight:600;padding:6px 2px;min-height:52px;border-radius:var(--r-m);cursor:pointer}
+.bnav button svg{width:20px;height:20px;stroke:currentColor;stroke-width:1.5;fill:none}
+.bnav button[aria-current="true"]{color:var(--accentText)}
+.bnav button[aria-current="true"] svg{filter:drop-shadow(0 0 6px var(--teal))}
+@media print{.bnav{display:none}}
+
+@media(max-width:900px){.bnav{display:flex}}
