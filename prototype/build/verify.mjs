@@ -723,12 +723,21 @@ const g10 = await p.evaluate(async () => {
   await sleep(420);
   const deptCrumb = document.getElementById('pm-gcrumb-t').textContent;
   const deptZoom = camK() > 1.3;
-  /* vrstvový panel: orbitálne kruhy + hlavička vrstvy + tečúce vlákna */
+  /* vrstvový panel: rám + stĺpec + orbity + hlavička + zväzok kriviek */
   const orbs = document.querySelectorAll('#pm-net .nt-orb').length;
   const ring = !!document.querySelector('#pm-net .nt-ring');
+  const frame = !!document.querySelector('#pm-net .nt-frame');
   const flbl = (document.querySelector('#pm-net .nt-flbl') || {}).textContent || '';
   const idx = document.querySelectorAll('#pm-net .nt-idx').length;
-  const fibs = document.querySelectorAll('#pm-net .nt-e.fib').length;
+  const fibs = document.querySelectorAll('#pm-net .nt-fib').length;
+  const hidden = document.querySelectorAll('#pm-net .nt-e.fibhide').length;
+  /* stĺpec: fokusované leafy zarovnané na jednu zvislicu */
+  await sleep(500);
+  const colXs = [...document.querySelectorAll('#pm-net .nt-lf')]
+    .filter(el => el.style.transform)
+    .map(el => { const b = el.getBoundingClientRect(); return b.left + b.width / 2; });
+  const colSpread = colXs.length >= 2 ? Math.max(...colXs) - Math.min(...colXs) : 0;
+  const colN = colXs.length;
   document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
   await sleep(360);
   const lobeCrumb = document.getElementById('pm-gcrumb-t').textContent;
@@ -778,12 +787,20 @@ const g10 = await p.evaluate(async () => {
   const fullEsc = fullOn && !document.getElementById('pm-gcard').classList.contains('gfull');
   document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
   await sleep(200);
-  return { deptCrumb, deptZoom, lobeCrumb, rootOk, crumbAfterEdit, hotOut, hiddenNote, hasSearchChip, hasFilterChip, cleaned, zIn, zFit, fullEsc, orbs, ring, flbl, idx, fibs };
+  const resid = [...document.querySelectorAll('#pm-net .nt-lf')].filter(el => el.style.transform).length;
+  const layerGone = !document.querySelector('#pm-net .nt-frame');
+  return { deptCrumb, deptZoom, lobeCrumb, rootOk, crumbAfterEdit, hotOut, hiddenNote, hasSearchChip, hasFilterChip, cleaned, zIn, zFit, fullEsc, orbs, ring, frame, flbl, idx, fibs, hidden, colSpread, colN, resid, layerGone };
 });
 (g10.deptCrumb.includes('›') && g10.deptZoom) ? O(`graf v7.1: hub klik = fokus oddelenia („${g10.deptCrumb}")`) : F('graf v7.1: fokus oddelenia zlyhal ' + JSON.stringify(g10));
-(g10.ring && g10.orbs >= 4 && g10.flbl.includes('›') && g10.idx >= 2 && g10.fibs >= 2)
-  ? O(`graf v7.1: vrstvový panel fokusu (prstenec + ${g10.orbs} orbít + hlavička + ${g10.fibs} vlákien)`)
-  : F('graf v7.1: vrstvový panel chýba ' + JSON.stringify({ ring: g10.ring, orbs: g10.orbs, flbl: g10.flbl, idx: g10.idx, fibs: g10.fibs }));
+(g10.ring && g10.frame && g10.orbs >= 4 && g10.flbl.includes('›') && g10.idx >= 2 && g10.fibs >= 3 && g10.hidden >= 2)
+  ? O(`graf v7.2: vrstvový panel (rám + prstenec + ${g10.orbs} orbít + ${g10.fibs} kriviek zväzku)`)
+  : F('graf v7.2: vrstvový panel chýba ' + JSON.stringify({ ring: g10.ring, frame: g10.frame, orbs: g10.orbs, flbl: g10.flbl, idx: g10.idx, fibs: g10.fibs, hidden: g10.hidden }));
+(g10.colN >= 2 && g10.colSpread <= 2)
+  ? O(`graf v7.2: fokus = zvislý stĺpec (${g10.colN} uzlov, rozptyl ${g10.colSpread.toFixed(1)} px)`)
+  : F('graf v7.2: stĺpec nezarovnaný ' + JSON.stringify({ colN: g10.colN, colSpread: g10.colSpread }));
+(g10.resid === 0 && g10.layerGone)
+  ? O('graf v7.2: po Esc sa uzly vrátia na organické pozície, panel zmizne')
+  : F('graf v7.2: zvyšky stĺpca po Esc ' + JSON.stringify({ resid: g10.resid, layerGone: g10.layerGone }));
 (!g10.lobeCrumb.includes('›') && g10.rootOk) ? O('graf v7.1: Esc reťaz oddelenie → lalok → koreň (1 úroveň/stlačenie)') : F('graf v7.1: Esc reťaz zlyhala ' + JSON.stringify(g10));
 g10.crumbAfterEdit ? O('graf v7.1: breadcrumb + fokus prežijú zmenu modelu (derivované)') : F('graf v7.1: breadcrumb po edite klame');
 g10.hotOut === 0 && g10.hiddenNote ? O('graf v7.1: search rešpektuje filter + hlási skryté zhody') : F('graf v7.1: search obchádza filter ' + JSON.stringify(g10));

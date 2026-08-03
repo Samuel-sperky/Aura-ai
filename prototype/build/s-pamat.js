@@ -873,11 +873,17 @@
     host.classList.toggle("focused", !!inSet);
     host.classList.toggle("dfocus", !!net.deptFocus);
 
-    /* vrstvový panel + orbitálne kruhy (štýl neurónovej vrstvy) — derivované z fokusu */
+    /* vrstvový panel (štýl neurónovej vrstvy): stĺpec v ráme + orbity + zväzok
+       kriviek. Deriované z fokusu — buduje sa nanovo pri každej zmene. */
     var camEl = document.getElementById("pm-cam");
     if (net.layerG && net.layerG.parentNode) net.layerG.parentNode.removeChild(net.layerG);
     net.layerG = null;
-    net.eel.forEach(function (ee) { ee.el.classList.remove("fib"); });
+    net._fitBox = null;
+    net.leaves.forEach(function (lf) {
+      var el2 = net.el[lf.id];
+      if (el2 && el2.style.transform) el2.style.transform = "";
+    });
+    net.eel.forEach(function (ee) { ee.el.classList.remove("fib", "fibhide"); });
     if (inSet && camEl) {
       var fx0 = 1e9, fy0 = 1e9, fx1 = -1e9, fy1 = -1e9;
       Object.keys(inSet).forEach(function (id) {
@@ -888,31 +894,82 @@
       var fArea = net.deptFocus ? net.byId[net.deptFocus].area : mem().areaByKey(net.lobeFocus);
       var acol = fArea ? fArea.color : "var(--teal)";
       var g = S("g", { class: "nt-layerg", "aria-hidden": "true" }, camEl);
-      /* veľký orbitálny prstenec okolo fokusu */
-      S("ellipse", {
-        cx: ((fx0 + fx1) / 2).toFixed(1), cy: ((fy0 + fy1) / 2).toFixed(1),
-        rx: ((fx1 - fx0) / 2 + 26).toFixed(1), ry: ((fy1 - fy0) / 2 + 22).toFixed(1),
-        class: "nt-ring", stroke: acol
-      }, g);
       if (net.deptFocus) {
         var h2 = net.byId[net.deptFocus];
-        var lvs = net.leaves.filter(function (lf) { return lf.hub === h2; });
-        /* hlavička vrstvy — ako menovka vrstvy v neurónovej sieti */
-        var t1 = S("text", { x: fx0, y: fy0 - 36, "text-anchor": "start", class: "nt-flbl" }, g);
+        var core2 = net.byId["core-" + h2.area.k];
+        var lvs = net.leaves.filter(function (lf) { return lf.hub === h2; })
+          .sort(function (a, b) { return b.node.str - a.node.str; });
+        /* stĺpec na strane od hubu smerom do voľného priestoru */
+        var right = h2.x < GW / 2;
+        var colX = h2.x + (right ? 1 : -1) * Math.max(64, h2.r + 44);
+        var step = 26, colH = (lvs.length - 1) * step;
+        var y0 = clamp(h2.y - colH / 2, GPAD + 30, GH - GPAD - colH - 12);
+        /* mená sú proti-škálované (konštantné px) → šírka rámu v jednotkách
+           závisí od výslednej kamery; 3 iterácie konvergujú */
+        var namePx = 0;
+        lvs.forEach(function (lf) { namePx = Math.max(namePx, Math.min(lf.name.length, 26) * 6.9); });
+        var numW = 30, k2 = 2.4, nmW, fr;
+        for (var itk = 0; itk < 3; itk++) {
+          nmW = 24 + namePx / k2;
+          fr = right
+            ? { x: colX - numW, y: y0 - 22, w: numW + nmW, h: colH + 44 }
+            : { x: colX - nmW, y: y0 - 22, w: numW + nmW, h: colH + 44 };
+          var ix0 = Math.min(fr.x, core2.x - core2.r) - 8, ix1 = Math.max(fr.x + fr.w, core2.x + core2.r) + 8;
+          var iy0 = Math.min(fr.y - 34, core2.y - core2.r), iy1 = Math.max(fr.y + fr.h, core2.y + core2.r);
+          k2 = clamp(Math.min(GW / (ix1 - ix0 + 72), GH / (iy1 - iy0 + 72)), 0.8, 2.8);
+        }
+        /* rám vrstvy + hlavička prisadená k hornej hrane */
+        S("rect", { x: fr.x.toFixed(1), y: fr.y.toFixed(1), width: fr.w.toFixed(1), height: fr.h.toFixed(1), rx: 10, class: "nt-frame", stroke: acol }, g);
+        var t1 = S("text", { x: (fr.x + 10).toFixed(1), y: (fr.y - 24).toFixed(1), "text-anchor": "start", class: "nt-flbl" }, g);
         t1.textContent = mem().ZONE_CODE[h2.area.k] + " › " + h2.name;
-        var t2 = S("text", { x: fx0, y: fy0 - 22, "text-anchor": "start", class: "nt-flbl2 num" }, g);
+        var t2 = S("text", { x: (fr.x + 10).toFixed(1), y: (fr.y - 10).toFixed(1), "text-anchor": "start", class: "nt-flbl2 num" }, g);
         t2.textContent = F(lvs.length, 0) + " uzlov v sieti · " + F(h2.dep.n, 0) + " v podklade · [" + h2.dep.type + "]";
-        /* orbity + poradové čísla satelitov */
+        /* veľký orbitálny prstenec okolo hub + rám */
+        var rx0 = Math.min(h2.x - h2.r, fr.x), rx1 = Math.max(h2.x + h2.r, fr.x + fr.w);
+        var ry0 = Math.min(h2.y - h2.r, fr.y), ry1 = Math.max(h2.y + h2.r, fr.y + fr.h);
+        S("ellipse", {
+          cx: ((rx0 + rx1) / 2).toFixed(1), cy: ((ry0 + ry1) / 2).toFixed(1),
+          rx: ((rx1 - rx0) / 2 + 30).toFixed(1), ry: ((ry1 - ry0) / 2 + 26).toFixed(1),
+          class: "nt-ring", stroke: acol
+        }, g);
+        /* pôvodné rovné hrany fokusu preč — nahradí ich zväzok kriviek */
+        net.eel.forEach(function (ee) { if (inSet[ee.e.a] && inSet[ee.e.b]) ee.el.classList.add("fibhide"); });
+        /* jadro → hub */
+        S("path", {
+          d: "M" + core2.x + " " + core2.y + " Q" + ((core2.x + h2.x) / 2).toFixed(1) + " " + ((core2.y + h2.y) / 2 - 18).toFixed(1) + " " + h2.x + " " + h2.y,
+          class: "nt-fib", stroke: acol, fill: "none"
+        }, g);
+        /* uzly do stĺpca (CSS transition), orbity + čísla + mená + krivky */
         lvs.forEach(function (lf, i) {
-          S("ellipse", { cx: lf.x, cy: lf.y, rx: (lf.r + 5.5).toFixed(1), ry: (lf.r + 3.5).toFixed(1), class: "nt-orb", stroke: acol }, g);
-          S("ellipse", { cx: lf.x, cy: lf.y, rx: (lf.r + 9.5).toFixed(1), ry: (lf.r + 6).toFixed(1), class: "nt-orb o2", stroke: acol }, g);
-          var ti = S("text", { x: (lf.x - lf.r - 12).toFixed(1), y: (lf.y + 4).toFixed(1), "text-anchor": "end", class: "nt-idx num" }, g);
+          var ny = y0 + i * step;
+          var el2 = net.el[lf.id];
+          if (el2) el2.style.transform = "translate(" + (colX - lf.x).toFixed(1) + "px," + (ny - lf.y).toFixed(1) + "px)";
+          S("ellipse", { cx: colX, cy: ny, rx: (lf.r + 5.5).toFixed(1), ry: (lf.r + 3.5).toFixed(1), class: "nt-orb", stroke: acol }, g);
+          S("ellipse", { cx: colX, cy: ny, rx: (lf.r + 9.5).toFixed(1), ry: (lf.r + 6).toFixed(1), class: "nt-orb o2", stroke: acol }, g);
+          var ti = S("text", { x: (colX + (right ? -1 : 1) * (lf.r + 14)).toFixed(1), y: (ny + 4).toFixed(1), "text-anchor": right ? "end" : "start", class: "nt-idx num" }, g);
           ti.textContent = String(i + 1);
-          var tn = S("text", { x: (lf.x + lf.r + 13).toFixed(1), y: (lf.y + 4).toFixed(1), "text-anchor": "start", class: "nt-flbl2" }, g);
+          var tn = S("text", { x: (colX + (right ? 1 : -1) * (lf.r + 15)).toFixed(1), y: (ny + 4).toFixed(1), "text-anchor": right ? "start" : "end", class: "nt-flbl2" }, g);
           tn.textContent = lf.name;
+          /* zväzok: vejár quadratic kriviek od hrany hubu → uzol stĺpca */
+          var bow = (i - (lvs.length - 1) / 2) * 9 + (right ? -14 : 14);
+          var sx = h2.x + (right ? 1 : -1) * (h2.r + 1);
+          S("path", {
+            d: "M" + sx.toFixed(1) + " " + h2.y + " Q" + ((sx + colX) / 2).toFixed(1) + " " + (((h2.y + ny) / 2) + bow).toFixed(1) + " " + (colX + (right ? -(lf.r + 4) : lf.r + 4)).toFixed(1) + " " + ny,
+            class: "nt-fib", stroke: acol, fill: "none"
+          }, g);
         });
-        /* vlákna: hrany vo fokuse tečú */
-        net.eel.forEach(function (ee) { if (inSet[ee.e.a] && inSet[ee.e.b]) ee.el.classList.add("fib"); });
+        /* kamera: fit na rám ∪ hub ∪ jadro */
+        net._fitBox = {
+          x0: Math.min(fr.x, core2.x - core2.r) - 8, y0: Math.min(fr.y - 34, core2.y - core2.r),
+          x1: Math.max(fr.x + fr.w, core2.x + core2.r) + 8, y1: Math.max(fr.y + fr.h, core2.y + core2.r)
+        };
+      } else {
+        /* fokus laloku: len veľký prstenec */
+        S("ellipse", {
+          cx: ((fx0 + fx1) / 2).toFixed(1), cy: ((fy0 + fy1) / 2).toFixed(1),
+          rx: ((fx1 - fx0) / 2 + 26).toFixed(1), ry: ((fy1 - fy0) / 2 + 22).toFixed(1),
+          class: "nt-ring", stroke: acol
+        }, g);
       }
       net.layerG = g;
     }
@@ -931,15 +988,16 @@
       net.aur[k2].classList.toggle("ctx-out", !!inSet && focusK !== k2);
     });
     if (!skipCam) {
-      if (inSet) {
+      if (inSet && net._fitBox) {
+        netFitTo(net._fitBox.x0, net._fitBox.y0, net._fitBox.x1, net._fitBox.y1, 36, 2.8);
+      } else if (inSet) {
         var xs = [], ys = [];
         Object.keys(inSet).forEach(function (id) {
           var n = net.byId[id]; if (!n) return;
           xs.push(n.x - n.r, n.x + n.r); ys.push(n.y - n.r, n.y + n.r);
         });
         netFitTo(Math.min.apply(null, xs), Math.min.apply(null, ys),
-                 Math.max.apply(null, xs), Math.max.apply(null, ys),
-                 net.deptFocus ? 60 : 34, net.deptFocus ? 2.8 : 2.2);
+                 Math.max.apply(null, xs), Math.max.apply(null, ys), 34, 2.2);
       } else {
         net.cam = { k: 1, tx: 0, ty: 0 };
         netCamApply();
