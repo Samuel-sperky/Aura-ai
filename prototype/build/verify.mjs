@@ -235,16 +235,16 @@ const fonts = await p.evaluate(() => {
     const w = s.getBoundingClientRect().width; s.remove(); return Math.round(w * 100) / 100;
   }
   const bogus = wOf("'NoSuchFontXyz123'");
-  const mono = wOf("'Geist Mono'"), bareMono = wOf('monospace');
-  const geist = wOf("'Geist'"), pf = wOf("'Playfair Display'");
+  const mono = wOf("'JetBrains Mono'"), bareMono = wOf('monospace');
+  const geist = wOf("'Inter'"), pf = wOf("'Playfair Display'");
   // koľko prvkov reálne renderuje fallback mono
   const usesMono = [...document.querySelectorAll('.view.on *')].filter(e =>
     e.children.length === 0 && e.textContent.trim() &&
-    /Geist Mono|monospace/.test(getComputedStyle(e).fontFamily)).length;
+    /JetBrains Mono|monospace/.test(getComputedStyle(e).fontFamily)).length;
   return { bogus, mono, bareMono, geist, pf, usesMono, monoReal: Math.abs(mono - bogus) > 1 && Math.abs(mono - bareMono) > 1 };
 });
-fonts.monoReal ? O(`Geist Mono sa reálne renderuje (${fonts.mono} px vs fallback ${fonts.bogus}/${fonts.bareMono})`)
-  : F(`Geist Mono padá na fallback — ${fonts.usesMono} prvkov v cudzom písme`);
+fonts.monoReal ? O(`JetBrains Mono sa reálne renderuje (${fonts.mono} px vs fallback ${fonts.bogus}/${fonts.bareMono})`)
+  : F(`JetBrains Mono padá na fallback — ${fonts.usesMono} prvkov v cudzom písme`);
 
 /* --- 10. typografická škála --- */
 const typo = await p.evaluate(() => {

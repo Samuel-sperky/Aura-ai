@@ -91,6 +91,29 @@
   }
   injectSections();
 
+  /* reveal pri scrolle — sekcie a karty sa jemne vynoria; reduced-motion to CSS vypína */
+  (function reveal() {
+    if (!("IntersectionObserver" in w)) return;
+    var io = new IntersectionObserver(function (es) {
+      es.forEach(function (e) {
+        if (!e.isIntersecting) return;
+        e.target.classList.add("in");
+        io.unobserve(e.target);
+      });
+    }, { rootMargin: "0px 0px -8% 0px" });
+    document.querySelectorAll(".view .sech, .view .card, .view .kpi").forEach(function (el, i) {
+      el.classList.add("rv");
+      el.style.transitionDelay = Math.min((i % 6) * 45, 220) + "ms";
+      io.observe(el);
+    });
+    /* prvky nad ohybom pri štarte nech nečakajú na scroll */
+    setTimeout(function () {
+      document.querySelectorAll(".view.on .rv:not(.in)").forEach(function (el) {
+        if (el.getBoundingClientRect().top < w.innerHeight) el.classList.add("in");
+      });
+    }, 120);
+  })();
+
   /* mini sparkliny v bočnom paneli */
   var ramHist = A.series(7714, 40, 62, 3.2, 0.05);
   var cpuHist = A.series(3311, 40, 66, 9, 0.02);
@@ -165,7 +188,7 @@
     var html = '<div class="feed">' + list.map(function (a, i) {
       var app = A.alertApp ? A.alertApp(a) : null;
       return '<button class="fi" data-al="' + i + '"><span class="fd' + (a.lvl === "info" ? "" : a.lvl === "warn" ? " a" : " r") + '"></span>' +
-        '<span class="fx"><b style="font-size:12.5px">' + (app ? A.esc(app.name) + " — " : "") + A.esc(a.t) + "</b><span>" + A.esc(a.d) + " · od " + A.esc(a.since) + "</span></span></button>";
+        '<span class="fx"><b style="font-size:var(--fs-sm)">' + (app ? A.esc(app.name) + " — " : "") + A.esc(a.t) + "</b><span>" + A.esc(a.d) + " · od " + A.esc(a.since) + "</span></span></button>";
     }).join("") + "</div>";
     A.detail("Aktívne upozornenia (" + list.length + ")", html, [
       { label: "Otvoriť Observabilitu", fn: function () { A.closeDetail(); A.go("observabilita"); } }

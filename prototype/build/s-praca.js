@@ -39,7 +39,7 @@
   var codeStore = [];
   function inline(s) {
     var out = esc(s);
-    out = out.replace(/`([^`]+)`/g, function (m, c) { return '<code style="font-family:var(--mono);font-size:12px;background:var(--card-2);border:1px solid var(--line);border-radius:4px;padding:1px 5px">' + c + "</code>"; });
+    out = out.replace(/`([^`]+)`/g, function (m, c) { return '<code style="font-family:var(--mono);font-size:var(--fs-label);background:var(--card-2);border:1px solid var(--line);border-radius:4px;padding:1px 5px">' + c + "</code>"; });
     out = out.replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>");
     out = out.replace(/(^|[^*])\*([^*\n]+)\*/g, "$1<em>$2</em>");
     return out;
@@ -58,14 +58,14 @@
         var raw = code.join("\n"), ci = codeStore.push(raw) - 1;
         out.push('<div style="border:1px solid var(--line);border-radius:9px;overflow:hidden;margin:0 0 10px">' +
           '<div style="display:flex;align-items:center;gap:8px;background:var(--card-2);padding:5px 10px;border-bottom:1px solid var(--line)">' +
-          '<span class="mono" style="font-size:11px;color:var(--ink-3)">' + esc(lang || "kód") + "</span><span style=\"flex:1\"></span>" +
-          '<button class="btn ghost" data-code="' + ci + '" style="padding:3px 9px;font-size:11px">Kopírovať kód</button></div>' +
-          '<pre style="margin:0;padding:10px 12px;overflow-x:auto;font-family:var(--mono);font-size:12px;line-height:1.55">' + esc(raw) + "</pre></div>");
+          '<span class="num" style="font-size:var(--fs-label);color:var(--ink-3)">' + esc(lang || "kód") + "</span><span style=\"flex:1\"></span>" +
+          '<button class="btn ghost" data-code="' + ci + '" style="padding:3px 9px;font-size:var(--fs-label)">Kopírovať kód</button></div>' +
+          '<pre style="margin:0;padding:10px 12px;overflow-x:auto;font-family:var(--mono);font-size:var(--fs-label);line-height:1.55">' + esc(raw) + "</pre></div>");
         continue;
       }
       if (/^\s*$/.test(ln)) { flushP(); closeList(); i++; continue; }
       var hm = ln.match(/^(#{1,4})\s+(.*)$/);
-      if (hm) { flushP(); closeList(); var sz = [17, 15, 13.5, 12.5][hm[1].length - 1]; out.push('<div style="font-family:var(--disp);font-weight:600;font-size:' + sz + 'px;margin:12px 0 6px">' + inline(hm[2]) + "</div>"); i++; continue; }
+      if (hm) { flushP(); closeList(); var sz = [19, 15.5, 14, 12.5][hm[1].length - 1]; out.push('<div style="font-family:var(--disp);font-weight:600;font-size:' + sz + 'px;margin:12px 0 6px">' + inline(hm[2]) + "</div>"); i++; continue; }
       var um = ln.match(/^\s*[-*]\s+(.*)$/);
       if (um) { flushP(); if (list !== "ul") { closeList(); out.push('<ul style="margin:0 0 9px;padding-left:18px">'); list = "ul"; } out.push('<li style="margin-bottom:3px">' + inline(um[1]) + "</li>"); i++; continue; }
       var om = ln.match(/^\s*\d+[.)]\s+(.*)$/);
@@ -105,10 +105,10 @@
   };
   function mcpIcon(name) {
     var col = MCP_META[name] || "var(--teal)", ini = (name || "?").slice(0, 1).toUpperCase();
-    return '<span class="mono" title="' + esc(name) + '" aria-label="MCP nástroj ' + esc(name) + '" ' +
-      'style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:5px;font-size:10px;font-weight:700;color:#fff;background:' + col + ';margin-right:3px;vertical-align:-3px">' + esc(ini) + "</span>";
+    return '<span class="num" title="' + esc(name) + '" aria-label="MCP nástroj ' + esc(name) + '" ' +
+      'style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:5px;font-size:var(--fs-label);font-weight:700;color:#fff;background:' + col + ';margin-right:3px;vertical-align:-3px">' + esc(ini) + "</span>";
   }
-  function mcpRow(list) { return (list || []).map(function (n) { return mcpIcon(n) + '<span style="font-size:11.5px;margin-right:8px">' + esc(n) + "</span>"; }).join(""); }
+  function mcpRow(list) { return (list || []).map(function (n) { return mcpIcon(n) + '<span style="font-size:var(--fs-label);margin-right:8px">' + esc(n) + "</span>"; }).join(""); }
 
   /* ---------- recall z Aura.mem (jeden zdroj pravdy) ---------- */
   function memRecall(q, n, appSlug) {
@@ -194,10 +194,10 @@
       var on = c === CH.cur;
       return '<div class="fi" data-conv="' + c.id + '" aria-current="' + on + '" style="cursor:pointer' + (on ? ";background:color-mix(in srgb,var(--teal) 10%,var(--card))" : "") + '">' +
         '<span class="fd' + (on ? "" : c.pinned ? " g" : "") + '"></span>' +
-        '<span class="fx"><b style="font-size:12.5px">' + (c.pinned ? "Pripnuté · " : "") + esc(c.title) + "</b><span>" + esc(c.when) + " · " + F(c.msgs.length, 0) + " správ · " + esc(ZONE_TXT[c.zone].b) + "</span></span>" +
+        '<span class="fx"><b style="font-size:var(--fs-sm)">' + (c.pinned ? "Pripnuté · " : "") + esc(c.title) + "</b><span>" + esc(c.when) + " · " + F(c.msgs.length, 0) + " správ · " + esc(ZONE_TXT[c.zone].b) + "</span></span>" +
         '<span class="ft" style="display:flex;gap:3px">' +
-        '<button class="btn ghost" data-pin="' + c.id + '" aria-label="Pripnúť konverzáciu" aria-pressed="' + c.pinned + '" style="padding:1px 6px;font-size:11px">' + (c.pinned ? "Odopnúť" : "Pripnúť") + "</button>" +
-        '<button class="btn ghost" data-del="' + c.id + '" aria-label="Zmazať konverzáciu" style="padding:1px 6px;font-size:11px">×</button></span></div>';
+        '<button class="btn ghost" data-pin="' + c.id + '" aria-label="Pripnúť konverzáciu" aria-pressed="' + c.pinned + '" style="padding:1px 6px;font-size:var(--fs-label)">' + (c.pinned ? "Odopnúť" : "Pripnúť") + "</button>" +
+        '<button class="btn ghost" data-del="' + c.id + '" aria-label="Zmazať konverzáciu" style="padding:1px 6px;font-size:var(--fs-label)">×</button></span></div>';
     }).join("") : '<div class="empty" style="padding:20px 8px"><p>Žiadna konverzácia nezodpovedá hľadaniu.</p></div>';
     $("#ch-convsel").innerHTML = rows.map(function (c) { return '<option value="' + c.id + '"' + (c === CH.cur ? " selected" : "") + ">" + esc(c.title) + "</option>"; }).join("");
     $("#ch-title").textContent = CH.cur ? CH.cur.title : "Nová konverzácia";
@@ -205,45 +205,45 @@
 
   function chMsgHTML(m, i) {
     if (m.role === "user") {
-      return '<div style="display:flex;justify-content:flex-end;margin-bottom:14px"><div style="max-width:76%;background:color-mix(in srgb,var(--teal) 12%,var(--card));border:1px solid color-mix(in srgb,var(--teal) 30%,var(--line));border-radius:12px 12px 4px 12px;padding:10px 13px;font-size:13.5px">' +
-        md(m.text) + '<div class="mono" style="font-size:11px;color:var(--ink-3);margin-top:4px;text-align:right">' + esc(m.at) + "</div></div></div>";
+      return '<div style="display:flex;justify-content:flex-end;margin-bottom:14px"><div style="max-width:76%;background:color-mix(in srgb,var(--teal) 12%,var(--card));border:1px solid color-mix(in srgb,var(--teal) 30%,var(--line));border-radius:12px 12px 4px 12px;padding:10px 13px;font-size:var(--fs-sm)">' +
+        md(m.text) + '<div class="num" style="font-size:var(--fs-label);color:var(--ink-3);margin-top:4px;text-align:right">' + esc(m.at) + "</div></div></div>";
     }
     var meta = m.meta || {};
     var head = '<div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin-bottom:6px">' +
       '<span class="badge info">' + esc(meta.model || CH.model) + "</span>" +
       (meta.router ? '<span class="badge ' + meta.router.cls + '" title="' + esc(meta.router.note) + '">router: ' + esc(meta.router.path) + "</span>" : "") +
-      '<span class="mono" style="font-size:11px;color:var(--ink-3);margin-left:auto">' + esc(m.at) + "</span></div>";
-    var body = '<div id="' + (m.streaming ? "ch-stream" : "ch-m" + i) + '" style="font-size:13.5px;line-height:1.62">' +
+      '<span class="num" style="font-size:var(--fs-label);color:var(--ink-3);margin-left:auto">' + esc(m.at) + "</span></div>";
+    var body = '<div id="' + (m.streaming ? "ch-stream" : "ch-m" + i) + '" style="font-size:var(--fs-sm);line-height:1.62">' +
       md(m.text) + (m.streaming ? '<span style="display:inline-block;width:8px;height:15px;background:var(--teal);vertical-align:-2px;animation:pulse 1s infinite"></span>' : "") + "</div>";
     if (m.streaming) return '<div style="margin-bottom:16px">' + head + body + "</div>";
 
-    var metrics = '<div class="mono" style="display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:var(--ink-3);margin-top:9px;padding-top:8px;border-top:1px solid var(--line)">' +
+    var metrics = '<div class="num" style="display:flex;gap:12px;flex-wrap:wrap;font-size:var(--fs-label);color:var(--ink-3);margin-top:9px;padding-top:8px;border-top:1px solid var(--line)">' +
       "<span>kontext " + F(meta.ctx || 0, 0) + " / " + F(8192, 0) + " tok</span><span>" + F(meta.tps || 0, 1) + " tok/s</span><span>recall " + F(meta.recallMs || 0, 0) + " ms</span><span>" + F((m.text || "").length / 4, 0) + " tok odpovede</span></div>";
 
     var src = (meta.sources || []).length
-      ? '<details style="margin-top:8px" open><summary style="font-family:var(--mono);font-size:11px;color:var(--ink-3);cursor:pointer">Recall zdroje — ' + meta.sources.length + " uzlov Hadesu (klik otvorí inšpektor)</summary><div class=\"feed\" style=\"margin-top:5px\">" +
+      ? '<details style="margin-top:8px" open><summary style="font-size:var(--fs-label);color:var(--ink-3);cursor:pointer">Recall zdroje — ' + meta.sources.length + " uzlov Hadesu (klik otvorí inšpektor)</summary><div class=\"feed\" style=\"margin-top:5px\">" +
         meta.sources.map(function (s) {
           var nd = s.node;
           return '<button class="fi" data-src="' + esc(nd.id) + '"><span class="fd v"></span>' +
-            '<span class="fx"><b style="font-size:12.5px">' + esc(nd.name) + "</b><span>" + esc(mem().zoneLabel(nd.area)) + " › " + esc(nd.dep.name) + " · sila " + F(nd.str, 2) + " · istota " + F(nd.conf, 2) + "</span></span>" +
+            '<span class="fx"><b style="font-size:var(--fs-sm)">' + esc(nd.name) + "</b><span>" + esc(mem().zoneLabel(nd.area)) + " › " + esc(nd.dep.name) + " · sila " + F(nd.str, 2) + " · istota " + F(nd.conf, 2) + "</span></span>" +
             '<span class="ft">' + F(s.score, 3) + "</span></button>";
         }).join("") + "</div></details>"
       : "";
 
     var acts = '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:9px">' +
-      '<button class="btn ghost" data-act="copy" data-i="' + i + '" style="padding:4px 10px;font-size:11.5px">Kopírovať</button>' +
-      '<button class="btn ghost" data-act="regen" data-i="' + i + '" style="padding:4px 10px;font-size:11.5px">Regenerovať</button>' +
-      '<button class="btn ghost" data-act="save" data-i="' + i + '" style="padding:4px 10px;font-size:11.5px">Uložiť odpoveď → uzol</button>' +
+      '<button class="btn ghost" data-act="copy" data-i="' + i + '" style="padding:4px 10px;font-size:var(--fs-label)">Kopírovať</button>' +
+      '<button class="btn ghost" data-act="regen" data-i="' + i + '" style="padding:4px 10px;font-size:var(--fs-label)">Regenerovať</button>' +
+      '<button class="btn ghost" data-act="save" data-i="' + i + '" style="padding:4px 10px;font-size:var(--fs-label)">Uložiť odpoveď → uzol</button>' +
       '<span style="flex:1"></span>' +
-      '<button class="btn ghost" data-act="up" data-i="' + i + '" aria-label="Odpoveď bola užitočná" aria-pressed="' + (m.vote === 1) + '" style="padding:4px 10px;font-size:11.5px' + (m.vote === 1 ? ";border-color:var(--good);color:var(--good)" : "") + '">Palec hore</button>' +
-      '<button class="btn ghost" data-act="down" data-i="' + i + '" aria-label="Odpoveď nebola užitočná" aria-pressed="' + (m.vote === -1) + '" style="padding:4px 10px;font-size:11.5px' + (m.vote === -1 ? ";border-color:var(--red);color:var(--red)" : "") + '">Palec dole</button></div>' +
+      '<button class="btn ghost" data-act="up" data-i="' + i + '" aria-label="Odpoveď bola užitočná" aria-pressed="' + (m.vote === 1) + '" style="padding:4px 10px;font-size:var(--fs-label)' + (m.vote === 1 ? ";border-color:var(--good);color:var(--good)" : "") + '">Palec hore</button>' +
+      '<button class="btn ghost" data-act="down" data-i="' + i + '" aria-label="Odpoveď nebola užitočná" aria-pressed="' + (m.vote === -1) + '" style="padding:4px 10px;font-size:var(--fs-label)' + (m.vote === -1 ? ";border-color:var(--red);color:var(--red)" : "") + '">Palec dole</button></div>' +
       (m.vote ? '<p class="note" style="margin-top:6px">Hodnotenie ' + (m.vote === 1 ? "posilnilo" : "oslabilo") + " silu a istotu " + F((meta.sources || []).length, 0) + " zdrojových uzlov v pamäti.</p>" : "");
 
     return '<div style="margin-bottom:18px">' + head + body + metrics + src + acts + "</div>";
   }
   function chStateEmpty() {
     var sug = ["Ako mám rozdeliť mind.js na moduly?", "Prečo je /api/search pomalé a čo s tým?", "Zhrň mi, čo si sa dnes naučil o e-shope.", "Aký tón mám používať v popisoch produktov?"];
-    $("#ch-msgs").innerHTML = '<div class="empty" style="padding:40px 16px"><span class="eico">∅</span><p style="font-size:13.5px">Konverzácia je prázdna. Model beží lokálne, nič neopúšťa tento stroj.</p>' +
+    $("#ch-msgs").innerHTML = '<div class="empty" style="padding:40px 16px"><span class="eico">∅</span><p style="font-size:var(--fs-sm)">Konverzácia je prázdna. Model beží lokálne, nič neopúšťa tento stroj.</p>' +
       '<div style="display:flex;flex-direction:column;gap:7px;margin-top:10px;width:min(520px,100%)">' +
       sug.map(function (s) { return '<button class="btn ghost" data-sug="' + esc(s) + '" style="text-align:left;justify-content:flex-start">' + esc(s) + "</button>"; }).join("") + "</div></div>";
   }
@@ -302,7 +302,7 @@
     $("#ch-gate-b").textContent = "zadržaných " + F(g.held.length, 0) + " útržkov";
     $("#ch-gate-held").innerHTML = g.held.length ? g.held.map(function (h) {
       var cls = h.why.indexOf("osobné") > -1 ? " r" : h.why.indexOf("ceny") > -1 ? " a" : h.why.indexOf("kód") > -1 ? " v" : "";
-      return '<div class="fi" style="cursor:default"><span class="fd' + cls + '"></span><span class="fx"><b style="font-size:12.5px;word-break:break-word">' + esc(h.frag.length > 70 ? h.frag.slice(0, 69) + "…" : h.frag) + "</b><span>" + esc(h.why) + "</span></span></div>";
+      return '<div class="fi" style="cursor:default"><span class="fd' + cls + '"></span><span class="fx"><b style="font-size:var(--fs-sm);word-break:break-word">' + esc(h.frag.length > 70 ? h.frag.slice(0, 69) + "…" : h.frag) + "</b><span>" + esc(h.why) + "</span></span></div>";
     }).join("") : '<div class="empty" style="padding:14px"><p>Filter nič nezadržal — celý dopyt je bezpečný na odoslanie.</p></div>';
     $("#ch-gate").style.display = "block";
     $("#ch-gate-no").focus();
@@ -564,12 +564,12 @@
     $("#sm-linkcnt").textContent = F(SM.links.length, 0) + " uzlov";
     host.innerHTML = SM.links.length ? SM.links.map(function (id) {
       var nd = mem().byId(id); if (!nd) return "";
-      return '<button class="fi" data-lnode="' + esc(nd.id) + '"><span class="fd v"></span><span class="fx"><b style="font-size:12.5px">' + esc(nd.name) + '</b><span>' + esc(mem().zoneLabel(nd.area)) + " · " + esc(nd.type) + " · sila " + F(nd.str, 2) + '</span></span><span class="ft"><span class="badge mute" data-rmlink="' + esc(nd.id) + '" style="cursor:pointer" role="button" aria-label="Odobrať prepojenie">odobrať ×</span></span></button>';
+      return '<button class="fi" data-lnode="' + esc(nd.id) + '"><span class="fd v"></span><span class="fx"><b style="font-size:var(--fs-sm)">' + esc(nd.name) + '</b><span>' + esc(mem().zoneLabel(nd.area)) + " · " + esc(nd.type) + " · sila " + F(nd.str, 2) + '</span></span><span class="ft"><span class="badge mute" data-rmlink="' + esc(nd.id) + '" style="cursor:pointer" role="button" aria-label="Odobrať prepojenie">odobrať ×</span></span></button>';
     }).join("") : '<div class="empty" style="padding:12px"><p>Žiadne prepojené uzly. Cez „Vložiť kontext z pamäte“ ich pripojíte.</p></div>';
   }
   function smRenderClaims() {
     $("#sm-claims").innerHTML = SM.claims.length ? SM.claims.map(function (c, i) {
-      return '<div class="fi" style="cursor:default"><span class="fd' + (c.ver ? " ok" : " a") + '"></span><span class="fx"><b style="font-size:12.5px">' + esc(c.text) + '</b><span>' + (c.ver ? "overené — má zdroj alebo meranie" : "neoverené — do smernice ide s výhradou") + '</span></span><span class="ft" style="display:flex;gap:5px;align-items:center"><button class="badge ' + (c.ver ? "ok" : "warn") + '" data-claim="' + i + '" style="cursor:pointer;font-family:var(--mono)" aria-label="Prepnúť overenie tvrdenia">' + (c.ver ? "overené" : "neoverené") + '</button><button class="btn ghost" data-del="' + i + '" aria-label="Odstrániť tvrdenie" style="padding:2px 8px;font-size:11px">×</button></span></div>';
+      return '<div class="fi" style="cursor:default"><span class="fd' + (c.ver ? " ok" : " a") + '"></span><span class="fx"><b style="font-size:var(--fs-sm)">' + esc(c.text) + '</b><span>' + (c.ver ? "overené — má zdroj alebo meranie" : "neoverené — do smernice ide s výhradou") + '</span></span><span class="ft" style="display:flex;gap:5px;align-items:center"><button class="badge ' + (c.ver ? "ok" : "warn") + '" data-claim="' + i + '" style="cursor:pointer;font-family:var(--mono)" aria-label="Prepnúť overenie tvrdenia">' + (c.ver ? "overené" : "neoverené") + '</button><button class="btn ghost" data-del="' + i + '" aria-label="Odstrániť tvrdenie" style="padding:2px 8px;font-size:var(--fs-label)">×</button></span></div>';
     }).join("") : '<div class="empty" style="padding:14px"><p>Žiadne tvrdenia. Vyberte šablónu alebo pridajte tvrdenie ručne.</p></div>';
   }
   function smPreview() {
@@ -639,7 +639,7 @@
       res = res.slice(0, 20);
       $("#sm-pick-list").innerHTML = res.map(function (r) {
         var nd = r.node, on = SM.links.indexOf(nd.id) > -1;
-        return '<button class="fi" data-pick="' + esc(nd.id) + '"><span class="fd' + (on ? " ok" : " v") + '"></span><span class="fx"><b style="font-size:12.5px">' + esc(nd.name) + '</b><span>' + esc(mem().zoneLabel(nd.area)) + " › " + esc(nd.dep.name) + " · " + esc(nd.type) + " · sila " + F(nd.str, 2) + '</span></span><span class="ft"><span class="badge ' + (on ? "ok" : "mute") + '">' + (on ? "vložené" : "vložiť") + "</span></span></button>";
+        return '<button class="fi" data-pick="' + esc(nd.id) + '"><span class="fd' + (on ? " ok" : " v") + '"></span><span class="fx"><b style="font-size:var(--fs-sm)">' + esc(nd.name) + '</b><span>' + esc(mem().zoneLabel(nd.area)) + " › " + esc(nd.dep.name) + " · " + esc(nd.type) + " · sila " + F(nd.str, 2) + '</span></span><span class="ft"><span class="badge ' + (on ? "ok" : "mute") + '">' + (on ? "vložené" : "vložiť") + "</span></span></button>";
       }).join("");
       $$("#sm-pick-list button[data-pick]").forEach(function (b) {
         b.addEventListener("click", function () {
@@ -789,15 +789,15 @@
     var routerMs = Math.round(120 + rt() * 260), recallMs = Math.round(8 + rt() * 120), genS = +(r.avg * 0.6 + rt() * 4).toFixed(1), genTok = Math.round(600 + r.avg * 45);
     function step(idx, title, meta, cls) {
       var sk = idx < fromStep;
-      return '<div class="fi" style="cursor:default' + (sk ? ";opacity:.5" : "") + '"><span class="fd' + (sk ? "" : (cls || "")) + '"></span><span class="fx"><b style="font-size:12.5px">' + title + (sk ? " · preskočené" : "") + '</b><span>' + (sk ? "použitý posledný výstup (cache)" : meta) + "</span></span></div>";
+      return '<div class="fi" style="cursor:default' + (sk ? ";opacity:.5" : "") + '"><span class="fd' + (sk ? "" : (cls || "")) + '"></span><span class="fx"><b style="font-size:var(--fs-sm)">' + title + (sk ? " · preskočené" : "") + '</b><span>' + (sk ? "použitý posledný výstup (cache)" : meta) + "</span></span></div>";
     }
     var mcpSk = 3 < fromStep;
-    var mcpSteps = (r.mcp || []).map(function (n) { return '<div class="fi" style="cursor:default"><span class="fd v"></span><span class="fx"><b style="font-size:12.5px">' + mcpIcon(n) + "MCP → " + esc(n) + '</b><span>egress cez klasifikátor · ' + F(Math.round(200 + rt() * 900), 0) + " ms · " + F(Math.round(40 + rt() * 180), 0) + " tok</span></span></div>"; }).join("");
+    var mcpSteps = (r.mcp || []).map(function (n) { return '<div class="fi" style="cursor:default"><span class="fd v"></span><span class="fx"><b style="font-size:var(--fs-sm)">' + mcpIcon(n) + "MCP → " + esc(n) + '</b><span>egress cez klasifikátor · ' + F(Math.round(200 + rt() * 900), 0) + " ms · " + F(Math.round(40 + rt() * 180), 0) + " tok</span></span></div>"; }).join("");
     return '<div class="feed">' +
       step(0, "1 · Router (qwen3:4b)", "klasifikácia oddelenia · " + F(routerMs, 0) + " ms · " + F(Math.round(20 + rt() * 40), 0) + " tok", " ok") +
       step(1, "2 · Recall (RecallEngine)", "hybridné hľadanie v pamäti · " + F(recallMs, 0) + " ms · " + F(Math.round(3 + rt() * 5), 0) + " uzlov", "") +
       step(2, "3 · Generácia (qwen3:4b)", F(genS, 1) + " s · " + F(genTok, 0) + " tok · " + F(genTok / genS, 1) + " tok/s", " a") +
-      '<details style="margin-top:2px"' + (mcpSk ? "" : " open") + '><summary style="font-family:var(--mono);font-size:11px;color:var(--ink-3);cursor:pointer;padding:6px 0">4 · MCP nástroje — ' + F((r.mcp || []).length, 0) + (mcpSk ? " · preskočené" : "") + "</summary>" + (mcpSk ? '<p class="note">Preskočené — použitý posledný výstup.</p>' : (mcpSteps || '<p class="note">Bez MCP volaní.</p>')) + "</details>" +
+      '<details style="margin-top:2px"' + (mcpSk ? "" : " open") + '><summary style="font-size:var(--fs-label);color:var(--ink-3);cursor:pointer;padding:6px 0">4 · MCP nástroje — ' + F((r.mcp || []).length, 0) + (mcpSk ? " · preskočené" : "") + "</summary>" + (mcpSk ? '<p class="note">Preskočené — použitý posledný výstup.</p>' : (mcpSteps || '<p class="note">Bez MCP volaní.</p>')) + "</details>" +
       "</div>";
   }
 
@@ -819,7 +819,7 @@
     var Ax = A();
     var steps = ["1 · Router", "2 · Recall", "3 · Generácia", "4 · MCP nástroje"];
     var html = '<p class="note">Vyberte krok, od ktorého sa beh zopakuje. Predošlé kroky sa preskočia a použije sa ich posledný výstup.</p><div class="feed">' +
-      steps.map(function (s, i) { return '<button class="fi" data-step="' + i + '"><span class="fd"></span><span class="fx"><b style="font-size:12.5px">' + esc(s) + '</b><span>zopakovať od tohto kroku</span></span></button>'; }).join("") + "</div>";
+      steps.map(function (s, i) { return '<button class="fi" data-step="' + i + '"><span class="fd"></span><span class="fx"><b style="font-size:var(--fs-sm)">' + esc(s) + '</b><span>zopakovať od tohto kroku</span></span></button>'; }).join("") + "</div>";
     Ax.detail("Retry od kroku · " + r.name, html, []);
     setTimeout(function () {
       $$("#dp-body button[data-step]").forEach(function (b) { b.addEventListener("click", function () { var i = +b.getAttribute("data-step"); Ax.toast(r.name + " · beh zopakovaný od kroku " + steps[i], "ok"); auRunDetail(r, i); }); });
@@ -837,7 +837,7 @@
       "<dt>Ušetrené</dt><dd>" + F(r.saved, 0) + " h / mesiac</dd>" +
       "<dt>Posledný beh</dt><dd>" + esc(r.last) + "</dd>" +
       "<dt>Stav</dt><dd>" + auStateBadge(r.state) + "</dd></dl>" +
-      "<p style='font-weight:600;margin-bottom:6px'>Kroky agenta</p><ol style='margin:0;padding-left:18px;font-size:12.5px;color:var(--ink-2);line-height:1.9'>" + r.steps.map(function (s) { return "<li>" + esc(s) + "</li>"; }).join("") + "</ol>" +
+      "<p style='font-weight:600;margin-bottom:6px'>Kroky agenta</p><ol style='margin:0;padding-left:18px;font-size:var(--fs-sm);color:var(--ink-2);line-height:1.9'>" + r.steps.map(function (s) { return "<li>" + esc(s) + "</li>"; }).join("") + "</ol>" +
       (r.state === "Chyba" ? "<div class='alert bad' style='margin-top:12px'><span class='ai'></span><span><b>Posledný beh zlyhal</b>Export v Canve vrátil timeout. Automatizácia je pozastavená do zásahu.</span></div>" : "") +
       "<p class='note' style='margin-top:12px'>Poradie priorít: " + AU.prio.join(" › ") + ". Prevádzkové čísla sú ukážkové.</p>",
       [
@@ -903,8 +903,8 @@
       return;
     }
     tb.innerHTML = rows.map(function (r) {
-      var toggle = '<button class="pill' + (r.state !== "Pozastavená" ? " on" : "") + '" data-toggle="' + r.id + '" aria-pressed="' + (r.state !== "Pozastavená") + '" aria-label="' + (r.state === "Pozastavená" ? "Spustiť automatizáciu" : "Pozastaviť automatizáciu") + '" style="padding:2px 9px;font-size:11px">' + (r.state === "Pozastavená" ? "Spustiť" : "Pauza") + "</button>";
-      return '<tr data-row="' + r.id + '" tabindex="0"><td class="who" style="color:var(--ink);font-weight:500">' + esc(r.name) + " " + mcpRow(r.mcp) + "</td><td>" + esc(r.dep) + "</td><td>" + auTrigBadge(r.trig) + ' <span class="mono" style="font-size:10.5px;color:var(--ink-3)">' + esc(r.next) + '</span></td><td class="mono" style="font-size:11px">' + esc(r.last) + '</td><td class="num">' + F(r.ok, 0) + ' %</td><td class="num">' + F(r.saved, 0) + " h</td><td>" + auStateBadge(r.state) + " " + toggle + "</td></tr>";
+      var toggle = '<button class="pill' + (r.state !== "Pozastavená" ? " on" : "") + '" data-toggle="' + r.id + '" aria-pressed="' + (r.state !== "Pozastavená") + '" aria-label="' + (r.state === "Pozastavená" ? "Spustiť automatizáciu" : "Pozastaviť automatizáciu") + '" style="padding:2px 9px;font-size:var(--fs-label)">' + (r.state === "Pozastavená" ? "Spustiť" : "Pauza") + "</button>";
+      return '<tr data-row="' + r.id + '" tabindex="0"><td class="who" style="color:var(--ink);font-weight:500">' + esc(r.name) + " " + mcpRow(r.mcp) + "</td><td>" + esc(r.dep) + "</td><td>" + auTrigBadge(r.trig) + ' <span class="num" style="font-size:var(--fs-label);color:var(--ink-3)">' + esc(r.next) + '</span></td><td class="num" style="font-size:var(--fs-label)">' + esc(r.last) + '</td><td class="num">' + F(r.ok, 0) + ' %</td><td class="num">' + F(r.saved, 0) + " h</td><td>" + auStateBadge(r.state) + " " + toggle + "</td></tr>";
     }).join("");
     cards.innerHTML = rows.map(function (r) {
       return '<button type="button" class="rowcard" data-row="' + r.id + '"><div class="rh"><b>' + esc(r.name) + "</b>" + auStateBadge(r.state) + "</div><dl><dt>Oddelenie</dt><dd>" + esc(r.dep) + "</dd><dt>Spúšťač</dt><dd>" + esc(r.trig) + " · " + esc(r.next) + "</dd><dt>Úspešnosť</dt><dd>" + F(r.ok, 0) + " %</dd><dt>Ušetrené</dt><dd>" + F(r.saved, 0) + " h</dd></dl></button>";
@@ -944,8 +944,8 @@
     host.innerHTML = AU.prio.map(function (p, i) {
       return '<div class="step"><span class="r">' + (i + 1) + '</span><b>' + esc(p) + '</b><span>' + esc(AU.prioDesc[p]) + '</span>' +
         '<div style="display:flex;gap:4px;margin-top:6px">' +
-        '<button class="btn ghost" data-pup="' + i + '" aria-label="Presunúť vyššie" ' + (i === 0 ? "disabled" : "") + ' style="padding:2px 8px;font-size:12px">▲</button>' +
-        '<button class="btn ghost" data-pdn="' + i + '" aria-label="Presunúť nižšie" ' + (i === AU.prio.length - 1 ? "disabled" : "") + ' style="padding:2px 8px;font-size:12px">▼</button></div></div>' +
+        '<button class="btn ghost" data-pup="' + i + '" aria-label="Presunúť vyššie" ' + (i === 0 ? "disabled" : "") + ' style="padding:2px 8px;font-size:var(--fs-label)">▲</button>' +
+        '<button class="btn ghost" data-pdn="' + i + '" aria-label="Presunúť nižšie" ' + (i === AU.prio.length - 1 ? "disabled" : "") + ' style="padding:2px 8px;font-size:var(--fs-label)">▼</button></div></div>' +
         (i < AU.prio.length - 1 ? '<span class="arrow">›</span>' : "");
     }).join("");
     $$("#au-prio [data-pup]").forEach(function (b) { b.addEventListener("click", function () { var i = +b.getAttribute("data-pup"); if (i > 0) { var t = AU.prio[i - 1]; AU.prio[i - 1] = AU.prio[i]; AU.prio[i] = t; auRenderPrio(); A().toast("Priorita „" + AU.prio[i - 1] + "“ posunutá vyššie", "ok"); } }); });

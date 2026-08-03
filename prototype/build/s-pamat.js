@@ -283,14 +283,14 @@
           return '<div class="nd"><span class="sw" style="background:' + a.color + '"></span>' +
             '<button class="lk" data-id="' + esc(n.id) + '" style="border:0;background:none;padding:0;flex:1;text-align:left;display:flex;align-items:center;gap:6px;color:var(--ink)">' +
             '<span style="color:' + typeColor(n.type) + ';display:inline-flex" aria-hidden="true">' + mem().typeIcon(n.type) + '</span>' + esc(n.name) +
-            (n.pinned ? ' <span class="badge mute" style="font-size:10px">chránený</span>' : '') + '</button>' +
-            '<span class="mono" style="color:var(--ink-3);font-size:11px;white-space:nowrap" title="sila uzla">sila ' + F(n.str, 2) + '</span></div>';
+            (n.pinned ? ' <span class="badge mute" style="font-size:var(--fs-label)">chránený</span>' : '') + '</button>' +
+            '<span class="num" style="color:var(--ink-3);font-size:var(--fs-label);white-space:nowrap" title="sila uzla">sila ' + F(n.str, 2) + '</span></div>';
         }).join("");
         return '<details><summary>' + esc(g.dep.name) +
-          ' <span class="mono" style="color:var(--ink-3);font-weight:400;font-size:11px">· ' + esc(g.dep.type) + ' · ' + F(g.list.length, 0) + ' uzlov</span></summary>' + items + '</details>';
+          ' <span class="num" style="color:var(--ink-3);font-weight:400;font-size:var(--fs-label)">· ' + esc(g.dep.type) + ' · ' + F(g.list.length, 0) + ' uzlov</span></summary>' + items + '</details>';
       }).join("") : '<p class="note">Filter v tejto oblasti nič nezobrazuje.</p>';
       return '<details' + (open ? ' open' : '') + '><summary>' + esc(mem().zoneLabel(a)) +
-        ' <span class="mono" style="color:var(--ink-3);font-weight:400;font-size:11px">· ' + F(live.length, 0) + ' uzlov · ' + deps.length + ' oddelení</span></summary>' + inner + '</details>';
+        ' <span class="num" style="color:var(--ink-3);font-weight:400;font-size:var(--fs-label)">· ' + F(live.length, 0) + ' uzlov · ' + deps.length + ' oddelení</span></summary>' + inner + '</details>';
     }).join("");
   }
 
@@ -359,13 +359,13 @@
       S("circle", { cx: x, cy: y, r: rad, fill: it.color, opacity: op * 0.22 }, g);
       S("circle", { cx: x, cy: y, r: rad, fill: "none", stroke: it.color, "stroke-width": 1.8, opacity: op }, g);
       var vt = S("text", { x: x, y: y + 4, "text-anchor": "middle", opacity: op }, g);
-      vt.setAttribute("style", "font-size:12px;fill:var(--ink)"); vt.textContent = F(it.count, 0);
+      vt.setAttribute("style", "font-size:var(--fs-label);fill:var(--ink)"); vt.textContent = F(it.count, 0);
 
       var out = rad + 9;
       var lx = x + out * Math.cos(a0), ly = y + out * Math.sin(a0);
       var anchor = Math.cos(a0) > 0.25 ? "start" : Math.cos(a0) < -0.25 ? "end" : "middle";
       var tx = S("text", { x: lx, y: ly + (Math.sin(a0) > 0.4 ? 12 : Math.sin(a0) < -0.4 ? -6 : 4), "text-anchor": anchor, opacity: op }, svg);
-      tx.setAttribute("style", "font-size:11.5px;font-weight:600;fill:var(--ink)");
+      tx.setAttribute("style", "font-size:var(--fs-label);font-weight:600;fill:var(--ink)");
       tx.textContent = it.label.length > 22 ? it.label.slice(0, 21) + "…" : it.label;
 
       (function (item) {
@@ -383,7 +383,7 @@
     S("circle", { cx: CX, cy: CY, r: 44, fill: "var(--gold)", opacity: 0.14 }, core);
     S("circle", { cx: CX, cy: CY, r: 44, fill: "none", stroke: "var(--gold)", "stroke-width": 2 }, core);
     var ct = S("text", { x: CX, y: CY - 2, "text-anchor": "middle" }, core);
-    ct.setAttribute("style", "font-family:var(--disp);font-size:14px;font-weight:600;fill:var(--gold)");
+    ct.setAttribute("style", "font-family:var(--body);font-size:var(--fs-md);font-weight:600;fill:var(--gold)");
     ct.textContent = centerLabel.length > 15 ? centerLabel.slice(0, 14) + "…" : centerLabel;
     var cs = S("text", { x: CX, y: CY + 13, "text-anchor": "middle", class: "ach-tick" }, core);
     cs.textContent = centerSub;
@@ -590,26 +590,26 @@
       var risk = sc.branch === "vektorový" && sc.vec > 0 && sc.vec < 0.55;
       return '<div class="pm-r" data-id="' + esc(n.id) + '" style="border-top:1px solid var(--line);padding:11px 0' + (i === 0 ? ";border-top:0" : "") + '">' +
         '<div style="display:flex;gap:9px;align-items:baseline;flex-wrap:wrap">' +
-        '<span class="mono" style="font-size:11px;color:var(--ink-3);width:18px">' + (i + 1) + ".</span>" +
-        '<button class="btn ghost pm-open" style="border:0;background:none;padding:0;font-size:13.5px;font-weight:600;color:var(--ink)">' + A.hl(n.name, PM.q) + "</button>" +
+        '<span class="num" style="font-size:var(--fs-label);color:var(--ink-3);width:18px">' + (i + 1) + ".</span>" +
+        '<button class="btn ghost pm-open" style="border:0;background:none;padding:0;font-size:var(--fs-sm);font-weight:600;color:var(--ink)">' + A.hl(n.name, PM.q) + "</button>" +
         '<span class="badge ' + bcls + '">' + sc.branch + "</span>" + mem().typeBadge(n.type) +
         (risk ? ' <span class="srcbadge sim">riziko SK↔EN</span>' : "") +
         '<span class="sp" style="flex:1"></span>' +
-        '<span class="mono" style="font-size:12.5px;color:var(--accentText)">' + F(sc.s, 3) + "</span></div>" +
+        '<span class="num" style="font-size:var(--fs-sm);color:var(--accentText)">' + F(sc.s, 3) + "</span></div>" +
         '<div style="display:flex;gap:10px;align-items:center;margin:6px 0 5px 27px">' +
         '<div class="trk" style="flex:1"><i style="width:' + (sc.s * 100).toFixed(1) + '%"></i></div>' +
-        '<span class="mono" style="font-size:11px;color:var(--ink-3);white-space:nowrap">lex ' + F(sc.lex, 2) + " · vec " + F(sc.vec, 2) + "</span></div>" +
-        '<div class="mono" style="font-size:11px;color:var(--ink-3);margin-left:27px">' + esc(mem().zoneLabel(n.area)) + " › " + esc(n.dep.name) + " · istota " + F(n.conf, 2) + " · vek " + F(n.age, 0) + " dní</div>" +
-        '<details style="margin:7px 0 0 27px"><summary style="font-family:var(--mono);font-size:11px;color:var(--ink-3);cursor:pointer">Prečo tento výsledok</summary>' +
-        '<div style="font-size:12.5px;color:var(--ink-2);margin-top:6px;line-height:1.6">' +
+        '<span class="num" style="font-size:var(--fs-label);color:var(--ink-3);white-space:nowrap">lex ' + F(sc.lex, 2) + " · vec " + F(sc.vec, 2) + "</span></div>" +
+        '<div class="num" style="font-size:var(--fs-label);color:var(--ink-3);margin-left:27px">' + esc(mem().zoneLabel(n.area)) + " › " + esc(n.dep.name) + " · istota " + F(n.conf, 2) + " · vek " + F(n.age, 0) + " dní</div>" +
+        '<details style="margin:7px 0 0 27px"><summary style="font-size:var(--fs-label);color:var(--ink-3);cursor:pointer">Prečo tento výsledok</summary>' +
+        '<div style="font-size:var(--fs-sm);color:var(--ink-2);margin-top:6px;line-height:1.6">' +
         "Lexikálna vetva " + (sc.lex > 0 ? "dala zhodu " + F(sc.lex, 2) : "nenašla priamu zhodu") + ", vektorová vetva (bge-m3) dala " + F(sc.vec, 2) + ". Výsledné skóre je vážený súčet = " + F(sc.s, 3) + ". " +
         (risk ? '<b style="color:var(--amber)">Riziko SK↔EN:</b> prekryv bge-m3 je len 3/20 — skús slovenský aj anglický tvar dopytu, samotné vektorové skóre nad 0,50 nie je dôkaz relevantnosti.' : "") +
         "</div></details>" +
         '<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:8px 0 0 27px">' +
-        '<label style="font-size:11px;color:var(--ink-3)">sila <input type="range" class="pm-str" min="0" max="100" step="5" value="' + Math.round(n.str * 100) + '" style="vertical-align:middle;width:90px" aria-label="Upraviť silu ' + esc(n.name) + '"></label>' +
-        '<button class="btn ghost pm-edit" style="padding:3px 9px;font-size:11px">Otvoriť editor</button>' +
-        '<button class="btn ghost pm-bad" style="padding:3px 9px;font-size:11px">Označiť zlý</button>' +
-        '<button class="btn ghost pm-graph" style="padding:3px 9px;font-size:11px">Prejsť do grafu</button>' +
+        '<label style="font-size:var(--fs-label);color:var(--ink-3)">sila <input type="range" class="pm-str" min="0" max="100" step="5" value="' + Math.round(n.str * 100) + '" style="vertical-align:middle;width:90px" aria-label="Upraviť silu ' + esc(n.name) + '"></label>' +
+        '<button class="btn ghost pm-edit" style="padding:3px 9px;font-size:var(--fs-label)">Otvoriť editor</button>' +
+        '<button class="btn ghost pm-bad" style="padding:3px 9px;font-size:var(--fs-label)">Označiť zlý</button>' +
+        '<button class="btn ghost pm-graph" style="padding:3px 9px;font-size:var(--fs-label)">Prejsť do grafu</button>' +
         "</div></div>";
     }).join("");
 

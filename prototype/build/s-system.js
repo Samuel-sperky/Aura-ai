@@ -825,7 +825,7 @@
     return '<tr tabindex="0" data-id="' + r.id + '"><td class="k">' + esc(r.name) + "</td><td>" + esc(r.cond) + "</td>" +
       '<td><span class="badge ' + b + '">' + esc(r.lvl) + "</span></td>" +
       '<td class="num"><input id="' + r.id + '-thr" type="number" step="1" min="0" value="' + r.thr +
-      '" aria-label="Prah pravidla ' + esc(r.name) + '" style="width:76px;background:var(--card-2);border:1px solid var(--line);border-radius:8px;padding:4px 7px;font-size:13px;text-align:right">' +
+      '" aria-label="Prah pravidla ' + esc(r.name) + '" style="width:76px;background:var(--card-2);border:1px solid var(--line);border-radius:8px;padding:4px 7px;font-size:var(--fs-sm);text-align:right">' +
       ' <label for="' + r.id + '-thr" class="note">' + esc(r.unit) + "</label></td>" +
       '<td><input id="' + r.id + '-on" type="checkbox"' + (r.on ? " checked" : "") + ' aria-label="Zapnuté ' + esc(r.name) + '"> ' +
       '<label for="' + r.id + '-on" class="note">' + (r.on ? "zap" : "vyp") + "</label></td></tr>";
@@ -841,7 +841,7 @@
         '<span style="display:flex;align-items:center;gap:6px">' +
           '<label for="' + r.id + '-thr-c" class="note">Prah</label>' +
           '<input id="' + r.id + '-thr-c" type="number" step="1" min="0" value="' + r.thr +
-          '" aria-label="Prah pravidla ' + esc(r.name) + '" style="width:90px;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:14px;text-align:right">' +
+          '" aria-label="Prah pravidla ' + esc(r.name) + '" style="width:90px;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:var(--fs-md);text-align:right">' +
           '<span class="note">' + esc(r.unit) + "</span></span>" +
         '<span style="display:flex;align-items:center;gap:6px">' +
           '<input id="' + r.id + '-on-c" type="checkbox"' + (r.on ? " checked" : "") + ' aria-label="Zapnuté ' + esc(r.name) + '">' +
@@ -1051,7 +1051,7 @@
   }
   function lCard(r) {
     return '<div class="rowcard" tabindex="0" data-id="' + r.id + '"><div class="rh">' + lvlBadge(r.lvl) +
-      '<b style="font-size:12px">' + A.hl(r.t, L.q) + "</b></div><dl><dt>Zdroj</dt><dd>" + A.hl(r.src, L.q) +
+      '<b style="font-size:var(--fs-label)">' + A.hl(r.t, L.q) + "</b></div><dl><dt>Zdroj</dt><dd>" + A.hl(r.src, L.q) +
       "</dd><dt>Zóna</dt><dd>" + A.hl(r.zone, L.q) + "</dd><dt>Správa</dt><dd>" + A.hl(r.msg, L.q) +
       "</dd><dt>Trvanie</dt><dd>" + lDur(r.ms) + "</dd></dl></div>";
   }

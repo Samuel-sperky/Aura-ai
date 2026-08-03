@@ -523,7 +523,7 @@
     miniNet(app, $("#apd-net"));
     var top = nodes.slice().sort(function (a, b) { return b.acts - a.acts; }).slice(0, 6);
     $("#apd-nodes").innerHTML = top.length ? top.map(function (n, i) {
-      return '<button class="fi" data-n="' + i + '"><span class="fd' + (n.str < 0.4 ? " w" : " ok") + '"></span><span class="fx"><b style="font-size:12.5px">' + mem().typeIcon(n.type) + " " + esc(n.name) + "</b><span>" + esc(mem().zoneLabel(n.area)) + " · " + esc(n.dep.name) + " · sila " + F(n.str, 2) + " · " + F(n.acts, 0) + " aktivácií</span></span></button>";
+      return '<button class="fi" data-n="' + i + '"><span class="fd' + (n.str < 0.4 ? " w" : " ok") + '"></span><span class="fx"><b style="font-size:var(--fs-sm)">' + mem().typeIcon(n.type) + " " + esc(n.name) + "</b><span>" + esc(mem().zoneLabel(n.area)) + " · " + esc(n.dep.name) + " · sila " + F(n.str, 2) + " · " + F(n.acts, 0) + " aktivácií</span></span></button>";
     }).join("") : '<div class="empty"><span class="eico">∅</span><p>Žiadne viazané uzly.</p></div>';
     $$("#apd-nodes .fi").forEach(function (b) { b.addEventListener("click", function () { mem().inspect(top[+b.getAttribute("data-n")]); }); });
     $("#apd-tomem").addEventListener("click", function () { A().go("pamat", "app:" + app.slug); });
