@@ -132,9 +132,20 @@
   /* ============================================================
      ZOZNAM APPIEK
      ============================================================ */
+  var APF = "";   /* KPI filter zoznamu: '' | 'run' | 'err' */
+  function apChip() {
+    var host = $("#ap-chip");
+    if (!host) { host = document.createElement("div"); host.id = "ap-chip"; var c = $("#ap-cards"); if (c) c.parentNode.insertBefore(host, c); }
+    host.innerHTML = APF ? '<div class="fchip">filtrované: <b>' + (APF === "run" ? "v prevádzke" : "s chybou") + '</b> <button aria-label="Zrušiť filter" id="ap-chip-x">✕</button></div>' : "";
+    var x = $("#ap-chip-x"); if (x) x.addEventListener("click", function () { APF = ""; renderCards(); apChip(); });
+  }
   function sortedApps() {
     var rank = { bad: 0, warn: 1, mute: 2, none: 3, ok: 4 };
-    return apps().all().slice().sort(function (a, b) {
+    return apps().all().filter(function (a) {
+      if (APF === "run") return !a.paused;
+      if (APF === "err") return apps().alerts(a).length > 0;
+      return true;
+    }).slice().sort(function (a, b) {
       var ha = apps().health(a), hb = apps().health(b);
       if (rank[ha.k] !== rank[hb.k]) return rank[ha.k] - rank[hb.k];
       return (b.share || 0) - (a.share || 0);
@@ -159,9 +170,18 @@
     }).join("");
     $$("#ap-kpi .kpi").forEach(function (b, i) {
       b.addEventListener("click", function () {
-        if (i === 2 && errs) { A().go("automatizacie", "A-11"); return; }
-        if (i === 3) { A().go("naklady"); return; }
-        A().toast(items[i].l + ": " + items[i].v + (items[i].u ? " " + items[i].u : ""), "ok");
+        if (i === 0) { APF = APF === "run" ? "" : "run"; renderCards(); apChip(); return; }
+        if (i === 1) {
+          A().detail("Spracované dnes", "<dl>" + list.map(function (a) {
+            return "<dt>" + esc(a.name) + '</dt><dd class="num">' + F(apps().kpi(a).today, 0) + " položiek</dd>";
+          }).join("") + "</dl><p class=\"note\">Rozpad dnešného objemu podľa appky. Denné hodnoty sú simulované.</p>", []);
+          return;
+        }
+        if (i === 2) {
+          if (!errs) { A().detail("Automatizácie v chybe", '<div class="empty"><span class="eico">✓</span><p>Žiadna automatizácia nie je v chybe.</p></div>', []); return; }
+          APF = APF === "err" ? "" : "err"; renderCards(); apChip(); return;
+        }
+        A().go("naklady");
       });
     });
   }
@@ -246,24 +266,39 @@
       '<div class="dirty"><span class="note" style="margin:0">Appka vznikne prázdna — čísla pribudnú, až keď jej oddelenia začnú bežať.</span><span class="sp" style="flex:1"></span>' +
       '<button class="btn ghost" id="af-cancel">Zrušiť</button><button class="btn" id="af-save">Vytvoriť appku</button></div></div>';
     card.removeAttribute("hidden");
+    card.scrollIntoView({ behavior: Ax.reduce ? "auto" : "smooth", block: "center" });
     $$("#ap-form .chz").forEach(function (b) {
       b.addEventListener("click", function () { b.setAttribute("aria-pressed", b.getAttribute("aria-pressed") === "true" ? "false" : "true"); });
     });
-    $("#af-name").focus();
-    $("#af-cancel").addEventListener("click", function () { card.setAttribute("hidden", ""); host.innerHTML = ""; });
+    setTimeout(function () { $("#af-name").focus(); }, 260);
+    function formFilled() { return $("#af-name").value.trim() || $("#af-desc").value.trim() || $$("#ap-form .chz[aria-pressed='true']").length; }
+    function closeForm() { card.setAttribute("hidden", ""); host.innerHTML = ""; }
+    $("#af-cancel").addEventListener("click", function () {
+      if (formFilled()) Ax.confirm("Zahodiť rozpísanú appku?", "Vyplnené polia sa nikam neuložia.", closeForm, "Zahodiť", true);
+      else closeForm();
+    });
+    function showErr(msg) {
+      var e = $("#af-err");
+      if (!e) { e = document.createElement("p"); e.id = "af-err"; e.className = "note"; e.style.color = "var(--red)"; e.setAttribute("aria-live", "polite"); $("#af-name").closest(".field").appendChild(e); }
+      e.textContent = msg;
+    }
+    $("#af-name").addEventListener("input", function () { var e = $("#af-err"); if (e && this.value.trim()) e.textContent = ""; });
     $("#af-save").addEventListener("click", function () {
       var name = $("#af-name").value.trim();
-      if (!name) { Ax.toast("Appka potrebuje názov", "warn"); $("#af-name").focus(); return; }
+      if (!name) { showErr("Appka potrebuje názov — vyplň pole vyššie."); Ax.toast("Formulár nie je úplný: chýba názov", "warn"); $("#af-name").focus(); return; }
       var app = apps().create({
         name: name, kind: $("#af-kind").value, desc: $("#af-desc").value,
         deps: $$("#af-deps .chz[aria-pressed='true']").map(function (b) { return b.getAttribute("data-dep"); }),
         memDeps: $$("#af-mem option:checked").map(function (o) { return o.value; }),
         mcp: $$("#af-mcp .chz[aria-pressed='true']").map(function (b) { return b.getAttribute("data-mcp"); })
       });
-      card.setAttribute("hidden", ""); host.innerHTML = "";
+      closeForm();
       registerAppCmds(app);
-      Ax.toast("Appka „" + app.name + "“ vytvorená", "ok");
-      Ax.go("appky", app.slug);
+      var t = Ax.toast("Appka „" + app.name + "“ vytvorená", "ok", { undo: function () { apps().remove(app); Ax.toast("Appka zahodená", "ok"); }, undoLabel: "Späť" });
+      var lk = document.createElement("button");
+      lk.className = "toast-undo"; lk.type = "button"; lk.textContent = "Zobraziť detail";
+      lk.addEventListener("click", function () { Ax.go("appky", app.slug); t.remove(); });
+      t.appendChild(lk);
     });
   }
 
@@ -347,7 +382,7 @@
       '<span class="ah-t"><b>' + esc(app.name) + "</b><span>" + esc(app.kind) + " · " + esc(app.host) + " · v" + esc(app.ver) + "</span></span>" +
       healthBadge(h) +
       '<span class="sp" style="flex:1"></span>' +
-      '<button class="pill' + (app.paused ? "" : " on") + '" id="ap-pause" aria-pressed="' + (!app.paused) + '"><span class="d"></span>' + (app.paused ? "Pozastavená" : "Beží") + "</button>" +
+      '<button class="swx" id="ap-pause" role="switch" aria-checked="' + (!app.paused) + '" title="' + (app.paused ? "Spustiť appku" : "Pozastaviť appku") + '"><span class="swx-t"><span class="swx-k"></span></span><span class="swx-l">' + (app.paused ? "Pozastavená" : "Beží") + "</span></button>" +
       '<button class="btn ghost sm" id="ap-back">Všetky appky</button>' +
       "</div>" + tabs(app);
     $("#ap-back").addEventListener("click", function () { A().go("appky"); });
@@ -358,14 +393,7 @@
       });
     });
     $("#ap-pause").addEventListener("click", function () {
-      var Ax = A();
-      if (!app.paused) {
-        Ax.confirm("Pozastaviť appku " + app.name + "?",
-          "Automatizácie appky (" + F(apps().autos(app).length, 0) + ") prestanú bežať a naplánované spustenia sa preskočia. Pamäť ani história behov sa nezmažú.",
-          function () { apps().setPaused(app, true); renderDetail(app); Ax.toast(app.name + " · pozastavená", "warn"); }, "Pozastaviť", true);
-      } else {
-        apps().setPaused(app, false); renderDetail(app); Ax.toast(app.name + " · obnovená", "ok");
-      }
+      apps().confirmPause(app, function () { renderDetail(app); });
     });
   }
 
@@ -375,7 +403,7 @@
     host.innerHTML = '<div class="alert bad" style="margin-bottom:12px"><span class="ai"></span><span><b>' + esc(al[0].title) + "</b>" +
       (al.length > 1 ? "a ďalšie " + F(al.length - 1, 0) + " automatizácie appky sú v chybe. " : "") +
       'Otvorte Observabilitu a pozrite, čo beh zhodilo.</span><button class="btn ghost sm" id="ap-toobs">Otvoriť Observabilitu</button></div>';
-    $("#ap-toobs").addEventListener("click", function () { A().go("observabilita", "app:" + app.slug); });
+    $("#ap-toobs").addEventListener("click", function () { A().go("observabilita", app.slug); });
   }
 
   function runsCSV(app) {
@@ -464,9 +492,21 @@
     }).join("");
     $$("#apd-kpi .kpi").forEach(function (b, i) {
       b.addEventListener("click", function () {
-        if (i === 0 || i === 1) A().go("automatizacie", "app:" + app.slug);
-        else if (i === 3) A().go("naklady");
-        else A().toast(kpiItems[i].l + ": " + kpiItems[i].v, "ok");
+        if (i === 0) { A().go("automatizacie", app.slug); return; }
+        if (i === 1) {
+          var last = runs[0], auto = last && w.Aura.autos.byId(last.id);
+          if (auto && w.Aura.autos.runDetail) w.Aura.autos.runDetail(auto);
+          else A().detail("Posledná aktivita", '<div class="empty"><span class="eico">∅</span><p>Zatiaľ žiadny beh.</p></div>', []);
+          return;
+        }
+        if (i === 2) {
+          var v14 = apps().vol(app, 14), d14 = A().days(14);
+          A().detail("Objem appky · " + app.name, "<dl>" + d14.map(function (d, di) {
+            return "<dt>" + esc(d) + '</dt><dd class="num">' + F(v14[di], 0) + " položiek</dd>";
+          }).join("") + '</dl><p class="note">Denné rozloženie je simulované; 14-dňový súčet ' + F(v14.reduce(function (x, y) { return x + y; }, 0), 0) + " položiek.</p>", []);
+          return;
+        }
+        A().go("naklady");
       });
     });
 
@@ -525,7 +565,7 @@
       }
       renderRuns(rrows);
       A().sortable($("#apd-tbl"), function () { return rrows; }, renderRuns);
-      $("#apd-allruns").addEventListener("click", function () { A().go("automatizacie", "app:" + app.slug); });
+      $("#apd-allruns").addEventListener("click", function () { A().go("automatizacie", app.slug); });
       $("#apd-csv").addEventListener("click", function () { runsCSV(app); });
     } else {
       var na = $("#apd-newauto");
@@ -581,7 +621,7 @@
   function registerAppCmds(app) {
     A().registerCmd([
       { label: "Appka — " + app.name, hint: "Appky", run: function () { A().go("appky", app.slug); } },
-      { label: "Behy appky — " + app.name, hint: "Appky", run: function () { A().go("automatizacie", "app:" + app.slug); } },
+      { label: "Behy appky — " + app.name, hint: "Appky", run: function () { A().go("automatizacie", app.slug); } },
       { label: "Pozastaviť appku — " + app.name, hint: "Appky", run: function () { A().go("appky", app.slug); setTimeout(function () { var b = $("#ap-pause"); if (b && !app.paused) b.click(); }, 300); } }
     ]);
   }

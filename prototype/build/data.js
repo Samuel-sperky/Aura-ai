@@ -236,6 +236,18 @@
 
   /* ---------- editovateľný inšpektor uzla (peek panel s dirty-bar) ----------
      volateľný odkiaľkoľvek cez #/node/<slug> aj priamo mem.inspect(node) */
+  /* staged create: vráti odpojený návrh uzla — do pamäte sa dostane až cez „Vytvoriť" v inšpektore */
+  A.mem.newDraft = function (attrs) {
+    attrs = attrs || {};
+    var area = attrs.area || AREAS[0], dep = attrs.dep || area.deps[0];
+    return {
+      __draft: true, id: "draft", slug: "draft", name: attrs.name || "", desc: attrs.desc || "",
+      dep: dep, area: area, type: attrs.type || "memory", str: 0.5, conf: 0.6,
+      acts: 0, age: 0, hist: A.series(1, 14, 1, 1, 0), tags: [], pinned: false, archived: false,
+      src: "mind_learn · manuálne", edits: [], today: true
+    };
+  };
+
   A.mem.inspect = function (nd) {
     if (typeof nd === "string") nd = _byId[nd];
     if (!nd) { A.toast("Uzol sa nenašiel", "warn"); return; }
@@ -302,10 +314,30 @@
         draft.tags.join("|") !== (nd.tags || []).join("|");
     }
     function actions() {
+      if (nd.__draft) {
+        return [
+          { label: "Zrušiť", kind: "ghost", fn: function () {
+              var filled = draft.name.trim() || draft.desc.trim();
+              if (filled) A.confirm("Zahodiť rozpísaný uzol?", "Návrh „" + (draft.name || "bez názvu") + "“ sa nikam neuloží.", function () { A.closeDetail(); }, "Zahodiť", true);
+              else A.closeDetail();
+            } },
+          { label: "Vytvoriť uzol", fn: function () {
+              if (!draft.name.trim()) { A.toast("Uzol potrebuje názov", "warn"); var i = A.$("#ins-name"); if (i) i.focus(); return; }
+              var area = mem.areaByKey(draft.areaK);
+              var dep = area.deps.filter(function (d) { return d.slug === draft.depSlug; })[0] || area.deps[0];
+              var created = mem.create({ name: draft.name.trim(), desc: draft.desc, type: draft.type, area: area, dep: dep, str: +draft.str, conf: +draft.conf, tags: draft.tags.slice() });
+              A.closeDetail();
+              A.toast("Uzol „" + created.name + "“ vytvorený", "ok", { undo: function () { mem.remove(created); A.toast("Uzol zahodený", "ok"); } });
+            } }
+        ];
+      }
       var acts = [
         { label: nd.pinned ? "Odopnúť" : "Pripnúť", kind: "ghost", fn: function () { mem.togglePin(nd); A.toast(nd.pinned ? "Uzol pripnutý a chránený" : "Odopnuté", "ok"); render(); } },
         { label: "Zabudnúť → archív", kind: "ghost", fn: function () {
-            A.confirm("Zabudnúť uzol?", "„" + nd.name + "“ sa presunie do archívu. Dá sa obnoviť; z pamäte a grafu zmizne.", function () { mem.archive(nd); A.closeDetail(); A.toast("Presunuté do archívu", "ok"); }, "Zabudnúť", true);
+            A.confirm("Zabudnúť uzol?", "„" + nd.name + "“ sa presunie do archívu. Dá sa obnoviť; z pamäte a grafu zmizne.", function () {
+              mem.archive(nd); A.closeDetail();
+              A.toast("„" + nd.name + "“ v archíve", "ok", { undo: function () { mem.restore(nd); A.toast("Uzol obnovený", "ok"); } });
+            }, "Zabudnúť", true);
           } }
       ];
       if (dirty()) acts.push({ label: "Uložiť", kind: "", fn: save });
@@ -319,7 +351,7 @@
       A.toast("Uzol uložený", "ok");
     }
     function render() {
-      A.detail(nd.name, body(), actions());
+      A.detail(nd.__draft ? "Nový uzol (návrh)" : nd.name, body(), actions());
       var root = A.$("#dp-body");
       /* live náhľad posuvníkov + dirty prepočet akcií */
       root.addEventListener("input", function (e) {
@@ -454,8 +486,10 @@
     },
     onChange: function (fn) { _asubs.push(fn); },
     create: function (attrs) {
+      var base = slugify(attrs.name || "appka"), slug = base, n = 2;
+      while (APPS.some(function (x) { return x.slug === slug; })) slug = base + "-" + (n++);
       var app = {
-        slug: slugify(attrs.name || "appka") + "-" + (APPS.length + 1),
+        slug: slug,
         name: (attrs.name || "Nová appka").trim(), kind: attrs.kind || "Vlastné",
         icon: attrs.icon || "cube", color: attrs.color || "var(--teal-3)",
         desc: (attrs.desc || "").trim(), host: attrs.host || "interné · lokálne · nové nasadenie",
@@ -470,7 +504,35 @@
       var i = APPS.indexOf(app); if (i > -1) APPS.splice(i, 1);
       aemit("remove", app);
     },
-    setPaused: function (app, v) { app.paused = !!v; aemit("update", app); },
+    setPaused: function (app, v) {
+      app.paused = !!v;
+      /* kaskáda (Q82): automatizácie appky sa reálne zastavia/obnovia */
+      A.autos.rows.forEach(function (r) {
+        if ((app.deps || []).indexOf(r.dep) < 0) return;
+        if (v) { if (r.state !== "Pozastavená (appka)") { r.__pre = r.state; r.state = "Pozastavená (appka)"; } }
+        else if (r.state === "Pozastavená (appka)") { r.state = r.__pre || "Aktívna"; r.__pre = null; }
+      });
+      A.autos.hist.unshift({ t: "teraz", agent: (v ? "Appka pozastavená — " : "Appka obnovená — ") + app.name, dep: (app.deps || [])[0] || "—", res: v ? "pauza" : "obnovené", tok: 0, min: 0, id: "—" });
+      if (A.autos.hist.length > 40) A.autos.hist.pop();
+      aemit("update", app);
+    },
+    /* jeden zdieľaný potvrdzovací tok pauzy (Q79) — používa detail appky aj Nastavenia */
+    confirmPause: function (app, after) {
+      var n = A.apps.autos(app).length;
+      if (!app.paused) {
+        A.confirm("Pozastaviť appku " + app.name + "?",
+          "Automatizácie appky (" + n + ") sa prepnú na „Pozastavená (appka)“, naplánované spustenia sa preskočia a KPI sa prepočítajú. Pamäť ani história behov sa nezmažú.",
+          function () {
+            A.apps.setPaused(app, true);
+            A.toast(app.name + " pozastavená · " + n + " automatizácií zastavených", "warn", { undo: function () { A.apps.setPaused(app, false); A.toast(app.name + " obnovená", "ok"); if (after) after(); } });
+            if (after) after();
+          }, "Pozastaviť", true);
+      } else {
+        A.apps.setPaused(app, false);
+        A.toast(app.name + " obnovená · automatizácie bežia", "ok");
+        if (after) after();
+      }
+    },
     /* --- väzby --- */
     autos: function (app) {
       return A.autos.rows.filter(function (r) { return (app.deps || []).indexOf(r.dep) > -1; });

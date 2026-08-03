@@ -439,6 +439,8 @@
         Ax.toast(on ? "Dopyt pôjde von cez MCP — pred odoslaním uvidíte náhľad brány" : "Dopyt zostáva lokálny", on ? "warn" : "ok");
       });
       $("#ch-gate-no").addEventListener("click", function () { $("#ch-gate").style.display = "none"; CH.pendingSend = null; Ax.toast("Odoslanie zrušené — von nešlo nič", "ok"); });
+      /* deep-link do konfigurácie brány (Q80) */
+      $("#ch-gate-cfg").addEventListener("click", function () { $("#ch-gate").style.display = "none"; CH.pendingSend = null; Ax.go("nastavenia", "zony"); });
       $("#ch-gate-yes").addEventListener("click", function () {
         $("#ch-gate").style.display = "none";
         var p = CH.pendingSend; CH.pendingSend = null; if (!p) return;
@@ -516,7 +518,17 @@
 
       Ax.registerCmd([{ label: "Chat — nová konverzácia", hint: "Práca", run: function () { Ax.go("chat"); setTimeout(function () { var b = $("#ch-new"); if (b) b.click(); }, 200); } }]);
     },
-    onShow: function () {
+    onShow: function (sub) {
+      /* sub-hash: #/chat/<appka> prepne kontext recallu (Q72) */
+      if (sub) {
+        var app = A().apps.bySlug(sub.indexOf("app:") === 0 ? sub.slice(4) : sub);
+        if (app) {
+          CH.app = app.slug;
+          var sel = $("#ch-app"); if (sel) sel.value = app.slug;
+          var bb = $("#ch-app-b"); if (bb) { bb.textContent = "appka: " + app.name; bb.className = "badge info"; }
+          A().toast("Kontext chatu: appka " + app.name, "ok");
+        }
+      }
       var mobile = w.innerWidth < 900, sh = $("#ch-shell");
       sh.style.gridTemplateColumns = mobile ? "1fr" : "270px 1fr";
       $("#ch-side").style.display = mobile ? "none" : "flex";
@@ -759,6 +771,16 @@
     onShow: function () { }
   };
 
+  /* zdroje zvončeka (Q74): neoverené tvrdenia smerníc + systémové udalosti */
+  if (w.Aura.registerInbox) {
+    w.Aura.registerInbox("smernica", "Smernica — neoverené tvrdenia", function () {
+      try { return SM.claims.filter(function (c) { return !c.ver; }).length; } catch (e) { return 0; }
+    }, function () { w.Aura.go("smernica"); });
+    w.Aura.registerInbox("sys", "Systém — zlyhané behy", function () {
+      return w.Aura.autos.rows.filter(function (r) { return r.state === "Chyba"; }).length;
+    }, function () { w.Aura.go("automatizacie"); });
+  }
+
   /* ============================================================
      4 · AUTOMATIZÁCIE
      ============================================================ */
@@ -778,7 +800,7 @@
         (!AU.filter.state || r.state === AU.filter.state) && (!appDeps || appDeps.indexOf(r.dep) > -1);
     });
   }
-  function auStateBadge(s) { return '<span class="badge ' + (s === "Aktívna" ? "ok" : s === "Chyba" ? "bad" : "warn") + '">' + esc(s) + "</span>"; }
+  function auStateBadge(s) { return '<span class="badge ' + (s === "Aktívna" ? "ok" : s === "Chyba" ? "bad" : "warn") + '">' + esc(s) + "</span>"; }  /* „Pozastavená (appka)" padá do warn */
   function auTrigBadge(t) { return '<span class="badge ' + (t === "cron" ? "info" : t === "MCP" ? "mute" : "warn") + '">' + esc(t) + "</span>"; }
   function auById(id) { for (var i = 0; i < AU.rows.length; i++) if (AU.rows[i].id === id) return AU.rows[i]; return null; }
 
@@ -931,6 +953,7 @@
   }
   function auFchip() {
     var host = $("#au-fchip"); if (!host) return;
+    if (!AU.fromLink) { host.innerHTML = ""; return; }   /* chip len pre deep-link — select stav vidno vedľa */
     var parts = [];
     if (AU.filter.app) { var ap = A().apps.bySlug(AU.filter.app); if (ap) parts.push("appka " + ap.name); }
     if (AU.filter.dep) parts.push(AU.filter.dep);
@@ -939,17 +962,38 @@
     host.innerHTML = parts.length ? '<div class="fchip">filtrované z <b>' + esc(parts.join(" · ")) + '</b> <button aria-label="Zrušiť filtre" id="au-fclr">✕</button></div>' : "";
     var b = $("#au-fclr"); if (b) b.addEventListener("click", function () { AU.filter = { dep: "", trig: "", state: "", app: "" }; $("#au-app").value = ""; $("#au-dep").value = ""; $("#au-trig").value = ""; $("#au-state").value = ""; auRender(); auFchip(); });
   }
+  /* poradie priorít ovplyvňuje poradie návrhov automatizácií — kandidát s najvyšším
+     skóre v prvej priorite ide prvý. Zmeny sú staged (Q67): draft → náhľad dopadu → Uložiť. */
+  var AU_PRIO_DRAFT = null;
+  function auPrioImpact(order) {
+    var score = { "Rýchlosť": function (r) { return 60 - r.avg; }, "Chyby": function (r) { return r.ok; }, "Čas": function (r) { return r.saved; }, "Náklady": function (r) { return -(r.avg * 40); } };
+    var top = AU.rows.slice().sort(function (a, b) { return score[order[0]](b) - score[order[0]](a); })[0];
+    return "prvá priorita „" + order[0] + "“ → najbližší kandidát na rozšírenie: <b>" + esc(top.name) + "</b>";
+  }
   function auRenderPrio() {
     var host = $("#au-prio"); if (!host) return;
-    host.innerHTML = AU.prio.map(function (p, i) {
+    var order = AU_PRIO_DRAFT || AU.prio;
+    var dirty = !!AU_PRIO_DRAFT && AU_PRIO_DRAFT.join() !== AU.prio.join();
+    host.innerHTML = order.map(function (p, i) {
       return '<div class="step"><span class="r">' + (i + 1) + '</span><b>' + esc(p) + '</b><span>' + esc(AU.prioDesc[p]) + '</span>' +
         '<div style="display:flex;gap:4px;margin-top:6px">' +
         '<button class="btn ghost" data-pup="' + i + '" aria-label="Presunúť vyššie" ' + (i === 0 ? "disabled" : "") + ' style="padding:2px 8px;font-size:var(--fs-label)">▲</button>' +
-        '<button class="btn ghost" data-pdn="' + i + '" aria-label="Presunúť nižšie" ' + (i === AU.prio.length - 1 ? "disabled" : "") + ' style="padding:2px 8px;font-size:var(--fs-label)">▼</button></div></div>' +
-        (i < AU.prio.length - 1 ? '<span class="arrow">›</span>' : "");
-    }).join("");
-    $$("#au-prio [data-pup]").forEach(function (b) { b.addEventListener("click", function () { var i = +b.getAttribute("data-pup"); if (i > 0) { var t = AU.prio[i - 1]; AU.prio[i - 1] = AU.prio[i]; AU.prio[i] = t; auRenderPrio(); A().toast("Priorita „" + AU.prio[i - 1] + "“ posunutá vyššie", "ok"); } }); });
-    $$("#au-prio [data-pdn]").forEach(function (b) { b.addEventListener("click", function () { var i = +b.getAttribute("data-pdn"); if (i < AU.prio.length - 1) { var t = AU.prio[i + 1]; AU.prio[i + 1] = AU.prio[i]; AU.prio[i] = t; auRenderPrio(); A().toast("Priorita „" + AU.prio[i + 1] + "“ posunutá nižšie", "ok"); } }); });
+        '<button class="btn ghost" data-pdn="' + i + '" aria-label="Presunúť nižšie" ' + (i === order.length - 1 ? "disabled" : "") + ' style="padding:2px 8px;font-size:var(--fs-label)">▼</button></div></div>' +
+        (i < order.length - 1 ? '<span class="arrow">›</span>' : "");
+    }).join("") +
+      '<div style="flex:1 1 100%;display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px">' +
+      '<span class="note" style="margin:0" id="au-prio-impact">Ovplyvňuje: ' + auPrioImpact(order) + "</span><span class=\"sp\" style=\"flex:1\"></span>" +
+      (dirty ? '<button class="btn ghost" id="au-prio-cancel">Zrušiť</button><button class="btn" id="au-prio-save">Uložiť poradie</button>' : "") + "</div>";
+    function swap(i, j) {
+      AU_PRIO_DRAFT = (AU_PRIO_DRAFT || AU.prio.slice());
+      var t = AU_PRIO_DRAFT[j]; AU_PRIO_DRAFT[j] = AU_PRIO_DRAFT[i]; AU_PRIO_DRAFT[i] = t;
+      auRenderPrio();
+    }
+    $$("#au-prio [data-pup]").forEach(function (b) { b.addEventListener("click", function () { var i = +b.getAttribute("data-pup"); if (i > 0) swap(i, i - 1); }); });
+    $$("#au-prio [data-pdn]").forEach(function (b) { b.addEventListener("click", function () { var i = +b.getAttribute("data-pdn"); if (i < order.length - 1) swap(i, i + 1); }); });
+    var sv = $("#au-prio-save"), cn = $("#au-prio-cancel");
+    if (sv) sv.addEventListener("click", function () { AU.prio = AU_PRIO_DRAFT.slice(); AU_PRIO_DRAFT = null; auRenderPrio(); A().toast("Poradie priorít uložené", "ok"); });
+    if (cn) cn.addEventListener("click", function () { AU_PRIO_DRAFT = null; auRenderPrio(); });
   }
   function auRender() {
     auRenderRows(A().applySort($("#au-tbl"), auVisible()));
@@ -969,23 +1013,33 @@
       }
       auFillApps();
       Ax.apps.onChange(auFillApps);
-      ["#au-app", "#au-dep", "#au-trig", "#au-state"].forEach(function (sel) { $(sel).addEventListener("change", function () { AU.filter.app = $("#au-app").value; AU.filter.dep = $("#au-dep").value; AU.filter.trig = $("#au-trig").value; AU.filter.state = $("#au-state").value; auRender(); auFchip(); }); });
+      ["#au-app", "#au-dep", "#au-trig", "#au-state"].forEach(function (sel) { $(sel).addEventListener("change", function () { AU.fromLink = false; AU.filter.app = $("#au-app").value; AU.filter.dep = $("#au-dep").value; AU.filter.trig = $("#au-trig").value; AU.filter.state = $("#au-state").value; auRender(); auFchip(); }); });
 
-      var totalSaved = AU.rows.reduce(function (s, r) { return s + r.saved; }, 0);
-      var avgOk = AU.rows.reduce(function (s, r) { return s + r.ok; }, 0) / AU.rows.length;
-      $("#au-kpi").innerHTML = [
-        { l: "Aktívne", v: F(AU.rows.filter(function (r) { return r.state === "Aktívna"; }).length, 0), d: "z " + AU.rows.length + " celkom" },
-        { l: "Behov dnes", v: "38", d: "+6 oproti včera" },
-        { l: "Úspešnosť", v: F(avgOk, 1), u: "%", d: "priemer" },
-        { l: "Ušetrený čas", v: F(totalSaved, 0), u: "h", d: "za mesiac" }
-      ].map(function (k, i) { return '<button class="kpi' + (i === 0 ? " tl" : "") + '" data-k="' + i + '"><span class="kl">' + esc(k.l) + '</span><b>' + esc(k.v) + (k.u ? ' <em>' + k.u + "</em>" : "") + '</b><span class="kd">' + esc(k.d) + "</span></button>"; }).join("");
-      $$("#au-kpi .kpi").forEach(function (b, i) {
-        b.addEventListener("click", function () {
-          if (i === 0) { AU.filter = { dep: "", trig: "", state: "Aktívna" }; $("#au-state").value = "Aktívna"; auRender(); auFchip(); Ax.toast("Filter: aktívne", "ok"); }
-          else if (i === 3) Ax.detail("Ušetrený čas", "<dl><dt>Spolu</dt><dd>" + F(totalSaved, 0) + " h / mesiac</dd><dt>Najviac</dt><dd>Copywriting</dd></dl><p class='note'>Súčet odhadovaného ušetreného času naprieč automatizáciami. Odhad, nie meranie.</p>", []);
-          else Ax.toast("Behov dnes: 38 · úspešnosť " + F(avgOk, 1) + " %", "ok");
+      function auKpi() {
+        var totalSaved = AU.rows.reduce(function (s, r) { return s + r.saved; }, 0);
+        var avgOk = AU.rows.reduce(function (s, r) { return s + r.ok; }, 0) / AU.rows.length;
+        var today = AU_HIST.length;
+        $("#au-kpi").innerHTML = [
+          { l: "Aktívne", v: F(AU.rows.filter(function (r) { return r.state === "Aktívna"; }).length, 0), d: "z " + AU.rows.length + " celkom" },
+          { l: "Behov dnes", v: F(today, 0), d: "vo feede histórie" },
+          { l: "Úspešnosť", v: F(avgOk, 1), u: "%", d: "priemer automatizácií" },
+          { l: "Ušetrený čas", v: F(totalSaved, 0), u: "h", d: "za mesiac" }
+        ].map(function (k, i) { return '<button class="kpi' + (i === 0 ? " tl" : "") + '" data-k="' + i + '"><span class="kl">' + esc(k.l) + '</span><b>' + esc(k.v) + (k.u ? ' <em>' + k.u + "</em>" : "") + '</b><span class="kd">' + esc(k.d) + "</span></button>"; }).join("");
+        $$("#au-kpi .kpi").forEach(function (b, i) {
+          b.addEventListener("click", function () {
+            if (i === 0) { AU.filter.state = AU.filter.state === "Aktívna" ? "" : "Aktívna"; $("#au-state").value = AU.filter.state; auRender(); auFchip(); }
+            else if (i === 1) Ax.detail("Behy dnes", '<div class="feed">' + AU_HIST.map(function (h) {
+              return '<div class="fi" style="cursor:default"><span class="fd' + (h.res === "chyba" ? " r" : h.res === "čaká" ? " a" : " ok") + '"></span><span class="fx"><b style="font-size:var(--fs-sm)">' + esc(h.agent) + "</b><span>" + esc(h.dep) + " · " + esc(h.res) + '</span></span><span class="ft">' + esc(h.t) + "</span></div>";
+            }).join("") + "</div>", []);
+            else if (i === 2) Ax.detail("Úspešnosť po automatizáciách", "<dl>" + AU.rows.slice().sort(function (a, b) { return a.ok - b.ok; }).map(function (r) {
+              return "<dt>" + esc(r.name) + '</dt><dd class="num">' + F(r.ok, 0) + " %</dd>";
+            }).join("") + '</dl><p class="note">Zoradené od najslabšej. Klik na riadok v tabuľke nižšie otvorí detail.</p>', []);
+            else Ax.detail("Ušetrený čas", "<dl><dt>Spolu</dt><dd>" + F(totalSaved, 0) + " h / mesiac</dd><dt>Najviac</dt><dd>Copywriting</dd></dl><p class='note'>Súčet odhadovaného ušetreného času naprieč automatizáciami. Odhad, nie meranie.</p>", []);
+          });
         });
-      });
+      }
+      auKpi();
+      Ax.apps.onChange(function () { auKpi(); auRender(); auFchip(); });
 
       auRenderPrio();
       $("#au-prio-reset").addEventListener("click", function () { AU.prio = ["Rýchlosť", "Chyby", "Čas", "Náklady"]; auRenderPrio(); Ax.toast("Poradie priorít obnovené", "ok"); });
@@ -1053,10 +1107,12 @@
     onShow: function (sub) {
       if (!sub) return;
       /* deep-link z appky: #/automatizacie/app:<slug> */
-      if (sub.indexOf("app:") === 0) {
-        var slug = sub.slice(4);
+      var plainApp = A().apps.bySlug(sub);
+      if (sub.indexOf("app:") === 0 || plainApp) {
+        var slug = plainApp ? sub : sub.slice(4);
         if (A().apps.bySlug(slug)) {
           AU.filter = { dep: "", trig: "", state: "", app: slug };
+          AU.fromLink = true;
           var s = $("#au-app"); if (s) s.value = slug;
           ["#au-dep", "#au-trig", "#au-state"].forEach(function (q) { var e = $(q); if (e) e.value = ""; });
           auRender(); auFchip();

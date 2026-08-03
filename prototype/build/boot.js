@@ -91,6 +91,34 @@
   }
   injectSections();
 
+  /* odznaky pôvodu dát: max 1 rad na sekciu — agregát v hlavičke .sech, karty stíchnu (Q37) */
+  (function badgeQuota() {
+    document.querySelectorAll(".view").forEach(function (view) {
+      var current = null;
+      Array.prototype.forEach.call(view.children, function (el) {
+        if (el.classList.contains("sech")) { current = { head: el, kinds: {} }; el.__bq = current; return; }
+        if (!current) return;
+        el.querySelectorAll(".srcbadge").forEach(function (b) {
+          var kind = b.classList.contains("meas") ? "meas" : b.classList.contains("sim") ? "sim" : "demo";
+          current.kinds[kind] = b.textContent;
+          b.setAttribute("title", b.textContent);
+          b.setAttribute("aria-label", b.textContent);
+          b.textContent = "";
+          b.classList.add("src-quiet");
+        });
+      });
+      view.querySelectorAll(".sech").forEach(function (h) {
+        var q = h.__bq; if (!q || !Object.keys(q.kinds).length) return;
+        Object.keys(q.kinds).forEach(function (k) {
+          var b = document.createElement("span");
+          b.className = "srcbadge " + k;
+          b.textContent = q.kinds[k];
+          h.appendChild(b);
+        });
+      });
+    });
+  })();
+
   /* reveal pri scrolle — sekcie a karty sa jemne vynoria; reduced-motion to CSS vypína */
   (function reveal() {
     if (!("IntersectionObserver" in w)) return;
@@ -186,28 +214,46 @@
   if (A.mem) A.mem.onChange(navBadges);
   if (A.apps) A.apps.onChange(navBadges);
 
-  /* zvonček: aktívne upozornenia s názvom appky + skok (Q51/Q72) */
+  /* zvonček: derivovaný zo zaregistrovaných zdrojov (Q74) + alerty s názvom appky (Q51) */
   $("#bellBtn").addEventListener("click", function () {
-    var list = A.alerts ? A.alerts() : [];
-    if (!list.length) { A.go("observabilita"); return; }
-    var html = '<div class="feed">' + list.map(function (a, i) {
-      var app = A.alertApp ? A.alertApp(a) : null;
-      return '<button class="fi" data-al="' + i + '"><span class="fd' + (a.lvl === "info" ? "" : a.lvl === "warn" ? " a" : " r") + '"></span>' +
-        '<span class="fx"><b style="font-size:var(--fs-sm)">' + (app ? A.esc(app.name) + " — " : "") + A.esc(a.t) + "</b><span>" + A.esc(a.d) + " · od " + A.esc(a.since) + "</span></span></button>";
-    }).join("") + "</div>";
-    A.detail("Aktívne upozornenia (" + list.length + ")", html, [
+    var srcs = A.inbox ? A.inbox() : [];
+    var alerts = A.alerts ? A.alerts() : [];
+    if (!srcs.length && !alerts.length) { A.toast("Žiadne nevybavené položky", "ok"); return; }
+    var html = "";
+    if (alerts.length) {
+      html += '<p class="eyet" style="margin-bottom:6px">Upozornenia</p><div class="feed">' + alerts.map(function (a, i) {
+        var app = A.alertApp ? A.alertApp(a) : null;
+        return '<button class="fi" data-al="' + i + '"><span class="fd' + (a.lvl === "info" ? "" : a.lvl === "warn" ? " a" : " r") + '"></span>' +
+          '<span class="fx"><b style="font-size:var(--fs-sm)">' + (app ? A.esc(app.name) + " — " : "") + A.esc(a.t) + "</b><span>" + A.esc(a.d) + " · od " + A.esc(a.since) + "</span></span></button>";
+      }).join("") + "</div>";
+    }
+    var others = srcs.filter(function (x) { return x.key !== "alerts"; });
+    if (others.length) {
+      html += '<p class="eyet" style="margin:12px 0 6px">Ďalšie fronty</p><div class="feed">' + others.map(function (x, i) {
+        return '<button class="fi" data-src="' + i + '"><span class="fd"></span><span class="fx"><b style="font-size:var(--fs-sm)">' + A.esc(x.label) + '</b><span>klik otvorí</span></span><span class="ft num">' + x.n + "</span></button>";
+      }).join("") + "</div>";
+    }
+    var total = srcs.reduce(function (s, x) { return s + x.n; }, 0);
+    A.detail("Nevybavené (" + total + ")", html, [
       { label: "Otvoriť Observabilitu", fn: function () { A.closeDetail(); A.go("observabilita"); } }
     ]);
     setTimeout(function () {
       A.$$("#dp-body [data-al]").forEach(function (b) {
         b.addEventListener("click", function () {
-          var a = list[+b.getAttribute("data-al")], app = A.alertApp ? A.alertApp(a) : null;
+          var a = alerts[+b.getAttribute("data-al")], app = A.alertApp ? A.alertApp(a) : null;
           A.closeDetail();
           if (app) A.go("appky", app.slug); else A.go("observabilita");
         });
       });
+      A.$$("#dp-body [data-src]").forEach(function (b) {
+        b.addEventListener("click", function () {
+          var x = others[+b.getAttribute("data-src")];
+          A.closeDetail(); if (x && x.go) x.go();
+        });
+      });
     }, 20);
   });
+  if (A.refreshBell) { A.refreshBell(); setInterval(A.refreshBell, 4000); }
 
   /* ---------- globálne „+ Nový" ---------- */
   var newBtn = $("#newBtn"), newPop = $("#newPop");

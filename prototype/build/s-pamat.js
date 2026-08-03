@@ -1216,8 +1216,14 @@
       '<div class="filt" style="margin:0;gap:8px"><button class="btn" type="button" id="pm-tb-go">Spracovať</button>' +
       '<button class="btn ghost" type="button" id="pm-tb-off">Neskôr</button></div></div>';
     $("#pm-tb-go").addEventListener("click", function () { switchTab("dnes"); triageBar(); });
-    $("#pm-tb-off").addEventListener("click", function () { PM.triageOff = true; triageBar(); A.toast("Triage odložený — nájdeš ho na tabe Dnes", "ok"); });
+    $("#pm-tb-off").addEventListener("click", function () {
+      PM.triageOff = true; triageBar();
+      A.toast("Pripomeniem zajtra — uzly ostávajú na tabe Dnes", "ok", { undo: function () { PM.triageOff = false; triageBar(); } });
+    });
   }
+
+  /* zdroj zvončeka: nevybavený triage (Q74) */
+  if (A.registerInbox) A.registerInbox("triage", "Triage — dnes pridané uzly", function () { return PM.triageOff ? 0 : mem().today().length; }, function () { A.go("pamat", "dnes"); });
 
   A.screens.pamat = {
     title: "Pamäť", group: "Pamäť",
@@ -1228,15 +1234,15 @@
       hlPresets(); hlSaved(); hlResults();
 
       /* KPI */
-      $("#pm-k1").addEventListener("click", function () {
+      $("#pm-k1").addEventListener("click", function () { A.go("pamat", "zoznam"); });
+      $("#pm-k2").addEventListener("click", function () {
         A.detail("Rozdelenie uzlov", "<dl>" + mem().AREAS.map(function (a) {
           var c = mem().nodes().filter(function (n) { return n.area.k === a.k; }).length;
           return "<dt>" + esc(mem().zoneLabel(a)) + "</dt><dd>" + F(c, 0) + " uzlov</dd>";
         }).join("") + "<dt>Systémové jadrá</dt><dd>" + F(mem().CORE_NODES, 0) + "</dd></dl><p>Živá snímka z modelu Aura.mem.</p>", []);
       });
-      $("#pm-k2").addEventListener("click", function () { resetFilters(); switchTab("graf"); A.toast("Filter oblastí zrušený", "ok"); });
-      $("#pm-k3").addEventListener("click", function () { presetWeak(); });
-      $("#pm-k4").addEventListener("click", function () { switchTab("dnes"); });
+      $("#pm-k3").addEventListener("click", function () { A.go("pamat", "slabe"); });
+      $("#pm-k4").addEventListener("click", function () { A.go("pamat", "dnes"); });
 
       /* domov */
       function homeGo() { switchTab("hladanie"); runSearch($("#pm-home-q").value); }
@@ -1270,7 +1276,12 @@
       });
 
       /* taby / pohľady */
-      $("#pm-tabs").addEventListener("click", function (e) { var b = e.target.closest("button[data-tab]"); if (b) { switchTab(b.getAttribute("data-tab")); triageBar(); } });
+      $("#pm-tabs").addEventListener("click", function (e) {
+        var b = e.target.closest("button[data-tab]"); if (!b) return;
+        var t = b.getAttribute("data-tab");
+        A.go("pamat", t === "graf" ? null : t);
+        if (t === "graf") { switchTab("graf"); triageBar(); }
+      });
       $("#pm-views").addEventListener("click", function (e) { var b = e.target.closest("button[data-view]"); if (b) switchView(b.getAttribute("data-view")); });
 
       /* sieť — vrstvy (len CSS/štýl, žiadny rebuild) */
@@ -1377,10 +1388,11 @@
       if (w.AuraChart) setTimeout(w.AuraChart.reflowAll, 40);
       if (PM.inited && PM.tab === "graf" && PM.view === "siet") setTimeout(function () { netDraw(); }, 40);
       triageBar();
-      if (!sub) return;
+      if (!sub) { if (PM.inited && PM.tab !== "graf") switchTab("graf"); return; }
       if (mem().byId(sub)) { mem().inspect(sub); return; }
       if (sub === "slabe" || sub === "weak") { presetWeak(); return; }
       if (sub === "cistenie" || sub === "cleanup") { switchTab("cistenie"); triageBar(); return; }
+      if (sub === "zoznam") { switchTab("graf"); switchView("zoznam"); return; }
       if (sub.indexOf("app:") === 0) {
         var app = A.apps.bySlug(sub.slice(4));
         if (app) {
@@ -1403,8 +1415,9 @@
 
   /* helpers viazané na obrazovku */
   function createNode() {
-    var nd = mem().create({ name: "Nový uzol", area: mem().AREAS[0], type: "memory" });
-    A.go("pamat"); mem().inspect(nd);
+    A.go("pamat");
+    mem().inspect(mem().newDraft());
+    setTimeout(function () { var i = A.$("#ins-name"); if (i) { i.focus(); i.select(); } }, 120);
   }
   function presetWeak() {
     switchTab("graf"); switchView("zoznam");

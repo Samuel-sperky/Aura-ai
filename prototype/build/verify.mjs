@@ -510,15 +510,29 @@ const labelled = await p.evaluate(() => {
   return { n: f.length, ok: f.filter(e => e.labels?.length || e.getAttribute('aria-label')).length };
 });
 labelled.n === labelled.ok ? O('appky: formulár má label ku každému poľu') : F(`appky: ${labelled.n - labelled.ok} polí formulára bez labelu`);
+// prázdny submit musí dať viditeľnú chybu (Q84)
+await p.evaluate(() => document.querySelector('#af-save').click());
+await p.waitForTimeout(300);
+const err = await p.evaluate(() => (document.querySelector('#af-err')?.textContent || ''));
+err.includes('názov') ? O('appky: prázdny submit ukáže inline chybu') : F('appky: prázdny submit mlčí');
 await p.fill('#af-name', 'Testovacia appka');
 await p.evaluate(() => document.querySelector('#af-save').click());
-await p.waitForTimeout(900);
-const created = await p.evaluate(() => ({ hash: location.hash, title: document.getElementById('title').textContent, tabs: document.querySelectorAll('#ap-tabs button').length }));
-created.title === 'Testovacia appka' && created.tabs >= 6
-  ? O('appky: formulár vytvoril appku a pribudla do tabov')
+await p.waitForTimeout(700);
+// Q86: toast s linkom „Zobraziť detail" namiesto redirectu
+const created = await p.evaluate(() => ({
+  toast: [...document.querySelectorAll('.toast')].map(t => t.textContent).join(' | '),
+  inList: !!document.querySelector('#ap-cards .appcard[data-slug="testovacia-appka"]'),
+  slug: (window.Aura.apps.bySlug('testovacia-appka') || {}).slug
+}));
+created.toast.includes('vytvorená') && created.inList && created.slug === 'testovacia-appka'
+  ? O('appky: vytvorenie = toast s linkom, čistý slug, karta v zozname')
   : F('appky: vytvorenie appky zlyhalo (' + JSON.stringify(created) + ')');
-const emptyState = await p.evaluate(() => (document.querySelector('#ap-body .empty')?.innerText || '').slice(0, 40));
-emptyState ? O('appky: nová appka má prázdny stav s návodom') : W('appky: nová appka bez prázdneho stavu');
+await p.evaluate(() => { [...document.querySelectorAll('.toast .toast-undo')].find(b => b.textContent.includes('Zobraziť'))?.click(); });
+await p.waitForTimeout(800);
+const emptyState = await p.evaluate(() => ({ title: document.getElementById('title').textContent, empty: (document.querySelector('#ap-body .empty')?.innerText || '').slice(0, 40) }));
+emptyState.title === 'Testovacia appka' && emptyState.empty
+  ? O('appky: link z toastu otvoril detail s prázdnym stavom')
+  : W('appky: detail novej appky bez prázdneho stavu (' + JSON.stringify(emptyState) + ')');
 
 // filter appky v Automatizáciách
 await go('automatizacie', 'app:studio');

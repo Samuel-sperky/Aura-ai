@@ -244,6 +244,12 @@
           <span class="kd" id="n-kpi-q-d">8 420 dopytov · elektrina / dopyt</span>
           <span class="spk" id="n-spk-q"></span>
         </button>
+        <button class="kpi" type="button" id="n-kpi-proj">
+          <span class="kl">Projekcia mesiaca</span>
+          <b><span class="kv" id="n-proj-v">—</span> <em>kWh</em></b>
+          <span class="kd" id="n-proj-d">odhad z priebehu augusta</span>
+          <span class="spk" id="n-spk-proj"></span>
+        </button>
       </div>
     </div>
   </div>
@@ -349,6 +355,21 @@
   <p class="eyet">Systém · observabilita</p>
   <p class="lead">Upozornenia, logy a dostupnosť na jednom mieste. Prepni sa medzi tabmi;
     hlboké odkazy z iných obrazoviek predvyplnia filter logov.</p>
+
+    <div class="row g4">
+      <button class="kpi" type="button" id="u-kpi-new">
+        <span class="kl">Vzniknuté · 30 dní</span><b><span class="kv" id="u-s-new">—</span></b>
+        <span class="kd">všetky závažnosti</span></button>
+      <button class="kpi" type="button" id="u-kpi-done">
+        <span class="kl">Vyriešené · 30 dní</span><b><span class="kv" id="u-s-done">—</span></b>
+        <span class="kd">vrátane stlmených</span></button>
+      <button class="kpi" type="button" id="u-kpi-mttr">
+        <span class="kl">Medián času do vyriešenia</span><b><span class="kv" id="u-s-mttr">—</span></b>
+        <span class="kd">od vzniku po zavretie</span></button>
+      <button class="kpi tl" type="button" id="u-kpi-up">
+        <span class="kl">Dostupnosť · 90 dní</span><b><span class="kv" id="u-s-up">—</span></b>
+        <span class="kd">1 výpadok Ollamy</span></button>
+    </div>
 
   <div class="seg" id="ob-tabs" role="tablist" aria-label="Observabilita">
     <button type="button" data-t="upozornenia" aria-pressed="true">Upozornenia</button>
@@ -504,20 +525,7 @@
 
   <!-- ---------- TAB: DOSTUPNOSŤ ---------- -->
   <div class="ob-tab" id="ob-dostupnost" hidden>
-    <div class="row g4">
-      <button class="kpi" type="button" id="u-kpi-new">
-        <span class="kl">Vzniknuté · 30 dní</span><b><span class="kv" id="u-s-new">—</span></b>
-        <span class="kd">všetky závažnosti</span></button>
-      <button class="kpi" type="button" id="u-kpi-done">
-        <span class="kl">Vyriešené · 30 dní</span><b><span class="kv" id="u-s-done">—</span></b>
-        <span class="kd">vrátane stlmených</span></button>
-      <button class="kpi" type="button" id="u-kpi-mttr">
-        <span class="kl">Medián času do vyriešenia</span><b><span class="kv" id="u-s-mttr">—</span></b>
-        <span class="kd">od vzniku po zavretie</span></button>
-      <button class="kpi tl" type="button" id="u-kpi-up">
-        <span class="kl">Dostupnosť · 90 dní</span><b><span class="kv" id="u-s-up">—</span></b>
-        <span class="kd">1 výpadok Ollamy</span></button>
-    </div>
+
 
     <div class="row">
       <div class="card">

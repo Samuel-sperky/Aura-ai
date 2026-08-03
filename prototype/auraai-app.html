@@ -404,6 +404,9 @@ mark{background:color-mix(in srgb,var(--gold) 42%,transparent);color:inherit;bor
   border:1px solid var(--line);border-left:3px solid var(--teal);border-radius:var(--r-m);
   padding:var(--sp-3) var(--sp-4);font-size:var(--fs-sm);box-shadow:var(--shadow-2);animation:tin .22s ease;max-width:42ch}
 @supports not (backdrop-filter:blur(1px)){.toast{background:var(--card)}}
+.toast{display:flex;align-items:center;gap:var(--sp-3)}
+.toast-undo{border:1px solid var(--line);background:var(--card-2);color:var(--accentText);border-radius:var(--r-s);padding:2px 10px;font-size:var(--fs-sm);font-weight:600;cursor:pointer}
+.toast-undo:hover{border-color:var(--teal)}
 .toast.ok{border-left-color:var(--good)}.toast.bad{border-left-color:var(--red)}.toast.warn{border-left-color:var(--amber)}
 @keyframes tin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 
@@ -888,6 +891,21 @@ body{position:relative;z-index:0}
 .rv{opacity:0;transform:translateY(10px)}
 .rv.in{opacity:1;transform:none;transition:opacity .5s ease,transform .5s cubic-bezier(.2,.7,.2,1)}
 @media (prefers-reduced-motion:reduce){.rv{opacity:1;transform:none}.rv.in{transition:none}}
+
+/* explicitný switch stavu (appka Beží/Pozastavená) */
+.swx{display:inline-flex;align-items:center;gap:var(--sp-2);border:0;background:none;cursor:pointer;padding:4px 6px;border-radius:var(--r-m)}
+.swx:hover{background:color-mix(in srgb,var(--teal) 7%,transparent)}
+.swx-t{width:34px;height:19px;border-radius:99px;background:var(--card-2);border:1px solid var(--line);position:relative;transition:background .18s,border-color .18s}
+.swx-k{position:absolute;top:2px;left:2px;width:13px;height:13px;border-radius:50%;background:var(--ink-3);transition:transform .18s,background .18s}
+.swx[aria-checked="true"] .swx-t{background:color-mix(in srgb,var(--good) 30%,var(--card-2));border-color:var(--good)}
+.swx[aria-checked="true"] .swx-k{transform:translateX(15px);background:var(--good)}
+.swx-l{font-size:var(--fs-sm);font-weight:600}
+/* odznaky na kartách appiek sú informačné — bez klik afordancie (Q70) */
+.appcard .badge{pointer-events:none}
+
+/* kartové srcbadge stíchnu — pôvod dát nesie hlavička sekcie (Q37); karta drží len bodku s tooltipom */
+.srcbadge.src-quiet{padding:1px 4px;border:0;background:none;gap:0}
+.srcbadge.src-quiet::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:currentColor;opacity:.55}
 </style>
 </head>
 <body>
@@ -1215,7 +1233,7 @@ body{position:relative;z-index:0}
 
     <div class="sech"><span class="n">02</span><h2>Appky</h2><p>Problémové sú hore. Klik na kartu otvorí dashboard appky.</p><span class="sp" style="flex:1"></span><button class="btn" id="ap-new">+ Nová appka</button></div>
     <div class="card p0" id="ap-formcard" hidden><div id="ap-form"></div></div>
-    <div class="row g3" id="ap-cards"></div>
+    <div class="row g4" id="ap-cards"></div>
   </div>
 
   <!-- ---------- detail appky ---------- -->
@@ -1325,6 +1343,7 @@ body{position:relative;z-index:0}
             </div>
           </div>
           <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px">
+            <button class="btn ghost" id="ch-gate-cfg">Upraviť pravidlá brány</button>
             <button class="btn ghost" id="ch-gate-no">Zrušiť odoslanie</button>
             <button class="btn" id="ch-gate-yes">Odoslať filtrované von</button>
           </div>
@@ -1755,6 +1774,12 @@ body{position:relative;z-index:0}
           <span class="kd" id="n-kpi-q-d">8 420 dopytov · elektrina / dopyt</span>
           <span class="spk" id="n-spk-q"></span>
         </button>
+        <button class="kpi" type="button" id="n-kpi-proj">
+          <span class="kl">Projekcia mesiaca</span>
+          <b><span class="kv" id="n-proj-v">—</span> <em>kWh</em></b>
+          <span class="kd" id="n-proj-d">odhad z priebehu augusta</span>
+          <span class="spk" id="n-spk-proj"></span>
+        </button>
       </div>
     </div>
   </div>
@@ -1860,6 +1885,21 @@ body{position:relative;z-index:0}
   <p class="eyet">Systém · observabilita</p>
   <p class="lead">Upozornenia, logy a dostupnosť na jednom mieste. Prepni sa medzi tabmi;
     hlboké odkazy z iných obrazoviek predvyplnia filter logov.</p>
+
+    <div class="row g4">
+      <button class="kpi" type="button" id="u-kpi-new">
+        <span class="kl">Vzniknuté · 30 dní</span><b><span class="kv" id="u-s-new">—</span></b>
+        <span class="kd">všetky závažnosti</span></button>
+      <button class="kpi" type="button" id="u-kpi-done">
+        <span class="kl">Vyriešené · 30 dní</span><b><span class="kv" id="u-s-done">—</span></b>
+        <span class="kd">vrátane stlmených</span></button>
+      <button class="kpi" type="button" id="u-kpi-mttr">
+        <span class="kl">Medián času do vyriešenia</span><b><span class="kv" id="u-s-mttr">—</span></b>
+        <span class="kd">od vzniku po zavretie</span></button>
+      <button class="kpi tl" type="button" id="u-kpi-up">
+        <span class="kl">Dostupnosť · 90 dní</span><b><span class="kv" id="u-s-up">—</span></b>
+        <span class="kd">1 výpadok Ollamy</span></button>
+    </div>
 
   <div class="seg" id="ob-tabs" role="tablist" aria-label="Observabilita">
     <button type="button" data-t="upozornenia" aria-pressed="true">Upozornenia</button>
@@ -2015,20 +2055,7 @@ body{position:relative;z-index:0}
 
   <!-- ---------- TAB: DOSTUPNOSŤ ---------- -->
   <div class="ob-tab" id="ob-dostupnost" hidden>
-    <div class="row g4">
-      <button class="kpi" type="button" id="u-kpi-new">
-        <span class="kl">Vzniknuté · 30 dní</span><b><span class="kv" id="u-s-new">—</span></b>
-        <span class="kd">všetky závažnosti</span></button>
-      <button class="kpi" type="button" id="u-kpi-done">
-        <span class="kl">Vyriešené · 30 dní</span><b><span class="kv" id="u-s-done">—</span></b>
-        <span class="kd">vrátane stlmených</span></button>
-      <button class="kpi" type="button" id="u-kpi-mttr">
-        <span class="kl">Medián času do vyriešenia</span><b><span class="kv" id="u-s-mttr">—</span></b>
-        <span class="kd">od vzniku po zavretie</span></button>
-      <button class="kpi tl" type="button" id="u-kpi-up">
-        <span class="kl">Dostupnosť · 90 dní</span><b><span class="kv" id="u-s-up">—</span></b>
-        <span class="kd">1 výpadok Ollamy</span></button>
-    </div>
+
 
     <div class="row">
       <div class="card">
@@ -3008,14 +3035,55 @@ body{position:relative;z-index:0}
   };
 
   /* ---------- toast ---------- */
-  A.toast = function (msg, kind) {
+  A.toast = function (msg, kind, opts) {
+    opts = opts || {};
     var box = $("#toasts");
     var t = document.createElement("div");
     t.className = "toast " + (kind || "");
     t.setAttribute("role", "status");
-    t.textContent = msg;
+    var span = document.createElement("span");
+    span.textContent = msg;
+    t.appendChild(span);
+    if (opts.undo) {
+      var b = document.createElement("button");
+      b.className = "toast-undo"; b.type = "button"; b.textContent = opts.undoLabel || "Späť";
+      b.addEventListener("click", function () { kill(0); try { opts.undo(); } catch (e) { console.error(e); } });
+      t.appendChild(b);
+    }
     box.appendChild(t);
-    setTimeout(function () { t.style.opacity = "0"; setTimeout(function () { t.remove(); }, 300); }, 3200);
+    var life = opts.undo ? 7000 : 5000, timer = null, born = Date.now(), left = life;
+    function kill(delay) {
+      clearTimeout(timer);
+      setTimeout(function () { t.style.opacity = "0"; setTimeout(function () { t.remove(); }, 300); }, delay || 0);
+    }
+    function arm(ms) { timer = setTimeout(function () { kill(0); }, ms); }
+    /* hover pozastaví odpočet */
+    t.addEventListener("mouseenter", function () { clearTimeout(timer); left -= Date.now() - born; });
+    t.addEventListener("mouseleave", function () { born = Date.now(); arm(Math.max(900, left)); });
+    arm(life);
+    return t;
+  };
+  /* deštruktívna akcia = toast so Späť (7 s) */
+  A.undoToast = function (msg, undoFn, kind) { return A.toast(msg, kind || "ok", { undo: undoFn }); };
+
+  /* guard pred odchodom z obrazovky s neuloženými zmenami */
+  A.setLeaveGuard = function (fn) { A.state._leaveGuard = fn || null; };
+
+  /* ---------- inbox: zvonček počíta zo zaregistrovaných zdrojov (Q74) ---------- */
+  var _inbox = {};
+  A.registerInbox = function (key, label, countFn, goFn) { _inbox[key] = { label: label, count: countFn, go: goFn }; A.refreshBell(); };
+  A.inbox = function () {
+    return Object.keys(_inbox).map(function (k) {
+      var src = _inbox[k], n = 0;
+      try { n = src.count() || 0; } catch (e) { }
+      return { key: k, label: src.label, n: n, go: src.go };
+    }).filter(function (x) { return x.n > 0; });
+  };
+  A.refreshBell = function () {
+    var b = $("#bellCount"); if (!b) return;
+    var total = A.inbox().reduce(function (s, x) { return s + x.n; }, 0);
+    b.textContent = total;
+    b.style.display = total ? "" : "none";
   };
 
   /* ---------- potvrdzovací dialóg ---------- */
@@ -3074,6 +3142,11 @@ body{position:relative;z-index:0}
 
   /* ---------- router (hash) ---------- */
   A.go = function (key, sub, replace) {
+    if (A.state._leaveGuard && key !== A.state.screen) {
+      var g = A.state._leaveGuard;
+      g(function () { A.state._leaveGuard = null; A.go(key, sub, replace); });
+      return;
+    }
     var h = "#/" + key + (sub ? "/" + sub : "");
     if (location.hash !== h) {
       if (replace) location.replace(h); else location.hash = h;
@@ -3574,6 +3647,18 @@ body{position:relative;z-index:0}
 
   /* ---------- editovateľný inšpektor uzla (peek panel s dirty-bar) ----------
      volateľný odkiaľkoľvek cez #/node/<slug> aj priamo mem.inspect(node) */
+  /* staged create: vráti odpojený návrh uzla — do pamäte sa dostane až cez „Vytvoriť" v inšpektore */
+  A.mem.newDraft = function (attrs) {
+    attrs = attrs || {};
+    var area = attrs.area || AREAS[0], dep = attrs.dep || area.deps[0];
+    return {
+      __draft: true, id: "draft", slug: "draft", name: attrs.name || "", desc: attrs.desc || "",
+      dep: dep, area: area, type: attrs.type || "memory", str: 0.5, conf: 0.6,
+      acts: 0, age: 0, hist: A.series(1, 14, 1, 1, 0), tags: [], pinned: false, archived: false,
+      src: "mind_learn · manuálne", edits: [], today: true
+    };
+  };
+
   A.mem.inspect = function (nd) {
     if (typeof nd === "string") nd = _byId[nd];
     if (!nd) { A.toast("Uzol sa nenašiel", "warn"); return; }
@@ -3640,10 +3725,30 @@ body{position:relative;z-index:0}
         draft.tags.join("|") !== (nd.tags || []).join("|");
     }
     function actions() {
+      if (nd.__draft) {
+        return [
+          { label: "Zrušiť", kind: "ghost", fn: function () {
+              var filled = draft.name.trim() || draft.desc.trim();
+              if (filled) A.confirm("Zahodiť rozpísaný uzol?", "Návrh „" + (draft.name || "bez názvu") + "“ sa nikam neuloží.", function () { A.closeDetail(); }, "Zahodiť", true);
+              else A.closeDetail();
+            } },
+          { label: "Vytvoriť uzol", fn: function () {
+              if (!draft.name.trim()) { A.toast("Uzol potrebuje názov", "warn"); var i = A.$("#ins-name"); if (i) i.focus(); return; }
+              var area = mem.areaByKey(draft.areaK);
+              var dep = area.deps.filter(function (d) { return d.slug === draft.depSlug; })[0] || area.deps[0];
+              var created = mem.create({ name: draft.name.trim(), desc: draft.desc, type: draft.type, area: area, dep: dep, str: +draft.str, conf: +draft.conf, tags: draft.tags.slice() });
+              A.closeDetail();
+              A.toast("Uzol „" + created.name + "“ vytvorený", "ok", { undo: function () { mem.remove(created); A.toast("Uzol zahodený", "ok"); } });
+            } }
+        ];
+      }
       var acts = [
         { label: nd.pinned ? "Odopnúť" : "Pripnúť", kind: "ghost", fn: function () { mem.togglePin(nd); A.toast(nd.pinned ? "Uzol pripnutý a chránený" : "Odopnuté", "ok"); render(); } },
         { label: "Zabudnúť → archív", kind: "ghost", fn: function () {
-            A.confirm("Zabudnúť uzol?", "„" + nd.name + "“ sa presunie do archívu. Dá sa obnoviť; z pamäte a grafu zmizne.", function () { mem.archive(nd); A.closeDetail(); A.toast("Presunuté do archívu", "ok"); }, "Zabudnúť", true);
+            A.confirm("Zabudnúť uzol?", "„" + nd.name + "“ sa presunie do archívu. Dá sa obnoviť; z pamäte a grafu zmizne.", function () {
+              mem.archive(nd); A.closeDetail();
+              A.toast("„" + nd.name + "“ v archíve", "ok", { undo: function () { mem.restore(nd); A.toast("Uzol obnovený", "ok"); } });
+            }, "Zabudnúť", true);
           } }
       ];
       if (dirty()) acts.push({ label: "Uložiť", kind: "", fn: save });
@@ -3657,7 +3762,7 @@ body{position:relative;z-index:0}
       A.toast("Uzol uložený", "ok");
     }
     function render() {
-      A.detail(nd.name, body(), actions());
+      A.detail(nd.__draft ? "Nový uzol (návrh)" : nd.name, body(), actions());
       var root = A.$("#dp-body");
       /* live náhľad posuvníkov + dirty prepočet akcií */
       root.addEventListener("input", function (e) {
@@ -3792,8 +3897,10 @@ body{position:relative;z-index:0}
     },
     onChange: function (fn) { _asubs.push(fn); },
     create: function (attrs) {
+      var base = slugify(attrs.name || "appka"), slug = base, n = 2;
+      while (APPS.some(function (x) { return x.slug === slug; })) slug = base + "-" + (n++);
       var app = {
-        slug: slugify(attrs.name || "appka") + "-" + (APPS.length + 1),
+        slug: slug,
         name: (attrs.name || "Nová appka").trim(), kind: attrs.kind || "Vlastné",
         icon: attrs.icon || "cube", color: attrs.color || "var(--teal-3)",
         desc: (attrs.desc || "").trim(), host: attrs.host || "interné · lokálne · nové nasadenie",
@@ -3808,7 +3915,35 @@ body{position:relative;z-index:0}
       var i = APPS.indexOf(app); if (i > -1) APPS.splice(i, 1);
       aemit("remove", app);
     },
-    setPaused: function (app, v) { app.paused = !!v; aemit("update", app); },
+    setPaused: function (app, v) {
+      app.paused = !!v;
+      /* kaskáda (Q82): automatizácie appky sa reálne zastavia/obnovia */
+      A.autos.rows.forEach(function (r) {
+        if ((app.deps || []).indexOf(r.dep) < 0) return;
+        if (v) { if (r.state !== "Pozastavená (appka)") { r.__pre = r.state; r.state = "Pozastavená (appka)"; } }
+        else if (r.state === "Pozastavená (appka)") { r.state = r.__pre || "Aktívna"; r.__pre = null; }
+      });
+      A.autos.hist.unshift({ t: "teraz", agent: (v ? "Appka pozastavená — " : "Appka obnovená — ") + app.name, dep: (app.deps || [])[0] || "—", res: v ? "pauza" : "obnovené", tok: 0, min: 0, id: "—" });
+      if (A.autos.hist.length > 40) A.autos.hist.pop();
+      aemit("update", app);
+    },
+    /* jeden zdieľaný potvrdzovací tok pauzy (Q79) — používa detail appky aj Nastavenia */
+    confirmPause: function (app, after) {
+      var n = A.apps.autos(app).length;
+      if (!app.paused) {
+        A.confirm("Pozastaviť appku " + app.name + "?",
+          "Automatizácie appky (" + n + ") sa prepnú na „Pozastavená (appka)“, naplánované spustenia sa preskočia a KPI sa prepočítajú. Pamäť ani história behov sa nezmažú.",
+          function () {
+            A.apps.setPaused(app, true);
+            A.toast(app.name + " pozastavená · " + n + " automatizácií zastavených", "warn", { undo: function () { A.apps.setPaused(app, false); A.toast(app.name + " obnovená", "ok"); if (after) after(); } });
+            if (after) after();
+          }, "Pozastaviť", true);
+      } else {
+        A.apps.setPaused(app, false);
+        A.toast(app.name + " obnovená · automatizácie bežia", "ok");
+        if (after) after();
+      }
+    },
     /* --- väzby --- */
     autos: function (app) {
       return A.autos.rows.filter(function (r) { return (app.deps || []).indexOf(r.dep) > -1; });
@@ -5119,8 +5254,14 @@ body{position:relative;z-index:0}
       '<div class="filt" style="margin:0;gap:8px"><button class="btn" type="button" id="pm-tb-go">Spracovať</button>' +
       '<button class="btn ghost" type="button" id="pm-tb-off">Neskôr</button></div></div>';
     $("#pm-tb-go").addEventListener("click", function () { switchTab("dnes"); triageBar(); });
-    $("#pm-tb-off").addEventListener("click", function () { PM.triageOff = true; triageBar(); A.toast("Triage odložený — nájdeš ho na tabe Dnes", "ok"); });
+    $("#pm-tb-off").addEventListener("click", function () {
+      PM.triageOff = true; triageBar();
+      A.toast("Pripomeniem zajtra — uzly ostávajú na tabe Dnes", "ok", { undo: function () { PM.triageOff = false; triageBar(); } });
+    });
   }
+
+  /* zdroj zvončeka: nevybavený triage (Q74) */
+  if (A.registerInbox) A.registerInbox("triage", "Triage — dnes pridané uzly", function () { return PM.triageOff ? 0 : mem().today().length; }, function () { A.go("pamat", "dnes"); });
 
   A.screens.pamat = {
     title: "Pamäť", group: "Pamäť",
@@ -5131,15 +5272,15 @@ body{position:relative;z-index:0}
       hlPresets(); hlSaved(); hlResults();
 
       /* KPI */
-      $("#pm-k1").addEventListener("click", function () {
+      $("#pm-k1").addEventListener("click", function () { A.go("pamat", "zoznam"); });
+      $("#pm-k2").addEventListener("click", function () {
         A.detail("Rozdelenie uzlov", "<dl>" + mem().AREAS.map(function (a) {
           var c = mem().nodes().filter(function (n) { return n.area.k === a.k; }).length;
           return "<dt>" + esc(mem().zoneLabel(a)) + "</dt><dd>" + F(c, 0) + " uzlov</dd>";
         }).join("") + "<dt>Systémové jadrá</dt><dd>" + F(mem().CORE_NODES, 0) + "</dd></dl><p>Živá snímka z modelu Aura.mem.</p>", []);
       });
-      $("#pm-k2").addEventListener("click", function () { resetFilters(); switchTab("graf"); A.toast("Filter oblastí zrušený", "ok"); });
-      $("#pm-k3").addEventListener("click", function () { presetWeak(); });
-      $("#pm-k4").addEventListener("click", function () { switchTab("dnes"); });
+      $("#pm-k3").addEventListener("click", function () { A.go("pamat", "slabe"); });
+      $("#pm-k4").addEventListener("click", function () { A.go("pamat", "dnes"); });
 
       /* domov */
       function homeGo() { switchTab("hladanie"); runSearch($("#pm-home-q").value); }
@@ -5173,7 +5314,12 @@ body{position:relative;z-index:0}
       });
 
       /* taby / pohľady */
-      $("#pm-tabs").addEventListener("click", function (e) { var b = e.target.closest("button[data-tab]"); if (b) { switchTab(b.getAttribute("data-tab")); triageBar(); } });
+      $("#pm-tabs").addEventListener("click", function (e) {
+        var b = e.target.closest("button[data-tab]"); if (!b) return;
+        var t = b.getAttribute("data-tab");
+        A.go("pamat", t === "graf" ? null : t);
+        if (t === "graf") { switchTab("graf"); triageBar(); }
+      });
       $("#pm-views").addEventListener("click", function (e) { var b = e.target.closest("button[data-view]"); if (b) switchView(b.getAttribute("data-view")); });
 
       /* sieť — vrstvy (len CSS/štýl, žiadny rebuild) */
@@ -5280,10 +5426,11 @@ body{position:relative;z-index:0}
       if (w.AuraChart) setTimeout(w.AuraChart.reflowAll, 40);
       if (PM.inited && PM.tab === "graf" && PM.view === "siet") setTimeout(function () { netDraw(); }, 40);
       triageBar();
-      if (!sub) return;
+      if (!sub) { if (PM.inited && PM.tab !== "graf") switchTab("graf"); return; }
       if (mem().byId(sub)) { mem().inspect(sub); return; }
       if (sub === "slabe" || sub === "weak") { presetWeak(); return; }
       if (sub === "cistenie" || sub === "cleanup") { switchTab("cistenie"); triageBar(); return; }
+      if (sub === "zoznam") { switchTab("graf"); switchView("zoznam"); return; }
       if (sub.indexOf("app:") === 0) {
         var app = A.apps.bySlug(sub.slice(4));
         if (app) {
@@ -5306,8 +5453,9 @@ body{position:relative;z-index:0}
 
   /* helpers viazané na obrazovku */
   function createNode() {
-    var nd = mem().create({ name: "Nový uzol", area: mem().AREAS[0], type: "memory" });
-    A.go("pamat"); mem().inspect(nd);
+    A.go("pamat");
+    mem().inspect(mem().newDraft());
+    setTimeout(function () { var i = A.$("#ins-name"); if (i) { i.focus(); i.select(); } }, 120);
   }
   function presetWeak() {
     switchTab("graf"); switchView("zoznam");
@@ -5459,9 +5607,20 @@ body{position:relative;z-index:0}
   /* ============================================================
      ZOZNAM APPIEK
      ============================================================ */
+  var APF = "";   /* KPI filter zoznamu: '' | 'run' | 'err' */
+  function apChip() {
+    var host = $("#ap-chip");
+    if (!host) { host = document.createElement("div"); host.id = "ap-chip"; var c = $("#ap-cards"); if (c) c.parentNode.insertBefore(host, c); }
+    host.innerHTML = APF ? '<div class="fchip">filtrované: <b>' + (APF === "run" ? "v prevádzke" : "s chybou") + '</b> <button aria-label="Zrušiť filter" id="ap-chip-x">✕</button></div>' : "";
+    var x = $("#ap-chip-x"); if (x) x.addEventListener("click", function () { APF = ""; renderCards(); apChip(); });
+  }
   function sortedApps() {
     var rank = { bad: 0, warn: 1, mute: 2, none: 3, ok: 4 };
-    return apps().all().slice().sort(function (a, b) {
+    return apps().all().filter(function (a) {
+      if (APF === "run") return !a.paused;
+      if (APF === "err") return apps().alerts(a).length > 0;
+      return true;
+    }).slice().sort(function (a, b) {
       var ha = apps().health(a), hb = apps().health(b);
       if (rank[ha.k] !== rank[hb.k]) return rank[ha.k] - rank[hb.k];
       return (b.share || 0) - (a.share || 0);
@@ -5486,9 +5645,18 @@ body{position:relative;z-index:0}
     }).join("");
     $$("#ap-kpi .kpi").forEach(function (b, i) {
       b.addEventListener("click", function () {
-        if (i === 2 && errs) { A().go("automatizacie", "A-11"); return; }
-        if (i === 3) { A().go("naklady"); return; }
-        A().toast(items[i].l + ": " + items[i].v + (items[i].u ? " " + items[i].u : ""), "ok");
+        if (i === 0) { APF = APF === "run" ? "" : "run"; renderCards(); apChip(); return; }
+        if (i === 1) {
+          A().detail("Spracované dnes", "<dl>" + list.map(function (a) {
+            return "<dt>" + esc(a.name) + '</dt><dd class="num">' + F(apps().kpi(a).today, 0) + " položiek</dd>";
+          }).join("") + "</dl><p class=\"note\">Rozpad dnešného objemu podľa appky. Denné hodnoty sú simulované.</p>", []);
+          return;
+        }
+        if (i === 2) {
+          if (!errs) { A().detail("Automatizácie v chybe", '<div class="empty"><span class="eico">✓</span><p>Žiadna automatizácia nie je v chybe.</p></div>', []); return; }
+          APF = APF === "err" ? "" : "err"; renderCards(); apChip(); return;
+        }
+        A().go("naklady");
       });
     });
   }
@@ -5573,24 +5741,39 @@ body{position:relative;z-index:0}
       '<div class="dirty"><span class="note" style="margin:0">Appka vznikne prázdna — čísla pribudnú, až keď jej oddelenia začnú bežať.</span><span class="sp" style="flex:1"></span>' +
       '<button class="btn ghost" id="af-cancel">Zrušiť</button><button class="btn" id="af-save">Vytvoriť appku</button></div></div>';
     card.removeAttribute("hidden");
+    card.scrollIntoView({ behavior: Ax.reduce ? "auto" : "smooth", block: "center" });
     $$("#ap-form .chz").forEach(function (b) {
       b.addEventListener("click", function () { b.setAttribute("aria-pressed", b.getAttribute("aria-pressed") === "true" ? "false" : "true"); });
     });
-    $("#af-name").focus();
-    $("#af-cancel").addEventListener("click", function () { card.setAttribute("hidden", ""); host.innerHTML = ""; });
+    setTimeout(function () { $("#af-name").focus(); }, 260);
+    function formFilled() { return $("#af-name").value.trim() || $("#af-desc").value.trim() || $$("#ap-form .chz[aria-pressed='true']").length; }
+    function closeForm() { card.setAttribute("hidden", ""); host.innerHTML = ""; }
+    $("#af-cancel").addEventListener("click", function () {
+      if (formFilled()) Ax.confirm("Zahodiť rozpísanú appku?", "Vyplnené polia sa nikam neuložia.", closeForm, "Zahodiť", true);
+      else closeForm();
+    });
+    function showErr(msg) {
+      var e = $("#af-err");
+      if (!e) { e = document.createElement("p"); e.id = "af-err"; e.className = "note"; e.style.color = "var(--red)"; e.setAttribute("aria-live", "polite"); $("#af-name").closest(".field").appendChild(e); }
+      e.textContent = msg;
+    }
+    $("#af-name").addEventListener("input", function () { var e = $("#af-err"); if (e && this.value.trim()) e.textContent = ""; });
     $("#af-save").addEventListener("click", function () {
       var name = $("#af-name").value.trim();
-      if (!name) { Ax.toast("Appka potrebuje názov", "warn"); $("#af-name").focus(); return; }
+      if (!name) { showErr("Appka potrebuje názov — vyplň pole vyššie."); Ax.toast("Formulár nie je úplný: chýba názov", "warn"); $("#af-name").focus(); return; }
       var app = apps().create({
         name: name, kind: $("#af-kind").value, desc: $("#af-desc").value,
         deps: $$("#af-deps .chz[aria-pressed='true']").map(function (b) { return b.getAttribute("data-dep"); }),
         memDeps: $$("#af-mem option:checked").map(function (o) { return o.value; }),
         mcp: $$("#af-mcp .chz[aria-pressed='true']").map(function (b) { return b.getAttribute("data-mcp"); })
       });
-      card.setAttribute("hidden", ""); host.innerHTML = "";
+      closeForm();
       registerAppCmds(app);
-      Ax.toast("Appka „" + app.name + "“ vytvorená", "ok");
-      Ax.go("appky", app.slug);
+      var t = Ax.toast("Appka „" + app.name + "“ vytvorená", "ok", { undo: function () { apps().remove(app); Ax.toast("Appka zahodená", "ok"); }, undoLabel: "Späť" });
+      var lk = document.createElement("button");
+      lk.className = "toast-undo"; lk.type = "button"; lk.textContent = "Zobraziť detail";
+      lk.addEventListener("click", function () { Ax.go("appky", app.slug); t.remove(); });
+      t.appendChild(lk);
     });
   }
 
@@ -5674,7 +5857,7 @@ body{position:relative;z-index:0}
       '<span class="ah-t"><b>' + esc(app.name) + "</b><span>" + esc(app.kind) + " · " + esc(app.host) + " · v" + esc(app.ver) + "</span></span>" +
       healthBadge(h) +
       '<span class="sp" style="flex:1"></span>' +
-      '<button class="pill' + (app.paused ? "" : " on") + '" id="ap-pause" aria-pressed="' + (!app.paused) + '"><span class="d"></span>' + (app.paused ? "Pozastavená" : "Beží") + "</button>" +
+      '<button class="swx" id="ap-pause" role="switch" aria-checked="' + (!app.paused) + '" title="' + (app.paused ? "Spustiť appku" : "Pozastaviť appku") + '"><span class="swx-t"><span class="swx-k"></span></span><span class="swx-l">' + (app.paused ? "Pozastavená" : "Beží") + "</span></button>" +
       '<button class="btn ghost sm" id="ap-back">Všetky appky</button>' +
       "</div>" + tabs(app);
     $("#ap-back").addEventListener("click", function () { A().go("appky"); });
@@ -5685,14 +5868,7 @@ body{position:relative;z-index:0}
       });
     });
     $("#ap-pause").addEventListener("click", function () {
-      var Ax = A();
-      if (!app.paused) {
-        Ax.confirm("Pozastaviť appku " + app.name + "?",
-          "Automatizácie appky (" + F(apps().autos(app).length, 0) + ") prestanú bežať a naplánované spustenia sa preskočia. Pamäť ani história behov sa nezmažú.",
-          function () { apps().setPaused(app, true); renderDetail(app); Ax.toast(app.name + " · pozastavená", "warn"); }, "Pozastaviť", true);
-      } else {
-        apps().setPaused(app, false); renderDetail(app); Ax.toast(app.name + " · obnovená", "ok");
-      }
+      apps().confirmPause(app, function () { renderDetail(app); });
     });
   }
 
@@ -5702,7 +5878,7 @@ body{position:relative;z-index:0}
     host.innerHTML = '<div class="alert bad" style="margin-bottom:12px"><span class="ai"></span><span><b>' + esc(al[0].title) + "</b>" +
       (al.length > 1 ? "a ďalšie " + F(al.length - 1, 0) + " automatizácie appky sú v chybe. " : "") +
       'Otvorte Observabilitu a pozrite, čo beh zhodilo.</span><button class="btn ghost sm" id="ap-toobs">Otvoriť Observabilitu</button></div>';
-    $("#ap-toobs").addEventListener("click", function () { A().go("observabilita", "app:" + app.slug); });
+    $("#ap-toobs").addEventListener("click", function () { A().go("observabilita", app.slug); });
   }
 
   function runsCSV(app) {
@@ -5791,9 +5967,21 @@ body{position:relative;z-index:0}
     }).join("");
     $$("#apd-kpi .kpi").forEach(function (b, i) {
       b.addEventListener("click", function () {
-        if (i === 0 || i === 1) A().go("automatizacie", "app:" + app.slug);
-        else if (i === 3) A().go("naklady");
-        else A().toast(kpiItems[i].l + ": " + kpiItems[i].v, "ok");
+        if (i === 0) { A().go("automatizacie", app.slug); return; }
+        if (i === 1) {
+          var last = runs[0], auto = last && w.Aura.autos.byId(last.id);
+          if (auto && w.Aura.autos.runDetail) w.Aura.autos.runDetail(auto);
+          else A().detail("Posledná aktivita", '<div class="empty"><span class="eico">∅</span><p>Zatiaľ žiadny beh.</p></div>', []);
+          return;
+        }
+        if (i === 2) {
+          var v14 = apps().vol(app, 14), d14 = A().days(14);
+          A().detail("Objem appky · " + app.name, "<dl>" + d14.map(function (d, di) {
+            return "<dt>" + esc(d) + '</dt><dd class="num">' + F(v14[di], 0) + " položiek</dd>";
+          }).join("") + '</dl><p class="note">Denné rozloženie je simulované; 14-dňový súčet ' + F(v14.reduce(function (x, y) { return x + y; }, 0), 0) + " položiek.</p>", []);
+          return;
+        }
+        A().go("naklady");
       });
     });
 
@@ -5852,7 +6040,7 @@ body{position:relative;z-index:0}
       }
       renderRuns(rrows);
       A().sortable($("#apd-tbl"), function () { return rrows; }, renderRuns);
-      $("#apd-allruns").addEventListener("click", function () { A().go("automatizacie", "app:" + app.slug); });
+      $("#apd-allruns").addEventListener("click", function () { A().go("automatizacie", app.slug); });
       $("#apd-csv").addEventListener("click", function () { runsCSV(app); });
     } else {
       var na = $("#apd-newauto");
@@ -5908,7 +6096,7 @@ body{position:relative;z-index:0}
   function registerAppCmds(app) {
     A().registerCmd([
       { label: "Appka — " + app.name, hint: "Appky", run: function () { A().go("appky", app.slug); } },
-      { label: "Behy appky — " + app.name, hint: "Appky", run: function () { A().go("automatizacie", "app:" + app.slug); } },
+      { label: "Behy appky — " + app.name, hint: "Appky", run: function () { A().go("automatizacie", app.slug); } },
       { label: "Pozastaviť appku — " + app.name, hint: "Appky", run: function () { A().go("appky", app.slug); setTimeout(function () { var b = $("#ap-pause"); if (b && !app.paused) b.click(); }, 300); } }
     ]);
   }
@@ -6383,6 +6571,8 @@ body{position:relative;z-index:0}
         Ax.toast(on ? "Dopyt pôjde von cez MCP — pred odoslaním uvidíte náhľad brány" : "Dopyt zostáva lokálny", on ? "warn" : "ok");
       });
       $("#ch-gate-no").addEventListener("click", function () { $("#ch-gate").style.display = "none"; CH.pendingSend = null; Ax.toast("Odoslanie zrušené — von nešlo nič", "ok"); });
+      /* deep-link do konfigurácie brány (Q80) */
+      $("#ch-gate-cfg").addEventListener("click", function () { $("#ch-gate").style.display = "none"; CH.pendingSend = null; Ax.go("nastavenia", "zony"); });
       $("#ch-gate-yes").addEventListener("click", function () {
         $("#ch-gate").style.display = "none";
         var p = CH.pendingSend; CH.pendingSend = null; if (!p) return;
@@ -6460,7 +6650,17 @@ body{position:relative;z-index:0}
 
       Ax.registerCmd([{ label: "Chat — nová konverzácia", hint: "Práca", run: function () { Ax.go("chat"); setTimeout(function () { var b = $("#ch-new"); if (b) b.click(); }, 200); } }]);
     },
-    onShow: function () {
+    onShow: function (sub) {
+      /* sub-hash: #/chat/<appka> prepne kontext recallu (Q72) */
+      if (sub) {
+        var app = A().apps.bySlug(sub.indexOf("app:") === 0 ? sub.slice(4) : sub);
+        if (app) {
+          CH.app = app.slug;
+          var sel = $("#ch-app"); if (sel) sel.value = app.slug;
+          var bb = $("#ch-app-b"); if (bb) { bb.textContent = "appka: " + app.name; bb.className = "badge info"; }
+          A().toast("Kontext chatu: appka " + app.name, "ok");
+        }
+      }
       var mobile = w.innerWidth < 900, sh = $("#ch-shell");
       sh.style.gridTemplateColumns = mobile ? "1fr" : "270px 1fr";
       $("#ch-side").style.display = mobile ? "none" : "flex";
@@ -6703,6 +6903,16 @@ body{position:relative;z-index:0}
     onShow: function () { }
   };
 
+  /* zdroje zvončeka (Q74): neoverené tvrdenia smerníc + systémové udalosti */
+  if (w.Aura.registerInbox) {
+    w.Aura.registerInbox("smernica", "Smernica — neoverené tvrdenia", function () {
+      try { return SM.claims.filter(function (c) { return !c.ver; }).length; } catch (e) { return 0; }
+    }, function () { w.Aura.go("smernica"); });
+    w.Aura.registerInbox("sys", "Systém — zlyhané behy", function () {
+      return w.Aura.autos.rows.filter(function (r) { return r.state === "Chyba"; }).length;
+    }, function () { w.Aura.go("automatizacie"); });
+  }
+
   /* ============================================================
      4 · AUTOMATIZÁCIE
      ============================================================ */
@@ -6722,7 +6932,7 @@ body{position:relative;z-index:0}
         (!AU.filter.state || r.state === AU.filter.state) && (!appDeps || appDeps.indexOf(r.dep) > -1);
     });
   }
-  function auStateBadge(s) { return '<span class="badge ' + (s === "Aktívna" ? "ok" : s === "Chyba" ? "bad" : "warn") + '">' + esc(s) + "</span>"; }
+  function auStateBadge(s) { return '<span class="badge ' + (s === "Aktívna" ? "ok" : s === "Chyba" ? "bad" : "warn") + '">' + esc(s) + "</span>"; }  /* „Pozastavená (appka)" padá do warn */
   function auTrigBadge(t) { return '<span class="badge ' + (t === "cron" ? "info" : t === "MCP" ? "mute" : "warn") + '">' + esc(t) + "</span>"; }
   function auById(id) { for (var i = 0; i < AU.rows.length; i++) if (AU.rows[i].id === id) return AU.rows[i]; return null; }
 
@@ -6875,6 +7085,7 @@ body{position:relative;z-index:0}
   }
   function auFchip() {
     var host = $("#au-fchip"); if (!host) return;
+    if (!AU.fromLink) { host.innerHTML = ""; return; }   /* chip len pre deep-link — select stav vidno vedľa */
     var parts = [];
     if (AU.filter.app) { var ap = A().apps.bySlug(AU.filter.app); if (ap) parts.push("appka " + ap.name); }
     if (AU.filter.dep) parts.push(AU.filter.dep);
@@ -6883,17 +7094,38 @@ body{position:relative;z-index:0}
     host.innerHTML = parts.length ? '<div class="fchip">filtrované z <b>' + esc(parts.join(" · ")) + '</b> <button aria-label="Zrušiť filtre" id="au-fclr">✕</button></div>' : "";
     var b = $("#au-fclr"); if (b) b.addEventListener("click", function () { AU.filter = { dep: "", trig: "", state: "", app: "" }; $("#au-app").value = ""; $("#au-dep").value = ""; $("#au-trig").value = ""; $("#au-state").value = ""; auRender(); auFchip(); });
   }
+  /* poradie priorít ovplyvňuje poradie návrhov automatizácií — kandidát s najvyšším
+     skóre v prvej priorite ide prvý. Zmeny sú staged (Q67): draft → náhľad dopadu → Uložiť. */
+  var AU_PRIO_DRAFT = null;
+  function auPrioImpact(order) {
+    var score = { "Rýchlosť": function (r) { return 60 - r.avg; }, "Chyby": function (r) { return r.ok; }, "Čas": function (r) { return r.saved; }, "Náklady": function (r) { return -(r.avg * 40); } };
+    var top = AU.rows.slice().sort(function (a, b) { return score[order[0]](b) - score[order[0]](a); })[0];
+    return "prvá priorita „" + order[0] + "“ → najbližší kandidát na rozšírenie: <b>" + esc(top.name) + "</b>";
+  }
   function auRenderPrio() {
     var host = $("#au-prio"); if (!host) return;
-    host.innerHTML = AU.prio.map(function (p, i) {
+    var order = AU_PRIO_DRAFT || AU.prio;
+    var dirty = !!AU_PRIO_DRAFT && AU_PRIO_DRAFT.join() !== AU.prio.join();
+    host.innerHTML = order.map(function (p, i) {
       return '<div class="step"><span class="r">' + (i + 1) + '</span><b>' + esc(p) + '</b><span>' + esc(AU.prioDesc[p]) + '</span>' +
         '<div style="display:flex;gap:4px;margin-top:6px">' +
         '<button class="btn ghost" data-pup="' + i + '" aria-label="Presunúť vyššie" ' + (i === 0 ? "disabled" : "") + ' style="padding:2px 8px;font-size:var(--fs-label)">▲</button>' +
-        '<button class="btn ghost" data-pdn="' + i + '" aria-label="Presunúť nižšie" ' + (i === AU.prio.length - 1 ? "disabled" : "") + ' style="padding:2px 8px;font-size:var(--fs-label)">▼</button></div></div>' +
-        (i < AU.prio.length - 1 ? '<span class="arrow">›</span>' : "");
-    }).join("");
-    $$("#au-prio [data-pup]").forEach(function (b) { b.addEventListener("click", function () { var i = +b.getAttribute("data-pup"); if (i > 0) { var t = AU.prio[i - 1]; AU.prio[i - 1] = AU.prio[i]; AU.prio[i] = t; auRenderPrio(); A().toast("Priorita „" + AU.prio[i - 1] + "“ posunutá vyššie", "ok"); } }); });
-    $$("#au-prio [data-pdn]").forEach(function (b) { b.addEventListener("click", function () { var i = +b.getAttribute("data-pdn"); if (i < AU.prio.length - 1) { var t = AU.prio[i + 1]; AU.prio[i + 1] = AU.prio[i]; AU.prio[i] = t; auRenderPrio(); A().toast("Priorita „" + AU.prio[i + 1] + "“ posunutá nižšie", "ok"); } }); });
+        '<button class="btn ghost" data-pdn="' + i + '" aria-label="Presunúť nižšie" ' + (i === order.length - 1 ? "disabled" : "") + ' style="padding:2px 8px;font-size:var(--fs-label)">▼</button></div></div>' +
+        (i < order.length - 1 ? '<span class="arrow">›</span>' : "");
+    }).join("") +
+      '<div style="flex:1 1 100%;display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px">' +
+      '<span class="note" style="margin:0" id="au-prio-impact">Ovplyvňuje: ' + auPrioImpact(order) + "</span><span class=\"sp\" style=\"flex:1\"></span>" +
+      (dirty ? '<button class="btn ghost" id="au-prio-cancel">Zrušiť</button><button class="btn" id="au-prio-save">Uložiť poradie</button>' : "") + "</div>";
+    function swap(i, j) {
+      AU_PRIO_DRAFT = (AU_PRIO_DRAFT || AU.prio.slice());
+      var t = AU_PRIO_DRAFT[j]; AU_PRIO_DRAFT[j] = AU_PRIO_DRAFT[i]; AU_PRIO_DRAFT[i] = t;
+      auRenderPrio();
+    }
+    $$("#au-prio [data-pup]").forEach(function (b) { b.addEventListener("click", function () { var i = +b.getAttribute("data-pup"); if (i > 0) swap(i, i - 1); }); });
+    $$("#au-prio [data-pdn]").forEach(function (b) { b.addEventListener("click", function () { var i = +b.getAttribute("data-pdn"); if (i < order.length - 1) swap(i, i + 1); }); });
+    var sv = $("#au-prio-save"), cn = $("#au-prio-cancel");
+    if (sv) sv.addEventListener("click", function () { AU.prio = AU_PRIO_DRAFT.slice(); AU_PRIO_DRAFT = null; auRenderPrio(); A().toast("Poradie priorít uložené", "ok"); });
+    if (cn) cn.addEventListener("click", function () { AU_PRIO_DRAFT = null; auRenderPrio(); });
   }
   function auRender() {
     auRenderRows(A().applySort($("#au-tbl"), auVisible()));
@@ -6913,23 +7145,33 @@ body{position:relative;z-index:0}
       }
       auFillApps();
       Ax.apps.onChange(auFillApps);
-      ["#au-app", "#au-dep", "#au-trig", "#au-state"].forEach(function (sel) { $(sel).addEventListener("change", function () { AU.filter.app = $("#au-app").value; AU.filter.dep = $("#au-dep").value; AU.filter.trig = $("#au-trig").value; AU.filter.state = $("#au-state").value; auRender(); auFchip(); }); });
+      ["#au-app", "#au-dep", "#au-trig", "#au-state"].forEach(function (sel) { $(sel).addEventListener("change", function () { AU.fromLink = false; AU.filter.app = $("#au-app").value; AU.filter.dep = $("#au-dep").value; AU.filter.trig = $("#au-trig").value; AU.filter.state = $("#au-state").value; auRender(); auFchip(); }); });
 
-      var totalSaved = AU.rows.reduce(function (s, r) { return s + r.saved; }, 0);
-      var avgOk = AU.rows.reduce(function (s, r) { return s + r.ok; }, 0) / AU.rows.length;
-      $("#au-kpi").innerHTML = [
-        { l: "Aktívne", v: F(AU.rows.filter(function (r) { return r.state === "Aktívna"; }).length, 0), d: "z " + AU.rows.length + " celkom" },
-        { l: "Behov dnes", v: "38", d: "+6 oproti včera" },
-        { l: "Úspešnosť", v: F(avgOk, 1), u: "%", d: "priemer" },
-        { l: "Ušetrený čas", v: F(totalSaved, 0), u: "h", d: "za mesiac" }
-      ].map(function (k, i) { return '<button class="kpi' + (i === 0 ? " tl" : "") + '" data-k="' + i + '"><span class="kl">' + esc(k.l) + '</span><b>' + esc(k.v) + (k.u ? ' <em>' + k.u + "</em>" : "") + '</b><span class="kd">' + esc(k.d) + "</span></button>"; }).join("");
-      $$("#au-kpi .kpi").forEach(function (b, i) {
-        b.addEventListener("click", function () {
-          if (i === 0) { AU.filter = { dep: "", trig: "", state: "Aktívna" }; $("#au-state").value = "Aktívna"; auRender(); auFchip(); Ax.toast("Filter: aktívne", "ok"); }
-          else if (i === 3) Ax.detail("Ušetrený čas", "<dl><dt>Spolu</dt><dd>" + F(totalSaved, 0) + " h / mesiac</dd><dt>Najviac</dt><dd>Copywriting</dd></dl><p class='note'>Súčet odhadovaného ušetreného času naprieč automatizáciami. Odhad, nie meranie.</p>", []);
-          else Ax.toast("Behov dnes: 38 · úspešnosť " + F(avgOk, 1) + " %", "ok");
+      function auKpi() {
+        var totalSaved = AU.rows.reduce(function (s, r) { return s + r.saved; }, 0);
+        var avgOk = AU.rows.reduce(function (s, r) { return s + r.ok; }, 0) / AU.rows.length;
+        var today = AU_HIST.length;
+        $("#au-kpi").innerHTML = [
+          { l: "Aktívne", v: F(AU.rows.filter(function (r) { return r.state === "Aktívna"; }).length, 0), d: "z " + AU.rows.length + " celkom" },
+          { l: "Behov dnes", v: F(today, 0), d: "vo feede histórie" },
+          { l: "Úspešnosť", v: F(avgOk, 1), u: "%", d: "priemer automatizácií" },
+          { l: "Ušetrený čas", v: F(totalSaved, 0), u: "h", d: "za mesiac" }
+        ].map(function (k, i) { return '<button class="kpi' + (i === 0 ? " tl" : "") + '" data-k="' + i + '"><span class="kl">' + esc(k.l) + '</span><b>' + esc(k.v) + (k.u ? ' <em>' + k.u + "</em>" : "") + '</b><span class="kd">' + esc(k.d) + "</span></button>"; }).join("");
+        $$("#au-kpi .kpi").forEach(function (b, i) {
+          b.addEventListener("click", function () {
+            if (i === 0) { AU.filter.state = AU.filter.state === "Aktívna" ? "" : "Aktívna"; $("#au-state").value = AU.filter.state; auRender(); auFchip(); }
+            else if (i === 1) Ax.detail("Behy dnes", '<div class="feed">' + AU_HIST.map(function (h) {
+              return '<div class="fi" style="cursor:default"><span class="fd' + (h.res === "chyba" ? " r" : h.res === "čaká" ? " a" : " ok") + '"></span><span class="fx"><b style="font-size:var(--fs-sm)">' + esc(h.agent) + "</b><span>" + esc(h.dep) + " · " + esc(h.res) + '</span></span><span class="ft">' + esc(h.t) + "</span></div>";
+            }).join("") + "</div>", []);
+            else if (i === 2) Ax.detail("Úspešnosť po automatizáciách", "<dl>" + AU.rows.slice().sort(function (a, b) { return a.ok - b.ok; }).map(function (r) {
+              return "<dt>" + esc(r.name) + '</dt><dd class="num">' + F(r.ok, 0) + " %</dd>";
+            }).join("") + '</dl><p class="note">Zoradené od najslabšej. Klik na riadok v tabuľke nižšie otvorí detail.</p>', []);
+            else Ax.detail("Ušetrený čas", "<dl><dt>Spolu</dt><dd>" + F(totalSaved, 0) + " h / mesiac</dd><dt>Najviac</dt><dd>Copywriting</dd></dl><p class='note'>Súčet odhadovaného ušetreného času naprieč automatizáciami. Odhad, nie meranie.</p>", []);
+          });
         });
-      });
+      }
+      auKpi();
+      Ax.apps.onChange(function () { auKpi(); auRender(); auFchip(); });
 
       auRenderPrio();
       $("#au-prio-reset").addEventListener("click", function () { AU.prio = ["Rýchlosť", "Chyby", "Čas", "Náklady"]; auRenderPrio(); Ax.toast("Poradie priorít obnovené", "ok"); });
@@ -6997,10 +7239,12 @@ body{position:relative;z-index:0}
     onShow: function (sub) {
       if (!sub) return;
       /* deep-link z appky: #/automatizacie/app:<slug> */
-      if (sub.indexOf("app:") === 0) {
-        var slug = sub.slice(4);
+      var plainApp = A().apps.bySlug(sub);
+      if (sub.indexOf("app:") === 0 || plainApp) {
+        var slug = plainApp ? sub : sub.slice(4);
         if (A().apps.bySlug(slug)) {
           AU.filter = { dep: "", trig: "", state: "", app: slug };
+          AU.fromLink = true;
           var s = $("#au-app"); if (s) s.value = slug;
           ["#au-dep", "#au-trig", "#au-state"].forEach(function (q) { var e = $(q); if (e) e.value = ""; });
           auRender(); auFchip();
@@ -7401,7 +7645,12 @@ body{position:relative;z-index:0}
       A.count($("#j-kpi-ram .kv"), 31.2, 1);
 
       /* KPI akcie — odkazy na eval kvalitu vlastní Jadro */
-      $("#j-kpi-router").addEventListener("click", function () { A.go("observabilita", "router"); });
+      $("#j-kpi-router").addEventListener("click", function () {
+        A.detail("Router 95,3 %",
+          dl([["Presnosť s regex vrstvou", "95,3 % (41/43)"], ["Model bez regex vrstvy", "87,5 %"], ["Prínos regex vrstvy", "+7,8 p. b."], ["Merané", "eval batéria 31. 7. 2026"]]) +
+          "<p>Klasifikácia oddelenia dopytu. Regex vrstva chytá jednoznačné vzory pred modelom.</p>",
+          [{ label: "Logy routera", kind: "ghost", fn: function () { A.closeDetail(); A.go("observabilita", "router"); } }, { label: "Zavrieť", fn: A.closeDetail }]);
+      });
       $("#j-kpi-hit").addEventListener("click", function () {
         A.detail("Recall hit@5 = 86,7 %",
           dl([["hit@5", "86,7 %"], ["MRR", "0,800"], ["Uzlov v pamäti", "714 v 5 oblastiach"],
@@ -7410,7 +7659,12 @@ body{position:relative;z-index:0}
           "<p>hit@5 hovorí, ako často je správny uzol v prvej päťke. MRR 0,800 znamená, že keď tam je, býva na prvom až druhom mieste.</p>",
           [{ label: "Prejsť na pamäť", fn: function () { A.closeDetail(); A.go("pamat"); } }, { label: "Zavrieť", fn: A.closeDetail }]);
       });
-      $("#j-kpi-p50").addEventListener("click", function () { A.go("observabilita", "p50"); });
+      $("#j-kpi-p50").addEventListener("click", function () {
+        A.detail("p50 vyhľadávania = 4,2 s",
+          dl([["p50 /api/search", "4,2 s"], ["Z toho embedovanie dopytu", "4,05 s (CPU)"], ["RecallEngine", "8–130 ms"], ["Cieľ", "pod 1 s"]]) +
+          "<p>Takmer celý čas zožerie embedovanie dopytu na CPU — recall samotný je rýchly.</p>",
+          [{ label: "Logy latencie", kind: "ghost", fn: function () { A.closeDetail(); A.go("observabilita", "p50"); } }, { label: "Zavrieť", fn: A.closeDetail }]);
+      });
       $("#j-kpi-ram").addEventListener("click", function () {
         A.detail("RAM 31,2 z 48 GB",
           dl([["Obsadené", "31,2 GB (65,0 %)"], ["Voľné", "16,8 GB"], ["Modely", "3,8 GB (qwen3:4b 2,6 + bge-m3 1,2)"],
@@ -7680,8 +7934,29 @@ body{position:relative;z-index:0}
           [{ label: "Zavrieť", fn: A.closeDetail }]);
       });
       $("#n-kpi-q").addEventListener("click", function () {
-        A.toast("Náklad na dopyt sa odvíja od latencie — pozri Jadro.", "ok"); A.go("jadro");
+        var elec = nElec(N.kwh);
+        A.detail("Cena za dopyt · rozklad",
+          dl([["Dopytov za mesiac", nf(N.q, 0)], ["Elektrina za mesiac", vf(elec, "€", 2)],
+            ["Elektrina / dopyt", vf(elec / N.q, "€", 4)], ["Sadzba", nf(N.rkwh, 2) + " €/kWh (Nastavenia)"],
+            ["Cloud / dopyt (odhad)", vf(nCloud(N.tokIn, N.tokOut) / N.q, "€", 4)]]) +
+          "<p>Lokálna cena je čistá elektrina — hardvér sa neamortizuje. Cloudová je prepočet tokenov cez sadzbu z Nastavení.</p>",
+          [{ label: "Upraviť sadzbu", kind: "ghost", fn: function () { A.closeDetail(); A.go("nastavenia"); } }, { label: "Zavrieť", fn: A.closeDetail }]);
       });
+      /* 4. KPI: projekcia mesiaca (Q61) — derivované z prebiehajúceho augusta */
+      (function () {
+        var cur = N.months[N.months.length - 1];
+        var proj = cur.kwh / 2 * 31;   /* 2 dni z augusta v seede */
+        $("#n-proj-v").textContent = nf(proj, 1);
+        $("#n-proj-d").textContent = "z " + nf(cur.kwh, 1) + " kWh za prvé dni · " + vf(proj * N.rkwh, "€", 2);
+        jSpark("#n-spk-proj", 144, proj / 31, 0.4, "var(--violet)", "kWh", 1);
+        $("#n-kpi-proj").addEventListener("click", function () {
+          A.detail("Projekcia augusta",
+            dl([["Zatiaľ nameraných", nf(cur.kwh, 1) + " kWh · " + nf(cur.q, 0) + " dopytov"],
+              ["Projekcia spotreby", nf(proj, 1) + " kWh"], ["Projekcia ceny", vf(proj * N.rkwh, "€", 2)],
+              ["Metóda", "lineárna extrapolácia z prvých dní"]]) +
+            "<p>Hrubý odhad — projekcia sa spresní s každým dňom mesiaca.</p>", []);
+        });
+      })();
       $("#n-torates").addEventListener("click", function () { A.go("nastavenia"); });
 
       $("#n-csv").addEventListener("click", function () {
@@ -7742,10 +8017,12 @@ body{position:relative;z-index:0}
     });
     return hit[0] || null;
   };
+  /* zdroj zvončeka: aktívne upozornenia (Q74) */
+  A.registerInbox && A.registerInbox("alerts", "Upozornenia observability", function () { return U.active.length; }, function () { A.go("observabilita"); });
   function uBell() {
+    if (A.refreshBell) { A.refreshBell(); }
     var b = document.getElementById("bellCount");
     var n = U.active.length;
-    if (b) b.textContent = n;
     var ab = $("#u-act-b");
     if (ab) { ab.textContent = n === 0 ? "žiadne" : (n + (n < 5 ? " aktívne" : " aktívnych")); ab.className = "badge " + (n === 0 ? "ok" : "warn"); }
   }
@@ -8370,8 +8647,9 @@ body{position:relative;z-index:0}
     onShow: function (sub) {
       uBell();
       if (!sub) { obTab("upozornenia"); return; }
-      if (sub.indexOf("app:") === 0) {
-        obTab("upozornenia"); obSetApp(sub.slice(4));
+      var plainApp = A.apps.bySlug(sub);
+      if (sub.indexOf("app:") === 0 || plainApp) {
+        obTab("upozornenia"); obSetApp(plainApp ? sub : sub.slice(4));
         A.toast("Filtrované na appku" + (obApp() ? " " + obApp().name : ""), "ok");
         return;
       }
@@ -8469,12 +8747,21 @@ body{position:relative;z-index:0}
     };
     C.render("#st-ch-models", mSpec); altTable("#st-ch-models", mSpec);
   }
+  function stGuard() {
+    var n = stDiffs().length;
+    A.setLeaveGuard(n > 0 ? function (proceed) {
+      A.confirm("Máš " + n + " neuložen" + (n === 1 ? "ú zmenu" : (n < 5 ? "é zmeny" : "ých zmien")) + " v Nastaveniach",
+        "Odchodom sa zahodia. Ulož ich lištou dole, alebo pokračuj bez uloženia.",
+        proceed, "Odísť bez uloženia", true);
+    } : null);
+  }
   function stDirty() {
     var d = stDiffs(), b = $("#st-dirty");
     b.textContent = d.length ? d.length + (d.length === 1 ? " neuložená zmena: " : d.length < 5 ? " neuložené zmeny: " : " neuložených zmien: ") + d.map(function (f) { return ST_LABELS[f]; }).join(", ") : "Žiadne neuložené zmeny";
     b.className = "badge " + (d.length ? "warn" : "mute");
     $("#st-save").disabled = !d.length; $("#st-cancel").disabled = !d.length;
     stValidateCtx(); stRamAlert(); stCharts();
+    stGuard();
   }
   function stRenderTools(rows) {
     $("#st-tbl tbody").innerHTML = rows.map(function (r, i) {
@@ -8796,6 +9083,34 @@ body{position:relative;z-index:0}
   }
   injectSections();
 
+  /* odznaky pôvodu dát: max 1 rad na sekciu — agregát v hlavičke .sech, karty stíchnu (Q37) */
+  (function badgeQuota() {
+    document.querySelectorAll(".view").forEach(function (view) {
+      var current = null;
+      Array.prototype.forEach.call(view.children, function (el) {
+        if (el.classList.contains("sech")) { current = { head: el, kinds: {} }; el.__bq = current; return; }
+        if (!current) return;
+        el.querySelectorAll(".srcbadge").forEach(function (b) {
+          var kind = b.classList.contains("meas") ? "meas" : b.classList.contains("sim") ? "sim" : "demo";
+          current.kinds[kind] = b.textContent;
+          b.setAttribute("title", b.textContent);
+          b.setAttribute("aria-label", b.textContent);
+          b.textContent = "";
+          b.classList.add("src-quiet");
+        });
+      });
+      view.querySelectorAll(".sech").forEach(function (h) {
+        var q = h.__bq; if (!q || !Object.keys(q.kinds).length) return;
+        Object.keys(q.kinds).forEach(function (k) {
+          var b = document.createElement("span");
+          b.className = "srcbadge " + k;
+          b.textContent = q.kinds[k];
+          h.appendChild(b);
+        });
+      });
+    });
+  })();
+
   /* reveal pri scrolle — sekcie a karty sa jemne vynoria; reduced-motion to CSS vypína */
   (function reveal() {
     if (!("IntersectionObserver" in w)) return;
@@ -8891,28 +9206,46 @@ body{position:relative;z-index:0}
   if (A.mem) A.mem.onChange(navBadges);
   if (A.apps) A.apps.onChange(navBadges);
 
-  /* zvonček: aktívne upozornenia s názvom appky + skok (Q51/Q72) */
+  /* zvonček: derivovaný zo zaregistrovaných zdrojov (Q74) + alerty s názvom appky (Q51) */
   $("#bellBtn").addEventListener("click", function () {
-    var list = A.alerts ? A.alerts() : [];
-    if (!list.length) { A.go("observabilita"); return; }
-    var html = '<div class="feed">' + list.map(function (a, i) {
-      var app = A.alertApp ? A.alertApp(a) : null;
-      return '<button class="fi" data-al="' + i + '"><span class="fd' + (a.lvl === "info" ? "" : a.lvl === "warn" ? " a" : " r") + '"></span>' +
-        '<span class="fx"><b style="font-size:var(--fs-sm)">' + (app ? A.esc(app.name) + " — " : "") + A.esc(a.t) + "</b><span>" + A.esc(a.d) + " · od " + A.esc(a.since) + "</span></span></button>";
-    }).join("") + "</div>";
-    A.detail("Aktívne upozornenia (" + list.length + ")", html, [
+    var srcs = A.inbox ? A.inbox() : [];
+    var alerts = A.alerts ? A.alerts() : [];
+    if (!srcs.length && !alerts.length) { A.toast("Žiadne nevybavené položky", "ok"); return; }
+    var html = "";
+    if (alerts.length) {
+      html += '<p class="eyet" style="margin-bottom:6px">Upozornenia</p><div class="feed">' + alerts.map(function (a, i) {
+        var app = A.alertApp ? A.alertApp(a) : null;
+        return '<button class="fi" data-al="' + i + '"><span class="fd' + (a.lvl === "info" ? "" : a.lvl === "warn" ? " a" : " r") + '"></span>' +
+          '<span class="fx"><b style="font-size:var(--fs-sm)">' + (app ? A.esc(app.name) + " — " : "") + A.esc(a.t) + "</b><span>" + A.esc(a.d) + " · od " + A.esc(a.since) + "</span></span></button>";
+      }).join("") + "</div>";
+    }
+    var others = srcs.filter(function (x) { return x.key !== "alerts"; });
+    if (others.length) {
+      html += '<p class="eyet" style="margin:12px 0 6px">Ďalšie fronty</p><div class="feed">' + others.map(function (x, i) {
+        return '<button class="fi" data-src="' + i + '"><span class="fd"></span><span class="fx"><b style="font-size:var(--fs-sm)">' + A.esc(x.label) + '</b><span>klik otvorí</span></span><span class="ft num">' + x.n + "</span></button>";
+      }).join("") + "</div>";
+    }
+    var total = srcs.reduce(function (s, x) { return s + x.n; }, 0);
+    A.detail("Nevybavené (" + total + ")", html, [
       { label: "Otvoriť Observabilitu", fn: function () { A.closeDetail(); A.go("observabilita"); } }
     ]);
     setTimeout(function () {
       A.$$("#dp-body [data-al]").forEach(function (b) {
         b.addEventListener("click", function () {
-          var a = list[+b.getAttribute("data-al")], app = A.alertApp ? A.alertApp(a) : null;
+          var a = alerts[+b.getAttribute("data-al")], app = A.alertApp ? A.alertApp(a) : null;
           A.closeDetail();
           if (app) A.go("appky", app.slug); else A.go("observabilita");
         });
       });
+      A.$$("#dp-body [data-src]").forEach(function (b) {
+        b.addEventListener("click", function () {
+          var x = others[+b.getAttribute("data-src")];
+          A.closeDetail(); if (x && x.go) x.go();
+        });
+      });
     }, 20);
   });
+  if (A.refreshBell) { A.refreshBell(); setInterval(A.refreshBell, 4000); }
 
   /* ---------- globálne „+ Nový" ---------- */
   var newBtn = $("#newBtn"), newPop = $("#newPop");

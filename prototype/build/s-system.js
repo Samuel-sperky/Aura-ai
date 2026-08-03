@@ -377,7 +377,12 @@
       A.count($("#j-kpi-ram .kv"), 31.2, 1);
 
       /* KPI akcie — odkazy na eval kvalitu vlastní Jadro */
-      $("#j-kpi-router").addEventListener("click", function () { A.go("observabilita", "router"); });
+      $("#j-kpi-router").addEventListener("click", function () {
+        A.detail("Router 95,3 %",
+          dl([["Presnosť s regex vrstvou", "95,3 % (41/43)"], ["Model bez regex vrstvy", "87,5 %"], ["Prínos regex vrstvy", "+7,8 p. b."], ["Merané", "eval batéria 31. 7. 2026"]]) +
+          "<p>Klasifikácia oddelenia dopytu. Regex vrstva chytá jednoznačné vzory pred modelom.</p>",
+          [{ label: "Logy routera", kind: "ghost", fn: function () { A.closeDetail(); A.go("observabilita", "router"); } }, { label: "Zavrieť", fn: A.closeDetail }]);
+      });
       $("#j-kpi-hit").addEventListener("click", function () {
         A.detail("Recall hit@5 = 86,7 %",
           dl([["hit@5", "86,7 %"], ["MRR", "0,800"], ["Uzlov v pamäti", "714 v 5 oblastiach"],
@@ -386,7 +391,12 @@
           "<p>hit@5 hovorí, ako často je správny uzol v prvej päťke. MRR 0,800 znamená, že keď tam je, býva na prvom až druhom mieste.</p>",
           [{ label: "Prejsť na pamäť", fn: function () { A.closeDetail(); A.go("pamat"); } }, { label: "Zavrieť", fn: A.closeDetail }]);
       });
-      $("#j-kpi-p50").addEventListener("click", function () { A.go("observabilita", "p50"); });
+      $("#j-kpi-p50").addEventListener("click", function () {
+        A.detail("p50 vyhľadávania = 4,2 s",
+          dl([["p50 /api/search", "4,2 s"], ["Z toho embedovanie dopytu", "4,05 s (CPU)"], ["RecallEngine", "8–130 ms"], ["Cieľ", "pod 1 s"]]) +
+          "<p>Takmer celý čas zožerie embedovanie dopytu na CPU — recall samotný je rýchly.</p>",
+          [{ label: "Logy latencie", kind: "ghost", fn: function () { A.closeDetail(); A.go("observabilita", "p50"); } }, { label: "Zavrieť", fn: A.closeDetail }]);
+      });
       $("#j-kpi-ram").addEventListener("click", function () {
         A.detail("RAM 31,2 z 48 GB",
           dl([["Obsadené", "31,2 GB (65,0 %)"], ["Voľné", "16,8 GB"], ["Modely", "3,8 GB (qwen3:4b 2,6 + bge-m3 1,2)"],
@@ -656,8 +666,29 @@
           [{ label: "Zavrieť", fn: A.closeDetail }]);
       });
       $("#n-kpi-q").addEventListener("click", function () {
-        A.toast("Náklad na dopyt sa odvíja od latencie — pozri Jadro.", "ok"); A.go("jadro");
+        var elec = nElec(N.kwh);
+        A.detail("Cena za dopyt · rozklad",
+          dl([["Dopytov za mesiac", nf(N.q, 0)], ["Elektrina za mesiac", vf(elec, "€", 2)],
+            ["Elektrina / dopyt", vf(elec / N.q, "€", 4)], ["Sadzba", nf(N.rkwh, 2) + " €/kWh (Nastavenia)"],
+            ["Cloud / dopyt (odhad)", vf(nCloud(N.tokIn, N.tokOut) / N.q, "€", 4)]]) +
+          "<p>Lokálna cena je čistá elektrina — hardvér sa neamortizuje. Cloudová je prepočet tokenov cez sadzbu z Nastavení.</p>",
+          [{ label: "Upraviť sadzbu", kind: "ghost", fn: function () { A.closeDetail(); A.go("nastavenia"); } }, { label: "Zavrieť", fn: A.closeDetail }]);
       });
+      /* 4. KPI: projekcia mesiaca (Q61) — derivované z prebiehajúceho augusta */
+      (function () {
+        var cur = N.months[N.months.length - 1];
+        var proj = cur.kwh / 2 * 31;   /* 2 dni z augusta v seede */
+        $("#n-proj-v").textContent = nf(proj, 1);
+        $("#n-proj-d").textContent = "z " + nf(cur.kwh, 1) + " kWh za prvé dni · " + vf(proj * N.rkwh, "€", 2);
+        jSpark("#n-spk-proj", 144, proj / 31, 0.4, "var(--violet)", "kWh", 1);
+        $("#n-kpi-proj").addEventListener("click", function () {
+          A.detail("Projekcia augusta",
+            dl([["Zatiaľ nameraných", nf(cur.kwh, 1) + " kWh · " + nf(cur.q, 0) + " dopytov"],
+              ["Projekcia spotreby", nf(proj, 1) + " kWh"], ["Projekcia ceny", vf(proj * N.rkwh, "€", 2)],
+              ["Metóda", "lineárna extrapolácia z prvých dní"]]) +
+            "<p>Hrubý odhad — projekcia sa spresní s každým dňom mesiaca.</p>", []);
+        });
+      })();
       $("#n-torates").addEventListener("click", function () { A.go("nastavenia"); });
 
       $("#n-csv").addEventListener("click", function () {
@@ -718,10 +749,12 @@
     });
     return hit[0] || null;
   };
+  /* zdroj zvončeka: aktívne upozornenia (Q74) */
+  A.registerInbox && A.registerInbox("alerts", "Upozornenia observability", function () { return U.active.length; }, function () { A.go("observabilita"); });
   function uBell() {
+    if (A.refreshBell) { A.refreshBell(); }
     var b = document.getElementById("bellCount");
     var n = U.active.length;
-    if (b) b.textContent = n;
     var ab = $("#u-act-b");
     if (ab) { ab.textContent = n === 0 ? "žiadne" : (n + (n < 5 ? " aktívne" : " aktívnych")); ab.className = "badge " + (n === 0 ? "ok" : "warn"); }
   }
@@ -1346,8 +1379,9 @@
     onShow: function (sub) {
       uBell();
       if (!sub) { obTab("upozornenia"); return; }
-      if (sub.indexOf("app:") === 0) {
-        obTab("upozornenia"); obSetApp(sub.slice(4));
+      var plainApp = A.apps.bySlug(sub);
+      if (sub.indexOf("app:") === 0 || plainApp) {
+        obTab("upozornenia"); obSetApp(plainApp ? sub : sub.slice(4));
         A.toast("Filtrované na appku" + (obApp() ? " " + obApp().name : ""), "ok");
         return;
       }
@@ -1445,12 +1479,21 @@
     };
     C.render("#st-ch-models", mSpec); altTable("#st-ch-models", mSpec);
   }
+  function stGuard() {
+    var n = stDiffs().length;
+    A.setLeaveGuard(n > 0 ? function (proceed) {
+      A.confirm("Máš " + n + " neuložen" + (n === 1 ? "ú zmenu" : (n < 5 ? "é zmeny" : "ých zmien")) + " v Nastaveniach",
+        "Odchodom sa zahodia. Ulož ich lištou dole, alebo pokračuj bez uloženia.",
+        proceed, "Odísť bez uloženia", true);
+    } : null);
+  }
   function stDirty() {
     var d = stDiffs(), b = $("#st-dirty");
     b.textContent = d.length ? d.length + (d.length === 1 ? " neuložená zmena: " : d.length < 5 ? " neuložené zmeny: " : " neuložených zmien: ") + d.map(function (f) { return ST_LABELS[f]; }).join(", ") : "Žiadne neuložené zmeny";
     b.className = "badge " + (d.length ? "warn" : "mute");
     $("#st-save").disabled = !d.length; $("#st-cancel").disabled = !d.length;
     stValidateCtx(); stRamAlert(); stCharts();
+    stGuard();
   }
   function stRenderTools(rows) {
     $("#st-tbl tbody").innerHTML = rows.map(function (r, i) {

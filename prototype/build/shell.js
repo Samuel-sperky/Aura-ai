@@ -77,14 +77,55 @@
   };
 
   /* ---------- toast ---------- */
-  A.toast = function (msg, kind) {
+  A.toast = function (msg, kind, opts) {
+    opts = opts || {};
     var box = $("#toasts");
     var t = document.createElement("div");
     t.className = "toast " + (kind || "");
     t.setAttribute("role", "status");
-    t.textContent = msg;
+    var span = document.createElement("span");
+    span.textContent = msg;
+    t.appendChild(span);
+    if (opts.undo) {
+      var b = document.createElement("button");
+      b.className = "toast-undo"; b.type = "button"; b.textContent = opts.undoLabel || "Späť";
+      b.addEventListener("click", function () { kill(0); try { opts.undo(); } catch (e) { console.error(e); } });
+      t.appendChild(b);
+    }
     box.appendChild(t);
-    setTimeout(function () { t.style.opacity = "0"; setTimeout(function () { t.remove(); }, 300); }, 3200);
+    var life = opts.undo ? 7000 : 5000, timer = null, born = Date.now(), left = life;
+    function kill(delay) {
+      clearTimeout(timer);
+      setTimeout(function () { t.style.opacity = "0"; setTimeout(function () { t.remove(); }, 300); }, delay || 0);
+    }
+    function arm(ms) { timer = setTimeout(function () { kill(0); }, ms); }
+    /* hover pozastaví odpočet */
+    t.addEventListener("mouseenter", function () { clearTimeout(timer); left -= Date.now() - born; });
+    t.addEventListener("mouseleave", function () { born = Date.now(); arm(Math.max(900, left)); });
+    arm(life);
+    return t;
+  };
+  /* deštruktívna akcia = toast so Späť (7 s) */
+  A.undoToast = function (msg, undoFn, kind) { return A.toast(msg, kind || "ok", { undo: undoFn }); };
+
+  /* guard pred odchodom z obrazovky s neuloženými zmenami */
+  A.setLeaveGuard = function (fn) { A.state._leaveGuard = fn || null; };
+
+  /* ---------- inbox: zvonček počíta zo zaregistrovaných zdrojov (Q74) ---------- */
+  var _inbox = {};
+  A.registerInbox = function (key, label, countFn, goFn) { _inbox[key] = { label: label, count: countFn, go: goFn }; A.refreshBell(); };
+  A.inbox = function () {
+    return Object.keys(_inbox).map(function (k) {
+      var src = _inbox[k], n = 0;
+      try { n = src.count() || 0; } catch (e) { }
+      return { key: k, label: src.label, n: n, go: src.go };
+    }).filter(function (x) { return x.n > 0; });
+  };
+  A.refreshBell = function () {
+    var b = $("#bellCount"); if (!b) return;
+    var total = A.inbox().reduce(function (s, x) { return s + x.n; }, 0);
+    b.textContent = total;
+    b.style.display = total ? "" : "none";
   };
 
   /* ---------- potvrdzovací dialóg ---------- */
@@ -143,6 +184,11 @@
 
   /* ---------- router (hash) ---------- */
   A.go = function (key, sub, replace) {
+    if (A.state._leaveGuard && key !== A.state.screen) {
+      var g = A.state._leaveGuard;
+      g(function () { A.state._leaveGuard = null; A.go(key, sub, replace); });
+      return;
+    }
     var h = "#/" + key + (sub ? "/" + sub : "");
     if (location.hash !== h) {
       if (replace) location.replace(h); else location.hash = h;
