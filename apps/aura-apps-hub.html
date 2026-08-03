@@ -812,7 +812,7 @@ function sparkmini(vals,tone){
 }
 function segarea(m){
   const key=state.tseg||'trzba';const s=m.chart.series[key];
-  const segs=Object.entries(m.chart.series).map(([k,v])=>`<button class="chip ${k===key?'on':''}" onclick="state.tseg='${k}';renderDashboard(MOD['${m.key}'])">${tr(v.l)}</button>`).join('');
+  const segs=Object.entries(m.chart.series).map(([k,v])=>`<button class="chip ${k===key?'on':''}" onclick="state.tseg='${k}';renderDashboard(MOD['${m.key}']);setTimeout(runPost,350)">${tr(v.l)}</button>`).join('');
   return `<div class="segrow"><div class="chips">${segs}</div><span class="note">${tr(m.chart.note)}</span></div>${area(s.v)}`;
 }
 let agN=0;
@@ -1688,11 +1688,25 @@ function renderPage(m,pg){
       <div class="card"><div class="ch"><h3>${tr(pg.states.title)}</h3></div>
         <table class="mtbl">${pg.states.rows.map(r=>`<tr><td><span class="badge ${r[2]}">${tr(r[0])}</span></td><td class="n" style="font-family:var(--mono);text-align:right">${tr(r[1])}</td></tr>`).join('')}</table></div></div>`;
   }else if(pg.type==='timeline'){
-    body=`<div class="card"><div class="ch"><div class="chips">${pg.modes.map((mo,i)=>`<button class="chip ${i===0?'on':''}" onclick="toast('${state.lang==='sk'?'Re\u017eim (demo): ':'Mode (demo): '}'+this.textContent)">${tr(mo)}</button>`).join('')}</div><span class="sp">${tr(pg.note)}</span></div>
-      <div class="gantt" style="position:relative">
+    const tlm=state.tlmode||0;
+    const chips=pg.modes.map((mo,i)=>`<button class="chip ${i===tlm?'on':''}" onclick="state.tlmode=${i};route()">${tr(mo)}</button>`).join('');
+    let tlbody='';
+    if(tlm===1){
+      const w=(MOD.roadmap.widget&&MOD.roadmap.widget.sprints)||[];
+      tlbody=`<div class="gantt">${w.map(s=>`<div class="grow"><span class="gl">${s.l}</span><div class="gtrack"><div class="gfill" style="width:${s.done}%"></div></div><span class="gst">${s.st} \u00b7 ${s.done} %${s.st==='commit'?' \u00b7 carry-over':''}</span></div>`).join('')}</div>
+        <div class="hm-note">${state.lang==='sk'?'\u0160printy draft \u2192 commit \u2192 close \u00b7 nedokon\u010den\u00e9 polo\u017eky sa pren\u00e1\u0161aj\u00fa (carry-over)':'Sprints draft \u2192 commit \u2192 close \u00b7 unfinished items carry over'}</div>`;
+    }else if(tlm===2){
+      const dpg=(MOD.roadmap.pages||[]).find(x=>x.key==='rozhodnutia');
+      const rows=dpg?dpg.rows.slice(0,5):[];
+      tlbody=`<table class="mtbl">${rows.map(r=>`<tr data-go="#roadmap/detail/${r.id}" onclick="go(this.dataset.go)"><td><b>${tr(r.c[0])}</b></td><td>${tr(r.c[1])}</td><td>${tcell(r.c[2],2,m).replace(/^<td>|<\/td>$/g,'')}</td><td><span class="badge ${r.c[3][0]} mono">${tr(r.c[3][1])}</span></td></tr>`).join('')}</table>
+        <div class="hm-note">${state.lang==='sk'?'Rozhodnutia s\u00fa po z\u00e1pise nemenn\u00e9 \u00b7 diamanty na \u010diare = checkpointy':'Decisions are immutable once recorded \u00b7 diamonds on the line = checkpoints'}</div>`;
+    }else{
+      tlbody=`<div class="gantt" style="position:relative">
         <div style="position:absolute;left:calc(52px + (100% - 144px)*${pg.today/100});top:-6px;bottom:-6px;width:1px;background:var(--gold);opacity:.7"></div>
         ${pg.rows.map(r=>`<div class="grow" data-go="#${m.key}/detail/${r.id}" onclick="go(this.dataset.go)" style="cursor:pointer"><span class="gl">${tr(r.l)}</span><div class="gtrack"><div class="gfill" style="margin-left:${r.s}%;width:${r.w}%"></div></div><span class="gst"><span class="badge ${r.b[0]} mono" style="font-size:10px">${tr(r.b[1])}</span></span></div>`).join('')}
-      </div></div>`;
+      </div>`;
+    }
+    body=`<div class="card"><div class="ch"><div class="chips">${chips}</div><span class="sp">${tr(pg.note)}</span></div>${tlbody}</div>`;
   }else if(pg.type==='lines'){
     const W=560,H=180,pad=8,n=pg.labels.length;
     const allv=pg.series.flatMap(s=>s.v),mx=Math.max(...allv),mn=Math.min(...allv),rng=(mx-mn)||1;

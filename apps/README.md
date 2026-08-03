@@ -14,16 +14,16 @@ tržby júl 2026); neoverené hodnoty sú ukážkové a v celej appke platí dem
 
 ```
 apps/
-  aura-apps-hub.html      ← jeden súbor: rozcestník + 6 modulov × 5 obrazoviek
-  aura-apps-hub.pdf       tlačová verzia, 31 strán A4 landscape (tmavá téma)
-  screens/                36 PNG (31 obrazoviek dark + 4 light + EN rozcestník)
+  aura-apps-hub.html      ← jeden súbor: rozcestník + 6 modulov (45+ obrazoviek)
+  aura-apps-hub.pdf       tlačová verzia, 57 strán A4 landscape (tmavá téma)
+  screens/                74 PNG (obrazovky dark + interakčné stavy + light + mobil + EN)
   build/
     shoot.mjs             Playwright: verifikácia + PNG + PDF
 ```
 
 ## Moduly a obrazovky
 
-Každý modul: **intro** (cover) → **Prehľad** (dashboard) → **zoznam** → **detail** → **Nastavenia**.
+Každý modul: **intro** → **Prehľad** → **zoznam** → **detail** → **Nastavenia** + extra stránky reálnych appiek (Analýza, Rok, Reklamácie, Timeline, Trhy, Koše…). Spolu 45+ obrazoviek.
 
 | # | Modul | Reálna appka (port) | Kľúčové reálne prvky |
 |---|---|---|---|
@@ -45,7 +45,7 @@ Náhľad je simulovateľný — nie je to len statická galéria:
 - **Reálne filtre** (chips) a **vyhľadávanie** v zozname zúžia tabuľku; prázdny výsledok → empty stav.
 - **Vytváranie/úprava** cez modálny formulár (`Nový` / `Upraviť`) → nový záznam sa pridá do tabuľky + toast.
 - **Prepínače** v Nastaveniach reálne prepnú stav (+ toast). **Pridávanie krokov** do timeline v detaile.
-- **Chybové stavy**: banner v Aura Ops (Worker C zaťažený) a Aura Finance (faktúry po splatnosti).
+- **Chybové stavy**: bannery s reálnymi scenármi (KPI po termíne, GLS zmluvné minimum, AI budget, pokles t30).
 - **Globálne prvky**: ⌘K vyhľadávanie naprieč modulmi, panel notifikácií (zvonček), profilové menu (avatar).
 - **Skeleton loading** pri prepínaní obrazoviek, **toasty** po akciách, **onboarding** prázdny štart.
 - **Vstupné obrazovky**: `#login` → `#workspace` (výber pracovného priestoru) → hub; `#profile`.
@@ -98,8 +98,9 @@ Filter ako popover, prepínač obdobia s poznámkou o limite API.
 ## Farebný systém
 
 Brand akcenty modulov sú **oddelené od stavových farieb** (aby sa napr. „pozor" nemýlilo s brandom):
-Marketing `--b-mkt` (teal), HR `--b-hr` (violet), Sales `--b-sales` (jantár), Finance `--b-fin` (zelená),
-Support `--b-support` (oranžová), Ops `--b-ops` `#2a8f96`. Stavové `good/amber/red/violet` sú len pre badge.
+Marketing `--b-mkt` (teal), KPI `--b-kpi` (jantárová zlatá), Logistika `--b-log` (oranžová),
+HR `--b-hr` (violet), Roadmap `--b-road` `#2a8f96`, Tržby `--b-fin` (zelená).
+Stavové `good/amber/red/violet` sú len pre badge; plnenie KPI: zelená ≥100 / žltá 60–99 / červená <60 / sivá.
 Chrome (topbar, SK/EN) drží fixný teal nezávisle od modulu.
 
 ## Ako prestavať screenshoty a PDF
