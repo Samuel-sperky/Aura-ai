@@ -27,7 +27,7 @@
 
   <!-- KPI -->
   <div class="row g4">
-    <button class="kpi tl" id="pm-k1"><span class="kl">Uzlov v pamäti</span><b id="pm-k1v">0</b><span class="kd" id="pm-k1d">710 v oblastiach · 4 jadrá</span></button>
+    <button class="kpi tl" id="pm-k1"><span class="kl">Uzlov v pamäti</span><b id="pm-k1v">0</b><span class="kd" id="pm-k1d">72 v oblastiach · 5 jadier</span></button>
     <button class="kpi" id="pm-k2"><span class="kl">Oblastí</span><b id="pm-k2v">5</b><span class="kd" id="pm-k2d">klik zobrazí rozdelenie</span></button>
     <button class="kpi" id="pm-k3"><span class="kl">Slabé uzly</span><b id="pm-k3v">0</b><span class="kd dn">sila pod 0,40 · na čistenie</span></button>
     <button class="kpi" id="pm-k4"><span class="kl">Dnes aktívne</span><b id="pm-k4v">0</b><span class="kd up">na triage</span></button>
@@ -65,9 +65,14 @@
           <button data-view="radial" aria-pressed="false">Radiál</button>
         </div>
         <button class="btn ghost" id="pm-filt-toggle" aria-expanded="false" aria-controls="pm-filter-body">Filtre <span id="pm-filt-caret" aria-hidden="true">▸</span></button>
-        <span class="tag num" id="pm-net-cnt"></span>
         <button class="btn ghost" id="pm-gfull" aria-pressed="false">Celá obrazovka</button>
       </div>
+
+      <!-- pásik zhôd hľadania (klik = vycentrovať + otvoriť) -->
+      <div class="ghits" id="pm-ghits" hidden></div>
+
+      <!-- stavový riadok: poctivé počítadlo + chipy aktívnych obmedzení -->
+      <div class="gchips" id="pm-gchips"><span class="tag num gcnt" id="pm-net-cnt"></span></div>
 
       <!-- rozbaľovacie filtre (Q11) -->
       <div class="gfilters" id="pm-filter-body" hidden>
@@ -86,10 +91,15 @@
           <button class="btn ghost sm" id="pm-gback">← Celá sieť</button>
           <span id="pm-gcrumb-t"></span>
         </div>
-        <svg class="cx-svg gnet" id="pm-net" viewBox="0 0 960 620" role="application" aria-label="Neurónová sieť pamäte — 5 lalokov, oddelenia a poznatky"></svg>
+        <svg class="cx-svg gnet" id="pm-net" viewBox="0 0 1160 620" role="application" tabindex="0" aria-label="Neurónová sieť pamäte — 5 lalokov, oddelenia a poznatky. Šípkami sa presúvaš medzi uzlami, Enter otvorí, plus a mínus približujú."></svg>
+        <div class="gzoom" role="group" aria-label="Priblíženie mapy">
+          <button class="btn ghost sm" id="pm-gz-out" aria-label="Oddialiť" title="Oddialiť">−</button>
+          <button class="btn ghost sm" id="pm-gz-fit" aria-label="Prispôsobiť pohľad" title="Prispôsobiť pohľad">⊙</button>
+          <button class="btn ghost sm" id="pm-gz-in" aria-label="Priblížiť" title="Priblížiť">+</button>
+        </div>
         <div class="gtip" id="pm-gtip" role="tooltip" hidden></div>
         <div class="cx-list" id="pm-net-list"></div>
-        <p class="note gnote">Prejdi po uzle — rozsvietia sa jeho synapsie, klik otvorí inšpektor. Klik na jadro laloku priblíži oblasť (Esc vráti). Koliesko približuje, ťahaním posúvaš plátno.</p>
+        <p class="note gnote"><span class="only-d">Mapa zobrazuje 72 reprezentantov zo 710 uzlov podkladu. Prejdi po uzle — rozsvietia sa jeho synapsie, klik otvorí inšpektor. Klik na jadro priblíži lalok, klik na oddelenie priblíži oddelenie (Esc vracia po úrovniach). Koliesko približuje, ťahaním posúvaš plátno.</span><span class="only-m">Zoznam nahrádza mapu: ťukni na uzol pre inšpektor. „Celá obrazovka" otvorí interaktívnu mapu — dva prsty približujú.</span></p>
       </div>
 
       <!-- RADIÁL -->

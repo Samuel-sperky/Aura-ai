@@ -8,7 +8,7 @@
   var A = w.Aura, esc = A.esc;
 
   /* deterministické pomôcky (rovnaké semienko = rovnaké hodnoty) */
-  function h32(s) { var h = 2166136261; for (var i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = (h * 16777619) >>> 0; } return h; }
+  function h32(s) { var h = 2166136261; for (var i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
   function det(s) { return A.rng(h32(s)); }
   function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
   var NB = " ";
@@ -16,7 +16,7 @@
 
   /* ---------- reálne oblasti a počty z mind_overview (verbatim) ---------- */
   var AREAS = [
-    { k: "dev", name: "Vývoj & kód", n: 271, color: "var(--teal)", deps: [
+    { k: "dev", name: "Vývoj & kód", n: 271, color: "var(--lobe-1)", deps: [
       { name: "Laravel & PHP", n: 68, type: "skill", nodes: ["Eloquent vzťahy a eager loading", "Service container a väzby", "Vlastné Artisan príkazy"] },
       { name: "JavaScript & Vite", n: 54, type: "skill", nodes: ["Vite build a delenie kódu", "ES moduly bez bundlera", "Vykresľovanie do canvasu 2D"] },
       { name: "Python & skripty", n: 39, type: "skill", nodes: ["Dávkové spracovanie CSV", "Migrácia vektorov medzi modelmi", "Automatizácia zálohy pamäte"] },
@@ -25,33 +25,33 @@
       { name: "Git & CI", n: 25, type: "skill", nodes: ["Vetvenie pre paralelných agentov", "Kontroly pred commitom", "Návrat po zlom zlúčení"] },
       { name: "Testovanie", n: 21, type: "skill", nodes: ["Eval batéria routera", "Snímkové testy rozhrania", "Meranie latencie recallu"] }
     ] },
-    { k: "biz", name: "Biznis & projekty", n: 160, color: "var(--gold)", deps: [
+    { k: "biz", name: "Biznis & projekty", n: 160, color: "var(--lobe-2)", deps: [
       { name: "Aura AI", n: 44, type: "project", nodes: ["Architektúra refactoru Hadesa", "Rozdelenie mind.js na moduly", "Plán upgradu stroja"] },
       { name: "E-shop Šperky", n: 38, type: "project", nodes: ["Štruktúra katalógu", "Tón popisov produktov", "Pravidlá kategorizácie"] },
       { name: "Klienti & ponuky", n: 31, type: "project", nodes: ["Šablóna cenovej ponuky", "Otázky pri prvom hovore", "Rozsah a hranice zákazky"] },
       { name: "Financie & fakturácia", n: 26, type: "memory", nodes: ["Splatnosť a upomienky", "Rozdelenie nákladov na projekty", "Sadzby podľa typu práce"] },
       { name: "Procesy", n: 21, type: "memory", nodes: ["Denný rituál plánovania", "Odovzdávanie práce agentom", "Kontrolný zoznam pred nasadením"] }
     ] },
-    { k: "mkt", name: "Marketing & SEO", n: 152, color: "var(--violet)", deps: [
+    { k: "mkt", name: "Marketing & SEO", n: 152, color: "var(--lobe-3)", deps: [
       { name: "Obsah & copy", n: 41, type: "skill", nodes: ["Štruktúra článku pre vyhľadávanie", "Písanie nadpisov", "Prepis odborného textu do ľudskej reči"] },
       { name: "Technické SEO", n: 35, type: "skill", nodes: ["Indexovateľnosť a robots", "Rýchlosť načítania a LCP", "Štruktúrované údaje produktov"] },
       { name: "Analytika", n: 29, type: "memory", nodes: ["Čítanie Search Console", "Rozdiel medzi dojmami a klikmi", "Sezónnosť dopytu po šperkoch"] },
       { name: "Sociálne siete", n: 26, type: "project", nodes: ["Plán príspevkov na mesiac", "Formát krátkych videí", "Reakcie na komentáre"] },
       { name: "Reklama PPC", n: 21, type: "memory", nodes: ["Rozpočet podľa marže", "Vylučujúce kľúčové slová", "Meranie návratnosti"] }
     ] },
-    { k: "per", name: "Osobné & preferencie", n: 91, color: "var(--good)", deps: [
+    { k: "per", name: "Osobné & preferencie", n: 91, color: "var(--lobe-4)", deps: [
       { name: "Štýl komunikácie", n: 27, type: "memory", nodes: ["Krátke vety, žiadna vata", "Priame pomenovanie problému", "Bez marketingového tónu"] },
       { name: "Pracovné návyky", n: 24, type: "memory", nodes: ["Hlboká práca v dopoludní", "Jedna veľká úloha denne", "Rozhodnutia sa zapisujú"] },
       { name: "Nástroje & prostredie", n: 22, type: "memory", nodes: ["Tmavá téma všade", "Klávesnica pred myšou", "Lokálne pred cloudom"] },
       { name: "Jazyk & tón", n: 18, type: "memory", nodes: ["Slovenčina s diakritikou", "Odborné termíny bez prekladu", "Žiadne emoji vo výstupoch"] }
     ] },
-    { k: "dsg", name: "Dizajn & kreatíva", n: 36, color: "var(--amber)", deps: [
+    { k: "dsg", name: "Dizajn & kreatíva", n: 36, color: "var(--lobe-5)", deps: [
       { name: "Typografia", n: 13, type: "skill", nodes: ["Serif na nadpisy, sans na text", "Tabuľkové číslice v dátach", "Minimálna veľkosť 11 px"] },
       { name: "Farby & témy", n: 12, type: "memory", nodes: ["Teal a zlatá ako pár", "Kontrast aspoň 4,5:1", "Svetlá téma nie je inverzia"] },
       { name: "Rozloženie", n: 11, type: "skill", nodes: ["Mriežka 12 stĺpcov", "Hustota dát pred bielym miestom", "Karta ako základná jednotka"] }
     ] }
   ];
-  var CORE_NODES = 4, TOTAL_AREA = 710, TOTAL_ALL = TOTAL_AREA + CORE_NODES; /* 714 */
+  var CORE_NODES = 5, TOTAL_AREA = 710, TOTAL_ALL = TOTAL_AREA + CORE_NODES; /* 715 = 710 + 5 jadier lalokov */
 
   /* zóny = oblasti (kód + názov, konzistentne všade) — Q33 */
   var ZONE_CODE = { dev: "Z1", biz: "Z2", mkt: "Z3", per: "Z4", dsg: "Z5" };
@@ -60,7 +60,7 @@
   var SESSIONS = ["session · Claude Code 31. 7.", "session · Codex 29. 7.", "mind_learn · manuálne", "session · Claude Code 24. 7.", "import · mind.js refactor"];
 
   /* ---------- vybuduj uzly (oddelenia + listy) ---------- */
-  var _nodes = [], _byId = {};
+  var _nodes = [], _byId = {}, _seq = 1;
   (function build() {
     AREAS.forEach(function (a, ai) {
       a.i = ai; a.slug = a.k; a.share = a.n / TOTAL_AREA; a.zone = ZONE_CODE[a.k];
@@ -102,13 +102,23 @@
   /* ---------- hrany / synapsie (odvodené, nie merané) ----------
      husté vnútri oddelenia, mosty pri zdieľanom type medzi oblasťami */
   var _edges = [], _adj = {};
+  function link(a, b, w0) {
+    if (a.id === b.id) return;
+    _edges.push({ a: a.id, b: b.id, w: w0 });
+    (_adj[a.id] = _adj[a.id] || []).push({ id: b.id, w: w0 });
+    (_adj[b.id] = _adj[b.id] || []).push({ id: a.id, w: w0 });
+  }
+  function unlink(id) {
+    _edges = _edges.filter(function (e) { return e.a !== id && e.b !== id; });
+    delete _adj[id];
+    Object.keys(_adj).forEach(function (k) { _adj[k] = _adj[k].filter(function (e) { return e.id !== id; }); });
+  }
+  /* váha mosta: deterministická zo sily koncov + jitter z id páru (0,20–0,70 < 0,8 intra) */
+  function bridgeW(a, b) {
+    var jit = (h32(a.id + "→" + b.id) % 1000) / 1000;
+    return +clamp(0.2 + ((a.str + b.str) / 2) * 0.4 + jit * 0.1, 0.2, 0.7).toFixed(3);
+  }
   (function edges() {
-    function link(a, b, w0) {
-      if (a.id === b.id) return;
-      _edges.push({ a: a.id, b: b.id, w: w0 });
-      (_adj[a.id] = _adj[a.id] || []).push({ id: b.id, w: w0 });
-      (_adj[b.id] = _adj[b.id] || []).push({ id: a.id, w: w0 });
-    }
     ALL_DEPS.forEach(function (d) {
       var ns = d.nodeList;
       for (var i = 0; i < ns.length; i++) for (var j = i + 1; j < ns.length; j++) link(ns[i], ns[j], 0.8);
@@ -119,7 +129,8 @@
       if (r() > 0.5) return;
       var cand = _nodes.filter(function (m) { return m.type === n.type && m.area.k !== n.area.k; });
       if (!cand.length) return;
-      link(n, cand[Math.floor(r() * cand.length)], 0.35);
+      var m = cand[Math.floor(r() * cand.length)];
+      link(n, m, bridgeW(n, m));
     });
   })();
 
@@ -191,7 +202,7 @@
     create: function (attrs) {
       var area = attrs.area || AREAS[0];
       var dep = attrs.dep || area.deps[0];
-      var id = "new-" + (h32(attrs.name + "|" + Date.parse ? attrs.name : attrs.name) >>> 0).toString(36) + "-" + _nodes.length;
+      var id = "new-" + h32(attrs.name || "uzol").toString(36) + "-" + (_seq++);
       var nd = {
         id: id, slug: id, name: attrs.name || "Nový uzol", dep: dep, area: area,
         type: attrs.type || dep.type || "memory",
@@ -200,7 +211,12 @@
         tags: attrs.tags || [], pinned: false, archived: false, desc: attrs.desc || "",
         src: attrs.src || "mind_learn · manuálne", edits: [{ what: "vytvorený", when: "teraz" }], today: true
       };
-      _nodes.push(nd); _byId[id] = nd; emit("create", nd);
+      _nodes.push(nd); _byId[id] = nd;
+      /* nový uzol nie je sirota — pripoj k 1–2 najsilnejším uzlom rovnakého oddelenia */
+      var sib = _nodes.filter(function (m) { return m.dep === dep && m.id !== id && !m.archived; })
+        .sort(function (a, b) { return b.str - a.str; }).slice(0, 2);
+      sib.forEach(function (m) { link(nd, m, +(0.5 + nd.str * 0.3).toFixed(3)); });
+      emit("create", nd);
       return nd;
     },
     update: function (nd, patch) {
@@ -211,7 +227,7 @@
     },
     archive: function (nd) { nd.archived = true; nd.edits = (nd.edits || []).concat([{ what: "archivovaný", when: "teraz" }]); emit("archive", nd); },
     restore: function (nd) { nd.archived = false; nd.edits = (nd.edits || []).concat([{ what: "obnovený", when: "teraz" }]); emit("restore", nd); },
-    remove: function (nd) { var i = _nodes.indexOf(nd); if (i > -1) _nodes.splice(i, 1); delete _byId[nd.id]; emit("remove", nd); },
+    remove: function (nd) { var i = _nodes.indexOf(nd); if (i > -1) _nodes.splice(i, 1); delete _byId[nd.id]; unlink(nd.id); emit("remove", nd); },
     togglePin: function (nd) { nd.pinned = !nd.pinned; emit("update", nd); },
     merge: function (keep, drop) {
       keep.str = Math.max(keep.str, drop.str); keep.acts += drop.acts;

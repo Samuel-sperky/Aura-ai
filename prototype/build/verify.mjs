@@ -617,8 +617,12 @@ await p.waitForTimeout(900);
 const g7 = await p.evaluate(() => {
   const svg = document.getElementById('pm-net');
   const hubs = svg.querySelectorAll('.nt-hub .nt-n').length;
-  const leaves = svg.querySelectorAll('.nt-leaf .nt-n').length;
-  const ns = [...svg.querySelectorAll('.nt-n')].map(c => ({ x: +c.getAttribute('cx'), y: +c.getAttribute('cy'), r: +c.getAttribute('r') }));
+  const leaves = svg.querySelectorAll('.nt-lf').length;
+  /* leafy sú aj path tvary (typ = tvar) → pozície z getBBox */
+  const ns = [...svg.querySelectorAll('.nt-n')].map(c => {
+    const b = c.getBBox();
+    return { x: b.x + b.width / 2, y: b.y + b.height / 2, r: Math.max(b.width, b.height) / 2 };
+  });
   let hard = 0;
   for (let i = 0; i < ns.length; i++) for (let j = i + 1; j < ns.length; j++) {
     if (Math.hypot(ns[i].x - ns[j].x, ns[i].y - ns[j].y) < (ns[i].r + ns[j].r) / 2) hard++;
@@ -662,6 +666,187 @@ g8.zoomed && g8.back ? O('graf v7: zoom kolieskom + Esc reset') : F('graf v7: zo
 g8.crumb ? O('graf v7: klik na jadro laloku = fokus s breadcrumb') : F('graf v7: fokus laloku nefunguje');
 g8.hots > 0 ? O(`graf v7: search zvýraznil ${g8.hots} zhôd`) : F('graf v7: search nič nezvýraznil');
 g8.sameNode ? O('graf v7: prepnutie vrstvy bez rebuildu DOM') : F('graf v7: vrstva prestavala DOM');
+
+// --- v7.1 brány: menovky, dátový kontrakt, fokus oddelenia, search×filter, stav ---
+const g9 = await p.evaluate(async () => {
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  const A = window.Aura, svg = document.getElementById('pm-net');
+  // 1) menovky hubov nesmú tvrdo kolidovať s uzlami (prienik > 4 jednotky)
+  const circles = [...svg.querySelectorAll('.nt-n')].map(c => {
+    const b = c.getBBox(); return { x: b.x + b.width / 2, y: b.y + b.height / 2, r: Math.max(b.width, b.height) / 2 };
+  });
+  let lblHits = 0;
+  for (const t of svg.querySelectorAll('.nt-hlbl')) {
+    const rc = t.getBBox();
+    for (const c of circles) {
+      const nx = Math.max(rc.x, Math.min(c.x, rc.x + rc.width));
+      const ny = Math.max(rc.y, Math.min(c.y, rc.y + rc.height));
+      if (c.r - Math.hypot(c.x - nx, c.y - ny) > 4) { lblHits++; break; }
+    }
+  }
+  // 2) hover počet spojení == inšpektorové "Súvisiace uzly" (mem.neighbors)
+  const lf = svg.querySelector('.nt-lf');
+  lf.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true, clientX: 400, clientY: 400 }));
+  await sleep(260);
+  const tipTxt = document.getElementById('pm-gtip').textContent;
+  const tipDeg = +(tipTxt.match(/(\d+)\s+súvisiacich/) || [])[1];
+  const memDeg = A.mem.neighbors(lf.__nid).length;
+  lf.dispatchEvent(new MouseEvent('mouseleave', { bubbles: true }));
+  // 3) mosty: reálne váhy (rôzne), max 2 na uzol, každý lalok ≥ 1
+  const ws = new Set(), endC = {}, lobeHit = {};
+  document.querySelectorAll('#pm-net .nt-e.nt-bridge').forEach(e => ws.add(e.getAttribute('stroke')));
+  const cross = A.mem.edges().filter(e => {
+    const a = A.mem.byId(e.a), b = A.mem.byId(e.b);
+    return a && b && a.area.k !== b.area.k;
+  });
+  const wVals = new Set(cross.map(e => e.w));
+  // 4) create → nový uzol má hrany; remove → žiadne visiace hrany
+  const nd = A.mem.create({ name: 'Verify uzol v71' });
+  const degNew = A.mem.neighbors(nd.id).length;
+  A.mem.remove(nd);
+  const dangling = A.mem.edges().filter(e => !A.mem.byId(e.a) || !A.mem.byId(e.b)).length;
+  await sleep(400);
+  return { lblHits, tipDeg, memDeg, wDistinct: wVals.size, degNew, dangling };
+});
+g9.lblHits === 0 ? O('graf v7.1: menovky hubov bez tvrdých kolízií s uzlami') : F(`graf v7.1: ${g9.lblHits} menoviek koliduje s uzlami`);
+g9.tipDeg === g9.memDeg ? O(`graf v7.1: hover spojenia == inšpektor (${g9.memDeg})`) : F('graf v7.1: hover vs inšpektor nesedí ' + JSON.stringify(g9));
+g9.wDistinct > 5 ? O(`graf v7.1: mosty majú reálne váhy (${g9.wDistinct} hodnôt)`) : F('graf v7.1: váhy mostov degenerované');
+g9.degNew >= 1 ? O(`graf v7.1: nový uzol dostane ${g9.degNew} hrán (nie sirota)`) : F('graf v7.1: create() tvorí sirotu');
+g9.dangling === 0 ? O('graf v7.1: remove() nenecháva visiace hrany') : F(`graf v7.1: ${g9.dangling} visiacich hrán po remove`);
+
+const g10 = await p.evaluate(async () => {
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  const A = window.Aura, cam = document.getElementById('pm-cam');
+  const camK = () => +(cam.getAttribute('transform').match(/scale\(([\d.]+)/) || [0, 1])[1];
+  // 1) hub klik = fokus oddelenia s vlastným crumbom; Esc = o úroveň (dept→lalok→koreň)
+  document.querySelector('#pm-net .nt-hub .nt-n').dispatchEvent(new MouseEvent('click', { bubbles: true }));
+  await sleep(420);
+  const deptCrumb = document.getElementById('pm-gcrumb-t').textContent;
+  const deptZoom = camK() > 1.3;
+  /* vrstvový panel: orbitálne kruhy + hlavička vrstvy + tečúce vlákna */
+  const orbs = document.querySelectorAll('#pm-net .nt-orb').length;
+  const ring = !!document.querySelector('#pm-net .nt-ring');
+  const flbl = (document.querySelector('#pm-net .nt-flbl') || {}).textContent || '';
+  const idx = document.querySelectorAll('#pm-net .nt-idx').length;
+  const fibs = document.querySelectorAll('#pm-net .nt-e.fib').length;
+  document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+  await sleep(360);
+  const lobeCrumb = document.getElementById('pm-gcrumb-t').textContent;
+  document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+  await sleep(360);
+  const rootOk = document.getElementById('pm-gcrumb').hidden && camK() === 1;
+  // 2) crumb prežije zmenu modelu korektne (fokus sa obnoví, neklame)
+  document.querySelector('#pm-net .nt-corec').dispatchEvent(new MouseEvent('click', { bubbles: true }));
+  await sleep(420);
+  const n0 = A.mem.nodes()[0];
+  A.mem.update(n0, { str: Math.min(1, n0.str + 0.01) });
+  await sleep(500);
+  const crumbAfterEdit = !document.getElementById('pm-gcrumb').hidden && camK() > 1.3;
+  document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+  await sleep(300);
+  // 3) search rešpektuje filter (0 .hot mimo passFilter) + hlási skryté zhody
+  document.getElementById('pm-filt-toggle').click(); await sleep(120);
+  const ft = document.getElementById('pm-f-type');
+  ft.value = 'project'; ft.dispatchEvent(new Event('change', { bubbles: true }));
+  await sleep(240);
+  const q = document.getElementById('pm-gq');
+  q.value = 'docker'; q.dispatchEvent(new Event('input', { bubbles: true }));
+  await sleep(300);
+  const hotOut = document.querySelectorAll('#pm-net .nt-n.hot.flt-out').length;
+  const hiddenNote = (document.getElementById('pm-ghits').textContent || '').includes('filtrom');
+  // 4) stavový riadok hlási zvýraznené aj dôvody ako chipy
+  const chips = [...document.querySelectorAll('#pm-gchips .gchip')].map(c => c.textContent);
+  const hasSearchChip = chips.some(t => t.includes('hľadanie'));
+  const hasFilterChip = chips.some(t => t.includes('filtre'));
+  // 5) „Vyčistiť pohľad" vráti neutrálny stav
+  [...document.querySelectorAll('#pm-gchips button')].find(b => b.textContent.includes('Vyčistiť'))?.click();
+  await sleep(360);
+  const cleaned = !document.getElementById('pm-gq').value &&
+    document.querySelectorAll('#pm-gchips .gchip').length === 0 && camK() === 1;
+  // 6) zoom klaster: + zväčší, ⊙ prispôsobí, Esc vráti
+  document.getElementById('pm-gz-in').click(); await sleep(200);
+  const zIn = camK() > 1.05;
+  document.getElementById('pm-gz-fit').click(); await sleep(200);
+  const zFit = camK() > 0.85;
+  document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+  await sleep(240);
+  // 7) fullscreen: Esc zatvára
+  document.getElementById('pm-gfull').click(); await sleep(300);
+  const fullOn = document.getElementById('pm-gcard').classList.contains('gfull');
+  document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+  await sleep(300);
+  const fullEsc = fullOn && !document.getElementById('pm-gcard').classList.contains('gfull');
+  document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+  await sleep(200);
+  return { deptCrumb, deptZoom, lobeCrumb, rootOk, crumbAfterEdit, hotOut, hiddenNote, hasSearchChip, hasFilterChip, cleaned, zIn, zFit, fullEsc, orbs, ring, flbl, idx, fibs };
+});
+(g10.deptCrumb.includes('›') && g10.deptZoom) ? O(`graf v7.1: hub klik = fokus oddelenia („${g10.deptCrumb}")`) : F('graf v7.1: fokus oddelenia zlyhal ' + JSON.stringify(g10));
+(g10.ring && g10.orbs >= 4 && g10.flbl.includes('›') && g10.idx >= 2 && g10.fibs >= 2)
+  ? O(`graf v7.1: vrstvový panel fokusu (prstenec + ${g10.orbs} orbít + hlavička + ${g10.fibs} vlákien)`)
+  : F('graf v7.1: vrstvový panel chýba ' + JSON.stringify({ ring: g10.ring, orbs: g10.orbs, flbl: g10.flbl, idx: g10.idx, fibs: g10.fibs }));
+(!g10.lobeCrumb.includes('›') && g10.rootOk) ? O('graf v7.1: Esc reťaz oddelenie → lalok → koreň (1 úroveň/stlačenie)') : F('graf v7.1: Esc reťaz zlyhala ' + JSON.stringify(g10));
+g10.crumbAfterEdit ? O('graf v7.1: breadcrumb + fokus prežijú zmenu modelu (derivované)') : F('graf v7.1: breadcrumb po edite klame');
+g10.hotOut === 0 && g10.hiddenNote ? O('graf v7.1: search rešpektuje filter + hlási skryté zhody') : F('graf v7.1: search obchádza filter ' + JSON.stringify(g10));
+g10.hasSearchChip && g10.hasFilterChip ? O('graf v7.1: stavový riadok ukazuje chipy obmedzení') : F('graf v7.1: chipy chýbajú');
+g10.cleaned ? O('graf v7.1: „Vyčistiť pohľad" vráti neutrálny stav') : F('graf v7.1: vyčistenie pohľadu zlyhalo');
+g10.zIn && g10.zFit ? O('graf v7.1: zoom klaster − ⊙ + funguje') : F('graf v7.1: zoom klaster zlyhal');
+g10.fullEsc ? O('graf v7.1: Esc zatvára fullscreen') : F('graf v7.1: fullscreen Esc zlyhal');
+
+// jednotná metrika: legenda == graf hustoty == KPI priemer
+const g11 = await p.evaluate(() => {
+  const nums = [...document.querySelectorAll('#pm-legend .glg-t .num')].map(s => {
+    const m = s.textContent.replace(/ /g, ' ').match(/(\d+)\s*v\s*sieti\s*·\s*([\d,]+)\s*spojení/);
+    return m ? { cnt: +m[1], per: +m[2].replace(',', '.') } : null;
+  }).filter(Boolean);
+  const kpiAvg = +(document.querySelectorAll('#pm-gkpi .kpi b')[2] || {}).textContent?.replace(',', '.');
+  const tot = nums.reduce((s, x) => s + x.cnt, 0);
+  const wAvg = nums.reduce((s, x) => s + x.per * x.cnt, 0) / (tot || 1);
+  return { rows: nums.length, tot, wAvg: +wAvg.toFixed(1), kpiAvg };
+});
+(g11.rows === 5 && Math.abs(g11.wAvg - g11.kpiAvg) <= 0.15)
+  ? O(`graf v7.1: jedna metrika spojení/uzol (legenda ø${g11.wAvg} == KPI ${g11.kpiAvg})`)
+  : F('graf v7.1: metriky sa rozchádzajú ' + JSON.stringify(g11));
+
+// radiál rešpektuje filter (stred = filtrovaný počet)
+const g12 = await p.evaluate(async () => {
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  document.getElementById('pm-filt-toggle').click(); await sleep(120);
+  const ft = document.getElementById('pm-f-type');
+  ft.value = 'project'; ft.dispatchEvent(new Event('change', { bubbles: true }));
+  await sleep(240);
+  const filtered = window.Aura.mem.nodes().filter(n => n.type === 'project').length;
+  document.querySelector('#pm-views [data-view="radial"]').click();
+  await sleep(400);
+  const centerSub = document.querySelector('#pm-rad .ach-tick')?.textContent || '';
+  document.querySelector('#pm-views [data-view="siet"]').click();
+  document.getElementById('pm-reset').click();
+  await sleep(240);
+  return { filtered, centerSub };
+});
+g12.centerSub.includes(String(g12.filtered))
+  ? O(`radiál v7.1: stred == filtrovaný počet (${g12.filtered})`)
+  : F('radiál v7.1: ignoruje filter ' + JSON.stringify(g12));
+
+// bulk výber neprežije filter
+const g13 = await p.evaluate(async () => {
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  document.getElementById('pm-all').checked = true;
+  document.getElementById('pm-all').dispatchEvent(new Event('change', { bubbles: true }));
+  await sleep(240);
+  const before = document.getElementById('pm-bulk-n').textContent;
+  const ft = document.getElementById('pm-f-type');
+  ft.value = 'project'; ft.dispatchEvent(new Event('change', { bubbles: true }));
+  await sleep(300);
+  const rows = document.querySelectorAll('#pm-tbl tbody tr').length;
+  const barHidden = document.getElementById('pm-bulk').hidden;
+  const after = barHidden ? '0' : document.getElementById('pm-bulk-n').textContent;
+  const selN = +(after.match(/\d+/) || [0])[0];
+  document.getElementById('pm-reset').click();
+  document.querySelectorAll('#pm-tbl .pm-cb:checked').forEach(cb => { cb.checked = false; cb.dispatchEvent(new Event('change', { bubbles: true })); });
+  await sleep(200);
+  return { before, rows, selN };
+});
+g13.selN <= g13.rows ? O(`zoznam v7.1: výber orezaný na viditeľné (${g13.selN} ≤ ${g13.rows})`) : F('zoznam v7.1: výber prežil filter ' + JSON.stringify(g13));
 
 // staged create: počet uzlov sa pred potvrdením nemení (Q81)
 const staged = await p.evaluate(async () => {
@@ -732,18 +917,32 @@ const mb = await p.evaluate(async () => {
   document.querySelector('#bnav [data-b="pamat"]').click(); await sleep(500);
   const svgHidden = getComputedStyle(document.getElementById('pm-net')).display === 'none';
   const listOn = getComputedStyle(document.getElementById('pm-net-list')).display !== 'none';
-  document.getElementById('pm-gfull').click(); await sleep(400);
-  const fullOn = document.getElementById('pm-gcard').classList.contains('gfull') && getComputedStyle(document.getElementById('pm-net')).display !== 'none';
+  /* legenda na mobile filtruje zoznam (chip = sekcia) */
+  const secBefore = document.querySelectorAll('#pm-net-list > details').length;
+  document.querySelector('#pm-legend .glg').click(); await sleep(300);
+  const secAfter = document.querySelectorAll('#pm-net-list > details').length;
+  document.querySelector('#pm-legend .glg').click(); await sleep(200);
+  const legendFilters = secBefore === 5 && secAfter === 1;
+  document.getElementById('pm-gfull').click(); await sleep(700);
+  const netEl = document.getElementById('pm-net');
+  const fullOn = document.getElementById('pm-gcard').classList.contains('gfull') && getComputedStyle(netEl).display !== 'none';
+  /* auto-fit: kresliaca mierka ≥ 1,1 (predtým 0,40 = nečitateľné) */
+  const rr = netEl.getBoundingClientRect();
+  const camT = document.getElementById('pm-cam').getAttribute('transform');
+  const kk = +(camT.match(/scale\(([\d.]+)/) || [0, 1])[1];
+  const drawScale = Math.min(rr.width / 1160, rr.height / 620) * kk;
   document.getElementById('pm-gfull').click(); await sleep(200);
   window.Aura.detail('Sheet test', '<p>x</p>', []); await sleep(400);
   const dp = document.getElementById('dp').getBoundingClientRect();
   const sheet = dp.width >= 380 && dp.bottom >= 830 && dp.top > 100;
   window.Aura.closeDetail();
-  return { bnavOn, svgHidden, listOn, fullOn, sheet };
+  return { bnavOn, svgHidden, listOn, fullOn, sheet, legendFilters, drawScale: +drawScale.toFixed(2) };
 });
 mb.bnavOn ? O('mobil: spodná navigačná lišta aktívna') : F('mobil: spodná lišta chýba');
 mb.svgHidden && mb.listOn ? O('mobil: graf = zoznam lalokov') : F('mobil: graf zoznam zlyhal ' + JSON.stringify(mb));
+mb.legendFilters ? O('mobil: legenda filtruje zoznam (chip = sekcia)') : F('mobil: legenda nefiltruje zoznam ' + JSON.stringify(mb));
 mb.fullOn ? O('mobil: „Celá obrazovka" ukáže interaktívny graf') : F('mobil: fullscreen graf zlyhal');
+mb.drawScale >= 1.1 ? O(`mobil: fullscreen auto-fit (mierka ${mb.drawScale})`) : F(`mobil: fullscreen mierka ${mb.drawScale} < 1,1`);
 mb.sheet ? O('mobil: peek = bottom sheet') : F('mobil: bottom sheet zlyhal ' + JSON.stringify(mb));
 await p.setViewportSize({ width: 1600, height: 1000 });
 
