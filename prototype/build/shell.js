@@ -158,6 +158,10 @@
     }
     if (!sc) { console.warn("Aura: žiadna obrazovka nie je registrovaná"); return; }
     A.state.screen = key;
+    /* peek panel nesmie prežiť prechod obrazovky — inak nad novou obrazovkou
+       visí detail zo starej (#/node/ deep-link si inšpektor otvorí až po show) */
+    if (A.state._lastScreen && A.state._lastScreen !== key) A.closeDetail();
+    A.state._lastScreen = key;
     $$(".view").forEach(function (v) { v.classList.remove("on"); });
     var v = $("#v-" + key);
     if (v) v.classList.add("on");

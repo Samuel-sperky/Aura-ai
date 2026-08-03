@@ -37,7 +37,7 @@
   --ink:#e8f0ef; --ink-2:#b9c9c7; --ink-3:#8fa4a2;
   --good:#3fbf7f; --amber:#e8a33d; --red:#ea6b64; --violet:#8b7fd4;
   --neutral:#8fa8c4;                    /* neutrálne porovnávacie série (namiesto červenej) */
-  --on-teal:#0e1413; --accentText:var(--teal);
+  --on-teal:#0e1413; --on-teal-2:#ffffff; --accentText:var(--teal);
   --shadow-1:0 1px 2px rgba(0,0,0,.28);
   --shadow-2:0 10px 30px rgba(0,0,0,.34);
   --glass:color-mix(in srgb, var(--paper) 72%, transparent);
@@ -72,7 +72,7 @@
 :root[data-theme="light"]{
   --paper:#eceae8; --card:#ffffff; --card-2:#f4f2f0; --line:#cfc9c5;
   --ink:#121a19; --ink-2:#3b4a48; --ink-3:#586866;
-  --teal:#04737a; --teal-3:#036067; --gold-t:#6f4d10; --on-teal:#ffffff;
+  --teal:#04737a; --teal-3:#036067; --gold:#8a6417; --gold-t:#6f4d10; --on-teal:#ffffff; --on-teal-2:#ffffff;
   --good:#0f5730; --amber:#6b4000; --red:#8f1f18; --violet:#453a86;
   --neutral:#3d5771;
   --shadow-1:0 1px 2px rgba(30,25,20,.07);
@@ -316,7 +316,7 @@ mark{background:color-mix(in srgb,var(--gold) 42%,transparent);color:inherit;bor
 .seg button{border:0;background:none;color:var(--ink-3);font-size:var(--fs-sm);padding:var(--sp-1) var(--sp-3);
   border-radius:99px;cursor:pointer;transition:.15s}
 .seg button:hover{color:var(--ink)}
-.seg button[aria-pressed="true"]{background:var(--teal-2);color:var(--on-teal);font-weight:500}
+.seg button[aria-pressed="true"]{background:var(--teal-2);color:var(--on-teal-2);font-weight:500}
 .filt{display:flex;gap:var(--sp-2);flex-wrap:wrap;align-items:center;margin-bottom:var(--sp-4)}
 .filt input,.filt select{background:var(--card);border:1px solid var(--line);border-radius:var(--r-m);
   padding:0 var(--sp-3);height:34px;font-size:var(--fs-sm)}
@@ -479,7 +479,7 @@ body{position:relative;z-index:0}
 .cx-layers{display:inline-flex;border:1px solid var(--line);border-radius:99px;background:var(--card-2);padding:3px;flex-wrap:wrap}
 .cx-layers button{border:0;background:none;color:var(--ink-3);font-size:var(--fs-sm);padding:var(--sp-1) var(--sp-3);border-radius:99px;cursor:pointer;transition:.15s}
 .cx-layers button:hover{color:var(--ink)}
-.cx-layers button[aria-pressed="true"]{background:var(--teal-2);color:var(--on-teal);font-weight:500}
+.cx-layers button[aria-pressed="true"]{background:var(--teal-2);color:var(--on-teal-2);font-weight:500}
 .cx-lobe{transition:opacity .3s}
 .cx-syn{stroke-linecap:round;transition:opacity .2s,stroke-width .2s}
 .cx-syn.flow{stroke-dasharray:2 8;animation:cxflow 3.2s linear infinite}
@@ -691,7 +691,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
   border:1px solid var(--glass-line);border-radius:var(--r-l)}
 .side::after,.top::after{content:"";position:absolute;left:0;right:0;top:0;height:1px;
   background:linear-gradient(90deg,transparent,var(--glass-line),transparent);pointer-events:none}
-.side{position:sticky}
+@media(min-width:901px){.side{position:sticky}}
 
 /* odznak pôvodu dát: merané / simulované / ukážkové */
 .srcbadge{display:inline-flex;align-items:center;gap:4px;font-size:var(--fs-label);font-weight:600;
@@ -2953,6 +2953,10 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
     }
     if (!sc) { console.warn("Aura: žiadna obrazovka nie je registrovaná"); return; }
     A.state.screen = key;
+    /* peek panel nesmie prežiť prechod obrazovky — inak nad novou obrazovkou
+       visí detail zo starej (#/node/ deep-link si inšpektor otvorí až po show) */
+    if (A.state._lastScreen && A.state._lastScreen !== key) A.closeDetail();
+    A.state._lastScreen = key;
     $$(".view").forEach(function (v) { v.classList.remove("on"); });
     var v = $("#v-" + key);
     if (v) v.classList.add("on");
