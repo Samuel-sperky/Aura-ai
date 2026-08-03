@@ -471,6 +471,246 @@ table.t tbody tr:hover .kebab,.kebab:focus-visible{opacity:1}
   *{print-color-adjust:exact;-webkit-print-color-adjust:exact}
   .shell{min-height:0}
 }
+
+/* ══ i1.css ══ */
+/* ═ I1 KONEKTOR — Shop API (len nové CSS pravidlá, prefix .cn-) ═ */
+
+/* ── LIVE pilulka v .gbar (pred .gspace) ─────────────────────── */
+.cn-pill{display:inline-flex;align-items:center;gap:8px;height:32px;padding:0 13px;border-radius:999px;border:1px solid var(--line);background:var(--card);font:600 10.5px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);cursor:pointer;white-space:nowrap;flex:none}
+.cn-pill:hover{color:var(--ink);border-color:color-mix(in srgb,var(--teal) 40%,var(--line))}
+.cn-pill .cn-dot{width:8px;height:8px;border-radius:50%;flex:none;background:var(--ink-3)}
+.cn-pill[data-st="live"] .cn-dot{background:var(--good);animation:cn-pulse 2.2s ease-in-out infinite}
+.cn-pill[data-st="stale"] .cn-dot{background:var(--amber)}
+.cn-pill[data-st="error"] .cn-dot{background:var(--red)}
+.cn-pill[data-st="demo"] .cn-dot{background:var(--ink-3)}
+.cn-pill[data-st="error"]{color:var(--red);border-color:color-mix(in srgb,var(--red) 40%,var(--line))}
+.cn-pill[data-st="stale"]{color:var(--amber);border-color:color-mix(in srgb,var(--amber) 35%,var(--line))}
+@keyframes cn-pulse{0%,100%{box-shadow:0 0 0 0 color-mix(in srgb,var(--good) 45%,transparent)}50%{box-shadow:0 0 0 5px transparent}}
+@media(max-width:640px){.cn-pill{padding:0 9px}.cn-pill .cn-txt{display:none}}
+
+/* ── mikro-glyf „● live 09:41" na KPI kartách a grafoch ──────── */
+.cn-glyph{display:inline-flex;align-items:center;gap:4px;font:600 10px var(--mono);letter-spacing:.04em;white-space:nowrap;color:var(--good);cursor:help}
+.cn-glyph.cn-stale{color:var(--amber)}
+.cn-glyph.cn-error{color:var(--red)}
+.cn-glyph.cn-demo{color:var(--ink-3)}
+.cn-glyph.cn-off{color:var(--ink-3);opacity:.75}          /* outage → glyf zošedne */
+.kpi:has(.cn-glyph){position:relative}
+.kpi>.cn-glyph{position:absolute;top:13px;right:15px}
+.ch .cn-glyph.cn-chg{margin-left:auto}
+
+/* skeleton hodnoty počas syncu (kombinuje sa s existujúcou .sk) */
+.cn-sk{display:inline-block;width:120px;height:24px;border-radius:6px;vertical-align:middle}
+
+/* ── dropdown konektora (vnútro existujúceho .dropdown) ──────── */
+.cn-ep{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--line)}
+.cn-ep .cn-dot{width:8px;height:8px;border-radius:50%;flex:none;background:var(--ink-3)}
+.cn-dot.cn-live{background:var(--good)}
+.cn-dot.cn-stale{background:var(--amber)}
+.cn-dot.cn-error{background:var(--red)}
+.cn-dot.cn-demo{background:var(--ink-3)}
+.cn-ep .cn-et{flex:1;min-width:0}
+.cn-ep .cn-et b{display:block;font-size:12.5px;font-weight:600}
+.cn-ep .cn-et small{display:block;font:500 10px var(--mono);color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cn-ep .cn-ago{font:600 10.5px var(--mono);color:var(--ink-3);white-space:nowrap;flex:none}
+.cn-foot{display:flex;gap:10px;padding:12px 16px 8px}
+.cn-foot .btn{flex:1;justify-content:center}
+.cn-note{font:500 10px var(--mono);color:var(--ink-3);padding:0 16px 10px;border-bottom:1px solid var(--line)}
+/* „skrytý" prepínač Simulovať výpadok — zámerne nenápadný */
+.cn-hid{display:flex;align-items:center;gap:10px;padding:9px 16px;font-size:11.5px;color:var(--ink-3);opacity:.8}
+.cn-hid:hover{opacity:1}
+.cn-hid .sl{flex:1}
+.cn-hid .sw{transform:scale(.85);transform-origin:right center}
+
+/* ══ i2.css ══ */
+/* ═ I2 IMPORT+REPORT — štýly (.iw- import wizard + UX, .rb- report builder) ═ */
+
+/* ── import wizard modal (rozšírenie .modal 480 → 720) ─────── */
+.iw-modal,.rb-modal{width:720px}
+.iw-steps{display:flex;gap:6px;padding:14px 20px 0;border-bottom:1px solid var(--line)}
+.iw-step{flex:1;display:flex;align-items:center;gap:8px;padding:6px 0 14px;color:var(--ink-3);font:600 12px var(--body);min-width:0}
+.iw-step span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.iw-step i{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;border:1px solid var(--line);font:600 11px var(--mono);font-style:normal;flex:none}
+.iw-step.on{color:var(--ink)}
+.iw-step.on i{background:var(--acc);border-color:var(--acc);color:#04120f}
+:root[data-theme="light"] .iw-step.on i{color:#fff}
+.iw-step.done{color:var(--acc)}
+.iw-step.done i{border-color:var(--acc);color:var(--acc)}
+@media(max-width:640px){.iw-step span{display:none}}
+
+.iw-drop{display:flex;align-items:center;gap:12px;padding:24px 18px;border:1px dashed var(--line);border-radius:12px;justify-content:center;flex-wrap:wrap;color:var(--ink-3);font-size:13px}
+.iw-note{font:500 11.5px var(--mono);color:var(--ink-3)}
+.iw-err{color:var(--red);font-size:12px}
+
+.iw-tblw{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--card-2)}
+.iw-tbl{width:100%;border-collapse:collapse;font-size:12px}
+.iw-tbl th{text-align:left;font:600 10px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+.iw-tbl td{padding:7px 10px;border-bottom:1px solid var(--line);color:var(--ink-2);white-space:nowrap}
+.iw-tbl tr:last-child td{border-bottom:0}
+
+.iw-map{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+.iw-map:last-of-type{border-bottom:0}
+.iw-map label{font-size:13px;font-weight:500;color:var(--ink)}
+.iw-map label em{display:block;font:500 10.5px var(--mono);color:var(--ink-3);font-style:normal;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.iw-map select{width:100%;border:1px solid var(--line);background:var(--paper);border-radius:9px;padding:8px 10px;font:500 13px var(--body);color:var(--ink);outline:none}
+.iw-map select:focus{border-color:var(--acc)}
+.iw-map select.iw-auto-hit{border-color:color-mix(in srgb,var(--good) 55%,var(--line))}
+
+.iw-skip{display:inline-flex;align-items:center;gap:8px;font:500 13px var(--body);color:var(--ink-2);cursor:pointer}
+.iw-sum{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.iw-sum .kpi .v{font-size:22px}
+
+/* ── „Posledný import" riadok pod toolbarom ────────────────── */
+.iw-last{display:flex;align-items:center;gap:10px;margin:0 0 14px;padding:9px 14px;border:1px solid color-mix(in srgb,var(--acc) 30%,var(--line));border-radius:11px;background:color-mix(in srgb,var(--acc) 7%,var(--card));font-size:12.5px;color:var(--ink-2);flex-wrap:wrap}
+.iw-last svg{color:var(--acc);flex:none}
+.iw-last b{color:var(--ink)}
+.iw-last .btn{margin-left:auto;padding:5px 10px;font-size:11.5px}
+
+/* ── popover (Filter chips + prepínač obdobia) ─────────────── */
+.iw-pop{position:fixed;z-index:76;background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:0 18px 44px -18px #000;min-width:210px;max-width:300px;overflow:hidden;animation:tin .15s ease both}
+.iw-pop-h{padding:10px 14px 2px;font:600 10px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3)}
+.iw-pop .chips{padding:10px 12px 12px}
+.iw-item{display:block;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--line);padding:10px 14px;font:500 13px var(--body);color:var(--ink-2);cursor:pointer;font-family:inherit}
+.iw-item:last-child{border-bottom:0}
+.iw-item:hover:not([disabled]){background:var(--card-2);color:var(--ink)}
+.iw-item.on{color:var(--acc)}
+.iw-item[disabled]{color:var(--ink-3);opacity:.65;cursor:not-allowed;font-size:11.5px}
+
+/* ── triedenie tabuliek ────────────────────────────────────── */
+.iw-th{cursor:pointer;user-select:none}
+.iw-th:hover{color:var(--ink)}
+.iw-arr{margin-left:5px;font-size:9px;color:var(--acc)}
+
+/* ── badge „auto z API" vo formulári Vyplň mesiac ──────────── */
+.iw-auto{display:inline-flex;margin-left:6px;font:600 9.5px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--violet);border:1px solid color-mix(in srgb,var(--violet) 40%,var(--line));border-radius:20px;padding:1px 7px;background:color-mix(in srgb,var(--violet) 10%,transparent);vertical-align:middle}
+
+/* ── report builder ────────────────────────────────────────── */
+.rb-grid{display:grid;grid-template-columns:252px 1fr;gap:16px;align-items:start}
+@media(max-width:760px){.rb-grid{grid-template-columns:1fr}}
+.rb-secs{display:flex;gap:8px;flex-wrap:wrap}
+.rb-chk{display:inline-flex;align-items:center;gap:6px;font:500 12.5px var(--body);color:var(--ink-2);border:1px solid var(--line);border-radius:9px;padding:6px 10px;cursor:pointer}
+.rb-chk:has(input:checked){color:var(--acc);border-color:color-mix(in srgb,var(--acc) 45%,var(--line));background:color-mix(in srgb,var(--acc) 8%,transparent)}
+.rb-fmt,.rb-plan{display:flex;gap:8px;flex-wrap:wrap}
+.rb-plan select,.rb-plan input{border:1px solid var(--line);background:var(--paper);border-radius:9px;padding:7px 10px;font:500 12.5px var(--body);color:var(--ink);outline:none}
+.rb-plan select:focus,.rb-plan input:focus{border-color:var(--acc)}
+
+.rb-prev{border:1px solid var(--line);border-radius:12px;background:var(--paper);padding:16px;max-height:56vh;overflow:auto}
+.rb-head{font-family:var(--disp);font-weight:700;font-size:16px;padding-bottom:10px;border-bottom:1px solid var(--line)}
+.rb-head small{display:block;font:500 11px var(--mono);color:var(--ink-3);margin-top:3px}
+.rb-kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:12px 0}
+.rb-kpi{border:1px solid var(--line);border-radius:10px;padding:9px 11px;background:var(--card)}
+.rb-kpi small{display:block;color:var(--ink-3);font-size:10.5px;margin-bottom:3px}
+.rb-kpi b{font-size:16px;font-feature-settings:var(--tnum)}
+.rb-sec-t{font:600 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin:14px 0 8px}
+.rb-tblw{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--card)}
+.rb-prev table.t{min-width:0;font-size:11.5px}
+.rb-prev table.t th,.rb-prev table.t td{padding:8px 10px}
+.rb-prev table.t tbody tr{cursor:default}
+.rb-ai ul{margin:0;padding-left:18px;display:grid;gap:6px}
+.rb-ai li{font-size:12.5px;color:var(--ink-2)}
+.rb-ai li::marker{color:var(--acc)}
+
+/* ── tlačová verzia reportu ────────────────────────────────── */
+.rb-print{display:none}
+@media print{
+  body.rb-printing .gbar,body.rb-printing #view,body.rb-printing .toasts,
+  body.rb-printing .modal,body.rb-printing .scrim,body.rb-printing .dropdown{display:none!important}
+  body.rb-printing .rb-print{display:block!important;padding:10mm}
+  body.rb-printing .rb-print .rb-prev,body.rb-printing .rb-print{max-height:none;overflow:visible}
+}
+
+/* ══ i3.css ══ */
+/* ═ I3 AURAAI CHAT — FAB + dokovaný panel + správy + citácie ═ */
+
+/* ── FAB s korunkou (modulové stránky, pod .toasts z-index 80) ── */
+.ai-fab{
+  position:fixed;right:18px;bottom:18px;z-index:79;
+  width:52px;height:52px;border-radius:50%;
+  border:1px solid color-mix(in srgb,var(--gold) 55%,var(--line));
+  background:linear-gradient(135deg,var(--gold),var(--gold-t));
+  color:#221806;display:none;place-items:center;cursor:pointer;
+  box-shadow:0 14px 32px -14px #000;
+  transition:transform var(--dur-1) var(--ease-out),box-shadow var(--dur-1) var(--ease-out);
+}
+.ai-fab svg{width:24px;height:24px}
+.ai-fab:hover{transform:translateY(-2px) scale(1.05);box-shadow:0 18px 40px -14px color-mix(in srgb,var(--gold) 60%,#000)}
+:root[data-theme="light"] .ai-fab{color:#3a2c08}
+/* toasty vyskočia nad FAB, aby sa neprekrývali */
+body.ai-fab-on .toasts{bottom:86px}
+
+/* ── dokovaný pravý panel 360 px ───────────────────────────── */
+.ai-panel{
+  position:fixed;top:52px;right:0;bottom:0;width:360px;z-index:79;
+  background:var(--card);border-left:1px solid var(--line);
+  display:none;flex-direction:column;
+  box-shadow:-18px 0 40px -30px #000;
+  animation:ai-in .2s var(--ease-out) both;
+}
+body.ai-open .ai-panel{display:flex}
+@keyframes ai-in{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:none}}
+@media(min-width:821px){
+  body.ai-open .main{margin-right:360px}
+  body.ai-open .toasts{right:378px}
+}
+@media(max-width:820px){
+  /* mobil: fullscreen sheet */
+  .ai-panel{left:0;width:auto;box-shadow:none}
+}
+
+/* hlavička */
+.ai-head{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line);flex:none}
+.ai-crown-ic{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;color:var(--gold);background:color-mix(in srgb,var(--gold) 14%,transparent);flex:none}
+.ai-crown-ic svg{width:19px;height:19px}
+.ai-ht{min-width:0;flex:1}
+.ai-ht b{display:block;font-size:13.5px}
+.ai-ht small{display:block;font:500 10.5px var(--mono);color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ai-x{width:28px;height:28px;border-radius:8px;border:1px solid var(--line);background:none;color:var(--ink-2);cursor:pointer;display:grid;place-items:center;flex:none}
+.ai-x:hover{color:var(--ink);border-color:color-mix(in srgb,var(--gold) 40%,var(--line))}
+.ai-x svg{width:14px;height:14px}
+
+/* telo — správy */
+.ai-body{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px}
+.ai-msg{max-width:90%;border-radius:12px;padding:9px 12px;font-size:13px;line-height:1.45;color:var(--ink)}
+.ai-msg.ai-u{align-self:flex-end;background:color-mix(in srgb,var(--acc) 16%,var(--card-2));border:1px solid color-mix(in srgb,var(--acc) 30%,var(--line));border-bottom-right-radius:4px}
+.ai-msg.ai-a{align-self:flex-start;background:var(--card-2);border:1px solid var(--line);border-bottom-left-radius:4px}
+.ai-tag{display:block;font:600 9px var(--mono);letter-spacing:.08em;color:var(--ink-3);text-transform:uppercase;margin-bottom:3px}
+
+/* povinná citácia pod odpoveďou */
+.ai-cite{display:flex;align-items:center;gap:6px;margin-top:8px;padding-top:7px;border-top:1px dashed var(--line);font:600 10.5px var(--mono);color:var(--ink-3)}
+.ai-cite i{width:7px;height:7px;border-radius:50%;flex:none;background:var(--ink-3)}
+.ai-cite.ai-c-live i{background:var(--good)}
+.ai-cite.ai-c-stale i{background:var(--amber)}
+.ai-cite.ai-c-outage i{background:var(--red)}
+.ai-cite.ai-c-import i{background:var(--violet)}
+
+/* max 1 akčné tlačidlo */
+.ai-act{margin-top:8px;display:inline-flex;align-items:center;gap:6px;font:600 12px var(--body);color:var(--acc);background:color-mix(in srgb,var(--acc) 10%,transparent);border:1px solid color-mix(in srgb,var(--acc) 40%,var(--line));border-radius:8px;padding:6px 11px;cursor:pointer}
+.ai-act svg{width:13px;height:13px}
+.ai-act:hover{background:color-mix(in srgb,var(--acc) 18%,transparent)}
+.ai-act:active{transform:translateY(1px)}
+
+/* typing skeleton (využíva globálny .sk shimmer) */
+.ai-typing{align-self:flex-start;width:70%;display:flex;flex-direction:column;gap:6px;padding:4px 0}
+.ai-typing .sk{height:12px}
+.ai-typing .sk:last-child{width:62%}
+
+/* navrhované otázky (chips) */
+.ai-sugg{flex:none;display:flex;gap:6px;flex-wrap:wrap;padding:10px 14px;border-top:1px solid var(--line)}
+.ai-chip{font:600 11.5px var(--body);padding:6px 11px;border-radius:20px;border:1px solid var(--line);color:var(--ink-2);cursor:pointer;background:none;text-align:left}
+.ai-chip:hover{color:var(--acc);border-color:color-mix(in srgb,var(--acc) 45%,var(--line));background:color-mix(in srgb,var(--acc) 8%,transparent)}
+.ai-fbchips{display:flex;flex-direction:column;align-items:flex-start;gap:6px;margin-top:8px}
+
+/* vstupný riadok */
+.ai-inrow{flex:none;display:flex;gap:8px;padding:12px 14px;border-top:1px solid var(--line)}
+.ai-inrow input{flex:1;min-width:0;border:1px solid var(--line);background:var(--paper);border-radius:10px;padding:9px 12px;font:500 13px var(--body);color:var(--ink);outline:none}
+.ai-inrow input:focus{border-color:var(--gold)}
+.ai-send{width:38px;height:38px;border-radius:10px;border:0;background:var(--gold);color:#221806;cursor:pointer;display:grid;place-items:center;flex:none}
+.ai-send:hover{filter:brightness(1.06)}
+.ai-send:active{transform:translateY(1px)}
+.ai-send svg{width:16px;height:16px}
+:root[data-theme="light"] .ai-send{color:#3a2c08}
+
+@media print{.ai-fab,.ai-panel{display:none!important}body.ai-open .main{margin-right:0}}
+
 </style>
 </head>
 <body>
@@ -1855,6 +2095,1666 @@ const _route=route;route=function(){_route();setTimeout(runPost,300);};
 applyStatic();route();
 /* expozícia pre náhľadový/screenshot skript (const nie sú automaticky na window) */
 window.state=state;window.MOD=MOD;window.MODULES=MODULES;
+
+/* ═ I1 KONEKTOR — Shop API: LIVE pilulka · sync + jitter · outage scenár · Settings inject · audit ═ */
+(function(){
+'use strict';
+window.POST=window.POST||[];
+
+/* ── deterministický PRNG (mulberry32) — žiadny Math.random ── */
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function hashStr(s){let h=0;for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))|0;return h>>>0;}
+
+/* ── dátový model konektora ──────────────────────────────────
+   AKO PRIDAŤ ĎALŠÍ ENDPOINT: pridaj objekt
+     {key:'customers',label:L('Zákazníci','Customers'),path:'/api/v1/customers',
+      modules:['trzby'],lastMin:5,latMs:160,status:'live'}
+   do CONNECTOR.endpoints — pilulka, dropdown aj Settings karta sa
+   vygenerujú automaticky. Pre glyf na KPI karte doplň index karty
+   do LIVE_MAP[modul] a zdrojový endpoint do SRC[modul][index].    */
+const CONNECTOR={
+  scenario:'ok',              /* 'ok' | 'outage' | 'demo' */
+  intervalMin:15,
+  syncN:0,                    /* počítadlo syncov = seed jitteru */
+  busy:false,
+  endpoints:[
+    {key:'orders',  label:L('Objednávky','Orders'),   path:'/api/v1/orders',  modules:['trzby','kpi'],            lastMin:3, latMs:142,status:'live'},
+    {key:'products',label:L('Produkty','Products'),   path:'/api/v1/products',modules:['marketing'],              lastMin:9, latMs:236,status:'live'},
+    {key:'stats',   label:L('Štatistiky','Stats'),    path:'/api/v1/stats',   modules:['trzby','kpi','marketing'],lastMin:3, latMs:184,status:'live'},
+    {key:'shipping',label:L('Doprava','Shipping'),    path:'/api/v1/shipping',modules:['logistika','trzby'],      lastMin:7, latMs:205,status:'live'},
+    {key:'returns', label:L('Vratky','Returns'),      path:'/api/v1/returns', modules:['logistika'],              lastMin:12,latMs:171,status:'live'}
+  ]
+};
+/* ktoré KPI karty (indexy v m.kpis) sú „live" — len moduly s API */
+const LIVE_MAP={trzby:[0,1,2,3],logistika:[0,3],marketing:[2,4],kpi:[0]};
+/* zdrojový endpoint pre tooltip každej live karty */
+const SRC={trzby:{0:'orders',1:'stats',2:'stats',3:'orders'},
+           logistika:{0:'shipping',3:'shipping'},
+           marketing:{2:'stats',4:'stats'},
+           kpi:{0:'stats'}};
+const CHART_SRC={trzby:'orders',logistika:'shipping',marketing:'stats',kpi:'stats'};
+/* statické integrácie (bez API) do Settings kariet, kde patria */
+const STATIC_ROWS={
+  kpi:[['Ahrefs',L('SEO metriky pre KPI Copywriter','SEO metrics for the Copywriter KPI')],
+       ['Google Workspace',L('denníky a reporty do Docs','diaries & reports to Docs')]],
+  marketing:[['Google Workspace',L('export bannerov na Drive','banner export to Drive')]]
+};
+state.audit=state.audit||[];   /* audit log — zápis pri každom syncu */
+
+const W_PILL ={live:L('LIVE','LIVE'),stale:L('STALE','STALE'),error:L('VÝPADOK','ERROR'),demo:L('DEMO','DEMO')};
+const W_GLYPH={live:L('live','live'),stale:L('stale','stale'),error:L('výpadok','error'),demo:L('demo','demo')};
+const ST_TITLE={live:L('živé dáta','live data'),stale:L('zastarané dáta','stale data'),
+                error:L('chyba spojenia','connection error'),demo:L('ukážkové dáta','demo data')};
+
+/* ── pomocníci ──────────────────────────────────────────────── */
+function epByKey(k){return CONNECTOR.endpoints.find(e=>e.key===k);}
+function modEps(key){return CONNECTOR.endpoints.filter(e=>e.modules.includes(key));}
+function fmtAgo(min){if(min<=0)return state.lang==='sk'?'práve teraz':'just now';
+  return state.lang==='sk'?('pred '+min+' min'):(min+' min ago');}
+function stampOf(ep){const d=new Date(Date.now()-ep.lastMin*60000);
+  return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');}
+function computeStatuses(){CONNECTOR.endpoints.forEach(e=>{
+  if(CONNECTOR.scenario==='demo')e.status='demo';
+  else if(CONNECTOR.scenario==='outage')e.status=(e.key==='orders'||e.key==='stats')?'error':'stale';
+  else e.status=e.lastMin>=CONNECTOR.intervalMin*2?'stale':'live';});}
+function moduleStatus(key){const eps=modEps(key);if(!eps.length)return 'demo';
+  const rank={error:3,stale:2,demo:1,live:0};
+  return eps.reduce((w,e)=>rank[e.status]>rank[w]?e.status:w,'live');}
+function moduleAgo(key){const eps=modEps(key);return eps.length?Math.min(...eps.map(e=>e.lastMin)):0;}
+function curCtx(){const seg=(location.hash.replace(/^#/,'')||'hub').split('/');
+  return {mod:MOD[seg[0]]||null,screen:seg[1]||seg[0]};}
+
+/* ── seedovaný jitter ±2 % — len vizuálne na 1. číslo textu KPI ── */
+function jitterVal(base,seedKey){
+  if(!CONNECTOR.syncN)return base;
+  const rnd=mulberry32(((CONNECTOR.syncN*2654435761)^hashStr(seedKey))>>>0)();
+  const j=(rnd*2-1)*0.02;
+  let done=false;
+  return base.replace(/\d[\d\u00A0\u202F ,.]*/g,seg=>{
+    if(done)return seg;done=true;
+    const t=seg.replace(/[\s\u00A0\u202F.,]+$/,''),tail=seg.slice(t.length);
+    let s=t.replace(/[\s\u00A0\u202F]/g,'');
+    s=state.lang==='sk'?s.replace(',','.'):s.replace(/,/g,'');
+    const dm=s.match(/\.(\d+)$/),dec=dm?dm[1].length:0;
+    const v=parseFloat(s);if(!isFinite(v))return seg;
+    const fixed=(v*(1+j)).toFixed(dec),parts=fixed.split('.');
+    return decs(Number(parts[0]))+(parts[1]?(state.lang==='sk'?',':'.')+parts[1]:'')+tail;
+  });
+}
+
+/* ── glyf + dekorácia KPI kariet a grafu ────────────────────── */
+function glyphHTML(ep,extraCls){
+  const off=CONNECTOR.scenario==='outage'?' cn-off':'';
+  return '<span class="cn-glyph cn-'+ep.status+off+(extraCls?' '+extraCls:'')+'" data-ep="'+ep.key+'"'+
+    ' title="GET '+ep.path+' · '+ep.latMs+' ms · '+esc(tr(ST_TITLE[ep.status]))+' · sync '+esc(fmtAgo(ep.lastMin))+'">'+
+    '● '+tr(W_GLYPH[ep.status])+' '+stampOf(ep)+'</span>';
+}
+function liveCards(mod){
+  const out=[];if(!mod||!LIVE_MAP[mod.key])return out;
+  const wrap=document.querySelector('#content .kpis');if(!wrap)return out;
+  const cards=wrap.querySelectorAll(':scope>.kpi');
+  LIVE_MAP[mod.key].forEach(i=>{if(cards[i])out.push({idx:i,el:cards[i]});});
+  return out;
+}
+function decorate(mod){
+  liveCards(mod).forEach(o=>{
+    const ep=epByKey((SRC[mod.key]||{})[o.idx])||modEps(mod.key)[0];if(!ep)return;
+    o.el.querySelectorAll('.cn-glyph').forEach(g=>g.remove());
+    o.el.insertAdjacentHTML('beforeend',glyphHTML(ep));
+    const v=o.el.querySelector('.v');if(!v)return;
+    if(!v.dataset.cnBase)v.dataset.cnBase=v.textContent;
+    v.textContent=jitterVal(v.dataset.cnBase,mod.key+':'+o.idx);
+  });
+  const ch=document.querySelector('#content .cols .card .ch');
+  if(ch){const ep=epByKey(CHART_SRC[mod.key]);
+    if(ep){const g=ch.querySelector('.cn-glyph');
+      if(g)g.outerHTML=glyphHTML(ep,'cn-chg');
+      else ch.insertAdjacentHTML('beforeend',glyphHTML(ep,'cn-chg'));}}
+}
+
+/* ── banner výpadku (existujúci vzor .banner.cond) ──────────── */
+function syncBanner(mod){
+  const content=document.getElementById('content');if(!content)return;
+  const ex=content.querySelector('.cn-banner');
+  if(CONNECTOR.scenario!=='outage'||!mod||!LIVE_MAP[mod.key]){if(ex)ex.remove();return;}
+  if(ex)return;
+  const b=document.createElement('div');b.className='banner cond cn-banner';
+  b.innerHTML=svg(I.warn)+'<span><b>Shop API</b> — '+
+    tr(L('simulovaný výpadok: dáta sa neobnovujú, zobrazené hodnoty môžu byť zastarané.',
+         'simulated outage: data is not refreshing, values shown may be stale.'))+'</span>'+
+    '<button class="bx" onclick="this.closest(\'.banner\').remove()">'+tr(L('Zavrieť','Dismiss'))+'</button>';
+  content.prepend(b);
+}
+
+/* ── LIVE pilulka v .gbar (mount pred .gspace) ──────────────── */
+function mountPill(){
+  if(document.getElementById('cnPill'))return;
+  const sp=document.querySelector('.gbar .gspace');if(!sp)return;
+  const b=document.createElement('button');
+  b.id='cnPill';b.className='cn-pill';b.style.display='none';
+  b.setAttribute('aria-haspopup','true');
+  b.innerHTML='<span class="cn-dot"></span><span class="cn-txt"></span>';
+  b.addEventListener('click',openCnDrop);
+  sp.parentNode.insertBefore(b,sp);
+}
+function updatePill(mod){
+  const p=document.getElementById('cnPill');if(!p)return;
+  if(!mod||!LIVE_MAP[mod.key]){p.style.display='none';return;}
+  const st=moduleStatus(mod.key);
+  p.style.display='inline-flex';p.dataset.st=st;
+  p.querySelector('.cn-txt').textContent=tr(W_PILL[st])+' · '+fmtAgo(moduleAgo(mod.key));
+  p.title=tr(L('Shop API konektor — kliknite pre detail','Shop API connector — click for details'));
+}
+
+/* ── dropdown konektora (existujúci vzor .dropdown/.scrim) ──── */
+function openCnDrop(){
+  if(state.overlay==='cn'){closeOverlay();return;}
+  closeOverlay();scrim();state.overlay='cn';
+  const d=document.createElement('div');d.className='dropdown';d.id='cnDrop';
+  const r=document.getElementById('cnPill').getBoundingClientRect();
+  d.style.left=Math.max(12,Math.min(r.left,window.innerWidth-332))+'px';d.style.right='auto';
+  document.body.appendChild(d);
+  drawCnDrop();
+}
+function drawCnDrop(){
+  const d=document.getElementById('cnDrop');if(!d)return;
+  const out=CONNECTOR.scenario==='outage';
+  d.innerHTML='<div class="dh">Shop API<span class="sp">'+tr(L('interval','interval'))+' '+CONNECTOR.intervalMin+' min</span></div>'+
+    CONNECTOR.endpoints.map(e=>'<div class="cn-ep"><span class="cn-dot cn-'+e.status+'"></span>'+
+      '<div class="cn-et"><b>'+tr(e.label)+'</b><small>GET '+e.path+' · '+e.latMs+' ms</small></div>'+
+      '<span class="cn-ago">'+esc(fmtAgo(e.lastMin))+'</span></div>').join('')+
+    '<div class="cn-foot"><button class="btn pri" id="cnSyncBtn"'+(CONNECTOR.busy?' disabled':'')+'>⟳ '+
+      tr(L('Synchronizovať teraz','Sync now'))+'</button></div>'+
+    '<div class="cn-note">'+tr(L('Audit','Audit'))+': '+state.audit.length+' '+tr(L('záznamov','entries'))+'</div>'+
+    '<div class="cn-hid"><span class="sl">'+tr(L('Simulovať výpadok','Simulate outage'))+'</span>'+
+      '<button class="sw" role="switch" aria-checked="'+out+'" id="cnOutSw" aria-label="'+
+      esc(tr(L('Simulovať výpadok','Simulate outage')))+'"></button></div>';
+  d.querySelector('#cnSyncBtn').addEventListener('click',cnSync);
+  d.querySelector('#cnOutSw').addEventListener('click',cnToggleOutage);
+}
+
+/* ── akcie: sync · outage · test · interval ─────────────────── */
+function cnSync(){
+  if(CONNECTOR.busy)return;
+  CONNECTOR.busy=true;
+  const btn=document.getElementById('cnSyncBtn');if(btn)btn.disabled=true;
+  const ctx=curCtx();
+  if(ctx.mod&&LIVE_MAP[ctx.mod.key]&&ctx.screen==='dashboard'){
+    liveCards(ctx.mod).forEach(o=>{const v=o.el.querySelector('.v');if(!v)return;
+      if(!v.dataset.cnBase)v.dataset.cnBase=v.textContent;
+      v.innerHTML='<span class="sk cn-sk"></span>';});
+  }
+  setTimeout(()=>{
+    CONNECTOR.busy=false;
+    const ok=CONNECTOR.scenario!=='outage';
+    if(ok){CONNECTOR.syncN++;CONNECTOR.endpoints.forEach(e=>{e.lastMin=0;});}
+    computeStatuses();
+    state.audit.push({at:new Date().toISOString(),type:'sync',src:'manual',ok,
+      scenario:CONNECTOR.scenario,seed:CONNECTOR.syncN,
+      endpoints:CONNECTOR.endpoints.map(e=>e.key+':'+e.status)});
+    refreshView();
+    if(document.getElementById('cnDrop'))drawCnDrop();
+    toast(ok?tr(L('Shop API synchronizované — KPI obnovené','Shop API synced — KPIs refreshed'))
+            :tr(L('Synchronizácia zlyhala — simulovaný výpadok','Sync failed — simulated outage')));
+  },600);
+}
+function cnToggleOutage(){
+  CONNECTOR.scenario=CONNECTOR.scenario==='outage'?'ok':'outage';
+  computeStatuses();
+  state.audit.push({at:new Date().toISOString(),type:'scenario',scenario:CONNECTOR.scenario});
+  refreshView();
+  if(document.getElementById('cnDrop'))drawCnDrop();
+  toast(CONNECTOR.scenario==='outage'
+    ?tr(L('Scenár: výpadok Shop API (simulácia)','Scenario: Shop API outage (simulated)'))
+    :tr(L('Scenár: spojenie obnovené','Scenario: connection restored')));
+}
+function cnTest(){
+  const ok=CONNECTOR.scenario!=='outage';
+  const avg=Math.round(CONNECTOR.endpoints.reduce((s,e)=>s+e.latMs,0)/CONNECTOR.endpoints.length);
+  toast(ok?tr(L('Test spojenia: 5/5 endpointov OK','Connection test: 5/5 endpoints OK'))+' · Ø '+avg+' ms'
+          :tr(L('Test spojenia zlyhal — 2/5 endpointov nedostupných','Connection test failed — 2/5 endpoints unreachable')));
+}
+function cnCycleInterval(e){
+  const opts=[5,15,30,60];
+  CONNECTOR.intervalMin=opts[(opts.indexOf(CONNECTOR.intervalMin)+1)%opts.length];
+  e.currentTarget.childNodes[0].textContent=CONNECTOR.intervalMin+' min ';
+  computeStatuses();updatePill(curCtx().mod);
+  toast((state.lang==='sk'?'Nastavené: interval → ':'Set: interval → ')+CONNECTOR.intervalMin+' min');
+}
+
+/* ── Settings inject: set-group „Shop API" (post-render DOM) ── */
+function injectSettings(mod){
+  const content=document.getElementById('content');
+  if(!content||content.querySelector('.cn-set'))return;
+  const eps=modEps(mod.key);if(!eps.length)return;
+  const stBadge=e=>({live:'ok',stale:'cond',error:'no',demo:'q'})[e.status];
+  const rows=eps.map(e=>'<div class="set-row"><div class="sl"><b>'+tr(e.label)+'</b>'+
+    '<small>GET '+e.path+' · '+e.latMs+' ms · '+tr(L('posledný sync','last sync'))+' '+esc(fmtAgo(e.lastMin))+'</small></div>'+
+    '<span class="badge '+stBadge(e)+'">'+tr(W_GLYPH[e.status])+'</span></div>').join('');
+  const statics=(STATIC_ROWS[mod.key]||[]).map(p=>'<div class="set-row"><div class="sl"><b>'+p[0]+' · '+
+    tr(L('ukážka','sample'))+'</b><small>'+tr(p[1])+'</small></div>'+
+    '<span class="badge q">'+tr(L('bez API','no API'))+'</span></div>').join('');
+  const card=document.createElement('div');card.className='card set-group cn-set';
+  card.innerHTML='<div class="gh">'+svg(I.server)+' Shop API</div>'+rows+
+    '<div class="set-row"><div class="sl"><b>'+tr(L('Interval synchronizácie','Sync interval'))+'</b>'+
+      '<small>'+tr(L('automatický pull z e-shopu','automatic pull from the e-shop'))+'</small></div>'+
+      '<button class="selbox" id="cnIntSel">'+CONNECTOR.intervalMin+' min '+svg('<path d="M6 9l6 6 6-6"/>')+'</button></div>'+
+    '<div class="set-row"><div class="sl"><b>'+tr(L('Test spojenia','Connection test'))+'</b>'+
+      '<small>'+tr(L('overí všetkých 5 endpointov','checks all 5 endpoints'))+'</small></div>'+
+      '<button class="btn" id="cnTestBtn">'+svg(I.check)+' '+tr(L('Otestovať','Test'))+'</button></div>'+
+    statics;
+  content.appendChild(card);
+  card.querySelector('#cnTestBtn').addEventListener('click',cnTest);
+  card.querySelector('#cnIntSel').addEventListener('click',cnCycleInterval);
+}
+
+/* ── refresh aktuálneho pohľadu bez zásahu do render funkcií ── */
+function refreshView(){
+  const ctx=curCtx();
+  updatePill(ctx.mod);
+  if(!ctx.mod||!LIVE_MAP[ctx.mod.key])return;
+  if(ctx.screen==='dashboard'){decorate(ctx.mod);syncBanner(ctx.mod);}
+  else if(ctx.screen==='settings'){
+    const old=document.querySelector('#content .cn-set');if(old)old.remove();
+    injectSettings(ctx.mod);
+  }
+}
+
+/* ── POST hook: beží ~300 ms po každom renderi ──────────────── */
+POST.push(function(mod,screen){
+  mountPill();
+  computeStatuses();
+  updatePill(mod);
+  if(!mod||!LIVE_MAP[mod.key])return;
+  if(screen==='dashboard'){decorate(mod);syncBanner(mod);}
+  else if(screen==='settings')injectSettings(mod);
+});
+
+/* ── tik každú minútu: „pred X min" + auto-sync po intervale ── */
+setInterval(function(){
+  let auto=false;
+  CONNECTOR.endpoints.forEach(e=>{
+    e.lastMin++;
+    if(CONNECTOR.scenario==='ok'&&e.lastMin>=CONNECTOR.intervalMin){e.lastMin=0;auto=true;}
+  });
+  if(auto){CONNECTOR.syncN++;
+    state.audit.push({at:new Date().toISOString(),type:'sync',src:'auto',ok:true,
+      scenario:CONNECTOR.scenario,seed:CONNECTOR.syncN,
+      endpoints:CONNECTOR.endpoints.map(e=>e.key+':'+e.status)});}
+  computeStatuses();
+  refreshView();
+  if(document.getElementById('cnDrop'))drawCnDrop();
+},60000);
+
+/* expozícia pre debug/screenshot skripty */
+window.CONNECTOR=CONNECTOR;window.LIVE_MAP=LIVE_MAP;
+})();
+
+/* ═ I2 IMPORT+REPORT ═
+   Import wizard (4 kroky, reálny CSV/FileReader + vzorové fixtures, upsert + UNDO),
+   Report builder (šablóny, náhľad, CSV/BOM+; download, tlač, odkaz, plán),
+   UX: triedenie th, pager >10, Filter popover, prepínač obdobia.
+   Iba POST hooky + MutationObserver — žiadne úpravy existujúcich funkcií. */
+(function(){
+'use strict';
+if(window.__I2)return;window.__I2=true;
+window.POST=window.POST||[];
+state.imports=state.imports||{};      /* história importov per modul (+ snapshoty na UNDO) */
+state.audit=state.audit||[];          /* spoločný audit (zdieľaný s I1 konektorom) */
+state.i2period=state.i2period||{};    /* zvolené obdobie date chipu per modul */
+
+/* ── pomocníci ─────────────────────────────────────────────── */
+const $=(s,r)=>(r||document).querySelector(s);
+const $$=(s,r)=>[...(r||document).querySelectorAll(s)];
+const norm=s=>String(s??'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]/g,'');
+const pNum=s=>parseFloat(String(s??'').replace(/[\s\u00a0]/g,'').replace(',','.').replace('−','-'));
+const iN=s=>{const n=pNum(s);return isNaN(n)?0:n;};
+const isISO=v=>/^\d{4}-\d{2}-\d{2}$/.test(String(v||''));
+const kv=k=>{const o=(k&&k.t)?fmtCell(k):tr(k);return o;};
+function cellText(c){
+  if(Array.isArray(c))return String(tr(c[1]));
+  if(c&&c.pln!==undefined)return c.pln==null?'':String(c.pln);
+  if(c&&c.t)return String(fmtCell(c));
+  return String(tr(c)??'');
+}
+function stamp(){const d=new Date();return d.toISOString().slice(0,10)+' '+d.toTimeString().slice(0,5);}
+function auditPush(mod,type,txt){state.audit.push({at:new Date().toISOString(),ts:stamp(),type,mod,txt});}
+function copyText(u){
+  const done=()=>toast(tr(L('Odkaz skopírovaný do schránky','Link copied to clipboard')));
+  const fb=()=>{const t=document.createElement('textarea');t.value=u;t.style.position='fixed';t.style.opacity='0';
+    document.body.appendChild(t);t.select();try{document.execCommand('copy');}catch(e){}t.remove();done();};
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(u).then(done,fb);else fb();
+}
+
+/* ══════════════════════════════════════════════════════════════
+   A) IMPORT WIZARD — IMPORT_TPL pre všetkých 6 modulov
+   ══════════════════════════════════════════════════════════════ */
+const TONE={
+  mkt:{'Návrh':'q','QA':'cond','Render':'cond','Export ZIP':'ok','Hotová':'ok','Lock aktívny':'info'},
+  kpiM:{'Uzavretý':'ok','Otvorený':'info','Po termíne':'no'},
+  kpiV:{'Kompletné':'ok','Rozpracované':'cond','Nevyplnené':'q'},
+  log:{'doručené':'ok','na ceste':'cond','výdajňa':'info','vrátené':'cond','stratené':'no'},
+  road:{'backlog':'q','in_progress':'info','waiting':'cond','done':'ok'}
+};
+const IMPORT_TPL={
+marketing:{
+  keyIdx:[0], keyL:L('kľúč: kampaň','key: campaign'),
+  fields:[
+    {k:'kampan',l:L('Kampaň','Campaign'),t:'str'},
+    {k:'svet',l:L('Svet','World'),t:'str'},
+    {k:'modelka',l:L('Modelka','Model'),t:'str'},
+    {k:'jazyky',l:L('Jazyky','Languages'),t:'num'},
+    {k:'bannery',l:L('Bannery','Banners'),t:'num'},
+    {k:'stav',l:L('Stav','Status'),t:'enum',opts:['Návrh','QA','Render','Export ZIP','Hotová','Lock aktívny']}],
+  toRow:r=>[r.kampan||'—',r.svet||'—',r.modelka||'—',String(iN(r.jazyky)),String(iN(r.bannery)),[TONE.mkt[r.stav]||'q',r.stav||'Návrh']],
+  csv:'kampan;svet;modelka;jazyky;bannery;stav\nJesenná kolekcia;Les;Adela;8;40;Návrh\nVianoce;Zimný salón;Viktória;8;0;Návrh\nBlack Friday;Nočné mesto;Nikola;8;40;Render\nValentín;Atelier;Adela;osem;40;QA\nSummer Sale;Riviéra;Adela;8;40;Lock aktívny'
+},
+kpi:{
+  keyIdx:[0], keyL:L('kľúč: oddelenie','key: department'),
+  fields:[
+    {k:'oddelenie',l:L('Oddelenie','Department'),t:'str'},
+    {k:'plnenie',l:L('Plnenie','Attainment'),t:'num'},
+    {k:'mesiac',l:L('Mesiac','Month'),t:'enum',opts:['Uzavretý','Otvorený','Po termíne']},
+    {k:'vyplnenie',l:L('Vyplnenie','Fill'),t:'enum',opts:['Kompletné','Rozpracované','Nevyplnené']},
+    {k:'vstupy',l:L('Vstupy','Inputs'),t:'str'},
+    {k:'trend',l:L('Trend','Trend'),t:'str'}],
+  toRow:r=>{const p=pNum(r.plnenie);return [r.oddelenie||'—',{pln:isNaN(p)?null:p},[TONE.kpiM[r.mesiac]||'q',r.mesiac||'—'],[TONE.kpiV[r.vyplnenie]||'q',r.vyplnenie||'—'],r.vstupy||'—',r.trend||'—'];},
+  csv:'oddelenie;plnenie;mesiac;vyplnenie;vstupy;trend\nCopywriter;98,2;Uzavretý;Kompletné;5/5;↑\nGrafika;74,5;Otvorený;Rozpracované;2/4;→\nPodpora;81,0;Uzavretý;Kompletné;4/4;↑\nCS tím;n/a;Zajtra;Kompletné;3/3;↑'
+},
+logistika:{
+  keyIdx:[0,1,2], keyL:L('kľúč: týždeň × krajina × prepravca','key: week × country × carrier'),
+  fields:[
+    {k:'tyzden',l:L('Týždeň','Week'),t:'str'},
+    {k:'krajina',l:L('Krajina','Country'),t:'enum',opts:['SK','CZ','HU','RO','SI','HR','PL','BG']},
+    {k:'prepravca',l:L('Prepravca','Carrier'),t:'enum',opts:['packeta','posta','gls','sps','dpd']},
+    {k:'odoslane',l:L('Odoslané','Shipped'),t:'num'},
+    {k:'stav',l:L('Stav','State'),t:'enum',opts:['doručené','na ceste','výdajňa','vrátené','stratené']},
+    {k:'hodnota',l:L('Hodnota','Value'),t:'num'}],
+  toRow:r=>[r.tyzden||'—',String(r.krajina||'—').toUpperCase(),r.prepravca||'—',int(iN(r.odoslane)),[TONE.log[r.stav]||'q',r.stav||'—'],cur(iN(r.hodnota))],
+  csv:'tyzden;krajina;prepravca;odoslane;stav;hodnota\nW32;SK;packeta;530;doručené;19100\nW32;HU;gls;415;doručené;16400\nW32;CZ;gls;362;na ceste;12600\nW31;SK;packeta;518;doručené;18650\nW32;XX;dpd;abc;doručené;7000'
+},
+hr:{
+  keyIdx:[0], keyL:L('kľúč: meno','key: name'),
+  fields:[
+    {k:'meno',l:L('Meno','Name'),t:'str'},
+    {k:'pozicia',l:L('Pozícia','Position'),t:'str'},
+    {k:'oddelenie',l:L('Oddelenie','Department'),t:'str'},
+    {k:'mail',l:L('Mail','Mail'),t:'str'},
+    {k:'uvazok',l:L('Úväzok','Contract'),t:'enum',opts:['TPP','dohoda']},
+    {k:'krajina',l:L('Krajina','Country'),t:'enum',opts:['SK','CZ','HU','RO','SI','HR','PL','BG']}],
+  toRow:r=>[r.meno||'—',r.pozicia||'—',r.oddelenie||'—',r.mail||'—',[r.uvazok==='TPP'?'ok':'cond',r.uvazok||'—'],String(r.krajina||'—').toUpperCase()],
+  csv:'meno;pozicia;oddelenie;mail;uvazok;krajina\nMarek;Skladník;Sklad;sklad2@sperky-aura.sk;TPP;SK\nJúlia;Fotografka;Marketing;foto@sperky-aura.sk;dohoda;SK\nPeter;Koordinátor expedície;Expedícia;expedicia2@sperky-aura.sk;TPP;CZ\nAnna;CS agent;Zákaznícky servis;cs2@sperky-aura.sk;externe;DE'
+},
+roadmap:{
+  keyIdx:[0], keyL:L('kľúč: položka','key: item'),
+  fields:[
+    {k:'polozka',l:L('Položka','Item'),t:'str'},
+    {k:'typ',l:L('Typ','Type'),t:'enum',opts:['task','bug','idea']},
+    {k:'projekt',l:L('Projekt','Project'),t:'str'},
+    {k:'sprint',l:L('Sprint','Sprint'),t:'str'},
+    {k:'stav',l:L('Stav','State'),t:'enum',opts:['backlog','in_progress','waiting','done']},
+    {k:'termin',l:L('Termín','Due'),t:'date'}],
+  toRow:r=>[r.polozka||'—',r.typ||'task',r.projekt||'—',r.sprint||'—',[TONE.road[r.stav]||'q',r.stav||'backlog'],isISO(r.termin)?dt(r.termin):(r.termin||'—')],
+  csv:'polozka;typ;projekt;sprint;stav;termin\nObnova SSL certifikátov;task;Bezpečnosť;S-32;backlog;2026-08-25\nDark mode audit;task;Aura KPI;S-32;backlog;2026-09-05\nBug: duplicitné notifikácie;bug;Aura Roadmap;S-31;in_progress;2026-08-08\nNápad: mobilný widget;idea;—;—;backlog;čoskoro'
+},
+trzby:{
+  keyIdx:[0], keyL:L('kľúč: segment','key: segment'),
+  fields:[
+    {k:'segment',l:L('Segment','Segment'),t:'str'},
+    {k:'podiel_obj',l:L('Podiel obj.','Order share'),t:'num'},
+    {k:'podiel_trzby',l:L('Podiel tržby','Revenue share'),t:'num'},
+    {k:'aov',l:L('AOV','AOV'),t:'num'},
+    {k:'marza',l:L('Marža','Margin'),t:'num'},
+    {k:'stav',l:L('Stav','Status'),t:'str'}],
+  toRow:r=>[r.segment||'—',pc(iN(r.podiel_obj)),pc(iN(r.podiel_trzby)),cur(iN(r.aov)),pc(iN(r.marza)),[iN(r.marza)>=70?'ok':'cond',r.stav||'OK']],
+  csv:'segment;podiel_obj;podiel_trzby;aov;marza;stav\nPrívesky;18,4;12,1;24,10;74,2;OK\nNáušnice;27,6;19,8;27,90;71,8;OK\nSety;6,2;11,4;70,40;63,5;sleduj maržu\nNáramky;12,9;9,3;abc;68,0;OK'
+}
+};
+
+/* ── CSV parser: BOM strip + autodetekcia ;/, + úvodzovky ──── */
+function parseCSV(text){
+  text=String(text).replace(/^\uFEFF/,'');
+  const nl=text.indexOf('\n');const first=nl<0?text:text.slice(0,nl);
+  const delim=first.split(';').length>=first.split(',').length?';':',';
+  const rows=[];let row=[],cell='',q=false;
+  for(let i=0;i<text.length;i++){const ch=text[i];
+    if(q){if(ch==='"'){if(text[i+1]==='"'){cell+='"';i++;}else q=false;}else cell+=ch;}
+    else if(ch==='"')q=true;
+    else if(ch===delim){row.push(cell);cell='';}
+    else if(ch==='\n'||ch==='\r'){if(ch==='\r'&&text[i+1]==='\n')i++;row.push(cell);cell='';
+      if(row.some(c=>c.trim()!==''))rows.push(row);row=[];}
+    else cell+=ch;}
+  if(cell!==''||row.length){row.push(cell);if(row.some(c=>c.trim()!==''))rows.push(row);}
+  if(!rows.length)return null;
+  return {delim,headers:rows[0].map(h=>h.trim()),rows:rows.slice(1).map(r=>r.map(c=>c.trim()))};
+}
+
+let IW=null; /* stav wizardu */
+function openImport(k){
+  closeOverlay();scrim();state.overlay='modal';
+  IW={mod:k,step:1,fname:'',delim:';',headers:null,rows:null,map:null,skip:true,checked:null};
+  const el=document.createElement('div');el.className='modal iw-modal';
+  el.setAttribute('role','dialog');el.setAttribute('aria-modal','true');
+  document.body.appendChild(el);iwDraw();
+}
+function iwAutoMap(){
+  const tpl=IMPORT_TPL[IW.mod];
+  IW.map=tpl.fields.map(f=>{
+    const cand=[norm(f.k),norm(f.l.sk),norm(f.l.en)];
+    let hi=IW.headers.findIndex(h=>cand.includes(norm(h)));
+    if(hi<0)hi=IW.headers.findIndex(h=>cand.some(c=>c&&(norm(h).includes(c)||c.includes(norm(h)))));
+    return hi;});
+}
+function iwLoad(text,fname){
+  const p=parseCSV(text);
+  if(!p||!p.headers.length){toast(tr(L('Súbor sa nepodarilo prečítať ako CSV','Could not read the file as CSV')));return;}
+  IW.fname=fname;IW.delim=p.delim;IW.headers=p.headers;IW.rows=p.rows;iwAutoMap();iwDraw();
+}
+function iwValidate(){
+  const tpl=IMPORT_TPL[IW.mod],m=MOD[IW.mod];
+  const existing=new Set(allRows(m).map(r=>tpl.keyIdx.map(ci=>norm(cellText(r.c[ci]))).join('|')));
+  IW.checked=IW.rows.map((row,ri)=>{
+    const rec={};tpl.fields.forEach((f,fi)=>{const hi=IW.map[fi];rec[f.k]=hi>=0?(row[hi]??''):'';});
+    const errs=[];
+    tpl.fields.forEach((f,fi)=>{if(IW.map[fi]<0)return;const v=rec[f.k];
+      if(f.t==='num'&&(v===''||isNaN(pNum(v))))errs.push(tr(f.l)+': „'+v+'“ '+tr(L('nie je číslo','is not a number')));
+      else if(f.t==='date'&&!isISO(v)&&!/^\d{1,2}\.\s*\d{1,2}\.\s*\d{4}$/.test(v))errs.push(tr(f.l)+': „'+v+'“ '+tr(L('nie je dátum','is not a date')));
+      else if(f.t==='enum'&&!f.opts.includes(v))errs.push(tr(f.l)+': „'+v+'“ ∉ '+f.opts.join(' / '));
+      else if(f.t==='str'&&!v)errs.push(tr(f.l)+': '+tr(L('prázdna hodnota','empty value')));});
+    const key=tpl.keyIdx.map(fi=>norm(rec[tpl.fields[fi].k])).join('|');
+    return {rec,errs,ri,upd:existing.has(key)};
+  });
+}
+function iwDraw(){
+  const el=$('.iw-modal');if(!el)return;
+  const tpl=IMPORT_TPL[IW.mod],m=MOD[IW.mod];
+  const steps=[L('Súbor','File'),L('Mapovanie','Mapping'),L('Validácia','Validation'),L('Súhrn','Summary')];
+  const btnBack='<button class="btn" data-iw="back">'+tr(L('Späť','Back'))+'</button>';
+  const btnCancel='<button class="btn" onclick="closeOverlay()">'+tr(L('Zrušiť','Cancel'))+'</button>';
+  let body='',foot='';
+  if(IW.step===1){
+    let prev='';
+    if(IW.rows){
+      const hs=IW.headers,rs=IW.rows.slice(0,5);
+      prev='<div class="iw-note">'+esc(IW.fname)+' · '+IW.rows.length+' '+tr(L('riadkov','rows'))+' · '+tr(L('oddeľovač','delimiter'))+' „'+IW.delim+'“ · '+tr(L('náhľad 5 riadkov','preview of 5 rows'))+'</div>'
+        +'<div class="iw-tblw"><table class="iw-tbl"><thead><tr>'+hs.map(h=>'<th>'+esc(h)+'</th>').join('')+'</tr></thead><tbody>'
+        +rs.map(r=>'<tr>'+hs.map((_,i)=>'<td>'+esc(r[i]??'')+'</td>').join('')+'</tr>').join('')+'</tbody></table></div>';
+    }else{
+      prev='<div class="iw-note">'+tr(L('Podporované: CSV s hlavičkou · oddeľovač ; alebo , (autodetekcia) · BOM sa odstráni.','Supported: CSV with a header row · ; or , delimiter (autodetected) · BOM is stripped.'))+'</div>';
+    }
+    body='<div class="iw-drop"><input type="file" id="iwFile" accept=".csv,text/csv" hidden>'
+      +'<button class="btn pri" id="iwPick">'+svg(I.doc)+' '+tr(L('Vybrať CSV súbor','Choose a CSV file'))+'</button>'
+      +'<span>'+tr(L('alebo','or'))+'</span>'
+      +'<button class="btn" id="iwSample">'+svg(I.inbox)+' '+tr(L('Použiť vzorový súbor','Use the sample file'))+'</button></div>'+prev;
+    foot=btnCancel+'<button class="btn pri" data-iw="next" '+(IW.rows?'':'disabled')+'>'+tr(L('Pokračovať','Continue'))+'</button>';
+  }else if(IW.step===2){
+    body='<div class="iw-note">'+tr(L('Stĺpce CSV boli automaticky spárované podľa hlavičky — selectami ich možno prepísať.','CSV columns were auto-matched by header — override with the selects.'))+'</div>'
+      +tpl.fields.map((f,fi)=>'<div class="iw-map"><label>'+tr(f.l)
+        +'<em>'+f.t+(f.opts?' · '+f.opts.join(' / '):'')+'</em></label>'
+        +'<select data-fi="'+fi+'" class="'+(IW.map[fi]>=0?'iw-auto-hit':'')+'"><option value="-1">—</option>'
+        +IW.headers.map((h,hi)=>'<option value="'+hi+'"'+(IW.map[fi]===hi?' selected':'')+'>'+esc(h)+'</option>').join('')
+        +'</select></div>').join('');
+    foot=btnBack+'<button class="btn pri" data-iw="next">'+tr(L('Pokračovať','Continue'))+'</button>';
+  }else if(IW.step===3){
+    iwValidate();
+    const bad=IW.checked.filter(c=>c.errs.length).length;
+    body='<div class="iw-note">'+tr(L('Typová kontrola (číslo / dátum / enum)','Type checks (number / date / enum)'))+' · '+bad+' '+tr(L('chybných riadkov','invalid rows'))+'</div>'
+      +'<div class="iw-tblw"><table class="iw-tbl"><thead><tr><th>#</th><th>'+tr(tpl.fields[tpl.keyIdx[0]].l)+'</th><th>'+tr(L('Stav','Status'))+'</th><th>'+tr(L('Chyby','Errors'))+'</th></tr></thead><tbody>'
+      +IW.checked.map(c=>{
+        const b=c.errs.length?['no',tr(L('chyba','error'))]:c.upd?['cond',tr(L('aktualizuje','updates'))]:['ok',tr(L('nový','new'))];
+        return '<tr><td>'+(c.ri+1)+'</td><td><b>'+esc(tpl.keyIdx.map(fi=>c.rec[tpl.fields[fi].k]).join(' × '))+'</b></td>'
+          +'<td><span class="badge '+b[0]+'">'+b[1]+'</span></td>'
+          +'<td class="iw-err">'+(c.errs.length?esc(c.errs.join(' · ')):'—')+'</td></tr>';}).join('')
+      +'</tbody></table></div>'
+      +'<label class="iw-skip"><input type="checkbox" id="iwSkip"'+(IW.skip?' checked':'')+'> '+tr(L('Preskočiť chybné riadky','Skip invalid rows'))+'</label>';
+    foot=btnBack+'<button class="btn pri" data-iw="next">'+tr(L('Pokračovať','Continue'))+'</button>';
+  }else{
+    iwValidate();
+    const bad=IW.checked.filter(c=>c.errs.length);
+    const useAll=!IW.skip;
+    const applied=IW.checked.filter(c=>useAll||!c.errs.length);
+    const nNew=applied.filter(c=>!c.upd).length,nUpd=applied.filter(c=>c.upd).length,nSkip=IW.checked.length-applied.length;
+    body='<div class="iw-sum">'
+      +'<div class="kpi"><div class="l">'+tr(L('Nové riadky','New rows'))+'</div><div class="v">'+nNew+'</div></div>'
+      +'<div class="kpi"><div class="l">'+tr(L('Aktualizované (upsert)','Updated (upsert)'))+'</div><div class="v">'+nUpd+'</div></div>'
+      +'<div class="kpi"><div class="l">'+tr(L('Preskočené','Skipped'))+'</div><div class="v">'+nSkip+'</div></div></div>'
+      +'<div class="iw-note">'+tr(tpl.keyL)+' · '+tr(L('nové riadky dostanú id imp1, imp2… · pred zápisom sa uloží snapshot pre UNDO','new rows get ids imp1, imp2… · a snapshot is stored for UNDO before writing'))+'</div>'
+      +(bad.length&&!IW.skip?'<div class="iw-note iw-err">'+tr(L('Chybné riadky sa importujú s náhradnými hodnotami (0 / —).','Invalid rows are imported with fallback values (0 / —).'))+'</div>':'');
+    foot=btnBack+'<button class="btn pri" data-iw="apply">'+svg(I.check)+' '+tr(L('Importovať','Import'))+'</button>';
+  }
+  el.innerHTML='<div class="mh"><h3>'+tr(L('Import','Import'))+' — '+esc(tr(m.list))+'</h3>'
+    +'<button class="x" onclick="closeOverlay()" aria-label="'+tr(L('Zavrieť','Close'))+'">'+svg(I.x,16)+'</button></div>'
+    +'<div class="iw-steps">'+steps.map((s,i)=>'<div class="iw-step '+(i+1===IW.step?'on':i+1<IW.step?'done':'')+'"><i>'+(i+1<IW.step?'✓':i+1)+'</i><span>'+tr(s)+'</span></div>').join('')+'</div>'
+    +'<div class="mb">'+body+'</div><div class="mf">'+foot+'</div>';
+  /* wire */
+  const pick=$('#iwPick',el);if(pick)pick.onclick=()=>$('#iwFile',el).click();
+  const fi=$('#iwFile',el);if(fi)fi.onchange=e=>{const f=e.target.files[0];if(!f)return;
+    const rd=new FileReader();rd.onload=()=>iwLoad(rd.result,f.name);rd.readAsText(f);};
+  const smp=$('#iwSample',el);if(smp)smp.onclick=()=>iwLoad(tpl.csv,tr(L('vzor-','sample-'))+IW.mod+'.csv');
+  $$('select[data-fi]',el).forEach(sel=>sel.onchange=()=>{IW.map[+sel.dataset.fi]=+sel.value;});
+  const sk=$('#iwSkip',el);if(sk)sk.onchange=()=>{IW.skip=sk.checked;};
+  $$('[data-iw]',el).forEach(b=>b.onclick=()=>{
+    const a=b.dataset.iw;
+    if(a==='back')IW.step=Math.max(1,IW.step-1);
+    else if(a==='next')IW.step=Math.min(4,IW.step+1);
+    else if(a==='apply')return iwApply();
+    iwDraw();});
+}
+function iwApply(){
+  const tpl=IMPORT_TPL[IW.mod],m=MOD[IW.mod];
+  const snap=JSON.stringify({rows:m.rows,extra:state.extra[IW.mod]||[]});
+  const applied=IW.checked.filter(c=>!IW.skip||!c.errs.length);
+  const skipped=IW.checked.length-applied.length;
+  let added=0,updated=0;
+  applied.forEach(c=>{
+    const cells=tpl.toRow(c.rec);
+    const key=tpl.keyIdx.map(ci=>norm(cellText(cells[ci]))).join('|');
+    const ex=allRows(m).find(r=>tpl.keyIdx.map(ci=>norm(cellText(r.c[ci]))).join('|')===key);
+    if(ex){ex.c=cells;updated++;}
+    else{let n=1;while(allRows(m).some(r=>r.id==='imp'+n))n++;
+      m.rows.unshift({id:'imp'+n,c:cells});added++;}
+  });
+  (state.imports[IW.mod]=state.imports[IW.mod]||[]).push({ts:stamp(),file:IW.fname,added,updated,skipped,snap});
+  auditPush(IW.mod,'import',IW.fname+' · +'+added+' / ~'+updated+' / -'+skipped);
+  closeOverlay();
+  toast(tr(L('Import hotový: ','Import done: '))+'+'+added+' '+tr(L('nových','new'))+', '+updated+' '+tr(L('aktualizovaných','updated')));
+  route();
+}
+function iwUndo(k){
+  const h=state.imports[k];if(!h||!h.length)return;
+  const last=h.pop();const snap=JSON.parse(last.snap);
+  const m=MOD[k];m.rows.splice(0,m.rows.length,...snap.rows);
+  state.extra[k]=snap.extra;
+  auditPush(k,'undo',tr(L('Import vrátený späť: ','Import undone: '))+last.file);
+  toast(tr(L('Posledný import vrátený späť','Last import undone')));
+  route();
+}
+
+/* KPI extra: formulár „Vyplň mesiac" s 2 vstupmi z API (badge auto) */
+function openFill(){
+  closeOverlay();scrim();state.overlay='modal';
+  const m=MOD.kpi;
+  const deps=allRows(m).map(r=>cellText(r.c[0]));
+  const el=document.createElement('div');el.className='modal';
+  el.setAttribute('role','dialog');el.setAttribute('aria-modal','true');
+  const auto='<span class="iw-auto">'+tr(L('auto · z API','auto · from API'))+'</span>';
+  el.innerHTML='<div class="mh"><h3>'+tr(L('Vyplň mesiac — Júl 2026','Fill the month — July 2026'))+'</h3>'
+    +'<button class="x" onclick="closeOverlay()" aria-label="'+tr(L('Zavrieť','Close'))+'">'+svg(I.x,16)+'</button></div>'
+    +'<div class="mb">'
+    +'<div class="fgroup"><label>'+tr(L('Oddelenie','Department'))+'</label><select id="iwDep" style="width:100%;border:1px solid var(--line);background:var(--paper);border-radius:9px;padding:9px 12px;font:500 13.5px var(--body);color:var(--ink)">'+deps.map(d=>'<option>'+esc(d)+'</option>').join('')+'</select></div>'
+    +'<div class="fgroup"><label>'+tr(L('Top 100 KW v TOP 3','Top 100 KWs in TOP 3'))+' '+auto+'</label><input value="28" readonly></div>'
+    +'<div class="fgroup"><label>CTR '+auto+'</label><input value="1,4 %" readonly></div>'
+    +'<div class="fgroup"><label>'+tr(L('Hustota KW 1–3','KW density 1–3'))+'</label><input placeholder="150–250" id="iwHus"></div>'
+    +'<div class="fgroup"><label>'+tr(L('Poznámka','Note'))+'</label><input placeholder="'+tr(L('Voliteľné…','Optional…'))+'"></div></div>'
+    +'<div class="mf"><button class="btn" onclick="closeOverlay()">'+tr(L('Zrušiť','Cancel'))+'</button>'
+    +'<button class="btn pri" id="iwFillGo">'+svg(I.check)+' '+tr(L('Uložiť mesiac','Save month'))+'</button></div>';
+  document.body.appendChild(el);
+  $('#iwFillGo',el).onclick=()=>{
+    const dep=$('#iwDep',el).value;
+    const row=allRows(m).find(r=>cellText(r.c[0])===dep);
+    if(row){row.c[3]=['ok',L('Kompletné','Complete')];
+      const mm=String(cellText(row.c[4])).match(/(\d+)\s*\/\s*(\d+)/);
+      if(mm)row.c[4]=mm[2]+'/'+mm[2];}
+    auditPush('kpi','fill',dep+' · '+tr(L('Júl 2026 vyplnený (2 vstupy z API)','July 2026 filled (2 inputs from API)')));
+    closeOverlay();
+    toast(tr(L('Mesiac vyplnený — 2 vstupy prevzaté z API (demo)','Month filled — 2 inputs taken from the API (demo)')));
+    route();
+  };
+  $('#iwHus',el).focus();
+}
+
+/* ══════════════════════════════════════════════════════════════
+   B) REPORT BUILDER — REPORT_TPL + náhľad + CSV/tlač/odkaz/plán
+   ══════════════════════════════════════════════════════════════ */
+const REPORT_TPL={
+  marketing:{tpls:[L('Mesačný prehľad kampaní','Monthly campaign overview'),L('QA a render report','QA & render report')],
+    ai:m=>[tr(L(`Vygenerovaných ${tr(m.kpis[1].v)} bannerov — ${tr(m.kpis[1].sub)}.`,`${tr(m.kpis[1].v)} banners generated — ${tr(m.kpis[1].sub)}.`)),
+      tr(L(`AI budget na ${m.side.donut} % mesačného stropu 300 € — pri prekročení sa generovanie zastaví.`,`AI budget at ${m.side.donut}% of the €300 monthly cap — generation halts at the limit.`)),
+      tr(L(`QA pass rate ${tr(m.kpis[3].v)} — 2 bannery vyžadujú re-render.`,`QA pass rate ${tr(m.kpis[3].v)} — 2 banners need a re-render.`))]},
+  kpi:{tpls:[L('Mesačná uzávierka KPI','Monthly KPI close'),L('Ročné porovnanie oddelení','Yearly department comparison')],
+    ai:m=>[tr(L(`Team score ${tr(m.kpis[0].v)} — ${tr(m.kpis[0].sub)}.`,`Team score ${tr(m.kpis[0].v)} — ${tr(m.kpis[0].sub)}.`)),
+      tr(L(`Vyplnených ${tr(m.kpis[1].v)} oddelení, ${tr(m.kpis[3].v)} po termíne uzávierky (10. deň).`,`${tr(m.kpis[1].v)} departments filled, ${tr(m.kpis[3].v)} past the close (day 10).`)),
+      tr(L(`Najlepšie oddelenie ${tr(m.kpis[2].v)} — ${tr(m.kpis[2].sub)}.`,`Top department ${tr(m.kpis[2].v)} — ${tr(m.kpis[2].sub)}.`))]},
+  logistika:{tpls:[L('Týždenný report zásielok','Weekly shipments report'),L('Report reklamácií','Claims report')],
+    ai:m=>[tr(L(`Odoslaných ${tr(m.kpis[0].v)} zásielok — doručenosť ${tr(m.kpis[1].v)}.`,`${tr(m.kpis[0].v)} parcels shipped — delivery rate ${tr(m.kpis[1].v)}.`)),
+      tr(L(`Otvorených ${tr(m.kpis[2].v)} reklamácií · ${m.side.donut} % vyriešených v SLA.`,`${tr(m.kpis[2].v)} open claims · ${m.side.donut}% resolved within SLA.`)),
+      tr(L(`Poštovné ${tr(m.kpis[3].v)} — ${tr(m.kpis[3].sub)}.`,`Postage ${tr(m.kpis[3].v)} — ${tr(m.kpis[3].sub)}.`))]},
+  hr:{tpls:[L('Prehľad evidencie','Registry overview')],
+    ai:m=>[tr(L(`${tr(m.kpis[0].v)} ľudí na ${tr(m.kpis[1].v)} pozíciách — pokrytie náplní ${m.side.donut} % knižnicou.`,`${tr(m.kpis[0].v)} people across ${tr(m.kpis[1].v)} positions — ${m.side.donut}% duty coverage from the library.`)),
+      tr(L(`Aplikácie stoja ${tr(m.kpis[3].v)} mesačne · ${tr(m.kpis[2].v)} zdieľaných schránok.`,`Apps cost ${tr(m.kpis[3].v)} monthly · ${tr(m.kpis[2].v)} shared mailboxes.`))]},
+  roadmap:{tpls:[L('Stav šprintov','Sprint status'),L('Report rozhodnutí','Decisions report')],
+    ai:m=>[tr(L(`${tr(m.kpis[1].v)} úloh v behu · ${tr(m.kpis[2].v)} rozhodnutia vo fronte (go / no-go).`,`${tr(m.kpis[1].v)} items in progress · ${tr(m.kpis[2].v)} decisions queued (go / no-go).`)),
+      tr(L(`${tr(m.kpis[3].v)} checkpoint po termíne — vyžaduje rozhodnutie.`,`${tr(m.kpis[3].v)} checkpoint overdue — a decision is required.`))]},
+  trzby:{tpls:[L('Mesačný report tržieb','Monthly revenue report'),L('Report segmentov','Segments report')],
+    ai:m=>[tr(L(`Zisk ${tr(m.kpis[1].v)} — ${tr(m.kpis[1].sub)}.`,`Profit ${tr(m.kpis[1].v)} — ${tr(m.kpis[1].sub)}.`)),
+      tr(L(`Tržba ${tr(m.kpis[0].v)} · ${tr(m.kpis[0].sub)}.`,`Revenue ${tr(m.kpis[0].v)} · ${tr(m.kpis[0].sub)}.`)),
+      tr(L(`Marža ${tr(m.kpis[2].v)} — ${tr(m.kpis[2].sub)}.`,`Margin ${tr(m.kpis[2].v)} — ${tr(m.kpis[2].sub)}.`))]}
+};
+const RB_PERIODS=[L('Júl 2026','July 2026'),L('Jún 2026','June 2026'),L('Q2 2026','Q2 2026')];
+const RB_DAYS=[L('Pondelok','Monday'),L('Streda','Wednesday'),L('Piatok','Friday'),L('1. deň mesiaca','1st of the month')];
+let RB=null;
+
+function openReport(k){
+  closeOverlay();scrim();state.overlay='modal';
+  RB={mod:k,tpl:0,per:0,sec:{kpi:true,graf:true,tab:true,ai:true}};
+  const el=document.createElement('div');el.className='modal rb-modal';
+  el.setAttribute('role','dialog');el.setAttribute('aria-modal','true');
+  document.body.appendChild(el);rbDraw();
+}
+function rbPreview(){
+  const m=MOD[RB.mod],tp=REPORT_TPL[RB.mod];
+  let h='<div class="rb-head">'+esc(m.name)+' — '+tr(tp.tpls[RB.tpl])
+    +'<small>'+tr(RB_PERIODS[RB.per])+' · '+tr(L('generované z dát modulu (demo)','generated from module data (demo)'))+'</small></div>';
+  if(RB.sec.kpi)h+='<div class="rb-sec-t">KPI</div><div class="rb-kpis">'
+    +m.kpis.slice(0,4).map(k=>'<div class="rb-kpi"><small>'+tr(k.l)+'</small><b>'+kv(k.v)+'</b></div>').join('')+'</div>';
+  if(RB.sec.graf)h+='<div class="rb-sec-t">'+tr(L('Graf','Chart'))+'</div>'
+    +(m.chart.type==='segarea'?area(m.chart.series.trzba.v):bars(m.chart.data.slice(0,6)));
+  if(RB.sec.tab){const rows=allRows(m).slice(0,5);
+    h+='<div class="rb-sec-t">'+tr(L('Tabuľka (prvých 5 riadkov)','Table (first 5 rows)'))+'</div>'
+      +'<div class="rb-tblw"><table class="t"><thead><tr>'+m.cols.map(c=>'<th>'+tr(c)+'</th>').join('')+'</tr></thead><tbody>'
+      +rows.map(r=>'<tr>'+r.c.map((cell,i)=>tcell(cell,i,m)).join('')+'</tr>').join('')+'</tbody></table></div>';}
+  if(RB.sec.ai)h+='<div class="rb-sec-t">'+tr(L('Zistenia (AI)','Findings (AI)'))+'</div>'
+    +'<div class="rb-ai"><ul>'+tp.ai(m).map(s=>'<li>'+s+'</li>').join('')+'</ul></div>';
+  return h;
+}
+function rbDraw(){
+  const el=$('.rb-modal');if(!el)return;
+  const m=MOD[RB.mod],tp=REPORT_TPL[RB.mod];
+  const secs=[['kpi','KPI'],['graf',tr(L('Graf','Chart'))],['tab',tr(L('Tabuľka','Table'))],['ai',tr(L('Zistenia','Findings'))]];
+  el.innerHTML='<div class="mh"><h3>Report — '+esc(m.name)+'</h3>'
+    +'<button class="x" onclick="closeOverlay()" aria-label="'+tr(L('Zavrieť','Close'))+'">'+svg(I.x,16)+'</button></div>'
+    +'<div class="mb rb-grid"><div class="rb-ctl">'
+    +'<div class="fgroup"><label>'+tr(L('Šablóna','Template'))+'</label><select id="rbTpl">'
+      +tp.tpls.map((t,i)=>'<option value="'+i+'"'+(i===RB.tpl?' selected':'')+'>'+tr(t)+'</option>').join('')+'</select></div>'
+    +'<div class="fgroup"><label>'+tr(L('Obdobie','Period'))+'</label><select id="rbPer">'
+      +RB_PERIODS.map((p,i)=>'<option value="'+i+'"'+(i===RB.per?' selected':'')+'>'+tr(p)+'</option>').join('')+'</select></div>'
+    +'<div class="fgroup"><label>'+tr(L('Sekcie','Sections'))+'</label><div class="rb-secs">'
+      +secs.map(([k,lb])=>'<label class="rb-chk"><input type="checkbox" data-sec="'+k+'"'+(RB.sec[k]?' checked':'')+'> '+lb+'</label>').join('')+'</div></div>'
+    +'<div class="fgroup"><label>'+tr(L('Formát a výstup','Format & output'))+'</label><div class="rb-fmt">'
+      +'<button class="btn" id="rbCsv">'+svg(I.doc)+' CSV</button>'
+      +'<button class="btn" id="rbPrint">'+svg(I.doc)+' '+tr(L('Tlač / PDF','Print / PDF'))+'</button>'
+      +'<button class="btn" id="rbLink">'+svg(I.arrow)+' '+tr(L('Odkaz','Link'))+'</button></div></div>'
+    +'<div class="fgroup"><label>'+tr(L('Plán reportu','Report schedule'))+'</label><div class="rb-plan">'
+      +'<select id="rbDay">'+RB_DAYS.map(d=>'<option>'+tr(d)+'</option>').join('')+'</select>'
+      +'<input type="time" id="rbTime" value="08:00">'
+      +'<button class="btn" id="rbPlan">'+svg(I.cal)+' '+tr(L('Naplánovať','Schedule'))+'</button></div></div>'
+    +'</div><div class="rb-prev" id="rbPrev">'+rbPreview()+'</div></div>';
+  $('#rbTpl',el).onchange=e=>{RB.tpl=+e.target.value;rbRefresh();};
+  $('#rbPer',el).onchange=e=>{RB.per=+e.target.value;rbRefresh();};
+  $$('input[data-sec]',el).forEach(cb=>cb.onchange=()=>{RB.sec[cb.dataset.sec]=cb.checked;rbRefresh();});
+  $('#rbCsv',el).onclick=rbCsv;
+  $('#rbPrint',el).onclick=rbPrint;
+  $('#rbLink',el).onclick=rbLink;
+  $('#rbPlan',el).onclick=()=>{
+    const day=$('#rbDay',el).value,tm=$('#rbTime',el).value||'08:00';
+    auditPush(RB.mod,'plan',tr(tp.tpls[RB.tpl])+' · '+day+' '+tm);
+    toast(tr(L('Report naplánovaný: ','Report scheduled: '))+day+' '+tm);};
+}
+function rbRefresh(){const p=$('#rbPrev');if(p)p.innerHTML=rbPreview();}
+function rbCsv(){
+  const m=MOD[RB.mod];
+  const q=s=>{s=String(s);return /[";\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;};
+  const cell=c=>{if(Array.isArray(c))return q(tr(c[1]));
+    if(c&&c.pln!==undefined)return c.pln==null?'':q(decs(c.pln)+' %');
+    return q(fmtCell(c));};
+  const lines=[m.cols.map(c=>q(tr(c))).join(';')]
+    .concat(allRows(m).map(r=>r.c.map(cell).join(';')));
+  const blob=new Blob(['\uFEFF'+lines.join('\r\n')],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='aura-'+RB.mod+'-report.csv';document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+  auditPush(RB.mod,'report','CSV · '+tr(REPORT_TPL[RB.mod].tpls[RB.tpl]));
+  toast(tr(L('CSV stiahnuté (BOM + ;)','CSV downloaded (BOM + ;)')));
+}
+function rbPrint(){
+  const pv=$('#rbPrev');if(!pv)return;
+  const pr=document.createElement('div');pr.className='rb-print';pr.innerHTML=pv.innerHTML;
+  document.body.appendChild(pr);document.body.classList.add('rb-printing');
+  auditPush(RB.mod,'report',tr(L('Tlač / PDF','Print / PDF'))+' · '+tr(REPORT_TPL[RB.mod].tpls[RB.tpl]));
+  setTimeout(()=>{window.print();
+    setTimeout(()=>{pr.remove();document.body.classList.remove('rb-printing');},300);},60);
+}
+function rbLink(){
+  const url=location.href.split('#')[0]+'#'+RB.mod+'/dashboard?rpt='+RB.tpl+'&per='+RB.per;
+  auditPush(RB.mod,'report',tr(L('Odkaz','Link'))+' · '+url);
+  copyText(url);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   C) UX — triedenie, pager, Filter popover, prepínač obdobia
+   ══════════════════════════════════════════════════════════════ */
+function sortVal(td){
+  const s=(td?td.textContent:'').replace(/ /g,' ').trim();
+  const c=s.replace(/[\s€%↑↓→▲▼]/g,'').replace(',','.').replace('−','-');
+  if(/^-?\d+(\.\d+)?[a-z]{0,3}$/i.test(c))return parseFloat(c);
+  return s.toLowerCase();
+}
+function makeSortable(t){
+  if(t.dataset.i2sort)return;t.dataset.i2sort='1';
+  const head=t.tHead&&t.tHead.rows[0];if(!head)return;
+  [...head.cells].forEach((th,ci)=>{
+    if(!th.textContent.trim())return;
+    th.classList.add('iw-th');th.tabIndex=0;
+    th.title=tr(L('Zoradiť','Sort'));
+    const arr=document.createElement('span');arr.className='iw-arr';arr.setAttribute('aria-hidden','true');th.appendChild(arr);
+    const doSort=()=>{
+      const dir=th.getAttribute('aria-sort')==='ascending'?'descending':'ascending';
+      [...head.cells].forEach(h=>{h.removeAttribute('aria-sort');const a=h.querySelector('.iw-arr');if(a)a.textContent='';});
+      th.setAttribute('aria-sort',dir);arr.textContent=dir==='ascending'?' ▲':' ▼';
+      const tb=t.tBodies[0];if(!tb)return;
+      const rows=[...tb.rows];
+      rows.sort((a,b)=>{const x=sortVal(a.cells[ci]),y=sortVal(b.cells[ci]);
+        if(typeof x==='number'&&typeof y==='number')return dir==='ascending'?x-y:y-x;
+        const r=String(x).localeCompare(String(y),state.lang==='sk'?'sk':'en');
+        return dir==='ascending'?r:-r;});
+      rows.forEach(r=>tb.appendChild(r));
+      if(t.__i2show)t.__i2show(+(t.dataset.i2page||1));
+    };
+    th.addEventListener('click',doSort);
+    th.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();doSort();}});
+  });
+}
+function makePager(t){
+  if(t.dataset.i2pg)return;
+  const tb=t.tBodies[0];if(!tb)return;
+  const n=tb.rows.length;if(n<=10)return;
+  t.dataset.i2pg='1';
+  const wrap=t.closest('.tbl-wrap')||t;
+  const pgr=document.createElement('div');pgr.className='pager iw-pager';
+  wrap.after(pgr);
+  const pages=Math.ceil(n/10);
+  const show=p=>{p=Math.min(Math.max(1,p),pages);t.dataset.i2page=p;
+    [...tb.rows].forEach((r,i)=>{r.style.display=(i>=(p-1)*10&&i<p*10)?'':'none';});
+    pgr.innerHTML='<span>'+n+' '+tr(L('záznamov · 10 na stranu','records · 10 per page'))+'</span>'
+      +'<button data-p="'+(p-1)+'" '+(p===1?'disabled':'')+' aria-label="'+tr(L('Predchádzajúca','Previous'))+'">‹</button>'
+      +Array.from({length:pages},(_,i)=>'<button data-p="'+(i+1)+'" class="'+(i+1===p?'on':'')+'">'+(i+1)+'</button>').join('')
+      +'<button data-p="'+(p+1)+'" '+(p===pages?'disabled':'')+' aria-label="'+tr(L('Ďalšia','Next'))+'">›</button>';
+    $$('button[data-p]',pgr).forEach(b=>b.onclick=()=>show(+b.dataset.p));};
+  t.__i2show=show;show(1);
+}
+function closePops(){$$('.iw-pop').forEach(p=>p.remove());}
+function popAt(anchor){
+  closePops();
+  const d=document.createElement('div');d.className='iw-pop';
+  const r=anchor.getBoundingClientRect();
+  d.style.top=Math.min(r.bottom+8,window.innerHeight-200)+'px';
+  d.style.left=Math.min(r.left,window.innerWidth-260)+'px';
+  document.body.appendChild(d);
+  return d;
+}
+/* Filter tlačidlo → popover s chipmi (capture; pulseChips beží ďalej) */
+document.addEventListener('click',e=>{
+  const fb=e.target.closest('[data-i2filter]');
+  if(!fb){if(!e.target.closest('.iw-pop')&&!e.target.closest('[data-i2date]'))closePops();return;}
+  if($('.iw-pop')){closePops();return;}
+  const k=fb.getAttribute('data-i2filter');const m=MOD[k];if(!m)return;
+  const ci=state.filter[k]||0,chips=chipsFor(m);
+  const d=popAt(fb);
+  d.innerHTML='<div class="iw-pop-h">'+tr(L('Rýchly filter','Quick filter'))+'</div>'
+    +'<div class="chips">'+chips.map((c,i)=>'<button class="chip '+(i===ci?'on':'')+'" data-fi="'+i+'">'+tr(c.l)+'</button>').join('')+'</div>';
+  $$('.chip',d).forEach(b=>b.onclick=()=>{closePops();setFilter(k,+b.dataset.fi);});
+},true);
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closePops();});
+
+/* date chip „Júl 2026" → dropdown období + API limit poznámka */
+function openPeriodPop(sp,k){
+  const opts=[L('Júl 2026','July 2026'),L('Jún 2026','June 2026')];
+  const cur=state.i2period[k]?tr(state.i2period[k]):tr(opts[0]);
+  const d=popAt(sp);
+  d.innerHTML='<div class="iw-pop-h">'+tr(L('Obdobie','Period'))+'</div>'
+    +opts.map((o,i)=>'<button class="iw-item '+(tr(o)===cur?'on':'')+'" data-i="'+i+'">'+tr(o)+'</button>').join('')
+    +'<button class="iw-item" disabled>'+tr(L('Máj 2026 — API limit 30/60 dní','May 2026 — API limit 30/60 days'))+'</button>';
+  $$('.iw-item:not([disabled])',d).forEach(b=>b.onclick=()=>{
+    const o=opts[+b.dataset.i];state.i2period[k]=o;
+    sp.innerHTML=svg(I.cal)+' '+esc(tr(o));closePops();
+    toast(tr(L('Obdobie prepnuté — prepočet (demo)','Period switched — recompute (demo)')));});
+}
+function enhanceDateChip(m){
+  if(!m)return;
+  $$('.phead .actions span.btn').forEach(sp=>{
+    if(sp.dataset.i2date)return;
+    if(!/Júl 2026|July 2026|Jún 2026|June 2026/.test(sp.textContent))return;
+    sp.dataset.i2date=m.key;sp.style.cursor='pointer';
+    sp.setAttribute('role','button');sp.tabIndex=0;
+    sp.title=tr(L('Prepnúť obdobie','Switch period'));
+    if(state.i2period[m.key])sp.innerHTML=svg(I.cal)+' '+esc(tr(state.i2period[m.key]));
+    sp.addEventListener('click',e=>{e.stopPropagation();
+      if($('.iw-pop'))closePops();else openPeriodPop(sp,m.key);});
+    sp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();openPeriodPop(sp,m.key);}});
+  });
+}
+
+/* ── injekcie: tlačidlá, „Posledný import", Settings história ── */
+function injectButtons(m,screen){
+  const act=$('.phead .actions');if(!m||!act)return;
+  if((screen==='list'||screen==='claims')&&IMPORT_TPL[m.key]&&!$('.iw-btn',act)){
+    const b=document.createElement('button');b.className='btn iw-btn';
+    b.innerHTML=svg(I.inbox)+' '+tr(L('Import','Import'));
+    b.onclick=()=>openImport(m.key);
+    act.insertBefore(b,act.firstChild);
+  }
+  if((screen==='dashboard'||screen==='list'||screen==='claims')&&REPORT_TPL[m.key]&&!$('.rb-btn',act)){
+    const b=document.createElement('button');b.className='btn rb-btn';
+    b.innerHTML=svg(I.doc)+' Report';
+    b.onclick=()=>openReport(m.key);
+    act.insertBefore(b,act.firstChild);
+  }
+  if(m.key==='kpi'&&(screen==='dashboard'||screen==='list')&&!$('.iw-fillbtn',act)){
+    const b=document.createElement('button');b.className='btn iw-fillbtn';
+    b.innerHTML=svg(I.check)+' '+tr(L('Vyplň mesiac','Fill month'));
+    b.onclick=openFill;
+    act.insertBefore(b,act.firstChild);
+  }
+}
+function injectLastImport(m){
+  if(!m||$('.iw-last'))return;
+  const h=state.imports[m.key];if(!h||!h.length)return;
+  const last=h[h.length-1];
+  const anchor=$('.toolbar')||$('.phead');if(!anchor)return;
+  const d=document.createElement('div');d.className='iw-last';
+  d.innerHTML=svg(I.inbox,14)
+    +'<span>'+tr(L('Posledný import','Last import'))+': <b>'+esc(last.file)+'</b> · +'+last.added+' '+tr(L('nových','new'))
+    +' · '+last.updated+' '+tr(L('aktualizovaných','updated'))+' · '+last.skipped+' '+tr(L('preskočených','skipped'))
+    +' · '+esc(last.ts)+'</span>'
+    +'<button class="btn iw-undo">'+tr(L('Vrátiť späť','Undo'))+'</button>';
+  $('.iw-undo',d).onclick=()=>iwUndo(m.key);
+  anchor.after(d);
+}
+function injectSettingsAudit(m){
+  if(!m||document.getElementById('iw-audit'))return;
+  const content=document.getElementById('content');if(!content)return;
+  const imp=(state.imports[m.key]||[]).slice(-4).reverse();
+  const aud=state.audit.filter(a=>a.mod===m.key&&a.type!=='import').slice(-4).reverse();
+  const KIND={plan:L('Plán reportu','Report schedule'),report:'Report',undo:'UNDO',fill:L('Vyplň mesiac','Fill month'),import:'Import'};
+  const card=document.createElement('div');card.className='card set-group';card.id='iw-audit';
+  card.innerHTML='<div class="gh">'+svg(I.doc)+' '+tr(L('Importy a reporty — história','Imports & reports — history'))+'</div>'
+    +imp.map(e=>'<div class="set-row"><div class="sl"><b>Import · '+esc(e.file)+'</b>'
+      +'<small>+'+e.added+' '+tr(L('nových','new'))+' · '+e.updated+' '+tr(L('aktualizovaných','updated'))
+      +' · '+e.skipped+' '+tr(L('preskočených','skipped'))+' · '+esc(e.ts)+'</small></div><span class="badge ok">CSV</span></div>').join('')
+    +aud.map(a=>'<div class="set-row"><div class="sl"><b>'+tr(KIND[a.type]||a.type)+'</b>'
+      +'<small>'+esc(a.txt)+' · '+esc(a.ts||'')+'</small></div><span class="badge info">'+esc(a.type)+'</span></div>').join('')
+    +((imp.length||aud.length)?'':'<div class="set-row"><div class="sl"><b>'+tr(L('Zatiaľ žiadna história','No history yet'))+'</b>'
+      +'<small>'+tr(L('CSV importy, reporty a plány sa zobrazia tu.','CSV imports, reports and schedules will appear here.'))+'</small></div></div>');
+  content.appendChild(card);
+}
+
+/* ── hlavný enhancer (idempotentný) ────────────────────────── */
+function enhance(){
+  const seg=(location.hash.replace(/^#/,'')||'hub').split('/');
+  const m=MOD[seg[0]]||null;const screen=seg[1]||seg[0];
+  if(m){
+    injectButtons(m,screen);
+    if(screen==='list'||screen==='claims')injectLastImport(m);
+    if(screen==='settings')injectSettingsAudit(m);
+    enhanceDateChip(m);
+    $$('button[onclick*="pulseChips"]').forEach(b=>b.setAttribute('data-i2filter',m.key));
+  }
+  $$('#view table.t').forEach(t=>{makeSortable(t);makePager(t);});
+}
+window.addEventListener('hashchange',closePops);
+
+/* POST hook po každom renderi + MutationObserver pre re-rendery
+   mimo route() (setFilter/onSearch/submitModal) */
+POST.push(function(){enhance();});
+const mo=new MutationObserver(()=>{clearTimeout(mo.__t);mo.__t=setTimeout(enhance,150);});
+const vw=document.getElementById('view');
+if(vw)mo.observe(vw,{childList:true,subtree:true});
+setTimeout(enhance,400);
+
+/* expozícia */
+window.I2={openImport,openReport,openFill,undo:iwUndo,enhance};
+window.IMPORT_TPL=IMPORT_TPL;window.REPORT_TPL=REPORT_TPL;
+})();
+
+/* ═ I3 AURAAI CHAT — FAB + dokovaný panel · 45 stránok × 3 otázky · citácie · ⌘J + ⌘K ═ */
+(function(){
+'use strict';
+if(window.__AI3)return;window.__AI3=true;
+window.POST=window.POST||[];
+
+state.chat=state.chat||{open:false,history:[]};
+
+const AI_CROWN='<path d="M3 8l4 4 5-7 5 7 4-4-2 12H5L3 8z"/>';
+const AQ=(q,a,kw,cite,act)=>({q,a,kw,cite,act});
+const G=arg=>({type:'goto',arg});                 /* goto akcia */
+const F=(h,chip)=>({type:'filter',arg:{h,chip}}); /* filter akcia */
+const X={type:'export'};                          /* export akcia */
+const C=arg=>({type:'create',arg});               /* create akcia — krok do state.steps */
+
+/* ══════════════════════════════════════════════════════════════
+   ZNALOSTNÁ BÁZA — AI['mod/screen'] = {q:[{q,a,kw,cite,act}]}
+   45 stránok × 3 otázky · čísla čerpané z MODULES/PAGES
+   ══════════════════════════════════════════════════════════════ */
+const AI={
+
+/* ── MARKETING ─────────────────────────────────────────────── */
+'marketing/dashboard':{q:[
+AQ(L('Koľko kampaní je aktívnych?','How many campaigns are active?'),
+   L('Aktívne sú 4 kampane (+1 oproti minulému mesiacu) a spolu je vygenerovaných 320 bannerov v 8 jazykoch × 5 rozmeroch.','4 campaigns are active (+1 vs last month) with 320 banners generated across 8 languages × 5 sizes.'),
+   ['kampan','aktivn','campaign','active','kolko'],'api',G('#marketing/list')),
+AQ(L('Ako sme na tom s AI budgetom?','How is the AI budget doing?'),
+   L('Čerpanie je na 62 % mesačného stropu 300 € — vyčerpaných 186 €, rezerva 114 €. Pri prekročení sa generovanie zastaví.','Spend is at 62% of the €300 monthly cap — €186 used, €114 headroom. Generation halts at the limit.'),
+   ['budget','rozpocet','strop','cerpanie'],'api',G('#marketing/settings')),
+AQ(L('Aký je QA pass rate bannerov?','What is the banner QA pass rate?'),
+   L('QA pass rate je 91 % (+4 p.b.). Kampaň Svadobná sezóna má 2 bannery s major deviation a čaká na re-render.','QA pass rate is 91% (+4 pp). The Wedding season campaign has 2 banners with major deviation awaiting a re-render.'),
+   ['qa','pass','deviation','rate'],'demo',G('#marketing/detail/svadba'))]},
+'marketing/list':{q:[
+AQ(L('Ktoré kampane vyžadujú akciu?','Which campaigns need action?'),
+   L('Tri: Black Friday (manifest nedokončený), Svadobná sezóna (2 bannery major deviation) a Zlaté prstene (render beží — 35/40 PNG).','Three: Black Friday (manifest unfinished), Wedding season (2 banners major deviation) and Gold rings (render running — 35/40 PNGs).'),
+   ['akci','pozornost','vyzaduj','need','action'],'demo',F('#marketing/list',2)),
+AQ(L('V akom stave je Summer Sale?','What is the Summer Sale status?'),
+   L('Lock aktívny — svet Riviéra + modelka Adela, 8 jazykov, 40 bannerov; 91 % prešlo QA gates a ZIP export je pripravený.','Lock active — world Riviéra + model Adela, 8 languages, 40 banners; 91% passed the QA gates and the ZIP export is ready.'),
+   ['summer','sale','lock','stav'],'demo',G('#marketing/detail/summer')),
+AQ(L('Priprav koncept novej kampane.','Draft a new campaign concept.'),
+   L('Pripravil som koncept novej kampane s návrhom copy manifestu pre 8 jazykov — krok viem zapísať do aktivity detailu.','I drafted a new campaign concept with a copy manifest proposal for 8 languages — I can log the step into the detail activity.'),
+   ['nova kampan','koncept','draft','new campaign','priprav'],'demo',
+   C(L('koncept novej kampane — návrh copy manifestu (8 jazykov)','new campaign concept — copy manifest draft (8 languages)')))]},
+'marketing/bannery':{q:[
+AQ(L('Koľko bannerov máme podľa rozmerov?','How many banners per size?'),
+   L('Spolu 320: 96× 1080×1080, 80× 1080×1350, 56× 1080×1920, 48× 1200×628 a 40× 970×250.','320 in total: 96× 1080×1080, 80× 1080×1350, 56× 1080×1920, 48× 1200×628 and 40× 970×250.'),
+   ['kolko bannerov','rozmer','size','pocet'],'demo'),
+AQ(L('Ktorý rozmer má najslabšie QA?','Which size has the weakest QA?'),
+   L('1200×628 s QA 88 %; najlepší je 1080×1080 s 96 %. Rozdiel drží kampaň Zlaté prstene v render fronte.','1200×628 with 88% QA; the best is 1080×1080 at 96%. The gap keeps Gold rings in the render queue.'),
+   ['najslab','weakest','najhors','qa'],'demo',G('#marketing/detail/zlate')),
+AQ(L('Exportuj prehľad bannerov.','Export the banner overview.'),
+   L('Pripravím CSV prehľad 320 bannerov (5 rozmerov × 8 jazykov) vrátane QA skóre.','I will prepare a CSV of 320 banners (5 sizes × 8 languages) including QA scores.'),
+   ['export','csv','stiahn'],'demo',X)]},
+'marketing/ads':{q:[
+AQ(L('Čo mám škálovať?','What should I scale?'),
+   L('Google Ads → Zlaté prstene: ROAS 5,1 pri spende 5 320 €; zostava RO výkon má ROAS 5,8 a banner 1080×1080 až 6,2.','Google Ads → Gold rings: ROAS 5.1 at €5,320 spend; the RO performance ad set is at 5.8 and the 1080×1080 banner at 6.2.'),
+   ['skalova','scale','navysit','zvysit'],'api'),
+AQ(L('Čo treba vypnúť?','What should be paused?'),
+   L('Zostava SK remarketing (ROAS 1,7) a video 9:16 (ROAS 1,2) sú v pásme < 2 → odporúčanie Vypnúť.','The SK remarketing ad set (ROAS 1.7) and the 9:16 video (ROAS 1.2) sit in the < 2 band → recommendation Pause.'),
+   ['vypnut','pause','strat','pod pasm'],'api'),
+AQ(L('Aký je blended ROAS?','What is the blended ROAS?'),
+   L('3,4 naprieč platformami — Google Ads 4,6 (spend 9 840 €) vs Meta Ads 2,8 (6 210 €).','3.4 across platforms — Google Ads 4.6 (€9,840 spend) vs Meta Ads 2.8 (€6,210).'),
+   ['blended','roas','celkov','platform'],'api')]},
+'marketing/detail':{q:[
+AQ(L('Čo je zamknuté v tejto kampani?','What is locked in this campaign?'),
+   L('Campaign lock drží svet Riviéra + modelku Adelu (identity lock); 8 jazykov a 5 rozmerov ide cez pipeline HTML/CSS → PNG → ZIP.','The campaign lock holds world Riviéra + model Adela (identity lock); 8 languages and 5 sizes run through the HTML/CSS → PNG → ZIP pipeline.'),
+   ['lock','zamknut','svet','modelka'],'demo'),
+AQ(L('Aká bola posledná aktivita?','What was the latest activity?'),
+   L('Dnes bol pripravený ZIP export (40 PNG v 5 rozmeroch); včera QA hard gates vrátili 2 bannery na re-render.','Today the ZIP export was prepared (40 PNGs in 5 sizes); yesterday the QA hard gates sent 2 banners back for a re-render.'),
+   ['aktivita','posledn','historia','activity'],'demo'),
+AQ(L('Zapíš schválenie exportu.','Log the export approval.'),
+   L('Zapíšem krok o schválení ZIP exportu do aktivity kampane.','I will log the ZIP export approval step into the campaign activity.'),
+   ['zapis','schval','krok','log'],'demo',
+   C(L('export ZIP schválený (40 PNG · 5 rozmerov)','ZIP export approved (40 PNGs · 5 sizes)')))]},
+'marketing/settings':{q:[
+AQ(L('Aký AI provider je nastavený?','Which AI provider is configured?'),
+   L('Aktuálne mock; k dispozícii sú openai (GPT) a gemini (3 Pro Image). Budget strop je 300 €/mes., API kľúče zatiaľ nevyplnené.','Currently mock; openai (GPT) and gemini (3 Pro Image) are available. The budget cap is €300/mo and API keys are not set yet.'),
+   ['provider','openai','gemini','mock'],'demo'),
+AQ(L('Ako funguje learning loop?','How does the learning loop work?'),
+   L('Výsledky QA sa vracajú do znalostnej bázy a render je deterministický — rovnaký vstup dá rovnaký PNG.','QA results feed back into the knowledge base and the render is deterministic — the same input yields the same PNG.'),
+   ['learning','loop','znalost','kb'],'demo'),
+AQ(L('Kde zmením budget strop?','Where do I change the budget cap?'),
+   L('V skupine AI provider — riadok Budget strop s možnosťami 100/200/300 €. Pri prekročení sa generovanie zastaví.','In the AI provider group — the Budget cap row with €100/200/300 options. Generation halts once the cap is hit.'),
+   ['strop','cap','limit','zmenim'],'demo')]},
+
+/* ── KPI ───────────────────────────────────────────────────── */
+'kpi/dashboard':{q:[
+AQ(L('Aký je Team score?','What is the Team score?'),
+   L('Team score je 61,9 % — priemer 6 zložiek. Vyplnených je 7 z 12 oddelení a 3 sú po termíne.','Team score is 61.9% — the average of 6 components. 7 of 12 departments are filled and 3 are overdue.'),
+   ['team','score','skore'],'import',G('#kpi/analyza')),
+AQ(L('Ktoré oddelenie je najlepšie a najhoršie?','Which department is best and worst?'),
+   L('Najlepší je Copywriter so 100 % za jún; najslabšie IT s 5 % (vyplnený 1 zo 4 vstupov).','Copywriter leads with 100% for June; IT is weakest at 5% (1 of 4 inputs filled).'),
+   ['najleps','najhors','best','worst','top'],'import',G('#kpi/detail/copy')),
+AQ(L('Kto zmeškal uzávierku?','Who missed the close?'),
+   L('Tri oddelenia po termíne 10. 7.: Fotografka (2/4 vstupy), Hospodársky (0/6) a IT (1/4).','Three departments missed the July 10 close: Photographer (2/4 inputs), Business/finance (0/6) and IT (1/4).'),
+   ['termin','overdue','meska','uzavierk','zmeska'],'import',F('#kpi/list',2))]},
+'kpi/list':{q:[
+AQ(L('Ktoré oddelenia majú jún uzavretý?','Which departments closed June?'),
+   L('Sedem: Copywriter (100 %), Import (91,3 %), Nahrávanie (88,5 %), Performance (87,2 %), Expedícia (82,5 %), Externistky (79,4 %) a Sklad (76,8 %).','Seven: Copywriter (100%), Import (91.3%), Uploads (88.5%), Performance (87.2%), Dispatch (82.5%), Externals (79.4%) and Warehouse (76.8%).'),
+   ['uzavret','closed','jun'],'import',F('#kpi/list',1)),
+AQ(L('Ako je na tom Newsletter-AI?','How is Newsletter-AI doing?'),
+   L('Júl je otvorený — vyplnené 3 z 5 vstupov; jún skončil na 84,6 % (+2,6 p.b. oproti máju).','July is open — 3 of 5 inputs filled; June closed at 84.6% (+2.6 pp vs May).'),
+   ['newsletter'],'import',G('#kpi/detail/news')),
+AQ(L('Pošli pripomienku Fotografke.','Send the Photographer a reminder.'),
+   L('Zapíšem pripomienku — Fotografke chýbajú 2 zo 4 vstupov a uzávierka bola 10. 7.','I will log the reminder — the Photographer is missing 2 of 4 inputs and the close was July 10.'),
+   ['pripomienk','reminder','fotograf','posli'],'demo',
+   C(L('pripomienka odoslaná: Fotografka — 2 chýbajúce vstupy za jún','reminder sent: Photographer — 2 missing June inputs')))]},
+'kpi/analyza':{q:[
+AQ(L('Kto sa medzi májom a júnom zlepšil?','Who improved from May to June?'),
+   L('Nahrávanie +4,5 p.b. (84 → 88,5), Copywriter +3 (97 → 100) a Newsletter-AI +2,6 (82 → 84,6).','Uploads +4.5 pp (84 → 88.5), Copywriter +3 (97 → 100) and Newsletter-AI +2.6 (82 → 84.6).'),
+   ['zlepsil','improve','porovnan','maj'],'import'),
+AQ(L('Kto klesol?','Who declined?'),
+   L('Fotografka −2,9 p.b. (71 → 68,1) — jediný pokles v A/B porovnaní; Hospodársky je úplne bez dát.','Photographer −2.9 pp (71 → 68.1) — the only decline in the A/B compare; Business/finance has no data at all.'),
+   ['klesol','pokles','declin','drop'],'import',G('#kpi/detail/foto')),
+AQ(L('Ako čítať heatmapu?','How do I read the heatmap?'),
+   L('Zelená = plnenie 100 %, žltá ≥ 60 %, červená < 60 %; jún sú reálne plnenia, staršie mesiace sú ukážkové.','Green = 100% attainment, amber ≥ 60%, red < 60%; June holds real attainment, earlier months are illustrative.'),
+   ['heatmap','citat','farb','legend'],'demo')]},
+'kpi/rok':{q:[
+AQ(L('Kto je mimo ročnej tolerancie?','Who is outside the yearly tolerance?'),
+   L('Hospodársky — −14,2 p.b. (66,3 % → 52,1 %) je mimo tolerancie ±5 %; hraniční sú Newsletter-AI (+9,6) a Fotografka (−7,6).','Business/finance — −14.2 pp (66.3% → 52.1%) is outside the ±5% tolerance; Newsletter-AI (+9.6) and Photographer (−7.6) are borderline.'),
+   ['toleranc','mimo','out of'],'import'),
+AQ(L('Ako medziročne rastie Copywriter?','How is Copywriter growing YoY?'),
+   L('Z 92,4 % na 96,1 % (+3,7 p.b.) — v tolerancii; najväčší medziročný skok má Newsletter-AI s +9,6 p.b.','From 92.4% to 96.1% (+3.7 pp) — within tolerance; the biggest YoY jump belongs to Newsletter-AI at +9.6 pp.'),
+   ['medzirocn','yoy','rok','rastie'],'import'),
+AQ(L('Exportuj ročné porovnanie.','Export the yearly compare.'),
+   L('Pripravím CSV s plneniami 2025 vs 2026 a delta stĺpcom pre 7 oddelení.','I will prepare a CSV with 2025 vs 2026 attainment and a delta column for 7 departments.'),
+   ['export','csv'],'demo',X)]},
+'kpi/missing':{q:[
+AQ(L('Čo chýba po termíne?','What is missing past due?'),
+   L('Fotografka (počet nafotených produktov), Hospodársky (marža a náklady — 6 vstupov) a IT (uptime a incidenty); termín bol 10. 7.','Photographer (products photographed count), Business/finance (margin & costs — 6 inputs) and IT (uptime & incidents); the deadline was July 10.'),
+   ['chyba','missing','po termine','overdue'],'import'),
+AQ(L('Čo je otvorené na august?','What is open for August?'),
+   L('Konverzie newslettera a 2 vstupy Reklamácií (Ø čas riešenia, počet uzavretých prípadov) — termín 10. 8.','Newsletter conversions and 2 Claims inputs (avg resolution time, closed cases count) — due August 10.'),
+   ['august','otvoren','open'],'import'),
+AQ(L('Pošli hromadnú pripomienku.','Send a bulk reminder.'),
+   L('Zapíšem krok — pripomienka pre 3 oddelenia po termíne (Fotografka, Hospodársky, IT).','I will log the step — a reminder for the 3 overdue departments (Photographer, Business/finance, IT).'),
+   ['pripomienk','hromadn','remind','posli'],'demo',
+   C(L('pripomienka odoslaná 3 oddeleniam po termíne (jún)','reminder sent to the 3 overdue departments (June)')))]},
+'kpi/seo':{q:[
+AQ(L('Koľko otázok z porady je otvorených?','How many meeting questions are open?'),
+   L('5 z 12 zobrazených (výber zo 72) — o. i. AI Overviews, indexácia jazykových mutácií a meranie návštevnosti z AI asistentov.','5 of the 12 shown (a sample of 72) — incl. AI Overviews, language-version indexing and measuring traffic from AI assistants.'),
+   ['otvoren','otazk','open','kolko'],'api'),
+AQ(L('Kto vlastní najviac otázok?','Who owns the most questions?'),
+   L('Gabika 6, Daniel 4 a Ema 2 — obsah a linkbuilding drží Gabika, techniku Daniel.','Gabika 6, Daniel 4 and Ema 2 — Gabika holds content & link building, Daniel the technical group.'),
+   ['vlastn','owner','kto ma'],'demo'),
+AQ(L('Ako sme na tom s AI vyhľadávaním?','How are we doing in AI search?'),
+   L('Štruktúrované dáta produktov sú hotové; otvorené ostáva zobrazovanie v AI Overviews a meranie návštevnosti z AI asistentov.','Product structured data is done; appearing in AI Overviews and measuring AI-assistant traffic remain open.'),
+   ['ai overview','vyhladavan','ai search','strukturovan'],'api')]},
+'kpi/detail':{q:[
+AQ(L('Prečo má Copywriter 100 %?','Why does Copywriter score 100%?'),
+   L('Všetky tri metriky sú naplnené: Top 100 KW v TOP 3 (váha 60 %), hustota KW 1–3 (20 %) a CTR (20 %); dáta tečú automaticky zo SEO appky.','All three metrics are met: Top 100 KWs in TOP 3 (60% weight), KW density 1–3 (20%) and CTR (20%); the data flows automatically from the SEO app.'),
+   ['preco','100','copywriter','metrik'],'api'),
+AQ(L('Kedy bola uzávierka?','When was the close?'),
+   L('Uzávierka bola 10. 7. 2026; mesiac sa reálne uzavrel 11. 7. a kompletné vstupy boli už 8. 7.','The close was July 10, 2026; the month was actually closed on July 11 with all inputs complete by July 8.'),
+   ['uzavierk','kedy','close'],'import'),
+AQ(L('Zapíš poznámku ku KPI.','Log a KPI note.'),
+   L('Zapíšem krok do aktivity oddelenia.','I will log the step into the department activity.'),
+   ['poznamk','zapis','note','krok'],'demo',
+   C(L('poznámka AuraAI: skontrolovať váhy metrík pred júlovou uzávierkou','AuraAI note: review metric weights before the July close')))]},
+'kpi/settings':{q:[
+AQ(L('Aké roly a práva existujú?','What roles and rights exist?'),
+   L('Admin, Editor a Prehliadač s M:N právami na oddelenia; Hospodársky vidí len Admin + manažment.','Admin, Editor and Viewer with M:N department rights; the Business/finance department is visible to Admin + management only.'),
+   ['rol','prava','access'],'demo'),
+AQ(L('Odkiaľ tečú automatické dáta?','Where does automatic data come from?'),
+   L('Z integrácií Logistika a SEO — read-only s graceful fallback, výpadok teda nezablokuje vypĺňanie.','From the Logistics and SEO integrations — read-only with a graceful fallback, so an outage never blocks data entry.'),
+   ['integraci','automatick','zdroj','odkial'],'api'),
+AQ(L('Ako sa počíta plnenie?','How is attainment computed?'),
+   L('(skutočnosť − Min) / (Max − Min) s capom 100 % — spolu 16 metrík, 38 vstupov a 48 pásiem.','(actual − Min) / (Max − Min), capped at 100% — 16 metrics, 38 inputs and 48 bands in total.'),
+   ['pocita','plnenie','vzorec','formula'],'demo')]},
+
+/* ── LOGISTIKA ─────────────────────────────────────────────── */
+'logistika/dashboard':{q:[
+AQ(L('Koľko zásielok sme odoslali v W31?','How many parcels shipped in W31?'),
+   L('2 340 (+6,2 % oproti W30) s doručenosťou 94,1 %; poštovné za júl je 11 603 €.','2,340 (+6.2% vs W30) with a 94.1% delivery rate; July postage is €11,603.'),
+   ['kolko zasielok','odoslan','shipped','w31'],'import',G('#logistika/vyvoj')),
+AQ(L('Aké je riziko s GLS?','What is the GLS risk?'),
+   L('GLS vyžaduje min. 80 % zo zmluvných 350 zásielok/deň (~280/deň) v auguste — inak hrozí zdraženie; v W31 malo GLS 749 zásielok.','GLS requires at least 80% of the contracted 350 parcels/day (~280/day) in August — otherwise prices may rise; GLS carried 749 parcels in W31.'),
+   ['gls','riziko','zmluv','minim'],'import'),
+AQ(L('Koľko reklamácií je otvorených?','How many claims are open?'),
+   L('37 otvorených (−5); 32 z nich je v 5-dňovej SLA a 5 po SLA.','37 open (−5); 32 within the 5-day SLA and 5 past it.'),
+   ['reklamaci','claims','otvoren'],'import',G('#logistika/claims'))]},
+'logistika/list':{q:[
+AQ(L('Ktorá krajina odoslala najviac?','Which country shipped the most?'),
+   L('SK — 512 zásielok cez packetu (hodnota 18 400 €); nasleduje HU 401 (GLS) a CZ 348.','SK — 512 parcels via packeta (value €18,400); then HU 401 (GLS) and CZ 348.'),
+   ['krajina','najviac','country'],'import',G('#logistika/detail/w31sk')),
+AQ(L('Kde máme problémy?','Where are the problems?'),
+   L('PL W30 — 17 vrátených pri neprevzatí dobierky (DPD) a BG W30 — 1 stratená zásielka, z ktorej vznikla reklamácia R-2026-0311.','PL W30 — 17 returns from uncollected COD (DPD) and BG W30 — 1 lost parcel, which opened claim R-2026-0311.'),
+   ['problem','vraten','straten'],'import',F('#logistika/list',2)),
+AQ(L('Čo čaká na výdajniach?','What is waiting at pickup points?'),
+   L('RO · SPS má 82 zásielok na výdajniach (súhrn W31 — 265 odoslaných, hodnota 9 700 €).','RO · SPS has 82 parcels waiting at pickup points (W31 summary — 265 shipped, value €9,700).'),
+   ['vydajn','pickup','caka'],'import',G('#logistika/detail/w31ro'))]},
+'logistika/claims':{q:[
+AQ(L('Kto je najčastejší vinník?','Who is the most common fault party?'),
+   L('Prepravca — 4 zo 6 prípadov; po jednom pripadá na e-shop a zákazníka.','The carrier — 4 of 6 cases; the e-shop and the customer take one each.'),
+   ['vinnik','fault','najcastejsi'],'import'),
+AQ(L('Ako dlho trvá riešenie?','How long does resolution take?'),
+   L('Aktuálne prípady 2–12 dní pri SLA 5 dní; najdlhší R-2026-0298 (12 dní) skončil ako stratený s plnou náhradou.','Current cases run 2–12 days against a 5-day SLA; the longest, R-2026-0298 (12 days), closed as lost with full compensation.'),
+   ['trva','riesenie','sla','dlho'],'import'),
+AQ(L('Založ novú reklamáciu — koncept.','Draft a new claim.'),
+   L('Pripravím koncept reklamácie a zapíšem krok do aktivity.','I will prepare a claim draft and log the step into the activity.'),
+   ['zaloz','nova reklamacia','new claim','koncept'],'demo',
+   C(L('koncept novej reklamácie pripravený (čaká na číslo zásielky)','new claim draft prepared (awaiting the parcel number)')))]},
+'logistika/vyvoj':{q:[
+AQ(L('Ako rastie objem zásielok?','How is parcel volume growing?'),
+   L('Z 2 050 (W26) na 2 340 (W31) — rast ~14 % za 6 týždňov, s poklesom v W30 (2 180).','From 2,050 (W26) to 2,340 (W31) — ~14% growth in 6 weeks, with a dip in W30 (2,180).'),
+   ['objem','rast','trend','vyvoj'],'import'),
+AQ(L('Plní GLS zmluvné minimum?','Is GLS meeting the contracted minimum?'),
+   L('GLS má v W31 749 zásielok (~107/deň) — pod zmluvným minimom ~280/deň, preto hrozí zdraženie.','GLS carried 749 parcels in W31 (~107/day) — below the ~280/day contracted minimum, so a price increase looms.'),
+   ['gls','minim','plni','zmluv'],'import'),
+AQ(L('Aký je mix stavov v W31?','What is the W31 state mix?'),
+   L('Doručené 94,1 %, na ceste 3,1 %, výdajňa 1,6 %, vrátené 0,9 % a stratené 0,3 %.','Delivered 94.1%, in transit 3.1%, pickup point 1.6%, returned 0.9% and lost 0.3%.'),
+   ['mix','stav','staty'],'import',G('#logistika/stavy'))]},
+'logistika/stavy':{q:[
+AQ(L('Koľko zásielok bolo doručených v W31?','How many parcels were delivered in W31?'),
+   L('2 202 z 2 340; na ceste 73, na výdajni 37, vrátené + stratené 28.','2,202 of 2,340; 73 in transit, 37 at pickup points, 28 returned + lost.'),
+   ['dorucen','kolko','delivered'],'import'),
+AQ(L('Rastú vratky?','Are returns rising?'),
+   L('Áno — vrátené + stratené stúpli z 22 (W26–W29) na 24 v W30 a 28 v W31; ťahá ich PL (neprevzaté dobierky).','Yes — returned + lost rose from 22 (W26–W29) to 24 in W30 and 28 in W31, driven by PL (uncollected COD).'),
+   ['vratk','rastu','returns'],'import'),
+AQ(L('Exportuj stavy do CSV.','Export the states to CSV.'),
+   L('Pripravím CSV so 4 stavovými radmi za W26–W31.','I will prepare a CSV with the 4 state series for W26–W31.'),
+   ['export','csv'],'demo',X)]},
+'logistika/detail':{q:[
+AQ(L('Čo obsahuje tento súhrn?','What does this summary contain?'),
+   L('W31 · SK · packeta — 512 zásielok, hodnota 18 400 €, poštovné 2 620 €, doručenosť 96 % (492 z 512).','W31 · SK · packeta — 512 parcels, value €18,400, postage €2,620, delivery rate 96% (492 of 512).'),
+   ['suhrn','obsahuje','summary'],'import'),
+AQ(L('Ako sa dáta zbierajú?','How is the data collected?'),
+   L('CSV import v pondelok, upsert podľa kľúča týždeň × krajina × prepravca a audit každej zmeny; súhrn sa uzatvára v piatok.','A Monday CSV import, an upsert on the week × country × carrier key and an audit of every change; the summary closes on Friday.'),
+   ['zbieraj','import','upsert','kluc'],'import'),
+AQ(L('Zapíš krok k súhrnu.','Log a step for this summary.'),
+   L('Zapíšem kontrolný krok do aktivity záznamu.','I will log a check step into the record activity.'),
+   ['zapis','krok','log'],'demo',
+   C(L('AuraAI kontrola: doručenosť W31 SK 96 % — bez potrebnej akcie','AuraAI check: W31 SK delivery 96% — no action needed')))]},
+'logistika/settings':{q:[
+AQ(L('Ktoré krajiny a prepravcovia sú povinní?','Which countries and carriers are required?'),
+   L('8 krajín (SK · CZ · HU · RO · SI · HR · PL · BG) a 5 prepravcov (packeta · posta · gls · sps · dpd).','8 countries (SK · CZ · HU · RO · SI · HR · PL · BG) and 5 carriers (packeta · posta · gls · sps · dpd).'),
+   ['krajin','prepravc','povinn'],'demo'),
+AQ(L('Ako fungujú zálohy?','How do backups work?'),
+   L('Zálohovací skript s testovaným restore; výstupy pre týždennú poradu idú cez XLSX export a tlač.','A backup script with a tested restore; weekly-meeting outputs go through XLSX export and print.'),
+   ['zaloh','restore','backup'],'demo'),
+AQ(L('Čo zabraňuje duplicitám?','What prevents duplicates?'),
+   L('Unikátny kľúč týždeň × krajina × prepravca — import robí upsert a každá zmena ide do auditu.','The unique week × country × carrier key — the import upserts and every change is audited.'),
+   ['duplicit','kluc','upsert','unik'],'demo')]},
+
+/* ── HR ────────────────────────────────────────────────────── */
+'hr/dashboard':{q:[
+AQ(L('Koľko máme ľudí a pozícií?','How many people and positions do we have?'),
+   L('18 zamestnancov (+1) na 32 pozíciách; k tomu ~90 zdieľaných schránok.','18 employees (+1) across 32 positions, plus ~90 shared mailboxes.'),
+   ['kolko ludi','zamestnanc','pozici'],'demo',G('#hr/list')),
+AQ(L('Koľko stoja aplikácie?','How much do the apps cost?'),
+   L('1 240 €/mes. (−4 %); najdrahšie sú Asana 280 €, Shoptet 240 € a Ahrefs 220 €.','€1,240/mo (−4%); the priciest are Asana €280, Shoptet €240 and Ahrefs €220.'),
+   ['stoja','naklad','aplikac','cost'],'demo',G('#hr/aplikacie')),
+AQ(L('Ktoré oddelenie je najväčšie?','Which department is the largest?'),
+   L('Expedícia s 5 ľuďmi; nasleduje Marketing so 4, IT a Sklad po 3.','Dispatch with 5 people; then Marketing with 4, IT and Warehouse with 3 each.'),
+   ['najvacsie','oddelen','largest'],'demo')]},
+'hr/list':{q:[
+AQ(L('Kto pracuje v IT?','Who works in IT?'),
+   L('Daniel a Kiko (vývojári — dev@ a dev2@); technicky ich vedie CTO Delaja z Vedenia.','Daniel and Kiko (developers — dev@ and dev2@); CTO Delaja from Leadership leads them technically.'),
+   ['it','vyvojar','developer'],'demo',G('#hr/detail/daniel')),
+AQ(L('Kto pracuje na dohodu?','Who works part-time?'),
+   L('Hajnalka — Team Leader CS z HU; drží 3 zdieľané CS schránky.','Hajnalka — the CS Team Leader from HU; she holds 3 shared CS mailboxes.'),
+   ['dohod','part-time','uvazok'],'demo',G('#hr/detail/hajnalka')),
+AQ(L('Pridaj nového zamestnanca — koncept.','Draft a new employee.'),
+   L('Pripravím koncept karty zamestnanca a zapíšem krok do aktivity.','I will prepare an employee card draft and log the step into the activity.'),
+   ['pridaj','novy zamestnanec','new employee'],'demo',
+   C(L('koncept karty nového zamestnanca (čaká na meno a pozíciu)','new employee card draft (awaiting name and position)')))]},
+'hr/pozicie':{q:[
+AQ(L('Ktorá pozícia nie je obsadená?','Which position is not filled?'),
+   L('Skladník — obsadené 2 z 3 miest, 1 voľné.','Warehouse operator — 2 of 3 seats filled, 1 open.'),
+   ['neobsaden','volne','open seat','obsaden'],'demo'),
+AQ(L('Kto má nekompletnú náplň?','Whose duties are incomplete?'),
+   L('Team Leader CS sa ešte dopĺňa; celkovo je 27 z 32 pozícií pokrytých knižnicou činností a 5 má vlastné bloky.','The CS Team Leader is still in progress; overall 27 of 32 positions are covered by the activity library and 5 use custom blocks.'),
+   ['napln','nekomplet','duties'],'demo'),
+AQ(L('Exportuj zoznam pozícií.','Export the position list.'),
+   L('Pripravím CSV s pozíciami, obsadením a stavom náplní.','I will prepare a CSV with positions, staffing and duty status.'),
+   ['export','csv'],'demo',X)]},
+'hr/maily':{q:[
+AQ(L('Ktoré schránky sú admin-only?','Which mailboxes are admin-only?'),
+   L('fakturacia@, admin@ a hr@ — heslá sú šifrované a vidí ich len Admin.','fakturacia@, admin@ and hr@ — passwords are encrypted and Admin-only.'),
+   ['admin-only','heslo','sifrovan'],'demo'),
+AQ(L('Kto spravuje reklamačnú schránku?','Who manages the claims mailbox?'),
+   L('reklamacie@sperky-aura.sk drží Hajnalka +1 a má 2 aliasy.','reklamacie@sperky-aura.sk is held by Hajnalka +1 and has 2 aliases.'),
+   ['reklamacie@','spravuje','mailbox','schranku'],'demo'),
+AQ(L('Koľko schránok spolu máme?','How many mailboxes in total?'),
+   L('~90 rolových mailov s aliasmi; prvú líniu (info@, objednavky@) drží Zákaznícky servis v troch ľuďoch.','~90 role mailboxes with aliases; the first line (info@, objednavky@) is held by the 3-person Customer service team.'),
+   ['kolko schranok','90','spolu'],'demo')]},
+'hr/aplikacie':{q:[
+AQ(L('Kde vieme ušetriť?','Where can we save?'),
+   L('Adobe CC (120 €) a Canva Pro (40 €) sú nevyužité — potenciál úspory 160 €/mes., t. j. ~13 % nákladov.','Adobe CC (€120) and Canva Pro (€40) are underused — a potential saving of €160/mo, i.e. ~13% of the spend.'),
+   ['usetrit','nevyuzit','saving','uspor'],'demo'),
+AQ(L('Ktorá aplikácia je najdrahšia?','Which app is the most expensive?'),
+   L('Asana — 280 €/mes. pri 15 licenciách, vlastník Delaja.','Asana — €280/mo with 15 licences, owned by Delaja.'),
+   ['najdrah','expensive'],'demo'),
+AQ(L('Exportuj register aplikácií.','Export the app register.'),
+   L('Pripravím CSV s 8 aplikáciami, nákladmi a vlastníkmi (spolu ≈ 1 240 €/mes.).','I will prepare a CSV with the 8 apps, costs and owners (≈ €1,240/mo in total).'),
+   ['export','csv','register'],'demo',X)]},
+'hr/org':{q:[
+AQ(L('Ako vyzerá štruktúra firmy?','What does the company structure look like?'),
+   L('Vedenie (2) → CTO Delaja → IT (Daniel, Kiko); vedľa Marketing (Gabika, Ema), Zákaznícky servis (Hajnalka +2) a Sklad s Expedíciou a Reklamáciami.','Leadership (2) → CTO Delaja → IT (Daniel, Kiko); alongside Marketing (Gabika, Ema), Customer service (Hajnalka +2) and Warehouse with Dispatch and Claims.'),
+   ['struktur','strom','org'],'demo'),
+AQ(L('Kto reportuje CTO?','Who reports to the CTO?'),
+   L('IT — Daniel a Kiko; samotný CTO reportuje CEO.','IT — Daniel and Kiko; the CTO himself reports to the CEO.'),
+   ['reportuje','nadriaden','cto'],'demo'),
+AQ(L('Kde chýba človek?','Where is a person missing?'),
+   L('V Sklade — obsadenosť 2/3, 1 voľné miesto na pozícii Skladník.','In the Warehouse — 2/3 staffed, 1 open seat for a Warehouse operator.'),
+   ['chyba','volne','miesto'],'demo',G('#hr/pozicie'))]},
+'hr/detail':{q:[
+AQ(L('Čo má tento zamestnanec na starosti?','What is this employee responsible for?'),
+   L('Delaja je CTO vo Vedení, reportuje CEO, má priradený cto@ a prístup k 4 zdieľaným schránkam (TPP · SK).','Delaja is the CTO in Leadership, reports to the CEO, holds cto@ and has access to 4 shared mailboxes (full-time · SK).'),
+   ['starosti','rola','delaja','zodpoved'],'demo'),
+AQ(L('Aká bola posledná aktivita?','What was the latest activity?'),
+   L('Dnes schválil prístupy k 2 aplikáciám; minulý týždeň bola náplň pozície doplnená z knižnice činností.','Today he approved access to 2 apps; last week the position duties were completed from the activity library.'),
+   ['aktivita','posledn'],'demo'),
+AQ(L('Zapíš krok k zamestnancovi.','Log a step for this employee.'),
+   L('Zapíšem krok do aktivity karty.','I will log the step into the card activity.'),
+   ['zapis','krok','log'],'demo',
+   C(L('AuraAI: naplánovať ročný pohovor a revíziu prístupov','AuraAI: schedule the annual review and an access audit')))]},
+'hr/settings':{q:[
+AQ(L('Kto vidí heslá schránok?','Who can see mailbox passwords?'),
+   L('Len Admin — heslá ~90 schránok sú šifrované a každú zmenu zaznamenáva audit log.','Admin only — the ~90 mailbox passwords are encrypted and every change lands in the audit log.'),
+   ['hesl','vidi','admin'],'demo'),
+AQ(L('Aké roly appka pozná?','What roles does the app know?'),
+   L('Admin, Editor a Prehliadač; pri zmene roly treba skontrolovať prístup k ~90 mailom.','Admin, Editor and Viewer; check access to the ~90 mailboxes whenever a role changes.'),
+   ['rol','roles'],'demo'),
+AQ(L('Ako sa zobrazuje org-strom?','How is the org tree shown?'),
+   L('Oddelenia → pozície → ľudia, v štýle Evidencie s podporou dark mode.','Departments → positions → people, in the Registry style with dark mode support.'),
+   ['org-strom','zobrazuje','tree'],'demo')]},
+
+/* ── ROADMAP ───────────────────────────────────────────────── */
+'roadmap/dashboard':{q:[
+AQ(L('Čo práve beží?','What is running right now?'),
+   L('5 položiek in_progress v S-31 (commit, 55 % hotovo, 11 položiek); 2 rozhodnutia čakajú vo fronte a 1 checkpoint je po termíne.','5 items in_progress in S-31 (commit, 55% done, 11 items); 2 decisions are queued and 1 checkpoint is overdue.'),
+   ['bezi','in_progress','prave'],'demo'),
+AQ(L('Aké rozhodnutia čakajú?','Which decisions are queued?'),
+   L('Go-live brána (Aura KPI, readiness 78 % → conditional_go s follow-upom) a Q3 rozpočet infra (deferred — čaká na cenové ponuky).','The Go-live gate (Aura KPI, readiness 78% → conditional_go with a follow-up) and the Q3 infra budget (deferred — awaiting quotes).'),
+   ['rozhodnut','cakaj','decision','fronte'],'demo',G('#roadmap/rozhodnutia')),
+AQ(L('Ako dopadli minulé šprinty?','How did past sprints go?'),
+   L('S-28 až S-30 sú uzavreté na 100 %; S-31 je v commite na 55 % a S-32 v drafte.','S-28 through S-30 closed at 100%; S-31 is committed at 55% and S-32 is in draft.'),
+   ['sprint','minule','dopadli'],'demo')]},
+'roadmap/list':{q:[
+AQ(L('Čo je zablokované?','What is blocked?'),
+   L('Bug 409 pri uložení checkpointu čaká na reprodukciu (optimistic concurrency, termín 6. 8.).','The 409-on-checkpoint-save bug is waiting for a repro (optimistic concurrency, due Aug 6).'),
+   ['zablokovan','waiting','blok','bug'],'demo',G('#roadmap/detail/bug409')),
+AQ(L('Čo sa naposledy dokončilo?','What finished most recently?'),
+   L('Podúloha zod kontrakt API v S-30 — 28. 7. s 535 zelenými unit testami.','The zod API contract subtask in S-30 — July 28, with 535 green unit tests.'),
+   ['dokoncil','done','naposledy','hotovo'],'demo'),
+AQ(L('Založ novú úlohu — koncept.','Draft a new work item.'),
+   L('Pripravím koncept úlohy do backlogu a zapíšem krok do aktivity.','I will draft a work item into the backlog and log the step into the activity.'),
+   ['zaloz','nova uloha','new item','koncept'],'demo',
+   C(L('koncept úlohy pridaný do backlogu (AuraAI)','work item draft added to the backlog (AuraAI)')))]},
+'roadmap/timeline':{q:[
+AQ(L('Aké režimy má timeline?','What modes does the timeline have?'),
+   L('Tri — Roadmap, Sprinty a Rozhodnutia; k tomu 3 zoomy (kvartál · mesiac · týždeň) a 2 hustoty. Zlatá čiara označuje dnešok.','Three — Roadmap, Sprints and Decisions; plus 3 zooms (quarter · month · week) and 2 densities. The gold line marks today.'),
+   ['rezim','mode','timeline'],'demo'),
+AQ(L('Ktorý projekt je najďalej?','Which project is furthest along?'),
+   L('Aura Roadmap je done; E-shop beží (migrácia platobnej brány, in_progress) a Aura KPI má conditional_go.','Aura Roadmap is done; E-shop is running (payment gateway migration, in_progress) and Aura KPI holds a conditional_go.'),
+   ['najdalej','furthest','projekt'],'demo'),
+AQ(L('Čo je v backlogu?','What sits in the backlog?'),
+   L('Aura Banner Studio (audit prístupov v S-32 drafte) a nápad na onboarding flow bez šprintu.','Aura Banner Studio (the access audit in the S-32 draft) and the onboarding flow idea with no sprint.'),
+   ['backlog','zasobnik'],'demo')]},
+'roadmap/projekty':{q:[
+AQ(L('Ktorý projekt má najvyššie riziko?','Which project carries the highest risk?'),
+   L('Bezpečnosť — vysoké riziko, čaká na dodávateľa, hotovo 6/18 položiek (33 %), termín 10. 10.','Security — high risk, waiting on the vendor, 6/18 items done (33%), due Oct 10.'),
+   ['rizik','risk','najvyss'],'demo',G('#roadmap/detail/bug409')),
+AQ(L('Ako je na tom E-shop?','How is the E-shop project doing?'),
+   L('P1 v realizácii — 24/41 položiek (58 %), sprint S-31, stredné riziko, termín 15. 9.','P1 in delivery — 24/41 items (58%), sprint S-31, medium risk, due Sep 15.'),
+   ['e-shop','eshop'],'demo'),
+AQ(L('Koľko projektov je hotových?','How many projects are done?'),
+   L('1 zo 6 — Aura Roadmap (36/36 položiek, 100 %, uzavreté 30. 6.).','1 of 6 — Aura Roadmap (36/36 items, 100%, closed Jun 30).'),
+   ['hotov','kolko projektov','done'],'demo')]},
+'roadmap/rozhodnutia':{q:[
+AQ(L('Koľko rozhodnutí bolo go?','How many decisions were go?'),
+   L('2× go (Release v2.0 pri readiness 96 % a Pilot renderu pri 88 %), 2× conditional_go a 1× deferred.','2× go (Release v2.0 at 96% readiness and the Render pilot at 88%), 2× conditional_go and 1× deferred.'),
+   ['go','kolko rozhodnuti','decision'],'demo'),
+AQ(L('Čo je odložené?','What is deferred?'),
+   L('CP-11 Penetračný audit — readiness len 38 %, deferred s follow-upom FU-35 (čaká na dodávateľa).','CP-11 Penetration audit — readiness only 38%, deferred with follow-up FU-35 (waiting on the vendor).'),
+   ['odlozen','deferred'],'demo'),
+AQ(L('Dá sa rozhodnutie zmeniť?','Can a decision be changed?'),
+   L('Nie — po zápise je nemenné; ukladá sa baseline snapshot, audit a prípadný follow-up do backlogu.','No — once recorded it is immutable; a baseline snapshot, an audit entry and any follow-up land in the backlog.'),
+   ['zmenit','nemenn','immutable'],'demo')]},
+'roadmap/detail':{q:[
+AQ(L('Čo znamená conditional_go?','What does conditional_go mean?'),
+   L('Podmienené go — readiness 78 % nestačila na čisté go, preto vznikol follow-up v backlogu; rozhodnutie je nemenné s baseline snapshotom.','A conditional go — the 78% readiness fell short of a clean go, so a follow-up was created in the backlog; the decision is immutable with a baseline snapshot.'),
+   ['conditional','znamena','podmienen'],'demo'),
+AQ(L('Ako sa rieši súbežnosť?','How is concurrency handled?'),
+   L('Optimistic concurrency — konflikt verzií vráti 409 VERSION_CONFLICT (viď bug v S-31).','Optimistic concurrency — a version conflict returns 409 VERSION_CONFLICT (see the S-31 bug).'),
+   ['subeznost','concurrency','409'],'demo'),
+AQ(L('Zapíš follow-up krok.','Log a follow-up step.'),
+   L('Zapíšem follow-up krok do aktivity checkpointu.','I will log the follow-up step into the checkpoint activity.'),
+   ['follow','zapis','krok'],'demo',
+   C(L('follow-up: overiť readiness pred ďalšou go-live bránou','follow-up: verify readiness before the next go-live gate')))]},
+'roadmap/settings':{q:[
+AQ(L('Aký je stavový model?','What is the state model?'),
+   L('backlog → in_progress → waiting → done; šprinty bežia draft → commit → close s carry-over.','backlog → in_progress → waiting → done; sprints run draft → commit → close with carry-over.'),
+   ['stavov','model','workflow'],'demo'),
+AQ(L('Aké zoomy a hustoty existujú?','What zooms and densities exist?'),
+   L('Kvartál, mesiac a týždeň; hustota cozy alebo compact.','Quarter, month and week; density cozy or compact.'),
+   ['zoom','hustot','density'],'demo'),
+AQ(L('Aké roly appka má?','What roles does the app have?'),
+   L('Admin, Editor a Prehliadač.','Admin, Editor and Viewer.'),
+   ['rol','roles'],'demo')]},
+
+/* ── TRŽBY ─────────────────────────────────────────────────── */
+'trzby/dashboard':{q:[
+AQ(L('Aká je tržba za júl?','What is the July revenue?'),
+   L('217 016 € za 1.–27. 7. (5 679 objednávok), zisk 126 541 € (58,3 % z tržby); run-rate na 31 dní je 250 822 €.','€217,016 for Jul 1–27 (5,679 orders), profit €126,541 (58.3% of revenue); the 31-day run-rate is €250,822.'),
+   ['trzba','revenue','jul'],'import',G('#trzby/detail')),
+AQ(L('Ktorý deň je najslabší?','Which day is the weakest?'),
+   L('Sobota je systematicky najslabší deň — 5 774 € vs Ø plného dňa 8 091 €; ostatné dni sú vyrovnané.','Saturday is systematically the weakest day — €5,774 vs the €8,091 full-day average; other days are level.'),
+   ['najslab','sobota','weakest','den'],'import',G('#trzby/hodiny')),
+AQ(L('Ako sa darí zlatu?','How is gold performing?'),
+   L('Zlato robí 49,8 % tržby pri len 22,4 % objednávok, no s nižšou maržou 54,6 % (ostatné kovy 77,4 %).','Gold makes 49.8% of revenue on just 22.4% of orders, but with a lower 54.6% margin (other metals 77.4%).'),
+   ['zlato','gold'],'import',G('#trzby/detail/zlato'))]},
+'trzby/list':{q:[
+AQ(L('Aké je riziko dobierky?','What is the COD risk?'),
+   L('Dobierka nesie 65,8 % tržby — riziko neprevzatia; vratky vidno v Logistike (PL W30 — 17 neprevzatých).','COD carries 65.8% of revenue — a non-pickup risk; the returns show up in Logistics (PL W30 — 17 uncollected).'),
+   ['dobierk','cod','riziko'],'import',G('#logistika/list')),
+AQ(L('Čo robia zľavy s maržou?','What do discounts do to margin?'),
+   L('Zľavy (14 602 €, 6,7 % tržby) dvíhajú AOV na 59,82 € vs 30,35 €, ale režú maržu na 57,5 % vs 72,2 % pri plnej cene.','Discounts (€14,602, 6.7% of revenue) lift AOV to €59.82 vs €30.35, but cut margin to 57.5% vs 72.2% at full price.'),
+   ['zlav','discount','marz'],'import'),
+AQ(L('Koľko máme opakovaných zákazníkov?','How many repeat customers do we have?'),
+   L('44,2 % objednávok a 45,6 % tržby — takmer polovica nákupov sa vracia.','44.2% of orders and 45.6% of revenue — nearly half of purchases are repeat.'),
+   ['opakovan','repeat','zakazn'],'import',G('#trzby/detail/opak'))]},
+'trzby/trhy':{q:[
+AQ(L('Ktoré trhy sú najväčšie?','Which markets are the largest?'),
+   L('HU 26,4 %, RO 19,8 % a SK 17,7 % — spolu 63,9 % tržby (reálny súčet).','HU 26.4%, RO 19.8% and SK 17.7% — 63.9% of revenue combined (the real total).'),
+   ['trh','najvacsie','market'],'import'),
+AQ(L('Kde rastú vratky?','Where are returns rising?'),
+   L('PL (9,1 % tržby, 580 objednávok) hlási rast vratiek — súvisí s neprevzatými dobierkami v Logistike W30.','PL (9.1% of revenue, 580 orders) reports rising returns — tied to the uncollected COD parcels in Logistics W30.'),
+   ['vratk','pl','returns','rastu'],'import',G('#logistika/list')),
+AQ(L('Aké AOV majú trhy?','What AOV do the markets have?'),
+   L('Najvyššie HU 41,20 €, najnižšie PL 33,90 €; celkové AOV je 38,21 € s mediánom 25,41 €.','HU is highest at €41.20, PL lowest at €33.90; the overall AOV is €38.21 with a €25.41 median.'),
+   ['aov','kosik','hodnota objedn'],'import')]},
+'trzby/expedicia':{q:[
+AQ(L('Aký je medián expedície?','What is the dispatch median?'),
+   L('P50 je 18,7 h a 69,6 % objednávok expedujeme do 24 h (cieľ 80 %).','P50 is 18.7h and 69.6% of orders ship within 24h (target 80%).'),
+   ['median','expedic','p50'],'import'),
+AQ(L('Kde expedícia zaostáva?','Where does dispatch lag?'),
+   L('P90 na 42,6 h je mimo cieľa a P75 (27,4 h) prekračuje 24 h — chvost objednávok sa expeduje neskoro.','P90 at 42.6h is off target and P75 (27.4h) exceeds 24h — the tail of orders ships late.'),
+   ['zaostava','p90','pomal','lag'],'import'),
+AQ(L('Exportuj percentily.','Export the percentiles.'),
+   L('Pripravím CSV s P50/P75/P90 a podielom do 24 h.','I will prepare a CSV with P50/P75/P90 and the within-24h share.'),
+   ['export','csv'],'demo',X)]},
+'trzby/hodiny':{q:[
+AQ(L('Kedy je denná špička?','When is the daily peak?'),
+   L('O 11:00 (reálny údaj); noc 0–6 h prinesie len 5,5 % tržby.','At 11:00 (a real figure); the 0–6h night brings only 5.5% of revenue.'),
+   ['spicka','peak','hodina','kedy'],'import'),
+AQ(L('Aký slabý je víkend?','How weak is the weekend?'),
+   L('Sobota je systematicky najslabšia — 5 774 € vs Ø plného dňa 8 091 €; nedeľa je normálna (7 870 €).','Saturday is systematically the weakest — €5,774 vs the €8,091 full-day average; Sunday is normal (€7,870).'),
+   ['vikend','sobota','weekend','slab'],'import'),
+AQ(L('Ktorý deň je najsilnejší?','Which day is the strongest?'),
+   L('Streda s 8 340 €, tesne pred pondelkom (8 210 €) a piatkom (8 150 €).','Wednesday at €8,340, just ahead of Monday (€8,210) and Friday (€8,150).'),
+   ['najsiln','strongest','den'],'import')]},
+'trzby/kose':{q:[
+AQ(L('Ktoré pásmo nesie tržbu?','Which band carries the revenue?'),
+   L('Pásmo > 60 € — 44,4 % tržby pri len 15,4 % objednávok (reálny údaj).','The > €60 band — 44.4% of revenue on just 15.4% of orders (a real figure).'),
+   ['pasmo','nesie','band','kos'],'import'),
+AQ(L('Aká je typická objednávka?','What is a typical order?'),
+   L('Medián 25,41 € — priemer (AOV 38,21 €) typickú objednávku nadhodnocuje kvôli drahým košom.','The median is €25.41 — the mean (AOV €38.21) overstates a typical order because of the expensive baskets.'),
+   ['typick','median','objednavka'],'import'),
+AQ(L('Exportuj pásma košov.','Export the basket bands.'),
+   L('Pripravím CSV so 4 pásmami a podielmi objednávok aj tržby.','I will prepare a CSV with the 4 bands and the order and revenue shares.'),
+   ['export','csv'],'demo',X)]},
+'trzby/definicie':{q:[
+AQ(L('Ako sa počíta zisk?','How is profit computed?'),
+   L('Zisk = marža − doprava − priame poplatky = 126 541 €; rozdiel oproti marži je 16 882 €, z toho doprava 11 603 €.','Profit = margin − shipping − direct fees = €126,541; the gap vs margin is €16,882, of which shipping is €11,603.'),
+   ['zisk','pocita','profit'],'import'),
+AQ(L('Čo presne je marža?','What exactly is margin?'),
+   L('Tržba − náklady tovaru = 66,1 % za júl; zlato má 54,6 %, ostatné kovy 77,4 %.','Revenue − cost of goods = 66.1% for July; gold sits at 54.6%, other metals at 77.4%.'),
+   ['marza','margin','co je'],'import'),
+AQ(L('Je zisk čistý zisk?','Is the profit net profit?'),
+   L('Nie — nezahŕňa marketing, mzdy ani réžiu, preto ho nemožno čítať ako čistý zisk.','No — it excludes marketing, payroll and overhead, so it must not be read as net profit.'),
+   ['cisty','net profit','pozor'],'demo')]},
+'trzby/detail':{q:[
+AQ(L('Čo sa stalo v týždni 30?','What happened in week 30?'),
+   L('Tržba klesla o −18,2 % (64 033 € → 52 384 €) oproti t29 — najväčší výkyv sledovaného obdobia.','Revenue dropped −18.2% (€64,033 → €52,384) vs w29 — the biggest swing of the tracked period.'),
+   ['tyzden 30','w30','klesla','stalo'],'import'),
+AQ(L('Koľko objednávok je odoslaných?','How many orders have shipped?'),
+   L('4 928 objednávok (87 %) je v stave Tovar odoslaný a 751 doručených z celkových 5 679.','4,928 orders (87%) sit in the Shipped state and 751 are Delivered out of 5,679 total.'),
+   ['odoslan','kolko objednavok','shipped'],'import'),
+AQ(L('Zapíš poznámku k reportu.','Log a report note.'),
+   L('Zapíšem krok do aktivity reportu.','I will log the step into the report activity.'),
+   ['zapis','poznamk','krok'],'demo',
+   C(L('AuraAI: preveriť príčinu poklesu t30 (−18,2 %) pred augustovým reportom','AuraAI: investigate the w30 drop (−18.2%) before the August report')))]},
+'trzby/settings':{q:[
+AQ(L('Aké filtre report podporuje?','What filters does the report support?'),
+   L('Trh, platba, kov, typ zákazníka a zľava — klik na riadok tabuľky funguje ako filter a prepočíta celý report.','Market, payment, metal, customer type and discount — clicking a table row acts as a filter and recomputes the entire report.'),
+   ['filtre','filter','podporuje'],'demo'),
+AQ(L('Ako funguje CSV export?','How does the CSV export work?'),
+   L('S BOM a oddeľovačom „;" pre Excel SK — tabuľky sa exportujú tak, ako sú zoradené.','With a BOM and a ";" separator for Slovak Excel — tables export exactly as sorted.'),
+   ['csv','export','bom'],'demo'),
+AQ(L('Aké segmenty zákazníkov rozlišuje?','What customer segments does it distinguish?'),
+   L('Nový vs opakovaný (opakovaní 44,2 % obj. / 45,6 % tržby) a so zľavou vs bez (AOV 59,82 € vs 30,35 €).','New vs repeat (repeat 44.2% of orders / 45.6% of revenue) and discounted vs full price (AOV €59.82 vs €30.35).'),
+   ['segment','zakazn','rozlisuje'],'demo')]}
+};
+
+/* ══════════════════════════════════════════════════════════════
+   POMOCNÍCI — kontext, normalizácia, konektor, citácie
+   ══════════════════════════════════════════════════════════════ */
+const aiNorm=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+function aiCtx(){
+  const seg=(location.hash.replace(/^#/,'')||'hub').split('/');
+  const m=MOD[seg[0]]||null;const screen=(m&&seg[1])?seg[1]:null;
+  return{m,screen,key:screen?(seg[0]+'/'+screen):null,onModule:!!screen};
+}
+function aiScreenName(m,screen){
+  const pg=(m.pages||[]).find(p=>p.key===screen);
+  if(pg)return tr(pg.title);
+  const map={dashboard:L('Prehľad','Overview'),list:m.list,claims:m.claims&&m.claims.title,
+             detail:L('Detail','Detail'),settings:L('Nastavenia','Settings')};
+  return tr(map[screen]||screen);
+}
+/* stav konektora I1 (window.CONNECTOR) — fallback {scenario:'ok'} */
+function aiConn(modKey){
+  try{
+    const c=window.CONNECTOR;
+    if(!c)return{scenario:'ok',min:4,stale:false};
+    let min=4,stale=false;
+    if(Array.isArray(c.endpoints)&&c.endpoints.length){
+      const eps=c.endpoints.filter(e=>modKey&&Array.isArray(e.modules)&&e.modules.includes(modKey));
+      const use=eps.length?eps:c.endpoints;
+      min=Math.min.apply(null,use.map(e=>(e.lastMin!=null?e.lastMin:15)));
+      if(!isFinite(min))min=4;
+      stale=use.some(e=>e.status==='stale');
+    }
+    return{scenario:c.scenario||'ok',min,stale};
+  }catch(e){return{scenario:'ok',min:4,stale:false};}
+}
+/* povinná citácia pod odpoveďou — podľa cite + stavu konektora */
+function aiCiteHTML(cite,tag){
+  const modKey=(tag||'').split('/')[0];
+  const c=aiConn(modKey);
+  if(cite==='demo'||c.scenario==='demo'&&cite==='api')
+    return '<span class="ai-cite ai-c-demo"><i></i>'+esc(tr(L('ukážka','sample data')))+'</span>';
+  const outage=c.scenario==='outage';
+  const pre=outage?tr(L('z cache · ','from cache · ')):'';
+  if(cite==='import')
+    return '<span class="ai-cite '+(outage?'ai-c-outage':'ai-c-import')+'"><i></i>'+esc(pre+tr(L('import · týždenné CSV','import · weekly CSV')))+'</span>';
+  const min=outage?Math.max(c.min,45):c.min;
+  const cls=outage?'ai-c-outage':(c.stale?'ai-c-stale':'ai-c-live');
+  const txt=pre+(state.lang==='sk'?('API · sync pred '+min+' min'):('API · synced '+min+' min ago'));
+  return '<span class="ai-cite '+cls+'"><i></i>'+esc(txt)+'</span>';
+}
+const AI_ACT_L={goto:L('Otvoriť','Open'),filter:L('Filtrovať','Filter'),
+                export:L('Export CSV','CSV export'),create:L('Zapísať krok','Log step')};
+const AI_ACT_I={goto:I.arrow,filter:I.filter,export:I.doc,create:I.plus};
+
+/* ══════════════════════════════════════════════════════════════
+   PANEL + FAB (mimo #view — prežijú re-render routera)
+   ══════════════════════════════════════════════════════════════ */
+const aiFab=document.createElement('button');
+aiFab.className='ai-fab';aiFab.id='aiFab';aiFab.innerHTML=svg(AI_CROWN,24);
+aiFab.addEventListener('click',()=>aiToggle());
+document.body.appendChild(aiFab);
+
+const aiPanel=document.createElement('aside');
+aiPanel.className='ai-panel';aiPanel.id='aiPanel';
+aiPanel.setAttribute('role','dialog');aiPanel.setAttribute('aria-label','AuraAI');
+aiPanel.innerHTML=
+  '<div class="ai-head"><span class="ai-crown-ic">'+svg(AI_CROWN,19)+'</span>'+
+  '<div class="ai-ht"><b>AuraAI</b><small id="aiCtxLine"></small></div>'+
+  '<button class="ai-x" id="aiX" aria-label="close">'+svg(I.x,14)+'</button></div>'+
+  '<div class="ai-body" id="aiBody"></div>'+
+  '<div class="ai-sugg" id="aiSugg"></div>'+
+  '<div class="ai-inrow"><input id="aiIn" autocomplete="off">'+
+  '<button class="ai-send" id="aiSendBtn" aria-label="send">'+svg(I.arrow,16)+'</button></div>';
+document.body.appendChild(aiPanel);
+document.getElementById('aiX').addEventListener('click',()=>aiClose());
+document.getElementById('aiSendBtn').addEventListener('click',()=>aiSend());
+document.getElementById('aiIn').addEventListener('keydown',e=>{if(e.key==='Enter')aiSend();});
+
+let aiTypingFlag=false;
+
+/* ── render ─────────────────────────────────────────────────── */
+function aiRenderHead(){
+  const el=document.getElementById('aiCtxLine');if(!el)return;
+  const ctx=aiCtx();
+  if(!ctx.onModule){el.textContent='Aura Suite';return;}
+  let t=(state.lang==='sk'?'vidí: ':'sees: ')+ctx.m.name.replace('Aura ','')+' / '+aiScreenName(ctx.m,ctx.screen);
+  const ci=state.filter[ctx.m.key]||0;
+  if(ci>0)t+=' · filter: '+tr(chipsFor(ctx.m)[ci].l);
+  el.textContent=t;
+}
+function aiRenderSugg(){
+  const el=document.getElementById('aiSugg');if(!el)return;
+  const ctx=aiCtx();const set=ctx.key?AI[ctx.key]:null;
+  el.innerHTML=set?set.q.map((it,j)=>'<button class="ai-chip" data-ai-s="'+j+'">'+esc(tr(it.q))+'</button>').join(''):'';
+  el.querySelectorAll('[data-ai-s]').forEach(b=>{b.addEventListener('click',()=>aiAsk(set.q[+b.dataset.aiS]));});
+}
+function aiRenderMsgs(){
+  const body=document.getElementById('aiBody');if(!body)return;
+  const H=state.chat.history;let h='';
+  if(!H.length&&!aiTypingFlag)
+    h+='<div class="ai-msg ai-a">'+esc(tr(L('Ahoj! Som AuraAI. Vidím dáta aktuálnej stránky — vyber si navrhovanú otázku alebo napíš vlastnú.','Hi! I am AuraAI. I can see the current page data — pick a suggested question or type your own.')))+'</div>';
+  H.forEach((e,i)=>{
+    if(e.r==='u'){
+      h+='<div class="ai-msg ai-u"><span class="ai-tag">'+esc(e.tag||'')+'</span>'+esc(tr(e.t))+'</div>';
+    }else{
+      let inner=esc(tr(e.t));
+      if(e.fallback){
+        const set=AI[e.tag];
+        if(set)inner+='<div class="ai-fbchips">'+set.q.map((it,j)=>'<button class="ai-chip" data-ai-fb="'+esc(e.tag)+'|'+j+'">'+esc(tr(it.q))+'</button>').join('')+'</div>';
+      }
+      if(e.act)inner+='<br><button class="ai-act" data-ai-run="'+i+'">'+svg(AI_ACT_I[e.act.type]||I.arrow,13)+' '+esc(tr(AI_ACT_L[e.act.type]||L('Akcia','Action')))+'</button>';
+      inner+=aiCiteHTML(e.cite||'demo',e.tag);
+      h+='<div class="ai-msg ai-a">'+inner+'</div>';
+    }
+  });
+  if(aiTypingFlag)h+='<div class="ai-typing" id="aiTyping"><div class="sk"></div><div class="sk"></div></div>';
+  body.innerHTML=h;
+  body.querySelectorAll('[data-ai-run]').forEach(b=>{b.addEventListener('click',()=>aiRunAct(+b.dataset.aiRun));});
+  body.querySelectorAll('[data-ai-fb]').forEach(b=>{b.addEventListener('click',()=>{
+    const p=b.dataset.aiFb.split('|');const set=AI[p[0]];
+    if(set&&set.q[+p[1]])aiAsk(set.q[+p[1]]);});});
+  body.scrollTop=body.scrollHeight;
+}
+
+/* ── konverzácia ────────────────────────────────────────────── */
+function aiAsk(item,userText){
+  if(aiTypingFlag)return;
+  const ctx=aiCtx();const tag=ctx.key||'hub';
+  state.chat.history.push({r:'u',t:userText||item.q,tag});
+  aiTypingFlag=true;aiRenderMsgs();
+  setTimeout(()=>{
+    aiTypingFlag=false;
+    state.chat.history.push({r:'a',t:item.a,cite:item.cite,act:item.act,tag});
+    aiRenderMsgs();
+  },600+Math.floor(Math.random()*300));
+}
+function aiFallback(text){
+  if(aiTypingFlag)return;
+  const ctx=aiCtx();const tag=ctx.key||'hub';
+  state.chat.history.push({r:'u',t:text,tag});
+  aiTypingFlag=true;aiRenderMsgs();
+  setTimeout(()=>{
+    aiTypingFlag=false;
+    state.chat.history.push({r:'a',t:L('V demoverzii poznám tieto otázky:','In this demo I know these questions:'),fallback:true,cite:'demo',tag});
+    aiRenderMsgs();
+  },600+Math.floor(Math.random()*300));
+}
+/* voľný vstup: lowercase + bez diakritiky → keyword match (aktuálna stránka má bonus) */
+function aiMatch(text){
+  const n=aiNorm(text);if(!n)return null;
+  const ctx=aiCtx();let best=null,bs=0;
+  const scan=(key,bonus)=>{
+    const set=AI[key];if(!set)return;
+    set.q.forEach(it=>{
+      let s=0;(it.kw||[]).forEach(k=>{if(n.includes(k))s++;});
+      if(s>0)s+=bonus;
+      if(s>bs){bs=s;best=it;}
+    });
+  };
+  if(ctx.key)scan(ctx.key,0.5);
+  Object.keys(AI).forEach(k=>{if(k!==ctx.key)scan(k,0);});
+  return best;
+}
+function aiSend(){
+  const inp=document.getElementById('aiIn');
+  const v=(inp.value||'').trim();if(!v||aiTypingFlag)return;
+  inp.value='';
+  const m=aiMatch(v);
+  if(m)aiAsk(m,v);else aiFallback(v);
+}
+/* max 1 akcia na odpoveď */
+function aiRunAct(i){
+  const e=state.chat.history[i];if(!e||!e.act)return;
+  const act=e.act;
+  if(act.type==='goto'){
+    if(window.innerWidth<821)aiClose();
+    if(location.hash===act.arg)route();else go(act.arg);
+  }else if(act.type==='filter'){
+    const k=act.arg.h.split('/')[0].slice(1);
+    state.filter[k]=act.arg.chip;
+    if(window.innerWidth<821)aiClose();
+    if(location.hash===act.arg.h)route();else go(act.arg.h);
+  }else if(act.type==='export'){
+    toast(tr(L('CSV export pripravený (demo)','CSV export ready (demo)')));
+  }else if(act.type==='create'){
+    const mk=(e.tag||'').split('/')[0];
+    if(!mk||!MOD[mk])return;
+    const kk=mk+'/active';
+    (state.steps[kk]=state.steps[kk]||[]).unshift('AuraAI: '+tr(act.arg));
+    toast(tr(L('Krok zapísaný do aktivity detailu','Step logged into the detail activity')));
+    const seg=location.hash.replace(/^#/,'').split('/');
+    if(seg[0]==='#'+mk||seg[0]===mk){if(seg[1]==='detail'&&!seg[2])renderDetail(MOD[mk],undefined);}
+  }
+}
+
+/* ── otvor / zavri / synchronizuj ───────────────────────────── */
+function aiOpen(){
+  if(!aiCtx().onModule){toast(tr(L('AuraAI je dostupný na stránkach modulov','AuraAI is available on module pages')));return;}
+  state.chat.open=true;aiSyncNow();
+  const inp=document.getElementById('aiIn');if(inp&&window.innerWidth>820)inp.focus();
+}
+function aiClose(){state.chat.open=false;aiSyncNow();}
+function aiToggle(){state.chat.open?aiClose():aiOpen();}
+function aiSyncNow(){
+  const ctx=aiCtx();
+  const on=ctx.onModule;
+  const open=on&&state.chat.open;
+  aiFab.style.display=(on&&!state.chat.open)?'grid':'none';
+  aiFab.title='AuraAI (⌘J)';
+  aiFab.setAttribute('aria-label',tr(L('Otvoriť AuraAI chat','Open the AuraAI chat')));
+  document.body.classList.toggle('ai-fab-on',on&&!state.chat.open);
+  document.body.classList.toggle('ai-open',open);
+  if(open){
+    aiRenderHead();aiRenderSugg();aiRenderMsgs();
+    const inp=document.getElementById('aiIn');
+    if(inp)inp.placeholder=tr(L('Napíš otázku…','Type a question…'));
+  }
+}
+
+/* POST hook — po každom prekreslení routera (aj po zmene jazyka) */
+POST.push(function(){aiSyncNow();});
+
+/* ── ⌘J skratka + Escape (capture, aby nezasiahol globálny listener) ── */
+window.addEventListener('keydown',function(e){
+  const k=(e.key||'').toLowerCase();
+  if((e.metaKey||e.ctrlKey)&&k==='j'){e.preventDefault();e.stopPropagation();aiToggle();return;}
+  if(k==='escape'&&state.chat&&state.chat.open){
+    const tag=(e.target.tagName||'').toLowerCase();
+    if(tag==='input'||tag==='textarea')return; /* nech existujúci guard spraví blur */
+    if(state.overlay)return;                   /* najprv nech sa zavrie overlay */
+    e.stopPropagation();aiClose();
+  }
+},true);
+
+/* ── ⌘K položka: dokumentovaný wrap cmdkIndex ───────────────── */
+/* openCmdk volá globálnu cmdkIndex(); prepíšeme window binding wrapperom,
+   ktorý pridá riadok „Spýtať sa AuraAI…" na začiatok indexu.
+   Šablóna riadku robí go('<go>') — aiFromCmdk() vráti aktuálny hash
+   (žiadna navigácia) a asynchrónne otvorí panel. */
+window.aiFromCmdk=function(){setTimeout(aiOpen,0);return location.hash||'#hub';};
+const _cmdkIndex=window.cmdkIndex;
+window.cmdkIndex=function(){
+  const out=_cmdkIndex();
+  out.unshift({cc:'var(--gold)',ic:AI_CROWN,
+    t:L('Spýtať sa AuraAI…','Ask AuraAI…'),
+    s:L('Chat nad dátami modulov · ⌘J','Chat over module data · ⌘J'),
+    kind:'AI',go:"'+window.aiFromCmdk()+'"});
+  return out;
+};
+
+/* init — prvý route už prebehol pred načítaním tohto súboru */
+aiSyncNow();
+
+window.AI3={AI,open:aiOpen,close:aiClose,toggle:aiToggle,ask:aiAsk};
+})();
+
 </script>
 </body>
 </html>

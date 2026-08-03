@@ -50,6 +50,41 @@ Náhľad je simulovateľný — nie je to len statická galéria:
 - **Skeleton loading** pri prepínaní obrazoviek, **toasty** po akciách, **onboarding** prázdny štart.
 - **Vstupné obrazovky**: `#login` → `#workspace` (výber pracovného priestoru) → hub; `#profile`.
 
+
+## Live vrstva: Shop API · Import · Reporty · AuraAI chat
+
+Iterácia „Live + AI" (3 implementačné balíky, 50 smerovacích rozhodnutí):
+
+**Shop API konektor** — LIVE pilulka v hlavičke pre moduly s API (Tržby, Logistika,
+Marketing, KPI), 5 endpointov (`orders`, `products`, `stats`, `shipping`, `returns`)
+s latenciou a časom syncu, 4 stavy (live / stale / error / demo), tikajúce „pred X min"
++ tlačidlo Synchronizovať teraz (deterministický jitter ±2 % — opakovateľné demo),
+mikro-glyf `● live 09:41` na KPI kartách a grafoch, prepínač **Simulovať výpadok**
+(banner + odpovede chatu „z cache"), sekcia Shop API v Nastaveniach + audit log.
+Štruktúra `CONNECTOR` je pripravená na rozšírenie o ďalšie endpointy.
+
+**Import wizard** (všetkých 6 modulov) — 4 kroky: súbor (reálny CSV cez FileReader
+s autodetekciou `;`/`,` a BOM, alebo vzorový súbor) → mapovanie stĺpcov (auto-match
+podľa hlavičky) → validácia (typová kontrola + tabuľka chýb) → súhrn s reálnym
+upsertom do tabuľky (kľúč per modul, napr. Logistika týždeň × krajina × prepravca),
+undo posledného importu, história v Nastaveniach + riadok pod toolbarom.
+KPI má režim **Vyplň mesiac** s predvyplnením vstupov z API.
+
+**Report builder** — šablóny per modul, obdobie, výber sekcií (KPI / graf / tabuľka /
+Zistenia), živý HTML náhľad, formáty: CSV (BOM + `;` pre Excel SK), Tlač/PDF cez
+print CSS, zdieľateľný hash-odkaz; šablónované AI komentáre z reálnych čísel;
+plánovanie reportov (formulár + záznam v spoločnom audite).
+
+**AuraAI chat asistent** — dokovaný pravý panel (360 px, na mobile fullscreen),
+FAB s korunkou + `⌘J` + položka v ⌘K palete; kontextová hlavička „vidí: modul /
+stránka · filter"; **3 navrhované otázky pre každú z 45 stránok** s odpoveďami
+z reálnych dát, povinná citácia zdroja (`API · sync` / `import` / `ukážka`),
+voľný vstup s keyword matchom a fallbackom, akcie (otvoriť / filtrovať / export /
+založiť) so zápisom do Aktivity detailu.
+
+Ďalšie UX: triedenie tabuliek klikom na hlavičku (`aria-sort`), pager nad 10 riadkov,
+Filter ako popover, prepínač obdobia s poznámkou o limite API.
+
 ## Ovládanie
 
 - **Prepínač SK / EN** vpravo hore — celé rozhranie vrátane formátu čísel a dátumov je dvojjazyčné.

@@ -90,12 +90,17 @@ async function main(){
     ['state-notif', 'logistika/dashboard', () => window.openNotif()],
     ['state-usermenu', 'hr/dashboard', () => window.openUser()],
     ['state-empty', 'trzby/list', () => { window.state.query.trzby = 'zzz'; window.renderList(window.MOD.trzby); }],
+    ['state-connector', 'trzby/dashboard', () => document.querySelector('.cn-pill').click()],
+    ['state-import', 'logistika/list', () => window.I2.openImport('logistika')],
+    ['state-report', 'trzby/dashboard', () => window.I2.openReport('trzby')],
+    ['state-chat', 'trzby/dashboard', () => window.AI3.open()],
+    ['state-fill', 'kpi/list', () => window.I2.openFill()],
   ];
   for (const [slug, hash, fn] of states){
     await page.evaluate(h => { location.hash = '#' + h; }, hash);
     await sleep(ANIM);
     await page.evaluate(fn);
-    await sleep(260);
+    await sleep(420);
     const file = join(OUT, `${slug}.png`);
     await page.screenshot({ path: file, fullPage: true });
     shots.push(file); ok(`${slug}.png`);
