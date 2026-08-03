@@ -35,22 +35,13 @@
     net: null, inited: false, filtOpen: false
   };
 
-  /* filter panel — na mobile (≤900) rozbaliteľný sheet, na desktope trvalý stĺpec */
+  /* rozbaľovacie filtre v lište grafu (Q11) */
   function syncFilterCollapse() {
-    var tgl = $("#pm-filt-toggle"), body = $("#pm-filter-body"), hh = $("#pm-filt-h");
+    var tgl = $("#pm-filt-toggle"), body = $("#pm-filter-body");
     if (!tgl || !body) return;
-    var mob = w.matchMedia("(max-width:900px)").matches;
-    if (mob) {
-      tgl.hidden = false;
-      if (hh) hh.style.display = "none";
-      body.hidden = !PM.filtOpen;
-      tgl.setAttribute("aria-expanded", String(PM.filtOpen));
-      var c = $("#pm-filt-caret"); if (c) c.textContent = PM.filtOpen ? "▾" : "▸";
-    } else {
-      tgl.hidden = true;
-      if (hh) hh.style.display = "";
-      body.hidden = false;
-    }
+    body.hidden = !PM.filtOpen;
+    tgl.setAttribute("aria-expanded", String(PM.filtOpen));
+    var c = $("#pm-filt-caret"); if (c) c.textContent = PM.filtOpen ? "▾" : "▸";
   }
 
   /* filter → čitateľný filter uzla */
@@ -72,6 +63,7 @@
   function shareFilter() {
     A.setShared("mem.filter", { area: PM.filter.area, type: PM.filter.type, strMin: PM.filter.strMin, per: PM.filter.per, weakOnly: PM.weakOnly });
   }
+
 
   /* ============================================================
      KPI + Naposledy / dnes
@@ -107,165 +99,550 @@
   }
 
   /* ============================================================
-     LEGENDA (interaktívna, 5 oblastí)
+     SIEŤ v7 — Hades hierarchia: jadro laloku → oddelenie → poznatok
+     Layout: phyllotaxis (zlatý uhol) + kolízna relaxácia, deterministický,
+     počíta sa raz a cachuje podľa podpisu množiny uzlov.
+     Render: mount raz, vrstvy/filtre = len CSS triedy. Hover cez adjacency.
+     ============================================================ */
+  var GW = 960, GH = 620, GPAD = 40, GOLD_ANG = 2.39996;
+
+  function netSig() {
+    return mem().nodes().map(function (n) { return n.id; }).join("|");
+  }
+
+  function netBuild() {
+    var sig = netSig();
+    if (PM.net && PM.net.sig === sig) return;
+    var areas = mem().AREAS, cx = GW / 2, cy = GH / 2, R = 205;
+    var lobes = {}, hubs = [], leaves = [], all = [], byId = {};
+
+    var counts = {};
+    areas.forEach(function (a) { counts[a.k] = mem().nodes().filter(function (n) { return n.area.k === a.k; }).length || 1; });
+    var maxC = Math.max.apply(null, Object.keys(counts).map(function (k) { return counts[k]; }));
+
+    areas.forEach(function (a, i) {
+      var ang = -Math.PI / 2 + i * 2 * Math.PI / areas.length;
+      var sc = 0.78 + 0.44 * Math.sqrt(counts[a.k] / maxC);          /* elipsa rastie s obsahom */
+      lobes[a.k] = {
+        k: a.k, area: a, ang: ang,
+        x: cx + Math.cos(ang) * R, y: cy + Math.sin(ang) * R * 0.88,
+        rx: 150 * sc, ry: 120 * sc
+      };
+    });
+
+    /* huby = oddelenia (24), phyllotaxis vnútri laloku */
+    areas.forEach(function (a) {
+      var L = lobes[a.k], m = a.deps.length;
+      a.deps.forEach(function (d, j) {
+        var ang = j * GOLD_ANG, rad = (L.rx * 0.62) * Math.sqrt((j + 0.55) / m);
+        var h = {
+          id: "hub-" + d.slug, kind: "hub", dep: d, area: a,
+          x: L.x + Math.cos(ang) * rad, y: L.y + Math.sin(ang) * rad * 0.82,
+          r: 7 + Math.min(9, d.n / 9), name: d.name
+        };
+        hubs.push(h); all.push(h); byId[h.id] = h;
+      });
+    });
+
+    /* leafy = živé uzly pamäte, vejár okolo svojho hubu */
+    var perHub = {};
+    mem().nodes().forEach(function (n) {
+      var hid = "hub-" + n.dep.slug, h = byId[hid]; if (!h) return;
+      var k = (perHub[hid] = perHub[hid] || { i: 0, n: 0 });
+      k.n++;
+    });
+    mem().nodes().forEach(function (n) {
+      var hid = "hub-" + n.dep.slug, h = byId[hid]; if (!h) return;
+      var k = perHub[hid], i = k.i++;
+      var spread = Math.min(2.4, 0.9 + k.n * 0.34);
+      var ang = Math.atan2(h.y - lobes[n.area.k].y, h.x - lobes[n.area.k].x) + (i - (k.n - 1) / 2) * (spread / Math.max(1, k.n));
+      var rad = 22 + (h32(n.id) % 14);
+      var lf = {
+        id: n.id, kind: "leaf", node: n, hub: h, area: n.area,
+        x: h.x + Math.cos(ang) * rad, y: h.y + Math.sin(ang) * rad * 0.85,
+        r: 3 + n.str * 3.4, name: n.name
+      };
+      leaves.push(lf); all.push(lf); byId[lf.id] = lf;
+    });
+
+    /* kolízna relaxácia: push-apart + pružina k domovu + hranice */
+    all.forEach(function (n) { n.hx = n.x; n.hy = n.y; });
+    for (var it = 0; it < 110; it++) {
+      var moved = 0;
+      for (var i = 0; i < all.length; i++) {
+        for (var j = i + 1; j < all.length; j++) {
+          var A1 = all[i], B = all[j];
+          var pad = (A1.kind === "hub" || B.kind === "hub") ? 9 : 5;
+          var dx = B.x - A1.x, dy = B.y - A1.y;
+          var d = Math.sqrt(dx * dx + dy * dy) || 0.01, min = A1.r + B.r + pad;
+          if (d < min) {
+            var push = (min - d) / 2 * 0.55, ux = dx / d, uy = dy / d;
+            A1.x -= ux * push; A1.y -= uy * push; B.x += ux * push; B.y += uy * push;
+            moved = Math.max(moved, push);
+          }
+        }
+      }
+      all.forEach(function (n) {
+        n.x += (n.hx - n.x) * 0.08; n.y += (n.hy - n.y) * 0.08;
+        n.x = clamp(n.x, GPAD + n.r, GW - GPAD - n.r);
+        n.y = clamp(n.y, GPAD + n.r, GH - GPAD - n.r);
+      });
+      if (moved < 0.15) break;
+    }
+    all.forEach(function (n) { n.x = Math.round(n.x * 2) / 2; n.y = Math.round(n.y * 2) / 2; });
+
+    /* hrany: stem (jadro→hub) · leaf (hub→uzol) · intra (hub↔hub) · bridge (top12 medzi lalokmi) */
+    var edges = [];
+    hubs.forEach(function (h) {
+      var L = lobes[h.area.k];
+      edges.push({ a: "core-" + h.area.k, b: h.id, kind: "stem", w: 1.6 });
+    });
+    leaves.forEach(function (lf) { edges.push({ a: lf.hub.id, b: lf.id, kind: "leaf", w: 0.7 }); });
+    areas.forEach(function (a) {
+      var hs = hubs.filter(function (h) { return h.area.k === a.k; });
+      hs.forEach(function (h, i) {
+        var t = hs[(i + 1) % hs.length];
+        if (t && t !== h && i < hs.length - 1) edges.push({ a: h.id, b: t.id, kind: "intra", w: 1.1 });
+      });
+    });
+    var bridges = mem().edges()
+      .filter(function (e) { var x = byId[e.a], y = byId[e.b]; return x && y && x.area.k !== y.area.k; })
+      .sort(function (x, y) { return y.w - x.w; }).slice(0, 12);
+    bridges.forEach(function (e) { edges.push({ a: e.a, b: e.b, kind: "bridge", w: e.w }); });
+
+    /* adjacency — hover sa dotkne len susedstva */
+    var adj = {};
+    edges.forEach(function (e, i) {
+      (adj[e.a] = adj[e.a] || []).push(i);
+      (adj[e.b] = adj[e.b] || []).push(i);
+    });
+
+    PM.net = {
+      sig: sig, lobes: lobes, hubs: hubs, leaves: leaves, all: all, byId: byId,
+      edges: edges, adj: adj, el: {}, eel: [], hi: null,
+      cam: { k: 1, tx: 0, ty: 0 }, lobeFocus: null, mounted: false
+    };
+  }
+
+  /* ---------- mount (raz na podpis) ---------- */
+  function netMount() {
+    var host = $("#pm-net"); if (!host) return;
+    netBuild();
+    var net = PM.net;
+    if (net.mounted && host.__sig === net.sig) return;
+    host.__sig = net.sig; net.mounted = true;
+    host.innerHTML = "";
+    S("title", {}, host).textContent = "Sieť pamäte: " + net.leaves.length + " uzlov v " + net.hubs.length + " oddeleniach a 5 lalokoch";
+
+    var defs = S("defs", {}, host);
+    mem().AREAS.forEach(function (a, i) {
+      var g = S("radialGradient", { id: "pmg-" + a.k }, defs);
+      S("stop", { offset: "0", "stop-color": a.color, "stop-opacity": ".5" }, g);
+      S("stop", { offset: "1", "stop-color": a.color, "stop-opacity": "0" }, g);
+    });
+    var fA = S("filter", { id: "pm-aurora", x: "-40%", y: "-40%", width: "180%", height: "180%" }, defs);
+    S("feGaussianBlur", { stdDeviation: "18" }, fA);
+    var fG = S("filter", { id: "pm-glow", x: "-60%", y: "-60%", width: "220%", height: "220%" }, defs);
+    S("feGaussianBlur", { stdDeviation: "2.4", result: "b" }, fG);
+    var fm = S("feMerge", {}, fG); S("feMergeNode", { in: "b" }, fm); S("feMergeNode", { in: "SourceGraphic" }, fm);
+
+    var cam = S("g", { id: "pm-cam" }, host);
+
+    /* aurora laloky */
+    var gA = S("g", { class: "nt-aurora", "aria-hidden": "true" }, cam);
+    Object.keys(net.lobes).forEach(function (k) {
+      var L = net.lobes[k];
+      S("ellipse", { cx: L.x, cy: L.y, rx: L.rx, ry: L.ry, fill: "url(#pmg-" + k + ")", filter: "url(#pm-aurora)" }, gA);
+    });
+
+    /* hrany */
+    var gB = S("g", { class: "nt-bridge" }, cam);
+    var gE = S("g", { class: "nt-syn" }, cam);
+    net.eel = [];
+    net.edges.forEach(function (e, i) {
+      var pa = e.a.indexOf("core-") === 0 ? net.lobes[e.a.slice(5)] : net.byId[e.a];
+      var pb = net.byId[e.b];
+      if (!pa || !pb) return;
+      var el;
+      if (e.kind === "bridge") {
+        /* oblúk VON od stredu plátna — most nejde cez cudzie zhluky */
+        var mx = (pa.x + pb.x) / 2, my = (pa.y + pb.y) / 2;
+        var vx = mx - GW / 2, vy = my - GH / 2, vl = Math.sqrt(vx * vx + vy * vy) || 1;
+        var len = Math.hypot(pb.x - pa.x, pb.y - pa.y), off = len * 0.22;
+        el = S("path", {
+          d: "M" + pa.x + " " + pa.y + " Q" + (mx + vx / vl * off) + " " + (my + vy / vl * off) + " " + pb.x + " " + pb.y,
+          class: "nt-e nt-" + e.kind + " flow", fill: "none",
+          stroke: (net.byId[e.a] || net.byId[e.b]).area.color
+        }, gB);
+      } else if (e.kind === "intra") {
+        var mx2 = (pa.x + pb.x) / 2, my2 = (pa.y + pb.y) / 2;
+        var dx = pb.x - pa.x, dy = pb.y - pa.y, l2 = Math.hypot(dx, dy) || 1;
+        el = S("path", {
+          d: "M" + pa.x + " " + pa.y + " Q" + (mx2 - dy / l2 * l2 * 0.12) + " " + (my2 + dx / l2 * l2 * 0.12) + " " + pb.x + " " + pb.y,
+          class: "nt-e nt-intra", fill: "none", stroke: pb.area.color
+        }, gE);
+      } else {
+        el = S("line", { x1: pa.x, y1: pa.y, x2: pb.x, y2: pb.y, class: "nt-e nt-" + e.kind, stroke: pb.area.color }, gE);
+      }
+      net.eel.push({ e: e, el: el });
+    });
+
+    /* jadrá lalokov */
+    var gC = S("g", { class: "nt-core" }, cam);
+    Object.keys(net.lobes).forEach(function (k) {
+      var L = net.lobes[k];
+      var c = S("circle", {
+        cx: L.x, cy: L.y, r: 15, fill: L.area.color, "fill-opacity": ".28",
+        stroke: L.area.color, "stroke-width": 1.4, filter: "url(#pm-glow)",
+        class: "nt-corec", tabindex: "0", role: "button",
+        "aria-label": "Lalok " + L.area.name + " — klik priblíži oblasť"
+      }, gC);
+      c.addEventListener("click", function () { netFocusLobe(PM.net.lobeFocus === k ? null : k); });
+      c.addEventListener("keydown", function (ev) { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); netFocusLobe(PM.net.lobeFocus === k ? null : k); } });
+    });
+
+    /* uzly: huby + leafy — kruhy (typ nesie farba/ikona v tooltipe) */
+    net.el = {};
+    var gH = S("g", { class: "nt-hub" }, cam);
+    net.hubs.forEach(function (h, i) {
+      var g = S("g", { class: "nt-hubg", style: "--i:" + i }, gH);
+      var c = S("circle", {
+        cx: h.x, cy: h.y, r: h.r, fill: h.area.color, "fill-opacity": ".8",
+        stroke: "var(--paper)", "stroke-width": 1, filter: "url(#pm-glow)",
+        class: "cx-node nt-n", tabindex: "0", role: "button",
+        "aria-label": "Oddelenie " + h.name + " — " + h.dep.n + " uzlov v podklade"
+      }, g);
+      net.el[h.id] = c;
+      netBindNode(c, h);
+      var t = S("text", { x: h.x, y: h.y - h.r - 5, "text-anchor": "middle", class: "nt-hlbl" }, g);
+      t.textContent = h.name;
+    });
+    var gL = S("g", { class: "nt-leaf" }, cam);
+    net.leaves.forEach(function (lf, i) {
+      var n = lf.node;
+      var c = S("circle", {
+        cx: lf.x, cy: lf.y, r: lf.r, fill: n.area.color,
+        "fill-opacity": (0.4 + n.str * 0.55).toFixed(2),
+        stroke: "var(--paper)", "stroke-width": n.pinned ? 1.4 : 0.5,
+        class: "cx-node nt-n nt-lf" + (n.today ? " today" : ""), style: "--i:" + i,
+        tabindex: "0", role: "button",
+        "aria-label": n.name + " — " + n.area.name + ", sila " + F(n.str, 2) + ", " + n.type
+      }, gL);
+      net.el[lf.id] = c;
+      netBindNode(c, lf);
+    });
+
+    /* menovky leafov — viditeľné od zoomu 1,6× (CSS trieda na svg) */
+    var gT = S("g", { class: "nt-llbl-g", "aria-hidden": "true" }, cam);
+    net.leaves.forEach(function (lf) {
+      var t = S("text", { x: lf.x, y: lf.y - lf.r - 3, "text-anchor": "middle", class: "nt-llbl" }, gT);
+      t.textContent = lf.name;
+    });
+
+    /* nábeh raz (Q95) */
+    if (!A.reduce && !host.__introDone) {
+      host.classList.add("intro");
+      host.__introDone = true;
+      setTimeout(function () { host.classList.remove("intro"); }, 1400);
+    }
+
+    netCamApply(true);
+    netStyle();
+    netKpi();
+    netZoomBind(host);
+  }
+
+  function netBindNode(el, item) {
+    el.addEventListener("mouseenter", function (ev) { netHi(item.id); netTip(item, ev); });
+    el.addEventListener("mouseleave", function () { netHi(null); netTipHide(); });
+    el.addEventListener("focus", function (ev) { netHi(item.id); netTip(item, ev); });
+    el.addEventListener("blur", function () { netHi(null); netTipHide(); });
+    el.addEventListener("click", function () {
+      if (item.kind === "leaf") { netTipHide(); mem().inspect(item.node); }
+      else { netFocusLobe(PM.net.lobeFocus === item.area.k ? null : item.area.k); }
+    });
+    el.addEventListener("keydown", function (ev) {
+      if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); el.dispatchEvent(new MouseEvent("click")); }
+    });
+    el.addEventListener("touchstart", function (ev) { netHi(item.id); netTip(item, ev.touches[0]); }, { passive: true });
+  }
+
+  /* ---------- štýl vrstvy/filtra — žiadny rebuild, len triedy ---------- */
+  function netStyle() {
+    var host = $("#pm-net"), net = PM.net; if (!host || !net) return;
+    host.setAttribute("class", "cx-svg gnet lay-" + PM.layer + (host.classList.contains("intro") ? " intro" : "") + (net.cam.k >= 1.6 ? " z16" : "") + (host.classList.contains("cx-dim") ? " cx-dim" : ""));
+    var app = PM.layer === "app" && $("#pm-gapp") ? A.apps.bySlug($("#pm-gapp").value) : null;
+    var appIds = {};
+    if (app) A.apps.nodes(app).forEach(function (n) { appIds[n.id] = 1; });
+    net.leaves.forEach(function (lf) {
+      var n = lf.node, el = net.el[lf.id]; if (!el) return;
+      var vis = passFilter(n);
+      var on = true;
+      if (PM.layer === "type") el.setAttribute("fill", typeColor(n.type));
+      else el.setAttribute("fill", n.area.color);
+      if (PM.layer === "act") on = !!n.today || n.acts > 20;
+      if (PM.layer === "app") on = !!appIds[n.id];
+      el.setAttribute("opacity", !vis ? 0.08 : on ? 0.95 : 0.18);
+    });
+    net.hubs.forEach(function (h) {
+      var el = net.el[h.id]; if (!el) return;
+      if (PM.layer === "type") el.setAttribute("fill", typeColor(h.dep.type));
+      else el.setAttribute("fill", h.area.color);
+    });
+    var shown = net.leaves.filter(function (lf) { return passFilter(lf.node); }).length;
+    var cnt = $("#pm-net-cnt");
+    if (cnt) cnt.textContent = F(shown, 0) + " / " + F(net.leaves.length, 0) + " uzlov · " + F(net.edges.length, 0) + " synapsií";
+    netMobileList();
+  }
+
+  /* ---------- hover cez adjacency: dotkne sa len susedstva ---------- */
+  function netHi(id) {
+    var net = PM.net, host = $("#pm-net"); if (!net || !host) return;
+    if (net.hi) {
+      net.hi.nodes.forEach(function (k) { var e = net.el[k]; if (e) e.classList.remove("hot"); });
+      net.hi.edges.forEach(function (i) { net.eel[i] && net.eel[i].el.classList.remove("hot"); });
+      net.hi = null;
+    }
+    if (!id) { host.classList.remove("cx-dim"); return; }
+    host.classList.add("cx-dim");
+    var nodes = [id], edgeIdx = [];
+    (net.adj[id] || []).forEach(function (i) {
+      var ee = net.eel[i]; if (!ee) return;
+      edgeIdx.push(i);
+      [ee.e.a, ee.e.b].forEach(function (k) { if (k !== id && k.indexOf("core-") !== 0 && nodes.indexOf(k) < 0) nodes.push(k); });
+    });
+    nodes.forEach(function (k) { var e = net.el[k]; if (e) e.classList.add("hot"); });
+    edgeIdx.forEach(function (i) { net.eel[i].el.classList.add("hot"); });
+    net.hi = { nodes: nodes, edges: edgeIdx };
+  }
+
+  /* ---------- bohatý HTML tooltip (Q21, 120 ms) ---------- */
+  var tipTimer = null;
+  function netTip(item, ev) {
+    var tip = $("#pm-gtip"); if (!tip) return;
+    clearTimeout(tipTimer);
+    tipTimer = setTimeout(function () {
+      var html;
+      if (item.kind === "hub") {
+        var liveN = mem().nodes().filter(function (n) { return n.dep.slug === item.dep.slug; }).length;
+        html = "<b>" + esc(item.name) + "</b>" +
+          '<span class="gt-r">' + esc(mem().zoneLabel(item.area)) + "</span>" +
+          '<span class="gt-r">oddelenie · ' + F(item.dep.n, 0) + " uzlov v podklade · " + F(liveN, 0) + " v sieti</span>" +
+          '<span class="gt-r gt-hint">klik priblíži lalok</span>';
+      } else {
+        var n = item.node, deg = (PM.net.adj[n.id] || []).length;
+        html = "<b>" + esc(n.name) + "</b>" +
+          '<span class="gt-r">' + mem().typeIcon(n.type) + " " + esc(n.type) + " · " + esc(mem().zoneLabel(n.area)) + " › " + esc(n.dep.name) + "</span>" +
+          '<span class="gt-r num">sila ' + F(n.str, 2) + " · istota " + F(n.conf, 2) + " · " + F(deg, 0) + " spojení</span>" +
+          '<span class="gt-r gt-hint">klik otvorí inšpektor</span>';
+      }
+      tip.innerHTML = html;
+      tip.hidden = false;
+      var wrap = $("#pm-v-siet").getBoundingClientRect();
+      var x = ev.clientX - wrap.left + 14, y = ev.clientY - wrap.top + 10;
+      if (x + 260 > wrap.width) x -= 280;
+      if (y + 110 > wrap.height) y -= 120;
+      tip.style.left = Math.max(6, x) + "px"; tip.style.top = Math.max(6, y) + "px";
+    }, 120);
+  }
+  function netTipHide() { clearTimeout(tipTimer); var t = $("#pm-gtip"); if (t) t.hidden = true; }
+
+  /* ---------- kamera: zoom / pan / pinch cez jediný transform ---------- */
+  function netCamApply(instant) {
+    var net = PM.net, cam = document.getElementById("pm-cam"); if (!net || !cam) return;
+    var c = net.cam;
+    if (!instant && !A.reduce && cam.animate) {
+      var from = cam.getAttribute("transform") || "translate(0 0) scale(1)";
+      cam.setAttribute("transform", "translate(" + c.tx + " " + c.ty + ") scale(" + c.k + ")");
+    } else {
+      cam.setAttribute("transform", "translate(" + c.tx + " " + c.ty + ") scale(" + c.k + ")");
+    }
+    var host = $("#pm-net");
+    if (host) host.classList.toggle("z16", c.k >= 1.6);
+  }
+  function netZoomTo(k, fx, fy) {
+    var net = PM.net, c = net.cam;
+    k = clamp(k, 0.8, 4);
+    /* bod (fx,fy) vo viewBox súradniciach ostane pod kurzorom */
+    c.tx = fx - (fx - c.tx) * (k / c.k);
+    c.ty = fy - (fy - c.ty) * (k / c.k);
+    c.k = k;
+    netCamApply();
+  }
+  function netZoomBind(host) {
+    if (host.__zoomBound) return; host.__zoomBound = true;
+    var raf = null;
+    function vb(ev) {
+      var r = host.getBoundingClientRect();
+      return { x: (ev.clientX - r.left) * GW / r.width, y: (ev.clientY - r.top) * GH / r.height };
+    }
+    host.addEventListener("wheel", function (ev) {
+      ev.preventDefault();
+      if (raf) return;
+      raf = requestAnimationFrame(function () {
+        raf = null;
+        var p = vb(ev), c = PM.net.cam;
+        netZoomTo(c.k * (ev.deltaY < 0 ? 1.16 : 0.86), p.x, p.y);
+      });
+    }, { passive: false });
+    var ptrs = {}, panFrom = null, pinch = null;
+    host.addEventListener("pointerdown", function (ev) {
+      if (ev.target.closest(".nt-n") || ev.target.closest(".nt-corec")) return;
+      ptrs[ev.pointerId] = vb(ev);
+      host.setPointerCapture(ev.pointerId);
+      var ids = Object.keys(ptrs);
+      if (ids.length === 1) panFrom = { x: ev.clientX, y: ev.clientY, tx: PM.net.cam.tx, ty: PM.net.cam.ty };
+      if (ids.length === 2) {
+        var a = ptrs[ids[0]], b = ptrs[ids[1]];
+        pinch = { d: Math.hypot(b.x - a.x, b.y - a.y), k: PM.net.cam.k, cx: (a.x + b.x) / 2, cy: (a.y + b.y) / 2 };
+        panFrom = null;
+      }
+    });
+    host.addEventListener("pointermove", function (ev) {
+      if (!(ev.pointerId in ptrs)) return;
+      ptrs[ev.pointerId] = vb(ev);
+      var ids = Object.keys(ptrs);
+      if (pinch && ids.length === 2) {
+        var a = ptrs[ids[0]], b = ptrs[ids[1]];
+        var d = Math.hypot(b.x - a.x, b.y - a.y);
+        netZoomTo(pinch.k * d / pinch.d, pinch.cx, pinch.cy);
+      } else if (panFrom) {
+        var r = host.getBoundingClientRect();
+        PM.net.cam.tx = panFrom.tx + (ev.clientX - panFrom.x) * GW / r.width;
+        PM.net.cam.ty = panFrom.ty + (ev.clientY - panFrom.y) * GH / r.height;
+        netCamApply(true);
+      }
+    });
+    function up(ev) { delete ptrs[ev.pointerId]; panFrom = null; pinch = null; }
+    host.addEventListener("pointerup", up); host.addEventListener("pointercancel", up);
+    host.addEventListener("dblclick", function (ev) {
+      if (ev.target.closest(".nt-n")) return;
+      netFocusLobe(null);
+    });
+    document.addEventListener("keydown", function (ev) {
+      if (ev.key === "Escape" && PM.net && (PM.net.lobeFocus || PM.net.cam.k !== 1) && A.state.screen === "pamat") netFocusLobe(null);
+    });
+  }
+
+  /* ---------- semantický zoom na lalok (Q42/49) ---------- */
+  function netFocusLobe(k) {
+    var net = PM.net; if (!net) return;
+    net.lobeFocus = k;
+    var crumb = $("#pm-gcrumb");
+    if (k) {
+      var L = net.lobes[k];
+      var zoom = 2.1;
+      net.cam.k = zoom;
+      net.cam.tx = GW / 2 - L.x * zoom;
+      net.cam.ty = GH / 2 - L.y * zoom;
+      netCamApply();
+      if (crumb) { crumb.hidden = false; $("#pm-gcrumb-t").textContent = mem().zoneLabel(L.area); }
+    } else {
+      net.cam = { k: 1, tx: 0, ty: 0 };
+      netCamApply();
+      if (crumb) crumb.hidden = true;
+    }
+  }
+
+  /* ---------- search v grafe (dim + hot + center, debounce 120 ms) ---------- */
+  var gqTimer = null;
+  function netSearch(q) {
+    clearTimeout(gqTimer);
+    gqTimer = setTimeout(function () {
+      var net = PM.net, host = $("#pm-net"), badge = $("#pm-gq-n");
+      if (!net || !host) return;
+      var fq = A.fold(q || "");
+      netHi(null);
+      if (!fq) { host.classList.remove("cx-dim"); if (badge) badge.hidden = true; Object.keys(net.el).forEach(function (k) { net.el[k].classList.remove("hot"); }); return; }
+      host.classList.add("cx-dim");
+      var hits = [];
+      net.leaves.forEach(function (lf) {
+        var on = A.fold(lf.name + " " + lf.node.dep.name + " " + lf.area.name).indexOf(fq) > -1;
+        net.el[lf.id].classList.toggle("hot", on);
+        if (on) hits.push(lf);
+      });
+      net.hubs.forEach(function (h) {
+        var on = A.fold(h.name).indexOf(fq) > -1;
+        net.el[h.id].classList.toggle("hot", on);
+        if (on) hits.push(h);
+      });
+      if (badge) { badge.hidden = false; badge.textContent = F(hits.length, 0) + " zhôd"; }
+      if (hits.length === 1) {
+        /* center bez zoomu (Q50) */
+        var c = PM.net.cam;
+        c.tx = GW / 2 - hits[0].x * c.k; c.ty = GH / 2 - hits[0].y * c.k;
+        netCamApply();
+      }
+    }, 120);
+  }
+
+  /* ---------- KPI rad siete (Hades) ---------- */
+  function netKpi() {
+    var host = $("#pm-gkpi"), net = PM.net; if (!host || !net) return;
+    var deg = {};
+    net.edges.forEach(function (e) { if (e.kind === "leaf" || e.kind === "bridge") { deg[e.a] = (deg[e.a] || 0) + 1; deg[e.b] = (deg[e.b] || 0) + 1; } });
+    var per = {}, cnt = {};
+    net.leaves.forEach(function (lf) { per[lf.area.k] = (per[lf.area.k] || 0) + (deg[lf.id] || 0); cnt[lf.area.k] = (cnt[lf.area.k] || 0) + 1; });
+    var best = mem().AREAS.slice().sort(function (a, b) { return (per[b.k] || 0) / (cnt[b.k] || 1) - (per[a.k] || 0) / (cnt[a.k] || 1); })[0];
+    var avg = net.leaves.length ? (net.edges.filter(function (e) { return e.kind !== "stem"; }).length * 2 / (net.leaves.length + net.hubs.length)) : 0;
+    var items = [
+      { l: "Uzly v sieti", v: F(net.leaves.length + net.hubs.length, 0), d: F(net.leaves.length, 0) + " poznatkov · " + F(net.hubs.length, 0) + " oddelení", fn: function () { A.detail("Uzly v sieti", "<dl><dt>Poznatky</dt><dd>" + F(net.leaves.length, 0) + "</dd><dt>Oddelenia (huby)</dt><dd>" + F(net.hubs.length, 0) + "</dd><dt>Jadrá lalokov</dt><dd>5</dd><dt>V podklade</dt><dd>" + F(mem().TOTAL_ALL, 0) + " uzlov</dd></dl><p class=\"note\">Sieť agreguje podkladovú pamäť do čitateľnej mapy — legenda počíta percentá z celku.</p>", []); } },
+      { l: "Synapsie", v: F(net.edges.length, 0), d: F(net.edges.filter(function (e) { return e.kind === "bridge"; }).length, 0) + " mostov medzi lalokmi", fn: function () { A.detail("Synapsie", "<dl><dt>Kmene (jadro→oddelenie)</dt><dd>" + F(net.edges.filter(function (e) { return e.kind === "stem"; }).length, 0) + "</dd><dt>Listy (oddelenie→uzol)</dt><dd>" + F(net.edges.filter(function (e) { return e.kind === "leaf"; }).length, 0) + "</dd><dt>Vnútri laloku</dt><dd>" + F(net.edges.filter(function (e) { return e.kind === "intra"; }).length, 0) + "</dd><dt>Mosty (top 12 váhou)</dt><dd>" + F(net.edges.filter(function (e) { return e.kind === "bridge"; }).length, 0) + "</dd></dl>", []); } },
+      { l: "Priem. spojení", v: F(avg, 1), d: "na uzol siete", fn: function () { A.detail("Priemer spojení", "<p>Každý uzol siete má v priemere <b class=\"num\">" + F(avg, 1) + "</b> spojení. Mosty medzi lalokmi sú obmedzené na 12 najsilnejších, aby graf ostal čitateľný.</p>", []); } },
+      { l: "Najprepojenejšia", v: best ? best.name.split(" ")[0] : "—", d: best ? F((per[best.k] || 0) / (cnt[best.k] || 1), 1) + " spojení/uzol" : "", fn: function () { if (best) netFocusLobe(best.k); } }
+    ];
+    host.innerHTML = items.map(function (x, i) {
+      return '<button class="kpi' + (i === 0 ? " tl" : "") + '" data-g="' + i + '"><span class="kl">' + esc(x.l) + '</span><b>' + esc(x.v) + '</b><span class="kd">' + esc(x.d) + "</span></button>";
+    }).join("");
+    $$("#pm-gkpi .kpi").forEach(function (b, i) { b.addEventListener("click", items[i].fn); });
+  }
+
+  /* ============================================================
+     LEGENDA „Laloky a hustota" — pod grafom, klik zvýrazní lalok (Q9)
      ============================================================ */
   function legendRefresh() {
     var host = $("#pm-legend");
     if (!host) return;
-    var live = mem().nodes();
-    host.innerHTML = mem().AREAS.map(function (a) {
-      var cnt = live.filter(function (n) { return n.area.k === a.k; }).length;
-      var on = PM.filter.area === a.k;
-      return '<button class="fi" data-area="' + a.k + '" aria-pressed="' + on + '">' +
-        '<span class="fd" style="background:' + a.color + (on ? "" : ";opacity:.6") + '"></span>' +
-        '<span class="fx"><b>' + esc(mem().zoneLabel(a)) + "</b><span>" + F(cnt, 0) + " uzlov · " + a.deps.length + " oddelení</span></span>" +
-        '<span class="ft">' + F((a.n / mem().TOTAL_AREA) * 100, 1) + " %</span></button>";
-    }).join("");
-  }
-
-  /* ============================================================
-     SIEŤ — seedovaný force layout (stabilné pozície)
-     ============================================================ */
-  function netBuild() {
-    var W = 760, H = 520, cx = W / 2, cy = H / 2, R = 172;
-    var areas = mem().AREAS, lobe = {};
-    areas.forEach(function (a, i) {
-      var ang = -Math.PI / 2 + i * 2 * Math.PI / areas.length;
-      lobe[a.k] = { x: cx + Math.cos(ang) * R, y: cy + Math.sin(ang) * R, ang: ang, area: a };
-    });
-    var nodes = mem().nodes(), pos = {};
-    nodes.forEach(function (n) {
-      var L = lobe[n.area.k]; if (!L) return;
-      var r = A.rng(h32(n.id));
-      var depSpread = ((n.dep.i || 0) - (n.area.deps.length - 1) / 2) * 0.34;
-      var a0 = L.ang + depSpread + (r() - 0.5) * 0.55;
-      var rad = 34 + r() * 74;
-      pos[n.id] = {
-        x: clamp(L.x + Math.cos(a0) * rad, 26, W - 26),
-        y: clamp(L.y + Math.sin(a0) * rad * 0.9, 26, H - 26)
-      };
-    });
-    var byId = {}; nodes.forEach(function (n) { byId[n.id] = n; });
-    var edges = mem().edges().filter(function (e) { return byId[e.a] && byId[e.b]; });
-    PM.net = { W: W, H: H, lobe: lobe, pos: pos, nodes: nodes, edges: edges, byId: byId, areas: areas, el: {}, edgeEls: [] };
-  }
-
-  function nodeShape(n, x, y, size, fill, host) {
-    var el;
-    if (n.type === "skill") {
-      el = S("path", { d: "M" + x + " " + (y - size) + "L" + (x + size) + " " + (y + size * 0.8) + "L" + (x - size) + " " + (y + size * 0.8) + "Z", fill: fill }, host);
-    } else if (n.type === "project") {
-      el = S("path", { d: "M" + x + " " + (y - size) + "L" + (x + size) + " " + y + "L" + x + " " + (y + size) + "L" + (x - size) + " " + y + "Z", fill: fill }, host);
-    } else {
-      el = S("circle", { cx: x, cy: y, r: size, fill: fill }, host);
-    }
-    return el;
-  }
-
-  function netLayerFill(n) {
-    if (PM.layer === "type") return typeColor(n.type);
-    return n.area.color;
-  }
-  function netLayerActive(n) {
-    /* či je uzol v aktuálnej vrstve zvýraznený (nie stlmený vrstvou) */
-    if (PM.layer === "str") return n.str >= 0.4;
-    if (PM.layer === "today") return !!n.today;
-    return true;
-  }
-
-  function netDraw() {
-    var host = $("#pm-net"); if (!host) return;
-    if (!PM.net) netBuild();
-    host.innerHTML = "";
-    host.classList.remove("cx-dim");
+    netBuild();
     var net = PM.net;
-    S("title", {}, host).textContent = "Sieť " + net.nodes.length + " uzlov v 5 lalokoch";
-
-    /* laloky */
-    var defs = S("defs", {}, host);
-    net.areas.forEach(function (a, i) {
-      var g = S("radialGradient", { id: "pmg" + i }, defs);
-      S("stop", { offset: "0", "stop-color": a.color, "stop-opacity": ".4" }, g);
-      S("stop", { offset: "1", "stop-color": a.color, "stop-opacity": "0" }, g);
-    });
-    var gLobe = S("g", { class: "cx-lobe" }, host);
-    net.areas.forEach(function (a, i) {
-      var L = net.lobe[a.k];
-      S("ellipse", { cx: L.x, cy: L.y, rx: 118, ry: 96, fill: "url(#pmg" + i + ")" }, gLobe);
-    });
-
-    /* synapsie */
-    var synEmph = PM.layer === "syn";
-    var gSyn = S("g", {}, host);
-    net.edgeEls = [];
+    var degPer = {}, cntPer = {};
     net.edges.forEach(function (e) {
-      var pa = net.pos[e.a], pb = net.pos[e.b]; if (!pa || !pb) return;
-      var na = net.byId[e.a];
-      var vis = passFilter(net.byId[e.a]) && passFilter(net.byId[e.b]);
-      var mx = (pa.x + pb.x) / 2, my = (pa.y + pb.y) / 2 - (e.w < 0.5 ? 26 : 8);
-      var p = S("path", {
-        d: "M" + pa.x.toFixed(1) + " " + pa.y.toFixed(1) + " Q" + mx.toFixed(1) + " " + my.toFixed(1) + " " + pb.x.toFixed(1) + " " + pb.y.toFixed(1),
-        fill: "none", stroke: na.area.color, "stroke-width": e.w < 0.5 ? 0.8 : 1.3,
-        opacity: !vis ? 0.05 : synEmph ? 0.55 : 0.22, class: "cx-syn" + (e.w < 0.5 ? " flow" : "")
-      }, gSyn);
-      net.edgeEls.push({ a: e.a, b: e.b, el: p });
+      [e.a, e.b].forEach(function (id) {
+        var it = net.byId[id]; if (!it) return;
+        degPer[it.area.k] = (degPer[it.area.k] || 0) + 1;
+      });
     });
-
-    /* neuróny */
-    var gNode = S("g", {}, host);
-    net.el = {};
-    net.nodes.forEach(function (n) {
-      var p = net.pos[n.id]; if (!p) return;
-      var vis = passFilter(n), layerOn = netLayerActive(n);
-      var size = 3.6 + n.str * 7 * (PM.layer === "str" ? 1.25 : 1);
-      var fill = netLayerFill(n);
-      var el = nodeShape(n, p.x, p.y, size, fill, gNode);
-      el.setAttribute("class", "cx-node");
-      el.setAttribute("tabindex", "0");
-      el.setAttribute("role", "button");
-      el.setAttribute("stroke", "var(--paper)");
-      el.setAttribute("stroke-width", n.pinned ? 1.6 : 0.6);
-      el.setAttribute("opacity", (!vis ? 0.12 : layerOn ? 0.96 : 0.28));
-      el.setAttribute("aria-label", n.name + " — " + n.area.name + ", sila " + F(n.str, 2) + ", " + n.type);
-      net.el[n.id] = el;
-      el.addEventListener("mouseenter", function () { netHi(n.id); });
-      el.addEventListener("mouseleave", function () { netHi(null); });
-      el.addEventListener("focus", function () { netHi(n.id); });
-      el.addEventListener("blur", function () { netHi(null); });
-      el.addEventListener("click", function () { mem().inspect(n); });
-      el.addEventListener("keydown", function (e2) { if (e2.key === "Enter" || e2.key === " ") { e2.preventDefault(); mem().inspect(n); } });
+    net.all.forEach(function (it) { cntPer[it.area.k] = (cntPer[it.area.k] || 0) + 1; });
+    host.innerHTML = '<div class="glg-h"><b>Laloky a hustota</b><span class="note" style="margin:0">klik zvýrazní lalok · percentá z ' + F(mem().TOTAL_AREA, 0) + ' uzlov podkladu</span></div>' +
+      '<div class="glg-row">' + mem().AREAS.map(function (a) {
+        var on = PM.net && PM.net.legendHot === a.k;
+        return '<button class="glg" data-lobe="' + a.k + '" aria-pressed="' + !!on + '">' +
+          '<span class="fd" style="background:' + a.color + '"></span>' +
+          "<span class=\"glg-t\"><b>" + esc(mem().zoneLabel(a)) + "</b>" +
+          '<span class="num">' + F(cntPer[a.k] || 0, 0) + " v sieti · " + F(((degPer[a.k] || 0) / (cntPer[a.k] || 1)), 1) + " spojení/uzol · " + F((a.n / mem().TOTAL_AREA) * 100, 1) + " %</span></span></button>";
+      }).join("") + "</div>";
+    $$("#pm-legend .glg").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var k = b.getAttribute("data-lobe");
+        var net2 = PM.net;
+        net2.legendHot = net2.legendHot === k ? null : k;
+        var host2 = $("#pm-net");
+        host2.classList.toggle("cx-dim", !!net2.legendHot);
+        Object.keys(net2.el).forEach(function (id) {
+          var it = net2.byId[id];
+          net2.el[id].classList.toggle("hot", !!net2.legendHot && it.area.k === net2.legendHot);
+        });
+        net2.eel.forEach(function (ee) {
+          var xa = net2.byId[ee.e.a], xb = net2.byId[ee.e.b];
+          ee.el.classList.toggle("hot", !!net2.legendHot && ((xa && xa.area.k === net2.legendHot) || (xb && xb.area.k === net2.legendHot)));
+        });
+        legendRefresh();
+      });
     });
-
-    /* menovky lalokov */
-    var gLbl = S("g", {}, host);
-    net.areas.forEach(function (a) {
-      var L = net.lobe[a.k];
-      var ly = clamp(L.y - 104, 16, net.H - 14);
-      var t = S("text", { x: clamp(L.x, 60, net.W - 60), y: ly, "text-anchor": "middle", class: "cx-nlbl" }, gLbl);
-      t.textContent = a.name;
-    });
-
-    var shown = net.nodes.filter(passFilter).length;
-    $("#pm-net-cnt").textContent = F(shown, 0) + " / " + F(net.nodes.length, 0) + " uzlov · " + F(net.edges.length, 0) + " synapsií";
   }
 
-  function netHi(id) {
-    var net = PM.net, host = $("#pm-net"); if (!net || !host) return;
-    if (!id) {
-      host.classList.remove("cx-dim");
-      Object.keys(net.el).forEach(function (k) { net.el[k].classList.remove("hot"); });
-      net.edgeEls.forEach(function (e) { e.el.classList.remove("hot"); });
-      return;
-    }
-    host.classList.add("cx-dim");
-    var near = {}; near[id] = 1;
-    net.edgeEls.forEach(function (e) {
-      var on = e.a === id || e.b === id;
-      e.el.classList.toggle("hot", on);
-      if (on) { near[e.a] = 1; near[e.b] = 1; }
-    });
-    Object.keys(net.el).forEach(function (k) { net.el[k].classList.toggle("hot", !!near[k]); });
-  }
+  /* kompletné prekreslenie siete (mount ak treba + štýl) */
+  function netDraw() { netMount(); netStyle(); }
 
   /* Mobilný zoznam = plnohodnotná náhrada grafu: oblasť → oddelenie → uzol.
      Zóna (zoneLabel) na úrovni oblasti, typ (ikona) + sila na úrovni uzla. */
@@ -689,25 +1066,34 @@
     if (w.AuraChart) setTimeout(w.AuraChart.reflowAll, 30);
   }
   function switchView(view) {
+    /* zoznam je od v7 samostatná karta pod grafom — „zoznam" naň odscrolluje */
+    if (view === "zoznam") {
+      var lc = $("#pm-v-zoznam");
+      if (lc) lc.scrollIntoView({ behavior: A.reduce ? "auto" : "smooth", block: "start" });
+      redrawView();
+      return;
+    }
     PM.view = view;
     $$("#pm-views button").forEach(function (b) { b.setAttribute("aria-pressed", String(b.getAttribute("data-view") === view)); });
     $("#pm-v-siet").hidden = view !== "siet";
     $("#pm-v-radial").hidden = view !== "radial";
-    $("#pm-v-zoznam").hidden = view !== "zoznam";
-    $("#pm-crumb").textContent = view === "siet" ? "Sieť" : view === "radial" ? "Radiál" : "Zoznam";
     redrawView();
   }
   function redrawView() {
-    if (PM.tab !== "graf") return;
-    if (PM.view === "siet") { netDraw(); netMobileList(); }
-    else if (PM.view === "radial") { radCrumb(); radDraw(); }
-    else { zoznamRender(A.applySort($("#pm-tbl"), zoznamRows())); }
+    if (PM.tab === "graf") {
+      if (PM.view === "siet") netDraw();
+      else { radCrumb(); radDraw(); }
+    }
+    zoznamRender(A.applySort($("#pm-tbl"), zoznamRows()));
+    var lc = $("#pm-list-cnt");
+    if (lc) lc.textContent = F(filteredNodes().length, 0) + " uzlov";
   }
 
   /* ------------------------------------------------------------
      Filtre UI ↔ stav
      ------------------------------------------------------------ */
   function applyFilterUI() {
+    if (PM.net && PM.net.mounted) netStyle();
     $("#pm-f-type").value = PM.filter.type;
     $("#pm-f-str").value = Math.round(PM.filter.strMin * 100);
     $("#pm-f-strv").textContent = F(PM.filter.strMin, 2);
@@ -836,8 +1222,8 @@
   A.screens.pamat = {
     title: "Pamäť", group: "Pamäť",
     init: function () {
-      kpiRefresh(); recentRefresh(); legendRefresh();
-      netBuild(); netDraw(); netMobileList();
+      kpiRefresh(); recentRefresh();
+      netDraw(); legendRefresh(); redrawView();
       drawCharts();
       hlPresets(); hlSaved(); hlResults();
 
@@ -887,12 +1273,41 @@
       $("#pm-tabs").addEventListener("click", function (e) { var b = e.target.closest("button[data-tab]"); if (b) { switchTab(b.getAttribute("data-tab")); triageBar(); } });
       $("#pm-views").addEventListener("click", function (e) { var b = e.target.closest("button[data-view]"); if (b) switchView(b.getAttribute("data-view")); });
 
-      /* sieť — vrstvy */
+      /* sieť — vrstvy (len CSS/štýl, žiadny rebuild) */
       $("#pm-layers").addEventListener("click", function (e) {
         var b = e.target.closest("button[data-l]"); if (!b) return;
         PM.layer = b.getAttribute("data-l");
         $$("#pm-layers button").forEach(function (n) { n.setAttribute("aria-pressed", String(n === b)); });
-        netDraw();
+        var ga = $("#pm-gapp");
+        if (ga) {
+          ga.hidden = PM.layer !== "app";
+          if (PM.layer === "app" && !ga.options.length) {
+            ga.innerHTML = A.apps.all().map(function (ap) { return '<option value="' + esc(ap.slug) + '">' + esc(ap.name) + "</option>"; }).join("");
+          }
+        }
+        netStyle();
+      });
+      var gapp = $("#pm-gapp");
+      if (gapp) gapp.addEventListener("change", netStyle);
+
+      /* search v grafe */
+      $("#pm-gq").addEventListener("input", function () { netSearch(this.value); });
+
+      /* rozbaľovacie filtre */
+      $("#pm-filt-toggle").addEventListener("click", function () { PM.filtOpen = !PM.filtOpen; syncFilterCollapse(); });
+      syncFilterCollapse();
+
+      /* breadcrumb návrat zo zoomu laloku */
+      $("#pm-gback").addEventListener("click", function () { netFocusLobe(null); });
+
+      /* mobil: graf na celú obrazovku */
+      $("#pm-gfull").addEventListener("click", function () {
+        var card = $("#pm-gcard"), on = !card.classList.contains("gfull");
+        card.classList.toggle("gfull", on);
+        this.setAttribute("aria-pressed", String(on));
+        this.textContent = on ? "Zavrieť" : "Celá obrazovka";
+        document.body.style.overflow = on ? "hidden" : "";
+        if (w.AuraChart) setTimeout(w.AuraChart.reflowAll, 60);
       });
       $("#pm-net-list").addEventListener("click", function (e) { var b = e.target.closest("button[data-id]"); if (b) mem().inspect(b.getAttribute("data-id")); });
 
@@ -910,16 +1325,9 @@
 
       /* filtre */
       $("#pm-f-type").addEventListener("change", function () { PM.filter.type = this.value; applyFilterUI(); });
-      $("#pm-f-str").addEventListener("input", function () { PM.filter.strMin = +this.value / 100; $("#pm-f-strv").textContent = F(PM.filter.strMin, 2); shareFilter(); redrawView(); legendRefresh(); if (PM.tab === "hladanie") hlResults(); });
+      $("#pm-f-str").addEventListener("input", function () { PM.filter.strMin = +this.value / 100; $("#pm-f-strv").textContent = F(PM.filter.strMin, 2); shareFilter(); netStyle(); redrawView(); if (PM.tab === "hladanie") hlResults(); });
       $("#pm-f-per").addEventListener("change", function () { PM.filter.per = +this.value; applyFilterUI(); });
       $("#pm-reset").addEventListener("click", resetFilters);
-      $("#pm-legend").addEventListener("click", function (e) {
-        var b = e.target.closest("button[data-area]"); if (!b) return;
-        var k = b.getAttribute("data-area");
-        PM.filter.area = PM.filter.area === k ? "" : k;
-        showFchip(PM.filter.area ? mem().areaByKey(k).name : null);
-        applyFilterUI();
-      });
 
       /* charty — prepnutie na tabuľku */
       bindChartToggle("#pm-dens-t", "#pm-ch-dens", "#pm-dens-tbl");

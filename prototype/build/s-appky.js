@@ -284,32 +284,56 @@
   }
 
   /* mini výrez siete — len uzly appky a hrany medzi nimi */
+  /* mini výrez siete — vizuál zosynchronizovaný s veľkým grafom Pamäte (aurora, glow, hover) */
   function miniNet(app, host) {
     var nodes = apps().nodes(app).slice(0, 26);
     if (!nodes.length) { host.innerHTML = '<div class="empty"><span class="eico">∅</span><p>Appka zatiaľ nemá viazané uzly pamäte.</p></div>'; return; }
     var ids = {}; nodes.forEach(function (n, i) { ids[n.id] = i; });
-    var W = 320, H = 190, cx = W / 2, cy = H / 2, R = Math.min(cx, cy) - 22;
+    var W = 320, H = 190, cx = W / 2, cy = H / 2, R = Math.min(cx, cy) - 24;
+    var GOLD = 2.39996;
     var pos = nodes.map(function (n, i) {
-      var t = (i / nodes.length) * Math.PI * 2 - Math.PI / 2;
-      var rr = R * (nodes.length > 12 && i % 2 ? 0.62 : 1);
-      return { x: cx + Math.cos(t) * rr, y: cy + Math.sin(t) * rr, n: n };
+      var t = i * GOLD, rr = R * Math.sqrt((i + 0.6) / nodes.length);
+      return { x: cx + Math.cos(t) * rr, y: cy + Math.sin(t) * rr * 0.86, n: n };
     });
     var edges = mem().edges().filter(function (e) { return ids[e.a] != null && ids[e.b] != null; }).slice(0, 60);
-    var svg = '<svg viewBox="0 0 ' + W + " " + H + '" width="100%" height="' + H + '" role="img" aria-label="Výrez pamäte appky ' + esc(app.name) + ' — ' + nodes.length + ' uzlov, ' + edges.length + ' spojení">' +
+    var uid = "mn-" + app.slug;
+    var svg = '<svg viewBox="0 0 ' + W + " " + H + '" width="100%" height="' + H + '" class="gnet mn-svg" role="img" aria-label="Výrez pamäte appky ' + esc(app.name) + ' — ' + nodes.length + ' uzlov, ' + edges.length + ' spojení">' +
       '<title>Výrez pamäte appky ' + esc(app.name) + "</title>" +
+      "<defs><radialGradient id=\"" + uid + "\"><stop offset=\"0\" stop-color=\"" + appColor(app) + "\" stop-opacity=\".4\"/><stop offset=\"1\" stop-color=\"" + appColor(app) + "\" stop-opacity=\"0\"/></radialGradient>" +
+      '<filter id="' + uid + '-b" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="12"/></filter></defs>' +
+      '<ellipse cx="' + cx + '" cy="' + cy + '" rx="' + (R + 18) + '" ry="' + (R * 0.86 + 16) + '" fill="url(#' + uid + ')" filter="url(#' + uid + '-b)" aria-hidden="true"/>' +
       edges.map(function (e) {
         var a = pos[ids[e.a]], b = pos[ids[e.b]];
-        return '<line x1="' + a.x.toFixed(1) + '" y1="' + a.y.toFixed(1) + '" x2="' + b.x.toFixed(1) + '" y2="' + b.y.toFixed(1) + '" stroke="var(--line)" stroke-width="' + (0.6 + e.w * 1.6).toFixed(2) + '"/>';
+        return '<line class="nt-e nt-leaf" x1="' + a.x.toFixed(1) + '" y1="' + a.y.toFixed(1) + '" x2="' + b.x.toFixed(1) + '" y2="' + b.y.toFixed(1) + '" stroke="' + appColor(app) + '" data-e="' + ids[e.a] + '-' + ids[e.b] + '"/>';
       }).join("") +
       pos.map(function (p, i) {
-        var r = 3.5 + p.n.str * 4.5;
+        var r = 3.2 + p.n.str * 4.2;
         return '<g class="mn-n" tabindex="0" role="button" data-i="' + i + '" aria-label="' + esc(p.n.name) + '">' +
-          '<circle cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="' + r.toFixed(1) + '" fill="' + appColor(app) + '" fill-opacity="' + (0.35 + p.n.str * 0.55).toFixed(2) + '" stroke="' + appColor(app) + '" stroke-width="1"/>' +
+          '<circle class="nt-n' + (p.n.today ? " nt-lf today" : "") + '" cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="' + r.toFixed(1) + '" fill="' + appColor(app) + '" fill-opacity="' + (0.4 + p.n.str * 0.55).toFixed(2) + '" stroke="var(--paper)" stroke-width=".6"/>' +
           "<title>" + esc(p.n.name) + " · sila " + F(p.n.str, 2) + "</title></g>";
       }).join("") + "</svg>";
     host.innerHTML = svg;
-    $$(".mn-n", host).forEach(function (g) {
+    var svgEl = host.querySelector("svg");
+    $$(".mn-n", host).forEach(function (g, gi) {
       function open() { mem().inspect(pos[+g.getAttribute("data-i")].n); }
+      function hi(on) {
+        svgEl.classList.toggle("cx-dim", on);
+        g.querySelector(".nt-n").classList.toggle("hot", on);
+        $$("[data-e]", svgEl).forEach(function (l) {
+          var pr = l.getAttribute("data-e").split("-");
+          var mine = +pr[0] === gi || +pr[1] === gi;
+          l.classList.toggle("hot", on && mine);
+          if (on && mine) {
+            var other = +pr[0] === gi ? +pr[1] : +pr[0];
+            var oc = $$(".mn-n", svgEl)[other]; if (oc) oc.querySelector(".nt-n").classList.add("hot");
+          }
+        });
+        if (!on) $$(".nt-n.hot", svgEl).forEach(function (c) { c.classList.remove("hot"); });
+      }
+      g.addEventListener("mouseenter", function () { hi(true); });
+      g.addEventListener("mouseleave", function () { hi(false); });
+      g.addEventListener("focus", function () { hi(true); });
+      g.addEventListener("blur", function () { hi(false); });
       g.addEventListener("click", open);
       g.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(); } });
     });

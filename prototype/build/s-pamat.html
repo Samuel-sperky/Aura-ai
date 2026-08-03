@@ -43,101 +43,98 @@
 
   <!-- ===================== PANEL GRAF ===================== -->
   <div id="pm-panel-graf">
-    <div class="row g3">
-      <div class="card s2 p0" style="min-width:0;overflow:visible">
-        <div class="ch" style="padding:14px 16px 0;flex-wrap:wrap">
-          <h3>Graf pamäte</h3>
-          <span class="tag" id="pm-crumb">Sieť</span>
-          <span class="sp"></span>
-          <div class="seg" id="pm-views" aria-label="Typ pohľadu">
-            <button data-view="siet" aria-pressed="true">Sieť</button>
-            <button data-view="radial" aria-pressed="false">Radiál</button>
-            <button data-view="zoznam" aria-pressed="false">Zoznam</button>
-          </div>
-        </div>
+    <!-- KPI siete (Hades rad) -->
+    <div class="row g4" id="pm-gkpi"></div>
 
-        <!-- SIEŤ (force) -->
-        <div id="pm-v-siet">
-          <div class="cx-wrap" style="margin:12px 16px 0">
-            <div class="cx-toolbar">
-              <span class="eyet" style="margin:0">Vrstva</span>
-              <div class="cx-layers" id="pm-layers" role="group" aria-label="Vrstvy siete">
-                <button data-l="area" aria-pressed="true">Oblasti</button>
-                <button data-l="type" aria-pressed="false">Typy</button>
-                <button data-l="str" aria-pressed="false">Sila</button>
-                <button data-l="syn" aria-pressed="false">Spojenia</button>
-                <button data-l="today" aria-pressed="false">Dnes aktívne</button>
-              </div>
-              <span class="sp"></span>
-              <span class="tag" id="pm-net-cnt"></span>
-            </div>
-            <svg class="cx-svg" id="pm-net" viewBox="0 0 760 520" role="img" aria-label="Sieť uzlov pamäte zoskupená do piatich lalokov"></svg>
-          </div>
-          <div class="cx-list" id="pm-net-list" style="padding:14px 16px"></div>
-          <p class="note" style="padding:9px 16px 14px">Prejdi myšou po uzle — rozsvietia sa jeho synapsie a susedia, ostatné stlmia. Klik otvorí inšpektor. Veľkosť podľa sily, tvar podľa typu, farba podľa vrstvy.</p>
+    <!-- ===================== VEĽKÁ KARTA GRAFU ===================== -->
+    <div class="card p0 gcard" id="pm-gcard" style="min-width:0">
+      <div class="gbar">
+        <label for="pm-gq" class="skip">Hľadať uzol v sieti</label>
+        <input type="search" id="pm-gq" placeholder="Hľadať v sieti…">
+        <span class="tag" id="pm-gq-n" hidden>0 zhôd</span>
+        <div class="seg" id="pm-layers" role="group" aria-label="Vrstvy siete">
+          <button data-l="all" aria-pressed="true">Všetko</button>
+          <button data-l="type" aria-pressed="false">Typy</button>
+          <button data-l="act" aria-pressed="false">Aktivita</button>
+          <button data-l="app" aria-pressed="false">Appka</button>
         </div>
-
-        <!-- RADIÁL -->
-        <div id="pm-v-radial" hidden>
-          <div class="filt" style="padding:12px 16px 0;margin-bottom:0">
-            <button class="btn ghost" id="pm-rad-back" disabled>Späť o úroveň</button>
-            <span class="tag" id="pm-rad-crumb">Hades</span>
-          </div>
-          <div id="pm-rad" style="padding:0 6px"></div>
-          <p class="note" style="padding:0 16px 14px">Hierarchia Hades → oblasti → oddelenia → uzly. Klik zanorí o úroveň nižšie, na uzle otvorí editovateľný inšpektor.</p>
+        <select id="pm-gapp" aria-label="Appka pre vrstvu Appka" hidden></select>
+        <span class="sp"></span>
+        <div class="seg" id="pm-views" aria-label="Typ pohľadu">
+          <button data-view="siet" aria-pressed="true">Sieť</button>
+          <button data-view="radial" aria-pressed="false">Radiál</button>
         </div>
-
-        <!-- ZOZNAM -->
-        <div id="pm-v-zoznam" hidden>
-          <div id="pm-bulk" hidden style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:11px 14px;margin:12px 14px 0;border:1px solid var(--teal);border-radius:var(--r-m);background:color-mix(in srgb,var(--teal) 8%,var(--card))">
-            <b id="pm-bulk-n" style="font-size:var(--fs-sm)"></b>
-            <span class="sp" style="flex:1"></span>
-            <button class="btn ghost" data-bulk="archive">Archív</button>
-            <button class="btn ghost" data-bulk="move">Presunúť</button>
-            <button class="btn ghost" data-bulk="tag">Tag</button>
-            <button class="btn ghost" data-bulk="pin">Chrániť</button>
-            <button class="btn ghost" data-bulk="merge">Zlúčiť</button>
-            <button class="btn ghost" data-bulk="clear">Zrušiť výber</button>
-          </div>
-          <div class="tw" style="padding:12px 4px 0">
-            <table class="tbl" id="pm-tbl">
-              <thead><tr>
-                <th style="width:28px"><input type="checkbox" id="pm-all" aria-label="Vybrať všetky uzly"></th>
-                <th data-sort="name">Názov</th>
-                <th data-sort="type">Typ</th>
-                <th data-sort="zone">Oblasť · zóna</th>
-                <th data-sort="str" class="num">Sila</th>
-                <th data-sort="conf" class="num">Istota</th>
-                <th data-sort="acts" class="num">Aktivácie</th>
-              </tr></thead>
-              <tbody></tbody>
-            </table>
-          </div>
-          <div class="cards-only" id="pm-cards" style="padding:0 12px 12px"></div>
-          <div id="pm-tbl-empty"></div>
-        </div>
+        <button class="btn ghost" id="pm-filt-toggle" aria-expanded="false" aria-controls="pm-filter-body">Filtre <span id="pm-filt-caret" aria-hidden="true">▸</span></button>
+        <span class="tag num" id="pm-net-cnt"></span>
+        <button class="btn ghost" id="pm-gfull" aria-pressed="false">Celá obrazovka</button>
       </div>
 
-      <!-- FILTER PANEL + LEGENDA (na mobile rozbaliteľný) -->
-      <div class="card" id="pm-filter-card" style="min-width:0">
-        <div class="ch">
-          <button class="btn ghost" id="pm-filt-toggle" aria-expanded="true" aria-controls="pm-filter-body" hidden style="font-weight:600">Filtre <span id="pm-filt-caret" aria-hidden="true">▾</span></button>
-          <h3 id="pm-filt-h">Filtre</h3>
-          <span class="sp"></span>
-          <button class="btn ghost" id="pm-reset">Zrušiť</button>
-        </div>
-        <div id="pm-filter-body">
-          <div class="field"><label for="pm-f-type">Typ uzla</label>
-            <select id="pm-f-type"><option value="">všetky typy</option><option value="skill">skill</option><option value="memory">memory</option><option value="project">project</option></select></div>
-          <div class="field"><label for="pm-f-str">Sila minimálne · <b id="pm-f-strv">0,00</b></label>
-            <input type="range" id="pm-f-str" min="0" max="100" step="5" value="0"></div>
-          <div class="field"><label for="pm-f-per">Vek uzla</label>
-            <select id="pm-f-per"><option value="0">celá pamäť</option><option value="30">do 30 dní</option><option value="90">do 90 dní</option><option value="320">do 320 dní</option></select></div>
-          <span class="eyet" style="margin-top:8px">Oblasti · klik filtruje</span>
-          <div class="feed" id="pm-legend"></div>
-          <p class="note" style="margin-top:10px">Filtre sú zdieľané cez <span class="mono">Aura.setShared</span> — prepnutie pohľadu ich zachová.</p>
-        </div>
+      <!-- rozbaľovacie filtre (Q11) -->
+      <div class="gfilters" id="pm-filter-body" hidden>
+        <div class="field" style="margin:0"><label for="pm-f-type">Typ uzla</label>
+          <select id="pm-f-type"><option value="">všetky typy</option><option value="skill">skill</option><option value="memory">memory</option><option value="project">project</option></select></div>
+        <div class="field" style="margin:0"><label for="pm-f-str">Sila minimálne · <b id="pm-f-strv" class="num">0,00</b></label>
+          <input type="range" id="pm-f-str" min="0" max="100" step="5" value="0"></div>
+        <div class="field" style="margin:0"><label for="pm-f-per">Vek uzla</label>
+          <select id="pm-f-per"><option value="0">celá pamäť</option><option value="30">do 30 dní</option><option value="90">do 90 dní</option><option value="320">do 320 dní</option></select></div>
+        <button class="btn ghost" id="pm-reset" style="align-self:end">Zrušiť filtre</button>
       </div>
+
+      <!-- SIEŤ -->
+      <div id="pm-v-siet" style="position:relative">
+        <div class="gcrumb" id="pm-gcrumb" hidden>
+          <button class="btn ghost sm" id="pm-gback">← Celá sieť</button>
+          <span id="pm-gcrumb-t"></span>
+        </div>
+        <svg class="cx-svg gnet" id="pm-net" viewBox="0 0 960 620" role="application" aria-label="Neurónová sieť pamäte — 5 lalokov, oddelenia a poznatky"></svg>
+        <div class="gtip" id="pm-gtip" role="tooltip" hidden></div>
+        <div class="cx-list" id="pm-net-list"></div>
+        <p class="note gnote">Prejdi po uzle — rozsvietia sa jeho synapsie, klik otvorí inšpektor. Klik na jadro laloku priblíži oblasť (Esc vráti). Koliesko približuje, ťahaním posúvaš plátno.</p>
+      </div>
+
+      <!-- RADIÁL -->
+      <div id="pm-v-radial" hidden>
+        <div class="filt" style="padding:12px 16px 0;margin-bottom:0">
+          <button class="btn ghost" id="pm-rad-back" disabled>Späť o úroveň</button>
+          <span class="tag" id="pm-rad-crumb">Hades</span>
+        </div>
+        <div id="pm-rad" style="padding:0 6px"></div>
+        <p class="note" style="padding:0 16px 14px">Hierarchia Hades → oblasti → oddelenia → uzly. Klik zanorí o úroveň nižšie, na uzle otvorí editovateľný inšpektor.</p>
+      </div>
+
+      <!-- legenda: Laloky a hustota (pod grafom, klik zvýrazní) -->
+      <div class="glegend" id="pm-legend" aria-label="Laloky a hustota"></div>
+    </div>
+
+    <!-- ===================== ZOZNAM (samostatná karta) ===================== -->
+    <div class="card p0" id="pm-v-zoznam" style="margin-top:13px">
+      <div class="ch" style="padding:14px 16px 0"><h3>Zoznam uzlov</h3><span class="tag num" id="pm-list-cnt"></span><span class="sp"></span><span class="badge info">hromadné operácie výberom</span></div>
+      <div id="pm-bulk" hidden style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:11px 14px;margin:12px 14px 0;border:1px solid var(--teal);border-radius:var(--r-m);background:color-mix(in srgb,var(--teal) 8%,var(--card))">
+        <b id="pm-bulk-n" style="font-size:var(--fs-sm)"></b>
+        <span class="sp" style="flex:1"></span>
+        <button class="btn ghost" data-bulk="archive">Archív</button>
+        <button class="btn ghost" data-bulk="move">Presunúť</button>
+        <button class="btn ghost" data-bulk="tag">Tag</button>
+        <button class="btn ghost" data-bulk="pin">Chrániť</button>
+        <button class="btn ghost" data-bulk="merge">Zlúčiť</button>
+        <button class="btn ghost" data-bulk="clear">Zrušiť výber</button>
+      </div>
+      <div class="tw" style="padding:12px 4px 0">
+        <table class="tbl" id="pm-tbl">
+          <thead><tr>
+            <th style="width:28px"><input type="checkbox" id="pm-all" aria-label="Vybrať všetky uzly"></th>
+            <th data-sort="name">Názov</th>
+            <th data-sort="type">Typ</th>
+            <th data-sort="zone">Oblasť · zóna</th>
+            <th data-sort="str" class="num">Sila</th>
+            <th data-sort="conf" class="num">Istota</th>
+            <th data-sort="acts" class="num">Aktivácie</th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="cards-only" id="pm-cards" style="padding:0 12px 12px"></div>
+      <div id="pm-tbl-empty"></div>
     </div>
 
     <!-- ENGINE GRAFY -->

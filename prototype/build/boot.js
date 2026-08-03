@@ -107,11 +107,16 @@
       io.observe(el);
     });
     /* prvky nad ohybom pri štarte nech nečakajú na scroll */
-    setTimeout(function () {
+    function sweep() {
       document.querySelectorAll(".view.on .rv:not(.in)").forEach(function (el) {
-        if (el.getBoundingClientRect().top < w.innerHeight) el.classList.add("in");
+        if (el.getBoundingClientRect().top < w.innerHeight + 40) el.classList.add("in");
       });
-    }, 120);
+    }
+    setTimeout(sweep, 120);
+    /* poistka: reveal nesmie nič trvalo skryť — po scrolle aj po prepnutí obrazovky dorovnaj */
+    var svT = null;
+    w.addEventListener("scroll", function () { clearTimeout(svT); svT = setTimeout(sweep, 90); }, { passive: true });
+    w.addEventListener("hashchange", function () { setTimeout(sweep, 160); });
   })();
 
   /* mini sparkliny v bočnom paneli */
