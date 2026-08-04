@@ -6,4 +6,4 @@ Thumbs.db
 .env.*
 !.env.example
 apps/screens/_gallery.html
-apps/screens-aura-ai/_prehlad.html
+apps/screens-aura-ai/_prehlad-*.html

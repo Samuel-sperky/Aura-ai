@@ -147,30 +147,41 @@ async function main(){
   }
   await page.setViewportSize({ width: W, height: H });
 
-  console.log('\nFáza F — kontaktný list');
-  const cells = shots.filter(s => !s.includes('mobil-')).map(fp => {
-    const b64 = readFileSync(fp).toString('base64');
-    return `<figure><img src="data:image/png;base64,${b64}"><figcaption>${basename(fp, '.png')}</figcaption></figure>`;
-  }).join('');
-  const gal = `<!doctype html><meta charset=utf-8><style>
-    body{margin:0;background:#0e1413;color:#829896;font:500 11px 'Geist Mono',ui-monospace,monospace;padding:18px}
-    h1{font:700 22px Georgia,serif;color:#e8f0ef;margin:0 0 4px}
-    p{margin:0 0 18px;color:#829896}
-    .g{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
-    figure{margin:0}
-    img{width:100%;display:block;border:1px solid #22302e;border-radius:8px}
-    figcaption{padding:5px 2px 0;letter-spacing:.04em}</style>
-    <h1>Aura AI · chat a zvyšné aplikácie</h1><p>${shots.filter(s => !s.includes('mobil-')).length} obrazoviek · kontaktný list</p>
-    <div class="g">${cells}</div>`;
-  const gfile = join(OUT, '_prehlad.html');
-  writeFileSync(gfile, gal);
+  /* Kontaktné listy — rozdelené na 3 časti a v dsf 1, aby jeden PNG
+     zostal pod ~2 MB (6 MB súbor odmietne prenos aj náhľad). */
+  console.log('\nFáza F — kontaktné listy');
+  const sheetShots = shots.filter(s => !s.includes('mobil-'));
+  const PARTS = [
+    ['1', s => /\/(hub|mind-)/.test(s), 'Rozcestník + Aura AI (mind)'],
+    ['2', s => /\/chat/.test(s) && !s.includes('-light') && !s.includes('-en'), 'AuraAI Chat'],
+    ['3', s => !/\/(hub|mind-)/.test(s) && !(/\/chat/.test(s) && !s.includes('-light') && !s.includes('-en')), 'Studios · sperky-ai · Hub · svetlá téma'],
+  ];
   const gp = await ctx.newPage();
-  await gp.setViewportSize({ width: 1800, height: 1200 });
-  await gp.goto(pathToFileURL(gfile).href, { waitUntil: 'load' });
-  await sleep(600);
-  const sheet = join(OUT, '_prehlad.png');
-  await gp.screenshot({ path: sheet, fullPage: true });
-  ok('_prehlad.png (kontaktný list)');
+  for (const [n, filt, label] of PARTS){
+    const fs2 = sheetShots.filter(filt);
+    if (!fs2.length) continue;
+    const cells = fs2.map(fp => {
+      const b64 = readFileSync(fp).toString('base64');
+      return `<figure><img src="data:image/png;base64,${b64}"><figcaption>${basename(fp, '.png')}</figcaption></figure>`;
+    }).join('');
+    const gal = `<!doctype html><meta charset=utf-8><style>
+      body{margin:0;background:#0e1413;color:#829896;font:500 10px 'Geist Mono',ui-monospace,monospace;padding:16px}
+      h1{font:700 20px Georgia,serif;color:#e8f0ef;margin:0 0 3px}
+      p{margin:0 0 14px}
+      .g{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+      figure{margin:0}
+      img{width:100%;display:block;border:1px solid #22302e;border-radius:6px}
+      figcaption{padding:4px 2px 0;letter-spacing:.04em}</style>
+      <h1>Aura AI · ${label}</h1><p>${fs2.length} obrazoviek · kontaktný list ${n}/3</p>
+      <div class="g">${cells}</div>`;
+    const gfile = join(OUT, `_prehlad-${n}.html`);
+    writeFileSync(gfile, gal);
+    await gp.setViewportSize({ width: 1500, height: 1000 });
+    await gp.goto(pathToFileURL(gfile).href, { waitUntil: 'load' });
+    await sleep(500);
+    await gp.screenshot({ path: join(OUT, `_prehlad-${n}.png`), fullPage: true, scale: 'css' });
+    ok(`_prehlad-${n}.png (${fs2.length} obrazoviek · ${label})`);
+  }
 
   await browser.close();
   console.log('\n─────────────────────────────');
