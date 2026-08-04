@@ -1,0 +1,419 @@
+<!doctype html>
+<html lang="sk" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark light">
+<title>Šperky — API klient</title>
+<meta name="description" content="Klient nad Šperky API: objednávky a produkty, dizajn rodiny Aura.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23d8b878'%3E%3Cpath d='M6 3h12l4 6-10 12L2 9z'/%3E%3C/svg%3E">
+
+<!-- Pre-paint: téma a hustota sa stampujú PRED prvým paintom, inak blikne svetlá.
+     Dark je default rodiny, takže `data-theme="dark"` je už v <html>. -->
+<script>
+(function () {
+  try {
+    var theme = localStorage.getItem("sperky.theme");
+    var density = localStorage.getItem("sperky.density");
+    var lang = localStorage.getItem("sperky.lang");
+    document.documentElement.dataset.theme = theme === "light" ? "light" : "dark";
+    if (density === "compact") document.documentElement.dataset.density = "compact";
+    if (lang === "en" || lang === "sk") document.documentElement.lang = lang;
+  } catch (err) {
+    /* privátny režim: zostáva dark + cozy */
+  }
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&family=Playfair+Display:ital,wght@1,600&display=swap">
+<link rel="stylesheet" href="assets/aura.css">
+<link rel="stylesheet" href="assets/sperky.css">
+</head>
+<body>
+
+<a class="skip-link" href="#main" data-i18n="app.skipToContent">Preskočiť na obsah</a>
+<div class="nav-overlay" id="navOverlay" hidden></div>
+
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar">
+    <div class="side-brand">
+      <span class="brand-mark" data-icon="gem" aria-hidden="true"></span>
+      <span class="brand-text">
+        <strong data-i18n="app.name">Šperky</strong>
+        <span data-i18n="app.suffix">API klient</span>
+      </span>
+    </div>
+
+    <nav class="nav" id="nav" aria-label="Aura">
+      <p class="eyebrow" style="padding: var(--space-3) var(--space-3) var(--space-1)" data-i18n="nav.section.data">Dáta</p>
+      <a class="nav-item" href="#/overview" data-route="overview">
+        <span data-icon="gauge" aria-hidden="true"></span>
+        <span class="nav-label" data-i18n="nav.overview">Prehľad</span>
+      </a>
+      <a class="nav-item" href="#/orders" data-route="orders">
+        <span data-icon="receipt" aria-hidden="true"></span>
+        <span class="nav-label" data-i18n="nav.orders">Objednávky</span>
+        <span class="nav-count" id="navOrdersCount" hidden></span>
+      </a>
+      <a class="nav-item" href="#/products" data-route="products">
+        <span data-icon="package" aria-hidden="true"></span>
+        <span class="nav-label" data-i18n="nav.products">Produkty</span>
+        <span class="nav-count" id="navProductsCount" hidden></span>
+      </a>
+      <p class="eyebrow" style="padding: var(--space-4) var(--space-3) var(--space-1)" data-i18n="nav.section.system">Systém</p>
+      <a class="nav-item" href="#/settings" data-route="settings">
+        <span data-icon="settings" aria-hidden="true"></span>
+        <span class="nav-label" data-i18n="nav.settings">Nastavenia</span>
+      </a>
+    </nav>
+
+    <div class="side-foot">
+      <span class="spSource" id="sourceBadge" data-mode="demo">
+        <span class="spSourceDot" aria-hidden="true"></span>
+        <span class="meta" id="sourceLabel">Demo dáta</span>
+      </span>
+      <span class="meta" id="baseUrlLabel"></span>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <button class="btn btn-ghost btn-icon hamburger" id="menuBtn" type="button" aria-expanded="false" aria-controls="sidebar">
+        <span data-icon="menu" aria-hidden="true"></span>
+        <span class="sr-only" data-i18n="app.openMenu">Otvoriť navigáciu</span>
+      </button>
+      <h1 class="topbar-title" id="topbarTitle">Prehľad</h1>
+      <div class="top-actions">
+        <button class="btn btn-outline btn-sm" id="langBtn" type="button">
+          <span data-icon="languages" aria-hidden="true"></span>
+          <span id="langBtnLabel">EN</span>
+        </button>
+        <button class="btn btn-outline btn-sm btn-icon" id="densityBtn" type="button">
+          <span data-icon="rows" aria-hidden="true"></span>
+          <span class="sr-only" data-i18n="app.density.toggle">Prepnúť hustotu — rýchle prepnutie</span>
+        </button>
+        <button class="btn btn-outline btn-sm btn-icon" id="themeBtn" type="button">
+          <span data-icon="sun" aria-hidden="true"></span>
+          <span class="sr-only" data-i18n="app.theme.toggle">Prepnúť tému — rýchle prepnutie</span>
+        </button>
+      </div>
+    </header>
+
+    <main class="view page-stack" id="main" tabindex="-1">
+      <div id="modeNotice"></div>
+
+      <!-- ── PREHĽAD ────────────────────────────────────────────────────── -->
+      <section class="page-stack" id="view-overview" hidden>
+        <div class="page-header">
+          <div>
+            <h1 data-i18n="overview.title">Prehľad</h1>
+            <p class="page-header-desc" data-i18n="overview.desc"></p>
+          </div>
+          <div class="page-header-actions">
+            <button class="btn btn-outline" data-action="reload-overview" type="button">
+              <span data-icon="refresh" aria-hidden="true"></span>
+              <span data-i18n="common.refresh">Obnoviť</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="grid-3">
+          <div class="stat stat-accent">
+            <div class="stat-k" data-i18n="overview.kpi.orders"></div>
+            <div class="stat-v" id="kpiOrders">—</div>
+            <div class="stat-sub" data-i18n="overview.kpi.ordersSub"></div>
+          </div>
+          <div class="stat stat-accent">
+            <div class="stat-k" data-i18n="overview.kpi.products"></div>
+            <div class="stat-v" id="kpiProducts">—</div>
+            <div class="stat-sub" data-i18n="overview.kpi.productsSub"></div>
+          </div>
+          <div class="stat stat-gold">
+            <div class="stat-k" data-i18n="overview.kpi.pageSum"></div>
+            <div class="stat-v" id="kpiPageSum">—</div>
+            <div class="stat-sub" id="kpiPageSumSub"></div>
+            <div class="spScope">
+              <span data-icon="info" aria-hidden="true"></span>
+              <span data-i18n="overview.scope"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <section class="panel">
+            <div class="panel-head">
+              <div>
+                <h2 data-i18n="overview.latestOrders">Najnovšie objednávky</h2>
+                <div class="panel-head-sub" id="overviewOrdersSub"></div>
+              </div>
+              <div class="panel-head-actions">
+                <a class="btn btn-ghost btn-sm" href="#/orders">
+                  <span data-i18n="overview.allOrders">Všetky objednávky</span>
+                  <span data-icon="arrow-right" aria-hidden="true"></span>
+                </a>
+              </div>
+            </div>
+            <div class="panel-body flush" id="overviewOrders"></div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-head">
+              <div>
+                <h2 data-i18n="overview.latestProducts">Produkty</h2>
+                <div class="panel-head-sub" data-i18n="overview.latestProductsSub"></div>
+              </div>
+              <div class="panel-head-actions">
+                <a class="btn btn-ghost btn-sm" href="#/products">
+                  <span data-i18n="overview.allProducts">Všetky produkty</span>
+                  <span data-icon="arrow-right" aria-hidden="true"></span>
+                </a>
+              </div>
+            </div>
+            <div class="panel-body flush" id="overviewProducts"></div>
+          </section>
+        </div>
+      </section>
+
+      <!-- ── OBJEDNÁVKY ─────────────────────────────────────────────────── -->
+      <section class="page-stack" id="view-orders" hidden>
+        <div class="page-header">
+          <div>
+            <h1 data-i18n="orders.title">Objednávky</h1>
+            <p class="page-header-desc" data-i18n="orders.desc"></p>
+          </div>
+          <div class="page-header-actions">
+            <label class="row" style="gap: var(--space-2)">
+              <span class="meta" data-i18n="orders.jump">Objednávka podľa ID</span>
+              <input class="input" id="orderJumpInput" style="width: 130px" inputmode="numeric" data-i18n-attr="placeholder:orders.jumpPlaceholder">
+            </label>
+            <button class="btn btn-outline" id="orderJumpBtn" type="button" data-i18n="orders.jumpOpen">Otvoriť</button>
+          </div>
+        </div>
+
+        <section class="panel">
+          <div class="panel-body">
+            <form class="spFilters" id="ordersFilters" novalidate>
+              <label class="field">
+                <span class="field-label" data-i18n="orders.filter.dateFrom">Dátum od</span>
+                <input class="input" type="date" name="date_from" id="fDateFrom">
+              </label>
+              <label class="field">
+                <span class="field-label" data-i18n="orders.filter.dateTo">Dátum do</span>
+                <input class="input" type="date" name="date_to" id="fDateTo">
+              </label>
+              <label class="field">
+                <span class="field-label" data-i18n="orders.filter.country">Krajina dodania</span>
+                <input class="input" name="country" id="fCountry" maxlength="2" autocomplete="off" spellcheck="false" data-i18n-attr="placeholder:orders.filter.countryHint">
+              </label>
+              <label class="field">
+                <span class="field-label" data-i18n="orders.filter.totalMin">Suma od</span>
+                <input class="input" type="number" step="0.01" min="0" name="total_min" id="fTotalMin" inputmode="decimal">
+              </label>
+              <label class="field">
+                <span class="field-label" data-i18n="orders.filter.totalMax">Suma do</span>
+                <input class="input" type="number" step="0.01" min="0" name="total_max" id="fTotalMax" inputmode="decimal">
+              </label>
+              <label class="field">
+                <span class="field-label" data-i18n="common.perPage">Na stránku</span>
+                <select class="select" name="per_page" id="fPerPage">
+                  <option value="10">10</option>
+                  <option value="25">25</option>
+                  <option value="50" selected>50</option>
+                  <option value="100">100</option>
+                </select>
+              </label>
+            </form>
+            <p class="field-error" id="ordersFilterError" hidden></p>
+            <div class="spFilterFoot">
+              <button class="btn btn-accent" id="ordersApply" type="button">
+                <span data-icon="filter" aria-hidden="true"></span>
+                <span data-i18n="common.apply">Použiť</span>
+              </button>
+              <button class="btn btn-ghost" id="ordersReset" type="button" data-i18n="common.reset">Zrušiť filtre</button>
+              <div class="spacer"></div>
+              <div class="spActiveFilters" id="ordersActiveFilters"></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-body flush" id="ordersTable"></div>
+          <div class="panel-foot" id="ordersPager" hidden></div>
+        </section>
+      </section>
+
+      <!-- ── PRODUKTY ───────────────────────────────────────────────────── -->
+      <section class="page-stack" id="view-products" hidden>
+        <div class="page-header">
+          <div>
+            <h1 data-i18n="products.title">Produkty</h1>
+            <p class="page-header-desc" data-i18n="products.desc"></p>
+          </div>
+          <div class="page-header-actions">
+            <label class="row" style="gap: var(--space-2)">
+              <span class="meta" data-i18n="products.jump">Produkt podľa ID</span>
+              <input class="input" id="productJumpInput" style="width: 110px" inputmode="numeric" data-i18n-attr="placeholder:products.jumpPlaceholder">
+            </label>
+            <button class="btn btn-outline" id="productJumpBtn" type="button" data-i18n="orders.jumpOpen">Otvoriť</button>
+          </div>
+        </div>
+
+        <section class="panel">
+          <div class="panel-body">
+            <div class="toolbar">
+              <div class="toolbar-search">
+                <span data-icon="search" aria-hidden="true"></span>
+                <input class="input" id="productSearch" type="search" data-i18n-attr="placeholder:products.search;aria-label:products.search">
+              </div>
+              <label class="field" style="flex: 0 0 150px">
+                <span class="field-label" data-i18n="products.lang">Jazyk</span>
+                <input class="input" id="pIdLang" inputmode="numeric" data-i18n-attr="placeholder:products.langDefault">
+              </label>
+              <label class="field" style="flex: 0 0 120px">
+                <span class="field-label" data-i18n="common.perPage">Na stránku</span>
+                <select class="select" id="pPerPage">
+                  <option value="10">10</option>
+                  <option value="25">25</option>
+                  <option value="50" selected>50</option>
+                  <option value="100">100</option>
+                </select>
+              </label>
+              <button class="btn btn-outline" id="productsApply" type="button">
+                <span data-icon="refresh" aria-hidden="true"></span>
+                <span data-i18n="common.refresh">Obnoviť</span>
+              </button>
+            </div>
+            <div class="notice notice-accent" style="margin-top: var(--space-3)">
+              <span data-icon="info" aria-hidden="true"></span>
+              <div class="notice-body">
+                <span data-i18n="products.searchScope"></span>
+                <span data-i18n="products.priceNote"></span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-body flush" id="productsTable"></div>
+          <div class="panel-foot" id="productsPager" hidden></div>
+        </section>
+      </section>
+
+      <!-- ── NASTAVENIA ─────────────────────────────────────────────────── -->
+      <section class="page-stack" id="view-settings" hidden>
+        <div class="page-header">
+          <div>
+            <h1 data-i18n="settings.title">Nastavenia</h1>
+            <p class="page-header-desc" data-i18n="settings.desc"></p>
+          </div>
+        </div>
+
+        <section class="panel">
+          <div class="panel-head"><h2 data-i18n="settings.connection">Spojenie</h2></div>
+          <div class="panel-body page-stack">
+            <div class="field">
+              <span class="field-label" data-i18n="settings.mode">Zdroj dát</span>
+              <div class="segmented" role="tablist" id="modeSwitch">
+                <button class="seg-btn" type="button" role="tab" data-mode="demo" data-i18n="settings.mode.demo">Demo dáta</button>
+                <button class="seg-btn" type="button" role="tab" data-mode="proxy" data-i18n="settings.mode.proxy">Cez proxy</button>
+                <button class="seg-btn" type="button" role="tab" data-mode="direct" data-i18n="settings.mode.direct">Priamo z prehliadača</button>
+              </div>
+              <p class="field-hint" id="modeHint"></p>
+            </div>
+
+            <label class="field">
+              <span class="field-label" data-i18n="settings.baseUrl">Základná URL</span>
+              <input class="input mono" id="sBaseUrl" spellcheck="false" autocomplete="off">
+              <span class="field-hint" id="baseUrlHint" data-i18n="settings.baseUrlHint"></span>
+            </label>
+
+            <div class="field">
+              <span class="field-label" data-i18n="settings.apiKey">API kľúč</span>
+              <div class="spKeyRow">
+                <input class="input" id="sApiKey" type="password" spellcheck="false" autocomplete="off">
+                <button class="btn btn-outline" id="keyReveal" type="button" data-i18n="settings.apiKeyShow">Zobraziť kľúč</button>
+                <button class="btn btn-danger" id="keyClear" type="button" data-i18n="settings.apiKeyClear">Vymazať kľúč</button>
+              </div>
+              <span class="field-hint" data-i18n="settings.apiKeyHint"></span>
+              <p class="field-error" id="keyMissing" hidden data-i18n="settings.apiKeyMissing"></p>
+            </div>
+
+            <label class="field" style="max-width: 280px">
+              <span class="field-label" data-i18n="settings.authHeader">Hlavička</span>
+              <select class="select" id="sAuthHeader">
+                <option value="apiKey">X-Api-Key</option>
+                <option value="bearer">Authorization: Bearer</option>
+              </select>
+            </label>
+
+            <div class="notice notice-warn">
+              <span data-icon="alert" aria-hidden="true"></span>
+              <div class="notice-body" data-i18n="settings.keyWarning"></div>
+            </div>
+          </div>
+          <div class="panel-foot">
+            <button class="btn btn-accent" id="settingsSave" type="button" data-i18n="settings.save">Uložiť</button>
+            <button class="btn btn-outline" id="settingsTest" type="button">
+              <span data-icon="plug" aria-hidden="true"></span>
+              <span data-i18n="settings.test">Otestovať spojenie</span>
+            </button>
+            <div class="spacer"></div>
+            <div class="row row-wrap" id="testResult"></div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head"><h2 data-i18n="settings.appearance">Vzhľad</h2></div>
+          <div class="panel-body grid-3">
+            <div class="field">
+              <span class="field-label" data-i18n="settings.theme">Téma</span>
+              <div class="segmented" id="themeSwitch">
+                <button class="seg-btn" type="button" data-theme="dark" data-i18n="settings.theme.dark">Tmavá</button>
+                <button class="seg-btn" type="button" data-theme="light" data-i18n="settings.theme.light">Svetlá</button>
+              </div>
+            </div>
+            <div class="field">
+              <span class="field-label" data-i18n="settings.density">Hustota</span>
+              <div class="segmented" id="densitySwitch">
+                <button class="seg-btn" type="button" data-density="cozy" data-i18n="settings.density.cozy">Pohodlná</button>
+                <button class="seg-btn" type="button" data-density="compact" data-i18n="settings.density.compact">Kompaktná</button>
+              </div>
+            </div>
+            <div class="field">
+              <span class="field-label" data-i18n="settings.language">Jazyk</span>
+              <div class="segmented" id="langSwitch">
+                <button class="seg-btn" type="button" data-lang="sk">Slovensky</button>
+                <button class="seg-btn" type="button" data-lang="en">English</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <div>
+              <h2 data-i18n="settings.log">Posledné požiadavky</h2>
+              <div class="panel-head-sub" id="logSub"></div>
+            </div>
+            <div class="panel-head-actions">
+              <button class="btn btn-ghost btn-sm" id="logClear" type="button" data-i18n="settings.logClear">Vyčistiť log</button>
+            </div>
+          </div>
+          <div class="panel-body flush" id="requestLog"></div>
+        </section>
+      </section>
+    </main>
+  </div>
+</div>
+
+<div class="toast-stack" id="toasts" aria-live="polite" aria-atomic="false"></div>
+<div id="overlayRoot"></div>
+
+<script src="assets/i18n.js"></script>
+<script src="assets/demo.js"></script>
+<script src="assets/api.js"></script>
+<script src="assets/app.js"></script>
+</body>
+</html>

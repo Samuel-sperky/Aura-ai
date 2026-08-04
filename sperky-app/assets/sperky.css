@@ -1,0 +1,110 @@
+/* ============================================================================
+   Šperky API klient — vrstva nad rodinou (aura.css).
+
+   Načítava sa AŽ ZA aura.css, takže tu napísané pravidlo prebije rodinné.
+   `@media` nezvyšuje špecificitu — media bloky tohto súboru sú preto na jeho
+   KONCI, nie hore. Kto pridá `.sp*` pravidlo do rodinných media blokov,
+   tichým spôsobom si ho vypne.
+
+   Rovnaké železné pravidlo ako v rodine: žiadny raw hex, žiadne rgba().
+   ========================================================================== */
+
+/* ── zdroj dát: pásik v topbare ──────────────────────────────────────────── */
+.spSource { display: inline-flex; align-items: center; gap: var(--space-2); }
+.spSourceDot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; background: var(--muted); }
+.spSource[data-mode="demo"] .spSourceDot { background: var(--brand-gold); }
+.spSource[data-mode="proxy"] .spSourceDot { background: var(--success); }
+.spSource[data-mode="direct"] .spSourceDot { background: var(--warn); }
+
+/* ── filtre ─────────────────────────────────────────────────────────────── */
+.spFilters { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: var(--space-3); }
+.spFilterFoot { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); margin-top: var(--space-4); }
+.spActiveFilters { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.spFilterChip { display: inline-flex; align-items: center; gap: 6px; padding: 3px 4px 3px 11px; border-radius: var(--radius-pill); background: var(--accent-tint); color: var(--accent-ink); border: 1px solid color-mix(in srgb, var(--accent) 26%, transparent); font-size: var(--text-sm); font-weight: 600; }
+/* 24×24 terč — WCAG 2.2 SC 2.5.8. Chipy sedia vedľa seba bez 24 px odstupu,
+   takže odstupová cesta je zavretá a jediná oprava je veľkosť. */
+.spFilterChip button { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; color: inherit; }
+.spFilterChip button:hover { background: color-mix(in srgb, var(--accent) 18%, transparent); }
+
+/* ── tabuľky objednávok a produktov ─────────────────────────────────────── */
+.spIdCell { font-family: var(--font-mono); font-size: var(--text-sm); color: var(--ink2); white-space: nowrap; }
+.spNameCell { min-width: 220px; max-width: 520px; }
+.spNameCell strong { font-weight: 600; }
+.spRowBtn { display: inline-flex; align-items: center; gap: 5px; min-height: 26px; padding: 0 9px; border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--ink2); font-size: var(--text-xs); font-weight: 600; transition: all var(--transition); }
+.spRowBtn:hover { border-color: var(--accent); background: var(--accent-tint); color: var(--accent-ink); }
+.spMoney { font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; }
+.spDate { white-space: nowrap; }
+.spDateTime { color: var(--muted); font-size: var(--text-sm); }
+
+/* ── detail: položky objednávky ─────────────────────────────────────────── */
+.spItems { display: flex; flex-direction: column; }
+.spItem { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-2) 0; border-bottom: 1px solid var(--border-soft); }
+.spItem:last-child { border-bottom: 0; }
+.spItemQty { flex-shrink: 0; min-width: 34px; height: 24px; display: inline-flex; align-items: center; justify-content: center; border-radius: var(--radius-sm); background: var(--panel2); border: 1px solid var(--border); font-size: var(--text-sm); font-weight: 700; font-variant-numeric: tabular-nums; }
+.spItemMain { flex: 1; min-width: 0; }
+.spItemName { font-size: var(--text-md); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.spItemId { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--muted); }
+
+/* ── detail produktu: popis z API (HTML) ────────────────────────────────── */
+.spProse { font-size: var(--text-md); color: var(--ink2); overflow-wrap: anywhere; }
+.spProse > * + * { margin-top: var(--space-3); }
+.spProse h1, .spProse h2, .spProse h3, .spProse h4 { font-size: var(--text-lg); font-weight: 700; color: var(--ink); }
+.spProse ul, .spProse ol { padding-left: var(--space-5); display: flex; flex-direction: column; gap: 4px; }
+.spProse img { max-width: 100%; height: auto; border-radius: var(--radius-sm); }
+.spProse table { width: 100%; border-collapse: collapse; }
+.spProse td, .spProse th { padding: var(--space-1) var(--space-2); border: 1px solid var(--border-soft); text-align: left; }
+.spProse strong { color: var(--ink); }
+
+/* ── varianty ───────────────────────────────────────────────────────────── */
+.spVarValues { display: flex; flex-wrap: wrap; gap: 4px; }
+.spStock { font-variant-numeric: tabular-nums; font-weight: 600; }
+.spStockOut { color: var(--danger-text); }
+.spStockLow { color: var(--warn-text); }
+.spStockOk { color: var(--success-text); }
+
+/* ── API kľúč ───────────────────────────────────────────────────────────── */
+.spKeyRow { display: flex; gap: var(--space-2); align-items: stretch; }
+.spKeyRow .input { font-family: var(--font-mono); font-size: var(--text-sm); }
+.spKeyRow .btn { flex-shrink: 0; }
+
+/* ── log požiadaviek ────────────────────────────────────────────────────── */
+.spLog { display: flex; flex-direction: column; font-family: var(--font-mono); font-size: var(--text-sm); }
+.spLogRow { display: flex; align-items: baseline; gap: var(--space-3); padding: 6px var(--card-pad); border-bottom: 1px solid var(--border-soft); }
+.spLogRow:last-child { border-bottom: 0; }
+.spLogTime { color: var(--muted); flex-shrink: 0; }
+.spLogStatus { flex-shrink: 0; font-weight: 700; min-width: 34px; }
+.spLogOk { color: var(--success-text); }
+.spLogBad { color: var(--danger-text); }
+.spLogUrl { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ink2); }
+.spLogMs { flex-shrink: 0; color: var(--muted); }
+
+/* ── prehľad: dlaždice ──────────────────────────────────────────────────── */
+.spScope { display: inline-flex; align-items: center; gap: 5px; margin-top: var(--space-2); font-size: var(--text-xs); color: var(--muted); }
+.spScope svg { width: 12px; height: 12px; flex-shrink: 0; }
+
+/* ── skeleton riadky v tabuľke ──────────────────────────────────────────── */
+.spSkelRow td { padding: var(--row-pad-y) var(--row-pad-x); }
+.spSkelRow .skeleton { width: 100%; }
+
+/* ── responsive (na KONCI súboru — @media nepridáva špecificitu) ─────────── */
+@media (max-width: 700px) {
+  /* 5-stĺpcová tabuľka sa na 390 px nezmestí — pod 700 px sa riadky vykresľujú
+     ako karty. Značka `data-label` na každom `td` prichádza z renderu v app.js;
+     kto pridá stĺpec bez nej, dostane kartu bez menovky. */
+  .spCardTable thead { display: none; }
+  .spCardTable, .spCardTable tbody, .spCardTable tr, .spCardTable td { display: block; width: auto; }
+  .spCardTable tr {
+    padding: var(--card-pad); margin-bottom: var(--space-3);
+    background: var(--panel2); border: 1px solid var(--border); border-radius: var(--radius-md);
+  }
+  .spCardTable tbody tr:hover td { background: transparent; }
+  .spCardTable td { border-bottom: 0; padding: 3px 0; display: flex; gap: var(--space-3); align-items: baseline; }
+  .spCardTable td::before {
+    content: attr(data-label); flex: 0 0 40%;
+    font-size: var(--text-xs); font-weight: 700; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--muted);
+  }
+  .spCardTable td.num { text-align: left; }
+  .spCardTable .spNameCell { min-width: 0; max-width: none; }
+  .spKeyRow { flex-direction: column; }
+}
