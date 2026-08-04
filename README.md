@@ -7,6 +7,11 @@ tri izolovaní workeri, kontrolovaná hranica spracovania dát).
 
 ```
 PLAN.md                                  plán prerobenia prezentácie + register rozhodnutí
+apps/
+  aura-apps-hub.html                     náhľad rodiny aplikácií — 6 modulov, 45+ obrazoviek
+  prehlad-aplikacii.html                 ← register: koľko aplikácií máme a aké funkcie majú
+  prehlad-aplikacii.xlsx                 ten istý register ako tabuľka (5 listov)
+  README.md                              moduly, live vrstva, ovládanie, register aplikácií
 presentation/
   aura-ai-prezentacia.html               ← finálna prezentácia (13 slajdov, deck + dokument režim)
   aura-ai-prezentacia.pdf                tlačová verzia, 13 strán A4 landscape

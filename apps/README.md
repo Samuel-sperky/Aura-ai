@@ -16,9 +16,16 @@ tržby júl 2026); neoverené hodnoty sú ukážkové a v celej appke platí dem
 apps/
   aura-apps-hub.html      ← jeden súbor: rozcestník + 6 modulov (45+ obrazoviek)
   aura-apps-hub.pdf       tlačová verzia, 57 strán A4 landscape (tmavá téma)
-  screens/                74 PNG (obrazovky dark + interakčné stavy + light + mobil + EN)
+  prehlad-aplikacii.html  ← register: koľko aplikácií máme a aké funkcie majú
+  prehlad-aplikacii.xlsx  ten istý register ako tabuľka, 5 listov
+  prehlad-aplikacii.pdf   tlačová verzia registra, 22 strán A4 landscape
+  screens/                86 PNG (obrazovky dark + interakčné stavy + light + mobil + EN + register)
   build/
-    shoot.mjs             Playwright: verifikácia + PNG + PDF
+    shoot.mjs             Playwright: verifikácia + PNG + PDF hubu
+    inventory-data.mjs    JEDINÝ ZDROJ PRAVDY registra aplikácií (moduly, funkcie, náklady, riziká)
+    inventory-html.mjs    inventory-data → prehlad-aplikacii.html
+    inventory-xlsx.py     inventory-data → prehlad-aplikacii.xlsx (openpyxl)
+    shoot-inventory.mjs   Playwright: verifikácia + 12 PNG + PDF registra
 ```
 
 ## Moduly a obrazovky
@@ -112,6 +119,44 @@ node shoot.mjs                       # ../aura-apps-hub.html → ../screens + ..
 
 `shoot.mjs` vyžaduje Playwright a Chromium v `/opt/pw-browsers/chromium`.
 `playwright install` sa nespúšťa — prehliadač je predinštalovaný.
+
+## Register aplikácií — `prehlad-aplikacii.html` + `.xlsx`
+
+Odpoveď na otázku „koľko aplikácií máme a čo každá robí" na jednom mieste.
+Rozsah: **6 modulov Aura Suite** podľa reálnych appiek rodiny — **61 funkcií**
+(48 modulových + 13 spoločných), **54 obrazoviek**, **16 rizík**, **8 externých SaaS
+za 1 240 € / mes.**
+
+**HTML** — Aura tokeny, dark + light, 6 kariet modulov s rozbaliteľným technickým profilom
+(stack, git, testy, veľkosť, kontajnery, vlastník, náklady), vyhľadávanie (`/`) a filtre
+podľa modulu, kategórie a stupňa overenia. Tlačová verzia cez `Ctrl+P`.
+
+**XLSX** — 5 listov: **Prehľad** (súhrn + tabuľka modulov so 17 stĺpcami), **Funkcie**,
+**Obrazovky**, **Náklady**, **Riziká**. Súčty a počty sú formuly (`SUM`, `COUNTIF`, `SUMIF`),
+takže po zmene dát sa hárok prepočíta sám. Každý list má autofilter a zamrznutú hlavičku.
+
+**Overenie údajov.** Každý riadok v HTML aj XLSX nesie zdroj a stupeň overenia:
+
+| Stupeň | Význam |
+|---|---|
+| `overené` | je to v tomto repe — dá sa otvoriť a skontrolovať (44 z 61 funkcií) |
+| `rekonštruované` | z Hades pamäte o reálnych appkách v `C:\Aura`, v tomto repe dôkaz nie je |
+| `ukážkové` | demo hodnota mockupu, nie prevádzkový údaj |
+
+**Dáta sa upravujú v `build/inventory-data.mjs`**, nie vo výstupoch. Prestavba:
+
+```bash
+cd apps/build
+node inventory-html.mjs                                    # → ../prehlad-aplikacii.html
+node inventory-data.mjs > /tmp/inv.json && python3 inventory-xlsx.py /tmp/inv.json ../prehlad-aplikacii.xlsx
+node shoot-inventory.mjs                                   # verifikácia + 12 PNG + PDF
+```
+
+Po generovaní XLSX treba prepočítať formuly (openpyxl ich zapisuje bez hodnôt):
+
+```bash
+python3 ~/.claude/skills/xlsx/scripts/recalc.py apps/prehlad-aplikacii.xlsx 300
+```
 
 ## Poznámka k dátam
 

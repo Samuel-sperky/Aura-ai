@@ -1,0 +1,1191 @@
+<!doctype html>
+<html lang="sk" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prehľad aplikácií Aura Suite — Aura</title>
+<meta name="description" content="Koľko aplikácií máme, čo každá robí a v akom stave je: 6 modulov, 61 funkcií, 54 obrazoviek.">
+<meta name="robots" content="noindex">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Playfair+Display:wght@600;700;800&family=Geist+Mono:wght@400;500&display=swap');
+:root{
+  --teal:#05bcc4; --teal-2:#03797e; --gold:#d8b878; --gold-t:#c9a869;
+  --paper:#0e1413; --card:#131b1a; --card-2:#1b2523; --line:#22302e;
+  --ink:#e8f0ef; --ink-2:#b9c9c7; --ink-3:#829896;
+  --good:#3fbf7f; --amber:#e8a33d; --red:#e0554e; --violet:#8b7fd4;
+  --b-mkt:#05bcc4; --b-hr:#8b7fd4; --b-kpi:#d3a53a; --b-fin:#2fae7a; --b-log:#e07a3e; --b-road:#2a8f96;
+  --mono:'Geist Mono',ui-monospace,monospace;
+  --disp:'Playfair Display',Georgia,serif;
+  --body:'Geist',Inter,system-ui,sans-serif;
+  --acc:var(--teal); --r:14px; --tnum:"tnum" 1,"lnum" 1;
+}
+:root[data-theme="light"]{
+  --paper:#f4f0f3; --card:#ffffff; --card-2:#eae3e8; --line:#ded5dc;
+  --ink:#131b1a; --ink-2:#37423f; --ink-3:#5a6968; --gold-t:#8a6417;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{font-family:var(--body);background:var(--paper);color:var(--ink);-webkit-font-smoothing:antialiased;line-height:1.55;overflow-x:hidden}
+.mono{font-family:var(--mono);font-feature-settings:var(--tnum)}
+h1,h2,h3{font-family:var(--disp);letter-spacing:-.4px;margin:0}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px;border-radius:4px}
+
+/* topbar */
+.top{position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:12px;height:52px;padding:0 20px;
+  background:color-mix(in srgb,var(--paper) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.top .brand{display:flex;align-items:center;gap:9px;font-weight:600;letter-spacing:.02em}
+.top .crown{width:20px;height:20px;color:var(--gold)}
+.top .sep{width:1px;height:20px;background:var(--line)}
+.top .where{color:var(--ink-3);font:500 12.5px var(--mono)}
+.top .sp{margin-left:auto}
+.btn{display:inline-flex;align-items:center;gap:7px;height:32px;padding:0 12px;border:1px solid var(--line);
+  background:var(--card);color:var(--ink);border-radius:9px;font:500 12.5px var(--body);cursor:pointer;transition:.15s}
+.btn:hover{border-color:color-mix(in srgb,var(--acc) 50%,var(--line));color:var(--acc)}
+.btn svg{width:15px;height:15px}
+
+/* layout */
+.wrap{max-width:1220px;margin:0 auto;padding:0 20px 72px}
+section{scroll-margin-top:64px}
+.hero{padding:52px 0 26px;position:relative}
+.eb{font:600 11.5px var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--acc);display:flex;gap:10px;align-items:center}
+.eb .n{color:var(--ink-3)}
+.hero h1{font-size:clamp(30px,4.6vw,46px);font-weight:800;line-height:1.05;margin:16px 0 12px}
+.hero .tag{color:var(--ink-2);font-size:17.5px;max-width:640px;margin:0 0 18px}
+.meta-l{display:flex;flex-wrap:wrap;gap:8px 18px;font:500 12.5px var(--mono);color:var(--ink-3)}
+.note{color:var(--ink-3);font-size:13px;border-left:2px solid var(--line);padding:8px 0 8px 14px;margin:22px 0 0;max-width:780px}
+h2.sh{font-size:23px;font-weight:700;margin:0 0 4px}
+.sh-sub{color:var(--ink-3);font-size:13.5px;margin:0 0 18px}
+.sec{padding-top:46px}
+.goldline{height:1px;background:linear-gradient(90deg,color-mix(in srgb,var(--gold) 45%,transparent),transparent);margin:0 0 22px}
+
+/* KPI tiles */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:6px 0 0}
+@media(max-width:900px){.kpis{grid-template-columns:repeat(2,1fr)}}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px 15px}
+.kpi .l{color:var(--ink-3);font-size:11.5px;text-transform:uppercase;letter-spacing:.09em;font-weight:600}
+.kpi .v{font-weight:700;font-size:27px;line-height:1.15;margin-top:5px;font-feature-settings:var(--tnum)}
+.kpi .s{color:var(--ink-3);font-size:12px;margin-top:2px}
+.kpi.acc .v{color:var(--acc)}
+
+/* toolbar */
+.tools{position:sticky;top:52px;z-index:30;display:flex;flex-wrap:wrap;gap:10px;align-items:center;
+  padding:12px 0;background:color-mix(in srgb,var(--paper) 92%,transparent);backdrop-filter:blur(8px)}
+.search{display:flex;align-items:center;gap:8px;height:34px;padding:0 12px;background:var(--card);
+  border:1px solid var(--line);border-radius:10px;min-width:250px;flex:1;max-width:380px}
+.search svg{width:15px;height:15px;color:var(--ink-3);flex:none}
+.search input{border:0;background:transparent;color:var(--ink);font:400 13.5px var(--body);width:100%;outline:none}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{height:30px;padding:0 11px;border:1px solid var(--line);background:transparent;color:var(--ink-2);
+  border-radius:99px;font:500 12px var(--body);cursor:pointer;transition:.15s}
+.chip:hover{color:var(--ink)}
+.chip[aria-pressed="true"]{background:color-mix(in srgb,var(--acc) 16%,transparent);border-color:color-mix(in srgb,var(--acc) 55%,var(--line));color:var(--acc)}
+.count{margin-left:auto;color:var(--ink-3);font:500 12.5px var(--mono)}
+
+/* module cards */
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:16px}
+.mcard{--acc:var(--b-mkt);background:var(--card);border:1px solid var(--line);border-radius:var(--r);
+  padding:0;overflow:hidden;display:flex;flex-direction:column}
+.mcard .bar{height:3px;background:linear-gradient(90deg,var(--acc),transparent)}
+.mcard .hd{display:flex;gap:12px;align-items:flex-start;padding:16px 17px 12px}
+.mcard .ic{width:36px;height:36px;flex:none;border-radius:10px;display:grid;place-items:center;
+  background:color-mix(in srgb,var(--acc) 15%,transparent);color:var(--acc)}
+.mcard .ic svg{width:19px;height:19px}
+.mcard h3{font-size:18.5px;font-weight:700}
+.mcard .no{font:600 11px var(--mono);color:var(--ink-3);letter-spacing:.12em}
+.mcard .ucel{color:var(--ink-2);font-size:13.5px;padding:0 17px;margin:0 0 12px}
+.badges{display:flex;flex-wrap:wrap;gap:6px;padding:0 17px 13px}
+.badge{display:inline-flex;align-items:center;gap:5px;height:23px;padding:0 9px;border-radius:6px;
+  font:600 11px var(--body);border:1px solid transparent;white-space:nowrap}
+.badge.ok{background:color-mix(in srgb,var(--good) 15%,transparent);color:var(--good);border-color:color-mix(in srgb,var(--good) 35%,transparent)}
+.badge.cond{background:color-mix(in srgb,var(--amber) 15%,transparent);color:var(--amber);border-color:color-mix(in srgb,var(--amber) 35%,transparent)}
+.badge.no{background:color-mix(in srgb,var(--red) 15%,transparent);color:var(--red);border-color:color-mix(in srgb,var(--red) 35%,transparent)}
+.badge.q{background:var(--card-2);color:var(--ink-3);border-color:var(--line)}
+.badge.mono{font-family:var(--mono);font-weight:500}
+.mcard .nums{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.mcard .nums div{background:var(--card);padding:10px 12px}
+.mcard .nums b{display:block;font-size:19px;font-weight:700;font-feature-settings:var(--tnum)}
+.mcard .nums span{color:var(--ink-3);font-size:11px;text-transform:uppercase;letter-spacing:.07em;font-weight:600}
+.mcard .body{padding:14px 17px 4px}
+.mcard .lbl{font:600 11px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);margin:0 0 8px}
+ul.fn{list-style:none;margin:0 0 14px;padding:0;display:grid;gap:7px}
+ul.fn li{display:flex;gap:9px;font-size:13.2px;color:var(--ink-2);line-height:1.45}
+ul.fn li i{width:5px;height:5px;border-radius:50%;background:var(--acc);flex:none;margin-top:7px}
+ul.fn li em{font-style:normal;color:var(--ink-3);font:500 11px var(--mono);white-space:nowrap}
+details.tech{border-top:1px solid var(--line);margin:0 -17px;padding:0}
+details.tech>summary{cursor:pointer;list-style:none;padding:12px 17px;font:600 12.5px var(--body);color:var(--ink-2);display:flex;align-items:center;gap:8px}
+details.tech>summary::-webkit-details-marker{display:none}
+details.tech>summary::after{content:'';width:6px;height:6px;border-right:1.6px solid currentColor;border-bottom:1.6px solid currentColor;transform:rotate(45deg);margin-left:auto;transition:.2s}
+details.tech[open]>summary::after{transform:rotate(225deg)}
+details.tech>summary:hover{color:var(--acc)}
+dl.kv{margin:0;padding:2px 17px 16px;display:grid;grid-template-columns:auto 1fr;gap:7px 14px;font-size:12.8px}
+dl.kv dt{color:var(--ink-3);font:600 11.5px var(--mono);white-space:nowrap}
+dl.kv dd{margin:0;color:var(--ink-2)}
+
+/* tables */
+.tw{border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:var(--card)}
+.tscroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13.2px;min-width:640px}
+th{text-align:left;padding:11px 13px;background:var(--card-2);color:var(--ink-3);font:600 11px var(--body);
+  text-transform:uppercase;letter-spacing:.09em;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:11px 13px;border-bottom:1px solid var(--line);color:var(--ink-2);vertical-align:top}
+tr:last-child td{border-bottom:0}
+tbody tr:hover td{background:color-mix(in srgb,var(--acc) 5%,transparent)}
+td.n{font-family:var(--mono);text-align:right;font-feature-settings:var(--tnum);white-space:nowrap}
+td b{color:var(--ink);font-weight:600}
+tfoot td{background:var(--card-2);color:var(--ink);font-weight:600;border-top:1px solid var(--line)}
+.dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:7px;vertical-align:1px}
+.empty{padding:34px 16px;text-align:center;color:var(--ink-3);font-size:13.5px;display:none}
+.empty.on{display:block}
+
+/* legend */
+.leg{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.leg .box{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:15px 16px}
+.leg dt{display:flex;align-items:center;gap:8px;font-weight:600;font-size:13.5px;margin-top:11px}
+.leg dt:first-of-type{margin-top:0}
+.leg dd{margin:3px 0 0;color:var(--ink-3);font-size:12.8px}
+footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:var(--ink-3);font-size:12.5px}
+footer p{margin:5px 0}
+
+@media(max-width:640px){
+  .wrap{padding:0 14px 56px}
+  .hero{padding-top:34px}
+  .grid{grid-template-columns:1fr}
+  .tools{position:static}
+  .count{margin-left:0;width:100%}
+}
+@media print{
+  .top,.tools,.btn{display:none!important}
+  body{background:#fff;color:#000}
+  :root{--paper:#fff;--card:#fff;--card-2:#f4f4f4;--line:#ccc;--ink:#111;--ink-2:#333;--ink-3:#666}
+  .wrap{max-width:none;padding:0}
+  .grid{grid-template-columns:1fr 1fr}
+  .mcard,.tw,.kpi{break-inside:avoid;page-break-inside:avoid}
+  details.tech{display:block}
+  details.tech>summary{display:none}
+  dl.kv{padding-top:10px}
+  section{page-break-before:auto}
+  table{min-width:0;font-size:10.5px}
+  th,td{padding:5px 7px}
+  @page{size:A4 landscape;margin:12mm}
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand"><svg class="crown" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 8l4 4 5-7 5 7 4-4-2 11H5z"/></svg><span>Aura</span></div>
+  <div class="sep"></div>
+  <div class="where">prehľad aplikácií · 4. 8. 2026</div>
+  <div class="sp"></div>
+  <button class="btn" id="theme" aria-label="Prepnúť tmavý a svetlý režim">
+    <svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M18 13.5A7.5 7.5 0 018.5 4a7.5 7.5 0 109.5 9.5z"/></svg>
+    <span id="themeL">Svetlý režim</span>
+  </button>
+  <button class="btn" onclick="window.print()">
+    <svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M6 8V3h10v5M6 16H4V8h14v8h-2M6 13h10v6H6z"/></svg>
+    Tlač / PDF
+  </button>
+</header>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eb">Aura Suite <span class="n">· register aplikácií</span></div>
+    <h1>Prehľad aplikácií Aura Suite</h1>
+    <p class="tag">Koľko aplikácií máme, čo každá robí a v akom stave je.</p>
+    <div class="meta-l">
+      <span>Aura Suite — 6 modulov podľa reálnych aplikácií rodiny Aura</span>
+      <span>stav k 4. 8. 2026</span>
+      <span>zdroje: apps/aura-apps-hub.html · apps/README.md (merge 817124f)</span>
+    </div>
+    <div class="kpis" style="margin-top:26px">
+      <div class="kpi acc"><div class="l">Aplikácií / modulov</div><div class="v">6</div><div class="s">5 v prevádzke · 1 neexistuje</div></div>
+      <div class="kpi"><div class="l">Funkcií spolu</div><div class="v">61</div><div class="s">48 modulových + 13 spoločných</div></div>
+      <div class="kpi"><div class="l">Obrazoviek</div><div class="v">54</div><div class="s">50 modulových + 4 globálnych</div></div>
+      <div class="kpi"><div class="l">Overených funkcií</div><div class="v">44 / 61</div><div class="s">13 rekonštruovaných · 4 ukážkových</div></div>
+      <div class="kpi"><div class="l">Hub /api/summary</div><div class="v">2 / 6</div><div class="s">KPI a Logistika dávajú živé dáta</div></div>
+      <div class="kpi"><div class="l">Otvorených rizík</div><div class="v">16</div><div class="s">4 s vysokou závažnosťou</div></div>
+      <div class="kpi"><div class="l">Externé SaaS</div><div class="v">1 240 €</div><div class="s">8 aplikácií / mes.</div></div>
+      <div class="kpi"><div class="l">Vetva B / vetva A</div><div class="v">2 / 4</div><div class="s">appky s testami a auth pipeline / vanilla SPA</div></div>
+    </div>
+    <p class="note">Obrazovka = samostatná hash-routa. Modulové obrazovky sa počítajú vrátane intro stránky modulu; vstupné obrazovky (login, workspace, profil) a rozcestník sa počítajú zvlášť. README uvádza zaokrúhlené „45+ obrazoviek&quot; — presný počet je nižšie v liste Obrazovky.</p>
+  </section>
+
+  <section class="sec" id="moduly">
+    <div class="goldline"></div>
+    <h2 class="sh">Aplikácie po moduloch</h2>
+    <p class="sh-sub">6 modulov Aura Suite, každý postavený podľa konkrétnej reálnej aplikácie rodiny. Rozbaľ „Technický profil" pre stack, git, testy, vlastníka a náklady.</p>
+    <div class="tools">
+      <label class="search">
+        <svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="10" cy="10" r="6"/><path d="M14.5 14.5L19 19"/></svg>
+        <input id="q" type="search" placeholder="Hľadaj v moduloch a funkciách…" autocomplete="off">
+      </label>
+      <div class="chips"><button class="chip" data-f="modul" data-v="all" aria-pressed="true">Všetky moduly</button><button class="chip" data-f="modul" data-v="marketing" aria-pressed="false">Marketing</button><button class="chip" data-f="modul" data-v="kpi" aria-pressed="false">KPI</button><button class="chip" data-f="modul" data-v="logistika" aria-pressed="false">Logistika</button><button class="chip" data-f="modul" data-v="hr" aria-pressed="false">HR</button><button class="chip" data-f="modul" data-v="roadmap" aria-pressed="false">Roadmap</button><button class="chip" data-f="modul" data-v="trzby" aria-pressed="false">Tržby</button><button class="chip" data-f="modul" data-v="spolocne" aria-pressed="false">Spoločná vrstva</button></div>
+      <span class="count" id="cntMod"></span>
+    </div>
+    <div class="grid" id="cards"><article class="mcard" style="--acc:var(--b-mkt)" data-modul="marketing" data-s="aura marketing marketingový kokpit: ads hierarchia s roas pásmami a ai banner štúdio s campaign lockom. sperky-ai (aura-web) + aura banner studio 3000 · 8091 b (sperky-ai) + a (banner studio) sperky-ai: next.js 16 + react 19 + ts, argon2id + jose + zod, defineroute() pipeline, non-root kontajner, 43 numerovaných migrácií s _migrations ledgerom. banner studio: node 20 + express 4 + mariadb 11.4 + vanilla spa + jwt, playwright/chromium render, obrázky na volume. gabika (banner studio) · marketing: gabika, ema strom platforma → kampaň → zostava → reklama s rollupom a roas pásmami bannery 8 jazykov × 5 rozmerov, deterministický render html/css → png → zip campaign lock (svet + modelka), qa gates a learning loop do znalostnej bázy ai provider abstrakcia mock / openai gpt / gemini 3 pro image, default mock + budget strop ads tabuľka: 11 riadkov hierarchie s rollupom metrík a farebnými roas pásmami galéria bannerov s filtrom podľa kampane a rozmeru znalostná báza importovaná zo sperky-ai (db aura_marketing), 3 modelky, produkty + ceny nastavenia: provider, budget strop, api kľúče, rozmery a jazyky, export zip, learning loop">
+  <div class="bar"></div>
+  <div class="hd">
+    <div class="ic"><svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l14-5v12L3 13v-2z"/><path d="M6 12v5"/></svg></div>
+    <div>
+      <div class="no">MODUL 01</div>
+      <h3>Aura Marketing</h3>
+    </div>
+  </div>
+  <p class="ucel">Marketingový kokpit: ads hierarchia s ROAS pásmami a AI banner štúdio s campaign lockom.</p>
+  <div class="badges">
+    <span class="badge ok">V prevádzke</span>
+    <span class="badge q mono">hub API: Chýba</span>
+    <span class="badge q mono">3000 · 8091</span>
+    <span class="badge ok mono">vetva B</span>
+  </div>
+  <div class="nums">
+    <div><b>8</b><span>funkcií</span></div>
+    <div><b>7</b><span>obrazoviek</span></div>
+    <div><b>4</b><span>rizík</span></div>
+  </div>
+  <div class="body">
+    <p class="lbl">Čo modul robí</p>
+    <ul class="fn"><li><i></i><span>Strom Platforma → Kampaň → Zostava → Reklama s rollupom a ROAS pásmami <em>· overené</em></span></li><li><i></i><span>Bannery 8 jazykov × 5 rozmerov, deterministický render HTML/CSS → PNG → ZIP <em>· overené</em></span></li><li><i></i><span>Campaign lock (svet + modelka), QA gates a learning loop do znalostnej bázy <em>· overené</em></span></li><li><i></i><span>AI provider abstrakcia mock / OpenAI GPT / Gemini 3 Pro Image, default mock + budget strop <em>· rekonštruované</em></span></li><li><i></i><span>Ads tabuľka: 11 riadkov hierarchie s rollupom metrík a farebnými ROAS pásmami <em>· overené</em></span></li><li><i></i><span>Galéria bannerov s filtrom podľa kampane a rozmeru <em>· overené</em></span></li><li><i></i><span>Znalostná báza importovaná zo sperky-ai (DB aura_marketing), 3 modelky, produkty + ceny <em>· rekonštruované</em></span></li><li><i></i><span>Nastavenia: provider, budget strop, API kľúče, rozmery a jazyky, export ZIP, learning loop <em>· overené</em></span></li></ul>
+  </div>
+  <details class="tech">
+    <summary>Technický profil, vlastník a náklady</summary>
+    <dl class="kv"><dt>Reálna appka</dt><dd>sperky-ai (aura-web) + Aura Banner Studio</dd><dt>Port / URL</dt><dd>3000 · 8091</dd><dt>Vetva rodiny</dt><dd>B (sperky-ai) + A (Banner Studio)</dd><dt>Stack</dt><dd>sperky-ai: Next.js 16 + React 19 + TS, argon2id + jose + zod, defineRoute() pipeline, non-root kontajner, 43 numerovaných migrácií s _migrations ledgerom. Banner Studio: Node 20 + Express 4 + MariaDB 11.4 + vanilla SPA + JWT, Playwright/Chromium render, obrázky na volume.</dd><dt>Testy</dt><dd>sperky-ai: 105 vitest + 3 Playwright. Banner Studio: 0 testov.</dd><dt>Git</dt><dd>sperky-ai: repo aura-web (4 worktree). Banner Studio: bez GitHub remote — gh nie je v prostredí.</dd><dt>Veľkosť</dt><dd>sperky-ai globals.css 1 172 r. / 719 súborov · ~233 000 riadkov kódu</dd><dt>Kontajnery</dt><dd>sperky-ai-app-1 · bannery-app / bannery-db / bannery-ngrok</dd><dt>Vlastník</dt><dd>Gabika (Banner Studio) · Marketing: Gabika, Ema</dd><dt>Náklady</dt><dd>AI budget strop 300 € / mes. (provider default mock → reálne čerpanie 0 €)</dd><dt>Hub /api/summary</dt><dd>Chýba</dd></dl>
+  </details>
+</article>
+<article class="mcard" style="--acc:var(--b-kpi)" data-modul="kpi" data-s="aura kpi mesačné a ročné kpi 12 oddelení s pásmami, uzávierkou a team score. aura-kpi (c:\aura\aura-kpi) 3030 a (vanilla spa) node 20 + express 4 + mariadb 11.4 + vanilla spa + jwt, bez build stepu, window.registerview() spa kit ema plnenie = (skutočnosť − min) / (max − min), cap 100 %; farby zelená ≥100 / žltá 60–99 / červená &lt;60 / sivá team score = priemer 6 zložiek; copywriter váhy 60/20/20; import tolerancia 5 %; ebitda pásmo 1–5 % heatmapa plnenia oddelení × mesiac, a/b porovnanie období a ročný pohľad uzávierka do 10. dňa; monthpill (otvorený / po termíne / uzavretý) + fillpill (nevyplnené / rozpracované / kompletné) modul „na doplnenie&quot; — čo ktoré oddelenie ešte nevyplnilo, s termínom seo porada — 72 otázok ako samostatný modul integrácie logistika + seo (read-only, graceful fallback), denníky projekty / sklad / externistky roly admin / editor / prehliadač, menné účty m:n na oddelenia, hospodársky len admin + manažment xlsx export, polročný a ročný report, audit log, zálohovací skript, sk/en, dark mode">
+  <div class="bar"></div>
+  <div class="hd">
+    <div class="ic"><svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17V9m5 8V4m5 13v-6m5 6V7"/></svg></div>
+    <div>
+      <div class="no">MODUL 02</div>
+      <h3>Aura KPI</h3>
+    </div>
+  </div>
+  <p class="ucel">Mesačné a ročné KPI 12 oddelení s pásmami, uzávierkou a Team score.</p>
+  <div class="badges">
+    <span class="badge ok">MVP v prevádzke</span>
+    <span class="badge ok mono">hub API: Hotové (8003483)</span>
+    <span class="badge q mono">3030</span>
+    <span class="badge cond mono">vetva A</span>
+  </div>
+  <div class="nums">
+    <div><b>9</b><span>funkcií</span></div>
+    <div><b>9</b><span>obrazoviek</span></div>
+    <div><b>1</b><span>rizík</span></div>
+  </div>
+  <div class="body">
+    <p class="lbl">Čo modul robí</p>
+    <ul class="fn"><li><i></i><span>Plnenie = (skutočnosť − Min) / (Max − Min), cap 100 %; farby zelená ≥100 / žltá 60–99 / červená &lt;60 / sivá <em>· overené</em></span></li><li><i></i><span>Team score = priemer 6 zložiek; Copywriter váhy 60/20/20; Import tolerancia 5 %; EBITDA pásmo 1–5 % <em>· rekonštruované</em></span></li><li><i></i><span>Heatmapa plnenia oddelení × mesiac, A/B porovnanie období a ročný pohľad <em>· overené</em></span></li><li><i></i><span>Uzávierka do 10. dňa; monthPill (Otvorený / Po termíne / Uzavretý) + fillPill (Nevyplnené / Rozpracované / Kompletné) <em>· overené</em></span></li><li><i></i><span>Modul „Na doplnenie&quot; — čo ktoré oddelenie ešte nevyplnilo, s termínom <em>· overené</em></span></li><li><i></i><span>SEO porada — 72 otázok ako samostatný modul <em>· overené</em></span></li><li><i></i><span>Integrácie Logistika + SEO (read-only, graceful fallback), denníky projekty / sklad / externistky <em>· rekonštruované</em></span></li><li><i></i><span>Roly Admin / Editor / Prehliadač, menné účty M:N na oddelenia, Hospodársky len Admin + manažment <em>· rekonštruované</em></span></li><li><i></i><span>XLSX export, polročný a ročný report, audit log, zálohovací skript, SK/EN, dark mode <em>· rekonštruované</em></span></li></ul>
+  </div>
+  <details class="tech">
+    <summary>Technický profil, vlastník a náklady</summary>
+    <dl class="kv"><dt>Reálna appka</dt><dd>aura-kpi (C:\Aura\aura-kpi)</dd><dt>Port / URL</dt><dd>3030</dd><dt>Vetva rodiny</dt><dd>A (vanilla SPA)</dd><dt>Stack</dt><dd>Node 20 + Express 4 + MariaDB 11.4 + vanilla SPA + JWT, bez build stepu, window.registerView() SPA kit</dd><dt>Testy</dt><dd>0 testov (vetva A) — overené end-to-end ručne v Dockeri 23. 7. 2026</dd><dt>Git</dt><dd>lokálny git, 8 commitov A0–A7, bez remote</dd><dt>Veľkosť</dt><dd>styles.css 652 r. · 12 oddelení · 16 metrík · 38 vstupov · 48 pásiem · 22 nových tabuliek</dd><dt>Kontajnery</dt><dd>aura-kpi-app : 3030 · aura-kpi-db (mariadb 11.4)</dd><dt>Vlastník</dt><dd>Ema</dd><dt>Náklady</dt><dd>bez licenčného nákladu (vlastná appka, vlastný hardware)</dd><dt>Hub /api/summary</dt><dd>Hotové (8003483)</dd></dl>
+  </details>
+</article>
+<article class="mcard" style="--acc:var(--b-log)" data-modul="logistika" data-s="aura logistika týždenná evidencia zásielok a reklamácií naprieč 8 krajinami a 5 prepravcami. aura-logistika (c:\aura\aura-logistika) 3020 a (vanilla spa) node 20 + express 4 + mariadb + vanilla spa + jwt, bez build stepu daniel súhrny za iso-týždeň × krajina (8) × prepravca (5) s upsertom a auditom stavy zásielok: odoslané / doručené / na ceste / vrátené / stratené / výdajňa reklamačné prípady so životným cyklom zahájené → vyriešené, ∅ a medián času riešenia csv import a xlsx export + tlačová verzia pre týždennú poradu svg grafy vývoja doručenosti s kĺzavým priemerom alert na zmluvné minimum prepravcu (scenár gls) endpoint /api/summary pre aura hub — živé dáta na rozcestníku nastavenia: povinné krajiny, prepravcovia, upsert + audit, zálohy">
+  <div class="bar"></div>
+  <div class="hd">
+    <div class="ic"><svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 7h11v8H2zM13 10h4l3 3v2h-7z"/><circle cx="6" cy="17" r="1.6"/><circle cx="16" cy="17" r="1.6"/></svg></div>
+    <div>
+      <div class="no">MODUL 03</div>
+      <h3>Aura Logistika</h3>
+    </div>
+  </div>
+  <p class="ucel">Týždenná evidencia zásielok a reklamácií naprieč 8 krajinami a 5 prepravcami.</p>
+  <div class="badges">
+    <span class="badge ok">V prevádzke</span>
+    <span class="badge ok mono">hub API: Hotové (0ffec3d)</span>
+    <span class="badge q mono">3020</span>
+    <span class="badge cond mono">vetva A</span>
+  </div>
+  <div class="nums">
+    <div><b>8</b><span>funkcií</span></div>
+    <div><b>7</b><span>obrazoviek</span></div>
+    <div><b>2</b><span>rizík</span></div>
+  </div>
+  <div class="body">
+    <p class="lbl">Čo modul robí</p>
+    <ul class="fn"><li><i></i><span>Súhrny za ISO-týždeň × krajina (8) × prepravca (5) s upsertom a auditom <em>· overené</em></span></li><li><i></i><span>Stavy zásielok: odoslané / doručené / na ceste / vrátené / stratené / výdajňa <em>· overené</em></span></li><li><i></i><span>Reklamačné prípady so životným cyklom zahájené → vyriešené, ∅ a medián času riešenia <em>· overené</em></span></li><li><i></i><span>CSV import a XLSX export + tlačová verzia pre týždennú poradu <em>· overené</em></span></li><li><i></i><span>SVG grafy vývoja doručenosti s kĺzavým priemerom <em>· overené</em></span></li><li><i></i><span>Alert na zmluvné minimum prepravcu (scenár GLS) <em>· ukážkové</em></span></li><li><i></i><span>Endpoint /api/summary pre Aura Hub — živé dáta na rozcestníku <em>· rekonštruované</em></span></li><li><i></i><span>Nastavenia: povinné krajiny, prepravcovia, upsert + audit, zálohy <em>· overené</em></span></li></ul>
+  </div>
+  <details class="tech">
+    <summary>Technický profil, vlastník a náklady</summary>
+    <dl class="kv"><dt>Reálna appka</dt><dd>aura-logistika (C:\Aura\aura-logistika)</dd><dt>Port / URL</dt><dd>3020</dd><dt>Vetva rodiny</dt><dd>A (vanilla SPA)</dd><dt>Stack</dt><dd>Node 20 + Express 4 + MariaDB + vanilla SPA + JWT, bez build stepu</dd><dt>Testy</dt><dd>0 testov</dd><dt>Git</dt><dd>prvý git repo dostala až 3. 8. 2026 (baseline commit 41b7165) — dovtedy bez verziovania</dd><dt>Veľkosť</dt><dd>styles.css 643 r.</dd><dt>Kontajnery</dt><dd>aura-logistika (sieť aura-logistika_aura-logistika)</dd><dt>Vlastník</dt><dd>Daniel</dd><dt>Náklady</dt><dd>bez licenčného nákladu; poštovné júl 2026 ≈ 11 603 € (prevádzkový náklad dopravy)</dd><dt>Hub /api/summary</dt><dd>Hotové (0ffec3d)</dd></dl>
+  </details>
+</article>
+<article class="mcard" style="--acc:var(--b-hr)" data-modul="hr" data-s="aura hr interná evidencia: ľudia, pozície, zdieľané schránky a firemné aplikácie s nákladmi. aura-hr-mapa (interná evidencia) neuvedený v pamäti · plán hr.aura-ai.sk a (vanilla spa) — praotec vetvy node + express + mariadb + vanilla spa + jwt; styles.css a spa kit sa z tejto appky kopírujú do ostatných delaja (cto) 32 pozícií s náplňou práce — štruktúrované bloky + knižnica činností ~90 rolových mailov s aliasmi; heslá šifrované, viditeľné len admin org-strom firmy — 8 uzlov, 3 úrovne, ľudia a pozície na uzol register firemných aplikácií s nákladmi, vlastníkmi a licenciami (8 aplikácií) karty zamestnancov: pozícia, oddelenie, mail, úväzok, krajina audit log a roly; prepínač „heslá mailov len admin&quot; zdroj dizajnu vetvy a — styles.css a window.registerview() kit pre logistiku, kpi a banner studio">
+  <div class="bar"></div>
+  <div class="hd">
+    <div class="ic"><svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="7" r="3"/><path d="M2 19c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="8" r="2.2"/></svg></div>
+    <div>
+      <div class="no">MODUL 04</div>
+      <h3>Aura HR</h3>
+    </div>
+  </div>
+  <p class="ucel">Interná evidencia: ľudia, pozície, zdieľané schránky a firemné aplikácie s nákladmi.</p>
+  <div class="badges">
+    <span class="badge ok">V prevádzke</span>
+    <span class="badge q mono">hub API: Neexistuje</span>
+    <span class="badge q mono">neuvedený v pamäti · plán hr.aura-ai.sk</span>
+    <span class="badge cond mono">vetva A</span>
+  </div>
+  <div class="nums">
+    <div><b>7</b><span>funkcií</span></div>
+    <div><b>9</b><span>obrazoviek</span></div>
+    <div><b>1</b><span>rizík</span></div>
+  </div>
+  <div class="body">
+    <p class="lbl">Čo modul robí</p>
+    <ul class="fn"><li><i></i><span>32 pozícií s náplňou práce — štruktúrované bloky + knižnica činností <em>· overené</em></span></li><li><i></i><span>~90 rolových mailov s aliasmi; heslá šifrované, viditeľné len Admin <em>· overené</em></span></li><li><i></i><span>Org-strom firmy — 8 uzlov, 3 úrovne, ľudia a pozície na uzol <em>· overené</em></span></li><li><i></i><span>Register firemných aplikácií s nákladmi, vlastníkmi a licenciami (8 aplikácií) <em>· ukážkové</em></span></li><li><i></i><span>Karty zamestnancov: pozícia, oddelenie, mail, úväzok, krajina <em>· ukážkové</em></span></li><li><i></i><span>Audit log a roly; prepínač „heslá mailov len Admin&quot; <em>· overené</em></span></li><li><i></i><span>Zdroj dizajnu vetvy A — styles.css a window.registerView() kit pre Logistiku, KPI a Banner Studio <em>· rekonštruované</em></span></li></ul>
+  </div>
+  <details class="tech">
+    <summary>Technický profil, vlastník a náklady</summary>
+    <dl class="kv"><dt>Reálna appka</dt><dd>aura-hr-mapa (interná evidencia)</dd><dt>Port / URL</dt><dd>neuvedený v pamäti · plán hr.aura-ai.sk</dd><dt>Vetva rodiny</dt><dd>A (vanilla SPA) — praotec vetvy</dd><dt>Stack</dt><dd>Node + Express + MariaDB + vanilla SPA + JWT; styles.css a SPA kit sa z tejto appky kopírujú do ostatných</dd><dt>Testy</dt><dd>0 testov</dd><dt>Git</dt><dd>nie je v Hades zázname</dd><dt>Veľkosť</dt><dd>32 pozícií · ~90 rolových mailov · 18 zamestnancov · 8 uzlov org-stromu</dd><dt>Kontajnery</dt><dd>nie je v Hades zázname</dd><dt>Vlastník</dt><dd>Delaja (CTO)</dd><dt>Náklady</dt><dd>register 8 firemných aplikácií ≈ 1 240 € / mes.</dd><dt>Hub /api/summary</dt><dd>Neexistuje</dd></dl>
+  </details>
+</article>
+<article class="mcard" style="--acc:var(--b-road)" data-modul="roadmap" data-s="aura roadmap plánovanie, evidencia pre reporting a rozhodovacia fronta. aura-roadmap (c:\aura\aura-roadmap) 3040 b (next 16 + react 19) node 22 alpine + next.js 16 output standalone + react 19 + ts, mariadb 11.4 s raw parametrizovaným sql (bez orm), numerované migrácie + _migrations ledger, argon2id + jose hs256 + app_sessions revalidované per request, defineroute() pipeline 100 %, csrf fail-closed, rate-limit + lockout 5/15 min → 423, csp, non-root kontajner daniel checkpoint readiness → nemenné rozhodnutie go / conditional_go / no_go / deferred + baseline snapshot timeline: 3 režimy (roadmap / sprinty / rozhodnutia) × 3 zoomy (kvartál / mesiac / týždeň) × 2 hustoty šprinty draft → commit → close s carry-over nedokončených položiek jeden pevný stavový model backlog → in_progress → waiting → done (workflow engine zrušený) 2 úrovne práce (úloha → podúloha), typy task / bug / idea; custom fields a dashboard builder zrušené projekty s fázou, prioritou, rizikom, sprintom a termínom (6 projektov) rozhodovacia fronta — 5 rozhodnutí s dopadom a termínom bezpečnostná pipeline defineroute(): auth → ratelimit → zod → handler, csrf fail-closed, lockout 5/15 min">
+  <div class="bar"></div>
+  <div class="hd">
+    <div class="ic"><svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V6a2 2 0 012-2h9l4 4v12z"/><path d="M8 10h7M8 14h5"/></svg></div>
+    <div>
+      <div class="no">MODUL 05</div>
+      <h3>Aura Roadmap</h3>
+    </div>
+  </div>
+  <p class="ucel">Plánovanie, evidencia pre reporting a rozhodovacia fronta.</p>
+  <div class="badges">
+    <span class="badge ok">V prevádzke</span>
+    <span class="badge q mono">hub API: Chýba (WIP)</span>
+    <span class="badge q mono">3040</span>
+    <span class="badge ok mono">vetva B</span>
+  </div>
+  <div class="nums">
+    <div><b>8</b><span>funkcií</span></div>
+    <div><b>8</b><span>obrazoviek</span></div>
+    <div><b>2</b><span>rizík</span></div>
+  </div>
+  <div class="body">
+    <p class="lbl">Čo modul robí</p>
+    <ul class="fn"><li><i></i><span>Checkpoint readiness → nemenné rozhodnutie go / conditional_go / no_go / deferred + baseline snapshot <em>· overené</em></span></li><li><i></i><span>Timeline: 3 režimy (Roadmap / Sprinty / Rozhodnutia) × 3 zoomy (kvartál / mesiac / týždeň) × 2 hustoty <em>· overené</em></span></li><li><i></i><span>Šprinty draft → commit → close s carry-over nedokončených položiek <em>· overené</em></span></li><li><i></i><span>Jeden pevný stavový model backlog → in_progress → waiting → done (workflow engine zrušený) <em>· overené</em></span></li><li><i></i><span>2 úrovne práce (Úloha → Podúloha), typy task / bug / idea; custom fields a dashboard builder zrušené <em>· rekonštruované</em></span></li><li><i></i><span>Projekty s fázou, prioritou, rizikom, sprintom a termínom (6 projektov) <em>· ukážkové</em></span></li><li><i></i><span>Rozhodovacia fronta — 5 rozhodnutí s dopadom a termínom <em>· overené</em></span></li><li><i></i><span>Bezpečnostná pipeline defineRoute(): auth → rateLimit → zod → handler, CSRF fail-closed, lockout 5/15 min <em>· rekonštruované</em></span></li></ul>
+  </div>
+  <details class="tech">
+    <summary>Technický profil, vlastník a náklady</summary>
+    <dl class="kv"><dt>Reálna appka</dt><dd>aura-roadmap (C:\Aura\aura-roadmap)</dd><dt>Port / URL</dt><dd>3040</dd><dt>Vetva rodiny</dt><dd>B (Next 16 + React 19)</dd><dt>Stack</dt><dd>Node 22 alpine + Next.js 16 output standalone + React 19 + TS, MariaDB 11.4 s raw parametrizovaným SQL (bez ORM), numerované migrácie + _migrations ledger, argon2id + jose HS256 + app_sessions revalidované per request, defineRoute() pipeline 100 %, CSRF fail-closed, rate-limit + lockout 5/15 min → 423, CSP, non-root kontajner</dd><dt>Testy</dt><dd>vitest ko-lokované + 3 Playwright e2e + axe; guard globals.css.test.ts zhodí testy pri raw hex mimo :root</dd><dt>Git</dt><dd>branch feat/aura-family-port, 10 commitov, BEZ GitHub remote (gh nie je v prostredí)</dd><dt>Veľkosť</dt><dd>globals.css 605 r. + timeline.module.css 1 820 r. · 20 tabuliek (zjednodušené z 36)</dd><dt>Kontajnery</dt><dd>aura-roadmap-app : 3040 · aura-roadmap-db (DB aura_roadmap)</dd><dt>Vlastník</dt><dd>Daniel</dd><dt>Náklady</dt><dd>bez licenčného nákladu</dd><dt>Hub /api/summary</dt><dd>Chýba (WIP)</dd></dl>
+  </details>
+</article>
+<article class="mcard" style="--acc:var(--b-fin)" data-modul="trzby" data-s="aura tržby e-shop report tržieb — júl 2026 (1.–27.), 5 679 objednávok. dnes statický html report · appka zatiaľ neexistuje plán 3060 · trzby.aura-ai.sk plán a (vanilla spa) dnes samostatný html report (štandard inter). plán: vanilla spa na porte 3060, nightly sync 03:00 zo sperky-ai /api/orders/export (vznikne až s f6) delaja (cto) klientske filtre prepočítavajú celý report (trh, platba, kov, zákazník, zľava) denný graf s prepínačom tržba / zisk / objednávky + kumulatívna krivka zoraditeľné tabuľky, riadok = filter, csv export (bom + „;&quot; pre excel sk) segmenty ako pravidlá v definíciách so spätným prepočtom (nový / opakovaný, zľava áno / nie) analytické pohľady: trhy (6), koše (4), hodiny a dni, expedícia (4) zistenia — pravidlové, nie ai generované reálne čísla júl 2026: tržba 217 016 €, zisk 126 541 €, marža 66,1 %, aov 38,21 €, expedícia 69,6 % do 24 h objednávky a položky bez osobných údajov, multi-mena, storná hrubé aj čisté (plán appky)">
+  <div class="bar"></div>
+  <div class="hd">
+    <div class="ic"><svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 18l5-6 4 3 5-8"/><path d="M3 21h18"/></svg></div>
+    <div>
+      <div class="no">MODUL 06</div>
+      <h3>Aura Tržby</h3>
+    </div>
+  </div>
+  <p class="ucel">E-shop report tržieb — júl 2026 (1.–27.), 5 679 objednávok.</p>
+  <div class="badges">
+    <span class="badge no">Appka neexistuje</span>
+    <span class="badge q mono">hub API: Neexistuje</span>
+    <span class="badge q mono">plán 3060 · trzby.aura-ai.sk</span>
+    <span class="badge cond mono">vetva p</span>
+  </div>
+  <div class="nums">
+    <div><b>8</b><span>funkcií</span></div>
+    <div><b>10</b><span>obrazoviek</span></div>
+    <div><b>2</b><span>rizík</span></div>
+  </div>
+  <div class="body">
+    <p class="lbl">Čo modul robí</p>
+    <ul class="fn"><li><i></i><span>Klientske filtre prepočítavajú celý report (trh, platba, kov, zákazník, zľava) <em>· overené</em></span></li><li><i></i><span>Denný graf s prepínačom tržba / zisk / objednávky + kumulatívna krivka <em>· overené</em></span></li><li><i></i><span>Zoraditeľné tabuľky, riadok = filter, CSV export (BOM + „;&quot; pre Excel SK) <em>· overené</em></span></li><li><i></i><span>Segmenty ako pravidlá v Definíciách so spätným prepočtom (nový / opakovaný, zľava áno / nie) <em>· overené</em></span></li><li><i></i><span>Analytické pohľady: Trhy (6), Koše (4), Hodiny a dni, Expedícia (4) <em>· overené</em></span></li><li><i></i><span>Zistenia — pravidlové, nie AI generované <em>· rekonštruované</em></span></li><li><i></i><span>Reálne čísla júl 2026: tržba 217 016 €, zisk 126 541 €, marža 66,1 %, AOV 38,21 €, expedícia 69,6 % do 24 h <em>· overené</em></span></li><li><i></i><span>Objednávky a položky bez osobných údajov, multi-mena, storná hrubé aj čisté (plán appky) <em>· rekonštruované</em></span></li></ul>
+  </div>
+  <details class="tech">
+    <summary>Technický profil, vlastník a náklady</summary>
+    <dl class="kv"><dt>Reálna appka</dt><dd>dnes statický HTML report · appka zatiaľ neexistuje</dd><dt>Port / URL</dt><dd>plán 3060 · trzby.aura-ai.sk</dd><dt>Vetva rodiny</dt><dd>plán A (vanilla SPA)</dd><dt>Stack</dt><dd>dnes samostatný HTML report (štandard Inter). Plán: vanilla SPA na porte 3060, nightly sync 03:00 zo sperky-ai /api/orders/export (vznikne až s F6)</dd><dt>Testy</dt><dd>—</dd><dt>Git</dt><dd>report je súčasťou tohto repa; appka neexistuje</dd><dt>Veľkosť</dt><dd>5 679 objednávok · 27 dní · 8 KPI kariet</dd><dt>Kontajnery</dt><dd>—</dd><dt>Vlastník</dt><dd>Delaja (CTO)</dd><dt>Náklady</dt><dd>bez licenčného nákladu</dd><dt>Hub /api/summary</dt><dd>Neexistuje</dd></dl>
+  </details>
+</article></div>
+    <div class="empty" id="emptyMod">Filtru nič nevyhovuje.</div>
+  </section>
+
+  <section class="sec" id="funkcie">
+    <div class="goldline"></div>
+    <h2 class="sh">Všetky funkcie na jednom mieste</h2>
+    <p class="sh-sub">61 funkcií — 48 modulových a 13 zo spoločnej vrstvy. Filtre a vyhľadávanie hore platia aj pre túto tabuľku.</p>
+    <div class="tools">
+      <div class="chips"><button class="chip" data-f="kat" data-v="all" aria-pressed="true">Všetky kategórie</button><button class="chip" data-f="kat" data-v="domena" aria-pressed="false">Doména</button><button class="chip" data-f="kat" data-v="integracia" aria-pressed="false">Integrácia</button><button class="chip" data-f="kat" data-v="obrazovka" aria-pressed="false">Obrazovka</button><button class="chip" data-f="kat" data-v="nastavenia" aria-pressed="false">Nastavenia</button><button class="chip" data-f="kat" data-v="proces" aria-pressed="false">Proces</button><button class="chip" data-f="kat" data-v="bezpecnost" aria-pressed="false">Bezpečnosť</button><button class="chip" data-f="kat" data-v="data" aria-pressed="false">Dáta</button><button class="chip" data-f="kat" data-v="stavy-a-alerty" aria-pressed="false">Stavy a alerty</button><button class="chip" data-f="kat" data-v="tech" aria-pressed="false">Tech</button><button class="chip" data-f="kat" data-v="spolocne" aria-pressed="false">Spoločné</button></div>
+      <div class="chips"><button class="chip" data-f="over" data-v="all" aria-pressed="true">Každé overenie</button><button class="chip" data-f="over" data-v="overene" aria-pressed="false">overené</button><button class="chip" data-f="over" data-v="rekonstruovane" aria-pressed="false">rekonštruované</button><button class="chip" data-f="over" data-v="ukazkove" aria-pressed="false">ukážkové</button></div>
+      <span class="count" id="cntFn"></span>
+    </div>
+    <div class="tw"><div class="tscroll"><table id="tFn">
+  <thead><tr><th>Modul</th><th>Funkcia</th><th>Kategória</th><th>Zdroj</th><th>Overenie</th></tr></thead>
+  <tbody><tr data-modul="marketing" data-kat="domena" data-over="overene"
+   data-s="aura marketing strom platforma → kampaň → zostava → reklama s rollupom a roas pásmami doména repo · hub overené">
+  <td><b>Aura Marketing</b></td>
+  <td>Strom Platforma → Kampaň → Zostava → Reklama s rollupom a ROAS pásmami</td>
+  <td><span class="badge q">Doména</span></td>
+  <td class="mono" style="font-size:11.5px">repo · hub</td>
+  <td><span class="badge ok">overené</span></td>
+</tr><tr data-modul="marketing" data-kat="domena" data-over="overene"
+   data-s="aura marketing bannery 8 jazykov × 5 rozmerov, deterministický render html/css → png → zip doména repo · hub + hades · banner studio overené">
+  <td><b>Aura Marketing</b></td>
+  <td>Bannery 8 jazykov × 5 rozmerov, deterministický render HTML/CSS → PNG → ZIP</td>
+  <td><span class="badge q">Doména</span></td>
+  <td class="mono" style="font-size:11.5px">repo · hub + Hades · Banner Studio</td>
+  <td><span class="badge ok">overené</span></td>
+</tr><tr data-modul="marketing" data-kat="domena" data-over="overene"
+   data-s="aura marketing campaign lock (svet + modelka), qa gates a learning loop do znalostnej bázy doména repo · hub + hades · banner studio overené">
+  <td><b>Aura Marketing</b></td>
+  <td>Campaign lock (svet + modelka), QA gates a learning loop do znalostnej bázy</td>
+  <td><span class="badge q">Doména</span></td>
+  <td class="mono" style="font-size:11.5px">repo · hub + Hades · Banner Studio</td>
+  <td><span class="badge ok">overené</span></td>
+</tr><tr data-modul="marketing" data-kat="integracia" data-over="rekonstruovane"
+   data-s="aura marketing ai provider abstrakcia mock / openai gpt / gemini 3 pro image, default mock + budget strop integrácia hades · banner studio rekonštruované">
+  <td><b>Aura Marketing</b></td>
+  <td>AI provider abstrakcia mock / OpenAI GPT / Gemini 3 Pro Image, default mock + budget strop</td>
+  <td><span class="badge q">Integrácia</span></td>
+  <td class="mono" style="font-size:11.5px">Hades · Banner Studio</td>
+  <td><span class="badge cond">rekonštruované</span></td>
+</tr><tr data-modul="marketing" data-kat="obrazovka" data-over="overene"
+   data-s="aura marketing ads tabuľka: 11 riadkov hierarchie s rollupom metrík a farebnými roas pásmami obrazovka repo · hub overené">
+  <td><b>Aura Marketing</b></td>
+  <td>Ads tabuľka: 11 riadkov hierarchie s rollupom metrík a farebnými ROAS pásmami</td>
+  <td><span class="badge q">Obrazovka</span></td>
+  <td class="mono" style="font-size:11.5px">repo · hub</td>
+  <td><span class="badge ok">overené</span></td>
+</tr><tr data-modul="marketing" data-kat="obrazovka" data-over="overene"
+   data-s="aura marketing galéria bannerov s filtrom podľa kampane a rozmeru obrazovka repo · hub overené">
+  <td><b>Aura Marketing</b></td>
+  <td>Galéria bannerov s filtrom podľa kampane a rozmeru</td>
+  <td><span class="badge q">Obrazovka</span></td>
+  <td class="mono" style="font-size:11.5px">repo · hub</td>
+  <td><span class="badge ok">overené</span></td>
+</tr><tr data-modul="marketing" data-kat="integracia" data-over="rekonstruovane"
+   data-s="aura marketing znalostná báza importovaná zo sperky-ai (db aura_marketing), 3 modelky, produkty + ceny integrácia hades · banner studio rekonštruované">
+  <td><b>Aura Marketing</b></td>
+  <td>Znalostná báza importovaná zo sperky-ai (DB aura_marketing), 3 modelky, produkty + ceny</td>
+  <td><span class="badge q">Integrácia</span></td>
+  <td class="mono" style="font-size:11.5px">Hades · Banner Studio</td>
+  <td><span class="badge cond">rekonštruované</span></td>
+</tr><tr data-modul="marketing" data-kat="nastavenia" data-over="overene"
+   data-s="aura marketing nastavenia: provider, budget strop, api kľúče, rozmery a jazyky, export zip, learning loop nastavenia repo · hub overené">
+  <td><b>Aura Marketing</b></td>
+  <td>Nastavenia: provider, budget strop, API kľúče, rozmery a jazyky, export ZIP, learning loop</td>
+  <td><span class="badge q">Nastavenia</span></td>
+  <td class="mono" style="font-size:11.5px">repo · hub</td>
+  <td><span class="badge ok">overené</span></td>
+</tr><tr data-modul="kpi" data-kat="domena" data-over="overene"
+   data-s="aura kpi plnenie = (skutočnosť − min) / (max − min), cap 100 %; farby zelená ≥100 / žltá 60–99 / červená &lt;60 / sivá doména repo · hub + hades · aura kpi overené">
+  <td><b>Aura KPI</b></td>
+  <td>Plnenie = (skutočnosť − Min) / (Max − Min), cap 100 %; farby zelená ≥100 / žltá 60–99 / červená &lt;60 / sivá</td>
+  <td><span class="badge q">Doména</span></td>
+  <td class="mono" style="font-size:11.5px">repo · hub + Hades · Aura KPI</td>
+  <td><span class="badge ok">overené</span></td>
+</tr><tr data-modul="kpi" data-kat="domena" data-over="rekonstruovane"
+   data-s="aura kpi team score = priemer 6 zložiek; copywriter váhy 60/20/20; import tolerancia 5 %; ebitda pásmo 1–5 % doména hades · aura kpi rekonštruované">
+  <td><b>Aura KPI</b></td>
+  <td>Team score = priemer 6 zložiek; Copywriter váhy 60/20/20; Import tolerancia 5 %; EBITDA pásmo 1–5 %</td>
+  <td><span class="badge q">Doména</span></td>
+  <td class="mono" style="font-size:11.5px">Hades · Aura KPI</td>
+  <td><span class="badge cond">rekonštruované</span></td>
+</tr><tr data-modul="kpi" data-kat="obrazovka" data-over="overene"
+   data-s="aura kpi heatmapa plnenia oddelení × mesiac, a/b porovnanie období a ročný pohľad obrazovka repo · hub overené">
+  <td><b>Aura KPI</b></td>
+  <td>Heatmapa plnenia oddelení × mesiac, A/B porovnanie období a ročný pohľad</td>
+  <td><span class="badge q">Obrazovka</span></td>
+  <td class="mono" style="font-size:11.5px">repo · hub</td>
+  <td><span class="badge ok">overené</span></td>
+</tr><tr data-modul="kpi" data-kat="proces" data-over="overene"
+   data-s="aura kpi uzávierka do 10. dňa; monthpill (otvorený / po termíne / uzavretý) + fillpill (nevyplnené / rozpracované / kompletné) proces repo · hub + hades · aura kpi overené">
+  <td><b>Aura KPI</b></td>
+  <td>Uzávierka do 10. dňa; monthPill (Otvorený / Po termíne / Uzavretý) + fillPill (Nevyplnené / Rozpracované / Kompletné)</td>
+  <td><span class="badge q">Proces</span></td>
+  <td class="mono" style="font-size:11.5px">repo · hub + Hades · Aura KPI</td>
+  <td><span class="badge ok">overené</span></td>
+</tr><tr data-modul="kpi" data-kat="obrazovka" data-over="overene"
+   data-s="aura kpi modul „na doplnenie&quot; — čo ktoré oddelenie ešte nevyplnilo, s termínom obrazovka repo · hub overené">
+  <td><b>Aura KPI</b></td>
+  <td>Modul „Na doplnenie&quot; — čo ktoré oddelenie ešte nevyplnilo, s termínom</td>
+  <td><span class="badge q">Obrazovka</span></td>
+  <td class="mono" style="font-size:11.5px">repo · hub</td>
+  <td><span class="badge ok">overené</span></td>
+</tr><tr data-modul="kpi" data-kat="obrazovka" data-over="overene"
+   data-s="aura kpi seo porada — 72 otázok ako samostatný modul obrazovka repo · hub + hades · aura kpi overené">
+  <td><b>Aura KPI</b></td>
+  <td>SEO porada — 72 otázok ako samostatný modul</td>
+  <td><span class="badge q">Obrazovka</span></td>
+  <td class="mono" style="font-size:11.5px">repo · hub + Hades · Aura KPI</td>
+  <td><span class="badge ok">overené</span></td>
+</tr><tr data-modul="kpi" data-kat="integracia" data-over="rekonstruovane"
+   data-s="aura kpi integrácie logistika + seo (read-only, graceful fallback), denníky projekty / sklad / externistky integrácia hades · aura kpi rekonštruované">
+  <td><b>Aura KPI</b></td>
+  <td>Integrácie Logistika + SEO (read-only, graceful fallback), denníky projekty / sklad / externistky</td>
+  <td><span class="badge q">Integrácia</span></td>
+  <td class="mono" style="font-size:11.5px">Hades · Aura KPI</td>
+  <td><span class="badge cond">rekonštruované</span></td>
+</tr><tr data-modul="kpi" data-kat="bezpecnost" data-over="rekonstruovane"
+   data-s="aura kpi roly admin / editor / prehliadač, menné účty m:n na oddelenia, hospodársky len admin + manažment bezpečnosť hades · aura kpi rekonštruované">
+  <td><b>Aura KPI</b></td>
+  <td>Roly Admin / Editor / Prehliadač, menné účty M:N na oddelenia, Hospodársky len Admin + manažment</td>
+  <td><span class="badge q">Bezpečnosť</span></td>
+  <td class="mono" style="font-size:11.5px">Hades · Aura KPI</td>
+  <td><span class="badge cond">rekonštruované</span></td>
+</tr><tr data-modul="kpi" data-kat="data" data-over="rekonstruovane"
+   data-s="aura kpi xlsx export, polročný a ročný report, audit log, zálohovací skript, sk/en, dark mode dáta hades · aura kpi rekonštruované">
+  <td><b>Aura KPI</b></td>
+  <td>XLSX export, polročný a ročný report, audit log, zálohovací skript, SK/EN, dark mode</td>
+  <td><span class="badge q">Dáta</span></td>
+  <td class="mono" style="font-size:11.5px">Hades · Aura KPI</td>
+  <td><span class="badge cond">rekonštruované</span></td>
+</tr><tr data-modul="logistika" data-kat="domena" data-over="overene"
+   data-s="aura logistika súhrny za iso-týždeň × krajina (8) × prepravca (5) s upsertom a auditom doména repo · hub overené">
+  <td><b>Aura Logistika</b></td>
+  <td>Súhrny za ISO-týždeň × krajina (8) × prepravca (5) s upsertom a auditom</td>
+  <td><span class="badge q">Doména</span></td>
+  <td class="mono" style="font-size:11.5px">repo · hub</td>
+  <td><span class="badge ok">overené</span></td>
+</tr><tr data-modul="logistika" data-kat="domena" data-over="overene"
+   data-s="aura logistika stavy zásielok: odoslané / doručené / na ceste / vrátené / stratené / výdajňa doména repo · hub overené">
+  <td><b>Aura Logistika</b></td>
+  <td>Stavy zásielok: odoslané / doručené / na ceste / vrátené / stratené / výdajňa</td>
+  <td><span class="badge q">Doména</span></td>
+  <td class="mono" style="font-size:11.5px">repo · hub</td>
+  <td><span class="badge ok">overené</span></td>
+</tr><tr data-modul="logistika" data-kat="domena" data-over="overene"
+   data-s="aura logistika reklamačné prípady so životným cyklom zahájené → vyriešené, ∅ a medián času riešenia doména repo · hub overené">
+  <td><b>Aura Logistika</b></td>
+  <td>Reklamačné prípady so životným cyklom zahájené → vyriešené, ∅ a medián času riešenia</td>
+  <td><span class="badge q">Doména</span></td>
+  <td class="mono" style="font-size:11.5px">repo · hub</td>
+  <td><span class="badge ok">overené</span></td>
+</tr><tr data-modul="logistika" data-kat="data" data-over="overene"
+   data-s="aura logistika csv import a xlsx export + tlačová verzia pre týždennú poradu dáta repo · hub overené">
+  <td><b>Aura Logistika</b></td>
+  <td>CSV import a XLSX export + tlačová verzia pre týždennú poradu</td>
+  <td><span class="badge q">Dáta</span></td>
+  <td class="mono" style="font-size:11.5px">repo · hub</td>
+  <td><span class="badge ok">overené</span></td>
+</tr><tr data-modul="logistika" data-kat="obrazovka" data-over="overene"
+   data-s="aura logistika svg grafy vývoja doručenosti s kĺzavým priemerom obrazovka repo · hub overené">
+  <td><b>Aura Logistika</b></td>
+  <td>SVG grafy vývoja doručenosti s kĺzavým priemerom</td>
+  <td><span class="badge q">Obrazovka</span></td>
+  <td class="mono" style="font-size:11.5px">repo · hub</td>
+  <td><span class="badge ok">overené</span></td>
+</tr><tr data-modul="logistika" data-kat="stavy-a-alerty" data-over="ukazkove"
+   data-s="aura logistika alert na zmluvné minimum prepravcu (scenár gls) stavy a alerty repo · hub ukážkové">
+  <td><b>Aura Logistika</b></td>
+  <td>Alert na zmluvné minimum prepravcu (scenár GLS)</td>
+  <td><span class="badge q">Stavy a alerty</span></td>
+  <td class="mono" style="font-size:11.5px">repo · hub</td>
+  <td><span class="badge q">ukážkové</span></td>
+</tr><tr data-modul="logistika" data-kat="integracia" data-over="rekonstruovane"
+   data-s="aura logistika endpoint /api/summary pre aura hub — živé dáta na rozcestníku integrácia hades · aura hub rekonštruované">
+  <td><b>Aura Logistika</b></td>
+  <td>Endpoint /api/summary pre Aura Hub — živé dáta na rozcestníku</td>
+  <td><span class="badge q">Integrácia</span></td>
+  <td class="mono" style="font-size:11.5px">Hades · Aura Hub</td>
+  <td><span class="badge cond">rekonštruované</span></td>
+</tr><tr data-modul="logistika" data-kat="nastavenia" data-over="overene"
+   data-s="aura logistika nastavenia: povinné krajiny, prepravcovia, upsert + audit, zálohy nastavenia repo · hub overené">
+  <td><b>Aura Logistika</b></td>
+  <td>Nastavenia: povinné krajiny, prepravcovia, upsert + audit, zálohy</td>
+  <td><span class="badge q">Nastavenia</span></td>
+  <td class="mono" style="font-size:11.5px">repo · hub</td>
+  <td><span class="badge ok">overené</span></td>
+</tr><tr data-modul="hr" data-kat="domena" data-over="overene"
+   data-s="aura hr 32 pozícií s náplňou práce — štruktúrované bloky + knižnica činností doména repo · hub overené">
+  <td><b>Aura HR</b></td>
+  <td>32 pozícií s náplňou práce — štruktúrované bloky + knižnica činností</td>
+  <td><span class="badge q">Doména</span></td>
+  <td class="mono" style="font-size:11.5px">repo · hub</td>
+  <td><span class="badge ok">overené</span></td>
+</tr><tr data-modul="hr" data-kat="bezpecnost" data-over="overene"
+   data-s="aura hr ~90 rolových mailov s aliasmi; heslá šifrované, viditeľné len admin bezpečnosť repo · hub overené">
+  <td><b>Aura HR</b></td>
+  <td>~90 rolových mailov s aliasmi; heslá šifrované, viditeľné len Admin</td>
+  <td><span class="badge q">Bezpečnosť</span></td>
+  <td class="mono" style="font-size:11.5px">repo · hub</td>
+  <td><span class="badge ok">overené</span></td>
+</tr><tr data-modul="hr" data-kat="obrazovka" data-over="overene"
+   data-s="aura hr org-strom firmy — 8 uzlov, 3 úrovne, ľudia a pozície na uzol obrazovka repo · hub overené">
+  <td><b>Aura HR</b></td>
+  <td>Org-strom firmy — 8 uzlov, 3 úrovne, ľudia a pozície na uzol</td>
+  <td><span class="badge q">Obrazovka</span></td>
+  <td class="mono" style="font-size:11.5px">repo · hub</td>
+  <td><span class="badge ok">overené</span></td>
+</tr><tr data-modul="hr" data-kat="domena" data-over="ukazkove"
+   data-s="aura hr register firemných aplikácií s nákladmi, vlastníkmi a licenciami (8 aplikácií) doména repo · hub ukážkové">
+  <td><b>Aura HR</b></td>
+  <td>Register firemných aplikácií s nákladmi, vlastníkmi a licenciami (8 aplikácií)</td>
+  <td><span class="badge q">Doména</span></td>
+  <td class="mono" style="font-size:11.5px">repo · hub</td>
+  <td><span class="badge q">ukážkové</span></td>
+</tr><tr data-modul="hr" data-kat="obrazovka" data-over="ukazkove"
+   data-s="aura hr karty zamestnancov: pozícia, oddelenie, mail, úväzok, krajina obrazovka repo · hub ukážkové">
+  <td><b>Aura HR</b></td>
+  <td>Karty zamestnancov: pozícia, oddelenie, mail, úväzok, krajina</td>
+  <td><span class="badge q">Obrazovka</span></td>
+  <td class="mono" style="font-size:11.5px">repo · hub</td>
+  <td><span class="badge q">ukážkové</span></td>
+</tr><tr data-modul="hr" data-kat="bezpecnost" data-over="overene"
+   data-s="aura hr audit log a roly; prepínač „heslá mailov len admin&quot; bezpečnosť repo · hub overené">
+  <td><b>Aura HR</b></td>
+  <td>Audit log a roly; prepínač „heslá mailov len Admin&quot;</td>
+  <td><span class="badge q">Bezpečnosť</span></td>
+  <td class="mono" style="font-size:11.5px">repo · hub</td>
+  <td><span class="badge ok">overené</span></td>
+</tr><tr data-modul="hr" data-kat="tech" data-over="rekonstruovane"
+   data-s="aura hr zdroj dizajnu vetvy a — styles.css a window.registerview() kit pre logistiku, kpi a banner studio tech hades · aura-app family rekonštruované">
+  <td><b>Aura HR</b></td>
+  <td>Zdroj dizajnu vetvy A — styles.css a window.registerView() kit pre Logistiku, KPI a Banner Studio</td>
+  <td><span class="badge q">Tech</span></td>
+  <td class="mono" style="font-size:11.5px">Hades · aura-app family</td>
+  <td><span class="badge cond">rekonštruované</span></td>
+</tr><tr data-modul="roadmap" data-kat="domena" data-over="overene"
+   data-s="aura roadmap checkpoint readiness → nemenné rozhodnutie go / conditional_go / no_go / deferred + baseline snapshot doména repo · hub overené">
+  <td><b>Aura Roadmap</b></td>
+  <td>Checkpoint readiness → nemenné rozhodnutie go / conditional_go / no_go / deferred + baseline snapshot</td>
+  <td><span class="badge q">Doména</span></td>
+  <td class="mono" style="font-size:11.5px">repo · hub</td>
+  <td><span class="badge ok">overené</span></td>
+</tr><tr data-modul="roadmap" data-kat="obrazovka" data-over="overene"
+   data-s="aura roadmap timeline: 3 režimy (roadmap / sprinty / rozhodnutia) × 3 zoomy (kvartál / mesiac / týždeň) × 2 hustoty obrazovka repo · hub + hades · aura roadmap overené">
+  <td><b>Aura Roadmap</b></td>
+  <td>Timeline: 3 režimy (Roadmap / Sprinty / Rozhodnutia) × 3 zoomy (kvartál / mesiac / týždeň) × 2 hustoty</td>
+  <td><span class="badge q">Obrazovka</span></td>
+  <td class="mono" style="font-size:11.5px">repo · hub + Hades · Aura Roadmap</td>
+  <td><span class="badge ok">overené</span></td>
+</tr><tr data-modul="roadmap" data-kat="proces" data-over="overene"
+   data-s="aura roadmap šprinty draft → commit → close s carry-over nedokončených položiek proces repo · hub overené">
+  <td><b>Aura Roadmap</b></td>
+  <td>Šprinty draft → commit → close s carry-over nedokončených položiek</td>
+  <td><span class="badge q">Proces</span></td>
+  <td class="mono" style="font-size:11.5px">repo · hub</td>
+  <td><span class="badge ok">overené</span></td>
+</tr><tr data-modul="roadmap" data-kat="domena" data-over="overene"
+   data-s="aura roadmap jeden pevný stavový model backlog → in_progress → waiting → done (workflow engine zrušený) doména repo · hub + hades · aura roadmap overené">
+  <td><b>Aura Roadmap</b></td>
+  <td>Jeden pevný stavový model backlog → in_progress → waiting → done (workflow engine zrušený)</td>
+  <td><span class="badge q">Doména</span></td>
+  <td class="mono" style="font-size:11.5px">repo · hub + Hades · Aura Roadmap</td>
+  <td><span class="badge ok">overené</span></td>
+</tr><tr data-modul="roadmap" data-kat="domena" data-over="rekonstruovane"
+   data-s="aura roadmap 2 úrovne práce (úloha → podúloha), typy task / bug / idea; custom fields a dashboard builder zrušené doména hades · aura roadmap rekonštruované">
+  <td><b>Aura Roadmap</b></td>
+  <td>2 úrovne práce (Úloha → Podúloha), typy task / bug / idea; custom fields a dashboard builder zrušené</td>
+  <td><span class="badge q">Doména</span></td>
+  <td class="mono" style="font-size:11.5px">Hades · Aura Roadmap</td>
+  <td><span class="badge cond">rekonštruované</span></td>
+</tr><tr data-modul="roadmap" data-kat="obrazovka" data-over="ukazkove"
+   data-s="aura roadmap projekty s fázou, prioritou, rizikom, sprintom a termínom (6 projektov) obrazovka repo · hub ukážkové">
+  <td><b>Aura Roadmap</b></td>
+  <td>Projekty s fázou, prioritou, rizikom, sprintom a termínom (6 projektov)</td>
+  <td><span class="badge q">Obrazovka</span></td>
+  <td class="mono" style="font-size:11.5px">repo · hub</td>
+  <td><span class="badge q">ukážkové</span></td>
+</tr><tr data-modul="roadmap" data-kat="obrazovka" data-over="overene"
+   data-s="aura roadmap rozhodovacia fronta — 5 rozhodnutí s dopadom a termínom obrazovka repo · hub overené">
+  <td><b>Aura Roadmap</b></td>
+  <td>Rozhodovacia fronta — 5 rozhodnutí s dopadom a termínom</td>
+  <td><span class="badge q">Obrazovka</span></td>
+  <td class="mono" style="font-size:11.5px">repo · hub</td>
+  <td><span class="badge ok">overené</span></td>
+</tr><tr data-modul="roadmap" data-kat="bezpecnost" data-over="rekonstruovane"
+   data-s="aura roadmap bezpečnostná pipeline defineroute(): auth → ratelimit → zod → handler, csrf fail-closed, lockout 5/15 min bezpečnosť hades · aura roadmap rekonštruované">
+  <td><b>Aura Roadmap</b></td>
+  <td>Bezpečnostná pipeline defineRoute(): auth → rateLimit → zod → handler, CSRF fail-closed, lockout 5/15 min</td>
+  <td><span class="badge q">Bezpečnosť</span></td>
+  <td class="mono" style="font-size:11.5px">Hades · Aura Roadmap</td>
+  <td><span class="badge cond">rekonštruované</span></td>
+</tr><tr data-modul="trzby" data-kat="domena" data-over="overene"
+   data-s="aura tržby klientske filtre prepočítavajú celý report (trh, platba, kov, zákazník, zľava) doména repo · hub overené">
+  <td><b>Aura Tržby</b></td>
+  <td>Klientske filtre prepočítavajú celý report (trh, platba, kov, zákazník, zľava)</td>
+  <td><span class="badge q">Doména</span></td>
+  <td class="mono" style="font-size:11.5px">repo · hub</td>
+  <td><span class="badge ok">overené</span></td>
+</tr><tr data-modul="trzby" data-kat="obrazovka" data-over="overene"
+   data-s="aura tržby denný graf s prepínačom tržba / zisk / objednávky + kumulatívna krivka obrazovka repo · hub overené">
+  <td><b>Aura Tržby</b></td>
+  <td>Denný graf s prepínačom tržba / zisk / objednávky + kumulatívna krivka</td>
+  <td><span class="badge q">Obrazovka</span></td>
+  <td class="mono" style="font-size:11.5px">repo · hub</td>
+  <td><span class="badge ok">overené</span></td>
+</tr><tr data-modul="trzby" data-kat="data" data-over="overene"
+   data-s="aura tržby zoraditeľné tabuľky, riadok = filter, csv export (bom + „;&quot; pre excel sk) dáta repo · hub overené">
+  <td><b>Aura Tržby</b></td>
+  <td>Zoraditeľné tabuľky, riadok = filter, CSV export (BOM + „;&quot; pre Excel SK)</td>
+  <td><span class="badge q">Dáta</span></td>
+  <td class="mono" style="font-size:11.5px">repo · hub</td>
+  <td><span class="badge ok">overené</span></td>
+</tr><tr data-modul="trzby" data-kat="domena" data-over="overene"
+   data-s="aura tržby segmenty ako pravidlá v definíciách so spätným prepočtom (nový / opakovaný, zľava áno / nie) doména repo · hub + hades · plán f2–f6 overené">
+  <td><b>Aura Tržby</b></td>
+  <td>Segmenty ako pravidlá v Definíciách so spätným prepočtom (nový / opakovaný, zľava áno / nie)</td>
+  <td><span class="badge q">Doména</span></td>
+  <td class="mono" style="font-size:11.5px">repo · hub + Hades · plán F2–F6</td>
+  <td><span class="badge ok">overené</span></td>
+</tr><tr data-modul="trzby" data-kat="obrazovka" data-over="overene"
+   data-s="aura tržby analytické pohľady: trhy (6), koše (4), hodiny a dni, expedícia (4) obrazovka repo · hub overené">
+  <td><b>Aura Tržby</b></td>
+  <td>Analytické pohľady: Trhy (6), Koše (4), Hodiny a dni, Expedícia (4)</td>
+  <td><span class="badge q">Obrazovka</span></td>
+  <td class="mono" style="font-size:11.5px">repo · hub</td>
+  <td><span class="badge ok">overené</span></td>
+</tr><tr data-modul="trzby" data-kat="domena" data-over="rekonstruovane"
+   data-s="aura tržby zistenia — pravidlové, nie ai generované doména hades · plán f2–f6 rekonštruované">
+  <td><b>Aura Tržby</b></td>
+  <td>Zistenia — pravidlové, nie AI generované</td>
+  <td><span class="badge q">Doména</span></td>
+  <td class="mono" style="font-size:11.5px">Hades · plán F2–F6</td>
+  <td><span class="badge cond">rekonštruované</span></td>
+</tr><tr data-modul="trzby" data-kat="data" data-over="overene"
+   data-s="aura tržby reálne čísla júl 2026: tržba 217 016 €, zisk 126 541 €, marža 66,1 %, aov 38,21 €, expedícia 69,6 % do 24 h dáta repo · hub + hades · hub náhľad overené">
+  <td><b>Aura Tržby</b></td>
+  <td>Reálne čísla júl 2026: tržba 217 016 €, zisk 126 541 €, marža 66,1 %, AOV 38,21 €, expedícia 69,6 % do 24 h</td>
+  <td><span class="badge q">Dáta</span></td>
+  <td class="mono" style="font-size:11.5px">repo · hub + Hades · hub náhľad</td>
+  <td><span class="badge ok">overené</span></td>
+</tr><tr data-modul="trzby" data-kat="bezpecnost" data-over="rekonstruovane"
+   data-s="aura tržby objednávky a položky bez osobných údajov, multi-mena, storná hrubé aj čisté (plán appky) bezpečnosť hades · plán f2–f6 rekonštruované">
+  <td><b>Aura Tržby</b></td>
+  <td>Objednávky a položky bez osobných údajov, multi-mena, storná hrubé aj čisté (plán appky)</td>
+  <td><span class="badge q">Bezpečnosť</span></td>
+  <td class="mono" style="font-size:11.5px">Hades · plán F2–F6</td>
+  <td><span class="badge cond">rekonštruované</span></td>
+</tr><tr data-modul="spolocne" data-kat="spolocne" data-over="overene"
+   data-s="spoločná vrstva shop api konektor — live pilulka v hlavičke, 5 endpointov (orders / products / stats / shipping / returns) s latenciou a časom syncu, 4 stavy (live / stale / error / demo), tikajúce „pred x min&quot; + synchronizovať teraz s deterministickým jitterom ±2 %, prepínač simulovať výpadok, audit log spoločné repo · hub + readme overené">
+  <td><b>Spoločná vrstva</b><br><span class="mono" style="font-size:11px;color:var(--ink-3)">Tržby, Logistika, Marketing, KPI</span></td>
+  <td>Shop API konektor — LIVE pilulka v hlavičke, 5 endpointov (orders / products / stats / shipping / returns) s latenciou a časom syncu, 4 stavy (live / stale / error / demo), tikajúce „pred X min&quot; + Synchronizovať teraz s deterministickým jitterom ±2 %, prepínač Simulovať výpadok, audit log</td>
+  <td><span class="badge q">Spoločné</span></td>
+  <td class="mono" style="font-size:11.5px">repo · hub + README</td>
+  <td><span class="badge ok">overené</span></td>
+</tr><tr data-modul="spolocne" data-kat="spolocne" data-over="overene"
+   data-s="spoločná vrstva import wizard — 4 kroky: súbor → mapovanie stĺpcov → validácia → súhrn. reálny csv cez filereader s autodetekciou „;&quot; / „,&quot; a bom, auto-match podľa hlavičky, typová kontrola s tabuľkou chýb, upsert s kľúčom per modul, undo posledného importu, história v nastaveniach spoločné repo · hub + readme overené">
+  <td><b>Spoločná vrstva</b><br><span class="mono" style="font-size:11px;color:var(--ink-3)">všetkých 6 modulov</span></td>
+  <td>Import wizard — 4 kroky: súbor → mapovanie stĺpcov → validácia → súhrn. Reálny CSV cez FileReader s autodetekciou „;&quot; / „,&quot; a BOM, auto-match podľa hlavičky, typová kontrola s tabuľkou chýb, upsert s kľúčom per modul, undo posledného importu, história v Nastaveniach</td>
+  <td><span class="badge q">Spoločné</span></td>
+  <td class="mono" style="font-size:11.5px">repo · hub + README</td>
+  <td><span class="badge ok">overené</span></td>
+</tr><tr data-modul="spolocne" data-kat="spolocne" data-over="overene"
+   data-s="spoločná vrstva report builder — šablóny per modul, obdobie, výber sekcií (kpi / graf / tabuľka / zistenia), živý html náhľad, csv s bom + „;&quot;, tlač/pdf cez print css, zdieľateľný hash-odkaz, plánovanie reportov, šablónované ai komentáre z reálnych čísel spoločné repo · hub + readme overené">
+  <td><b>Spoločná vrstva</b><br><span class="mono" style="font-size:11px;color:var(--ink-3)">všetkých 6 modulov</span></td>
+  <td>Report builder — Šablóny per modul, obdobie, výber sekcií (KPI / graf / tabuľka / Zistenia), živý HTML náhľad, CSV s BOM + „;&quot;, Tlač/PDF cez print CSS, zdieľateľný hash-odkaz, plánovanie reportov, šablónované AI komentáre z reálnych čísel</td>
+  <td><span class="badge q">Spoločné</span></td>
+  <td class="mono" style="font-size:11.5px">repo · hub + README</td>
+  <td><span class="badge ok">overené</span></td>
+</tr><tr data-modul="spolocne" data-kat="spolocne" data-over="overene"
+   data-s="spoločná vrstva auraai chat asistent — dokovaný pravý panel 360 px (na mobile fullscreen), fab s korunkou + ⌘j + položka v ⌘k palete, kontextová hlavička „vidí: modul / stránka · filter&quot;, 3 navrhované otázky pre každú z 45 stránok, povinná citácia zdroja (api · sync / import / ukážka), 4 typy akcií so zápisom do aktivity spoločné repo · hub + readme overené">
+  <td><b>Spoločná vrstva</b><br><span class="mono" style="font-size:11px;color:var(--ink-3)">všetkých 6 modulov</span></td>
+  <td>AuraAI chat asistent — Dokovaný pravý panel 360 px (na mobile fullscreen), FAB s korunkou + ⌘J + položka v ⌘K palete, kontextová hlavička „vidí: modul / stránka · filter&quot;, 3 navrhované otázky pre každú z 45 stránok, povinná citácia zdroja (API · sync / import / ukážka), 4 typy akcií so zápisom do Aktivity</td>
+  <td><span class="badge q">Spoločné</span></td>
+  <td class="mono" style="font-size:11.5px">repo · hub + README</td>
+  <td><span class="badge ok">overené</span></td>
+</tr><tr data-modul="spolocne" data-kat="spolocne" data-over="overene"
+   data-s="spoločná vrstva globálna navigácia — ⌘k / ctrl+k vyhľadávanie naprieč modulmi, panel notifikácií, profilové menu, klávesy 1–6 na skok na modul, ←/→ medzi obrazovkami, esc zavrie overlay spoločné repo · hub + readme overené">
+  <td><b>Spoločná vrstva</b><br><span class="mono" style="font-size:11px;color:var(--ink-3)">všetkých 6 modulov</span></td>
+  <td>Globálna navigácia — ⌘K / Ctrl+K vyhľadávanie naprieč modulmi, panel notifikácií, profilové menu, klávesy 1–6 na skok na modul, ←/→ medzi obrazovkami, Esc zavrie overlay</td>
+  <td><span class="badge q">Spoločné</span></td>
+  <td class="mono" style="font-size:11.5px">repo · hub + README</td>
+  <td><span class="badge ok">overené</span></td>
+</tr><tr data-modul="spolocne" data-kat="spolocne" data-over="overene"
+   data-s="spoločná vrstva dvojjazyčnosť sk / en — celé rozhranie vrátane formátu čísel a dátumov; prepínač vpravo hore spoločné repo · hub overené">
+  <td><b>Spoločná vrstva</b><br><span class="mono" style="font-size:11px;color:var(--ink-3)">všetkých 6 modulov</span></td>
+  <td>Dvojjazyčnosť SK / EN — Celé rozhranie vrátane formátu čísel a dátumov; prepínač vpravo hore</td>
+  <td><span class="badge q">Spoločné</span></td>
+  <td class="mono" style="font-size:11.5px">repo · hub</td>
+  <td><span class="badge ok">overené</span></td>
+</tr><tr data-modul="spolocne" data-kat="spolocne" data-over="overene"
+   data-s="spoločná vrstva dark / light téma — prepínač funguje na všetkých obrazovkách; light téma spĺňa aa kontrast spoločné repo · hub + readme overené">
+  <td><b>Spoločná vrstva</b><br><span class="mono" style="font-size:11px;color:var(--ink-3)">všetkých 6 modulov</span></td>
+  <td>Dark / Light téma — Prepínač funguje na všetkých obrazovkách; light téma spĺňa AA kontrast</td>
+  <td><span class="badge q">Spoločné</span></td>
+  <td class="mono" style="font-size:11.5px">repo · hub + README</td>
+  <td><span class="badge ok">overené</span></td>
+</tr><tr data-modul="spolocne" data-kat="spolocne" data-over="overene"
+   data-s="spoločná vrstva prístupnosť — :focus-visible, role=switch, aria popisy, landmarky header / main / aside, scope na tabuľkách, aria-sort pri triedení spoločné repo · hub + readme overené">
+  <td><b>Spoločná vrstva</b><br><span class="mono" style="font-size:11px;color:var(--ink-3)">všetkých 6 modulov</span></td>
+  <td>Prístupnosť — :focus-visible, role=switch, ARIA popisy, landmarky header / main / aside, scope na tabuľkách, aria-sort pri triedení</td>
+  <td><span class="badge q">Spoločné</span></td>
+  <td class="mono" style="font-size:11.5px">repo · hub + README</td>
+  <td><span class="badge ok">overené</span></td>
+</tr><tr data-modul="spolocne" data-kat="spolocne" data-over="overene"
+   data-s="spoločná vrstva stavy rozhrania — skeleton loading pri prepínaní obrazoviek, toasty po akciách, empty stav pri prázdnom filtri, onboarding prázdny štart, chybové bannery s reálnymi scenármi spoločné repo · hub + readme overené">
+  <td><b>Spoločná vrstva</b><br><span class="mono" style="font-size:11px;color:var(--ink-3)">všetkých 6 modulov</span></td>
+  <td>Stavy rozhrania — Skeleton loading pri prepínaní obrazoviek, toasty po akciách, empty stav pri prázdnom filtri, onboarding prázdny štart, chybové bannery s reálnymi scenármi</td>
+  <td><span class="badge q">Spoločné</span></td>
+  <td class="mono" style="font-size:11.5px">repo · hub + README</td>
+  <td><span class="badge ok">overené</span></td>
+</tr><tr data-modul="spolocne" data-kat="spolocne" data-over="overene"
+   data-s="spoločná vrstva vstupné obrazovky — login → workspace (výber pracovného priestoru) → rozcestník; profilová stránka spoločné repo · hub overené">
+  <td><b>Spoločná vrstva</b><br><span class="mono" style="font-size:11px;color:var(--ink-3)">globálne</span></td>
+  <td>Vstupné obrazovky — login → workspace (výber pracovného priestoru) → rozcestník; profilová stránka</td>
+  <td><span class="badge q">Spoločné</span></td>
+  <td class="mono" style="font-size:11.5px">repo · hub</td>
+  <td><span class="badge ok">overené</span></td>
+</tr><tr data-modul="spolocne" data-kat="spolocne" data-over="overene"
+   data-s="spoločná vrstva tabuľkové ovládanie — triedenie klikom na hlavičku, pager nad 10 riadkov, filter ako popover, klikateľné riadky → detail, create/edit modál s toastom spoločné repo · hub + readme overené">
+  <td><b>Spoločná vrstva</b><br><span class="mono" style="font-size:11px;color:var(--ink-3)">všetkých 6 modulov</span></td>
+  <td>Tabuľkové ovládanie — Triedenie klikom na hlavičku, pager nad 10 riadkov, Filter ako popover, klikateľné riadky → detail, create/edit modál s toastom</td>
+  <td><span class="badge q">Spoločné</span></td>
+  <td class="mono" style="font-size:11.5px">repo · hub + README</td>
+  <td><span class="badge ok">overené</span></td>
+</tr><tr data-modul="spolocne" data-kat="spolocne" data-over="overene"
+   data-s="spoločná vrstva nulové externé závislosti — bez localstorage, bez analytiky, bez cdn skriptov; grafy ručné svg/css; jediná externá závislosť sú google fonts so systémovým fallbackom spoločné repo · hub + readme overené">
+  <td><b>Spoločná vrstva</b><br><span class="mono" style="font-size:11px;color:var(--ink-3)">globálne</span></td>
+  <td>Nulové externé závislosti — Bez localStorage, bez analytiky, bez CDN skriptov; grafy ručné SVG/CSS; jediná externá závislosť sú Google Fonts so systémovým fallbackom</td>
+  <td><span class="badge q">Spoločné</span></td>
+  <td class="mono" style="font-size:11.5px">repo · hub + README</td>
+  <td><span class="badge ok">overené</span></td>
+</tr><tr data-modul="spolocne" data-kat="spolocne" data-over="rekonstruovane"
+   data-s="spoločná vrstva aura hub — rozcestník appiek — samostatná appka c:\aura\aura-hub na porte 3050 (node 22 + express 4, bez db, 37 testov). 6 kariet modulov s live metrikami, sparkline a pásom cross-app alertov. každá appka vystavuje get /api/summary chránený tokenom x-aura-hub-token; hub sa dopytuje paralelne, validuje payload proti kontraktu a kešuje 30 s spoločné hades · aura hub rekonštruované">
+  <td><b>Spoločná vrstva</b><br><span class="mono" style="font-size:11px;color:var(--ink-3)">globálne</span></td>
+  <td>Aura Hub — rozcestník appiek — Samostatná appka C:\Aura\aura-hub na porte 3050 (Node 22 + Express 4, bez DB, 37 testov). 6 kariet modulov s live metrikami, sparkline a pásom cross-app alertov. Každá appka vystavuje GET /api/summary chránený tokenom X-Aura-Hub-Token; hub sa dopytuje paralelne, validuje payload proti kontraktu a kešuje 30 s</td>
+  <td><span class="badge q">Spoločné</span></td>
+  <td class="mono" style="font-size:11.5px">Hades · Aura Hub</td>
+  <td><span class="badge cond">rekonštruované</span></td>
+</tr></tbody></table></div><div class="empty" id="emptyFn">Filtru nič nevyhovuje.</div></div>
+  </section>
+
+  <section class="sec" id="obrazovky">
+    <div class="goldline"></div>
+    <h2 class="sh">Obrazovky</h2>
+    <p class="sh-sub">54 obrazoviek: 50 v moduloch (vrátane intro stránky každého modulu) a 4 globálnych.</p>
+    <div class="tw"><div class="tscroll"><table id="tScr">
+  <thead><tr><th>Modul</th><th>#</th><th>Routa</th><th>Obrazovka</th><th>Typ / obsah</th></tr></thead>
+  <tbody><tr data-modul="marketing" data-s="aura marketing intro modulu intro intro">
+  <td><b>Aura Marketing</b></td><td class="n">1.1</td>
+  <td class="mono">#marketing/intro</td><td>Intro modulu</td><td>intro</td></tr><tr data-modul="marketing" data-s="aura marketing prehľad dashboard dashboard">
+  <td><b>Aura Marketing</b></td><td class="n">1.2</td>
+  <td class="mono">#marketing/dashboard</td><td>Prehľad</td><td>dashboard</td></tr><tr data-modul="marketing" data-s="aura marketing kampane zoznam (6 riadkov) list">
+  <td><b>Aura Marketing</b></td><td class="n">1.3</td>
+  <td class="mono">#marketing/list</td><td>Kampane</td><td>zoznam (6 riadkov)</td></tr><tr data-modul="marketing" data-s="aura marketing bannery galéria bannery">
+  <td><b>Aura Marketing</b></td><td class="n">1.4</td>
+  <td class="mono">#marketing/bannery</td><td>Bannery</td><td>galéria</td></tr><tr data-modul="marketing" data-s="aura marketing ads tabuľka (11 riadkov) ads">
+  <td><b>Aura Marketing</b></td><td class="n">1.5</td>
+  <td class="mono">#marketing/ads</td><td>Ads</td><td>tabuľka (11 riadkov)</td></tr><tr data-modul="marketing" data-s="aura marketing detail kampane detail detail">
+  <td><b>Aura Marketing</b></td><td class="n">1.6</td>
+  <td class="mono">#marketing/detail</td><td>Detail kampane</td><td>detail</td></tr><tr data-modul="marketing" data-s="aura marketing nastavenia nastavenia settings">
+  <td><b>Aura Marketing</b></td><td class="n">1.7</td>
+  <td class="mono">#marketing/settings</td><td>Nastavenia</td><td>nastavenia</td></tr><tr data-modul="kpi" data-s="aura kpi intro modulu intro intro">
+  <td><b>Aura KPI</b></td><td class="n">2.1</td>
+  <td class="mono">#kpi/intro</td><td>Intro modulu</td><td>intro</td></tr><tr data-modul="kpi" data-s="aura kpi prehľad dashboard dashboard">
+  <td><b>Aura KPI</b></td><td class="n">2.2</td>
+  <td class="mono">#kpi/dashboard</td><td>Prehľad</td><td>dashboard</td></tr><tr data-modul="kpi" data-s="aura kpi oddelenia zoznam (12 riadkov) list">
+  <td><b>Aura KPI</b></td><td class="n">2.3</td>
+  <td class="mono">#kpi/list</td><td>Oddelenia</td><td>zoznam (12 riadkov)</td></tr><tr data-modul="kpi" data-s="aura kpi analýza heatmapa + a/b analyza">
+  <td><b>Aura KPI</b></td><td class="n">2.4</td>
+  <td class="mono">#kpi/analyza</td><td>Analýza</td><td>heatmapa + A/B</td></tr><tr data-modul="kpi" data-s="aura kpi rok tabuľka (7 riadkov) rok">
+  <td><b>Aura KPI</b></td><td class="n">2.5</td>
+  <td class="mono">#kpi/rok</td><td>Rok</td><td>tabuľka (7 riadkov)</td></tr><tr data-modul="kpi" data-s="aura kpi na doplnenie tabuľka (6 riadkov) missing">
+  <td><b>Aura KPI</b></td><td class="n">2.6</td>
+  <td class="mono">#kpi/missing</td><td>Na doplnenie</td><td>tabuľka (6 riadkov)</td></tr><tr data-modul="kpi" data-s="aura kpi seo porada tabuľka (12 riadkov) seo">
+  <td><b>Aura KPI</b></td><td class="n">2.7</td>
+  <td class="mono">#kpi/seo</td><td>SEO porada</td><td>tabuľka (12 riadkov)</td></tr><tr data-modul="kpi" data-s="aura kpi detail oddelenia detail detail">
+  <td><b>Aura KPI</b></td><td class="n">2.8</td>
+  <td class="mono">#kpi/detail</td><td>Detail oddelenia</td><td>detail</td></tr><tr data-modul="kpi" data-s="aura kpi nastavenia nastavenia settings">
+  <td><b>Aura KPI</b></td><td class="n">2.9</td>
+  <td class="mono">#kpi/settings</td><td>Nastavenia</td><td>nastavenia</td></tr><tr data-modul="logistika" data-s="aura logistika intro modulu intro intro">
+  <td><b>Aura Logistika</b></td><td class="n">3.1</td>
+  <td class="mono">#logistika/intro</td><td>Intro modulu</td><td>intro</td></tr><tr data-modul="logistika" data-s="aura logistika prehľad dashboard dashboard">
+  <td><b>Aura Logistika</b></td><td class="n">3.2</td>
+  <td class="mono">#logistika/dashboard</td><td>Prehľad</td><td>dashboard</td></tr><tr data-modul="logistika" data-s="aura logistika zásielky zoznam (6 riadkov) list">
+  <td><b>Aura Logistika</b></td><td class="n">3.3</td>
+  <td class="mono">#logistika/list</td><td>Zásielky</td><td>zoznam (6 riadkov)</td></tr><tr data-modul="logistika" data-s="aura logistika reklamácie tabuľka claims">
+  <td><b>Aura Logistika</b></td><td class="n">3.4</td>
+  <td class="mono">#logistika/claims</td><td>Reklamácie</td><td>tabuľka</td></tr><tr data-modul="logistika" data-s="aura logistika vývoj graf trendu vyvoj">
+  <td><b>Aura Logistika</b></td><td class="n">3.5</td>
+  <td class="mono">#logistika/vyvoj</td><td>Vývoj</td><td>graf trendu</td></tr><tr data-modul="logistika" data-s="aura logistika detail zásielky detail detail">
+  <td><b>Aura Logistika</b></td><td class="n">3.6</td>
+  <td class="mono">#logistika/detail</td><td>Detail zásielky</td><td>detail</td></tr><tr data-modul="logistika" data-s="aura logistika nastavenia nastavenia settings">
+  <td><b>Aura Logistika</b></td><td class="n">3.7</td>
+  <td class="mono">#logistika/settings</td><td>Nastavenia</td><td>nastavenia</td></tr><tr data-modul="hr" data-s="aura hr intro modulu intro intro">
+  <td><b>Aura HR</b></td><td class="n">4.1</td>
+  <td class="mono">#hr/intro</td><td>Intro modulu</td><td>intro</td></tr><tr data-modul="hr" data-s="aura hr prehľad dashboard dashboard">
+  <td><b>Aura HR</b></td><td class="n">4.2</td>
+  <td class="mono">#hr/dashboard</td><td>Prehľad</td><td>dashboard</td></tr><tr data-modul="hr" data-s="aura hr zamestnanci zoznam (6 riadkov) list">
+  <td><b>Aura HR</b></td><td class="n">4.3</td>
+  <td class="mono">#hr/list</td><td>Zamestnanci</td><td>zoznam (6 riadkov)</td></tr><tr data-modul="hr" data-s="aura hr pozície tabuľka (6 riadkov) pozicie">
+  <td><b>Aura HR</b></td><td class="n">4.4</td>
+  <td class="mono">#hr/pozicie</td><td>Pozície</td><td>tabuľka (6 riadkov)</td></tr><tr data-modul="hr" data-s="aura hr maily tabuľka (10 riadkov) maily">
+  <td><b>Aura HR</b></td><td class="n">4.5</td>
+  <td class="mono">#hr/maily</td><td>Maily</td><td>tabuľka (10 riadkov)</td></tr><tr data-modul="hr" data-s="aura hr aplikácie tabuľka (8 riadkov) aplikacie">
+  <td><b>Aura HR</b></td><td class="n">4.6</td>
+  <td class="mono">#hr/aplikacie</td><td>Aplikácie</td><td>tabuľka (8 riadkov)</td></tr><tr data-modul="hr" data-s="aura hr org-strom tabuľka (8 riadkov) org">
+  <td><b>Aura HR</b></td><td class="n">4.7</td>
+  <td class="mono">#hr/org</td><td>Org-strom</td><td>tabuľka (8 riadkov)</td></tr><tr data-modul="hr" data-s="aura hr detail zamestnanca detail detail">
+  <td><b>Aura HR</b></td><td class="n">4.8</td>
+  <td class="mono">#hr/detail</td><td>Detail zamestnanca</td><td>detail</td></tr><tr data-modul="hr" data-s="aura hr nastavenia nastavenia settings">
+  <td><b>Aura HR</b></td><td class="n">4.9</td>
+  <td class="mono">#hr/settings</td><td>Nastavenia</td><td>nastavenia</td></tr><tr data-modul="roadmap" data-s="aura roadmap intro modulu intro intro">
+  <td><b>Aura Roadmap</b></td><td class="n">5.1</td>
+  <td class="mono">#roadmap/intro</td><td>Intro modulu</td><td>intro</td></tr><tr data-modul="roadmap" data-s="aura roadmap prehľad dashboard dashboard">
+  <td><b>Aura Roadmap</b></td><td class="n">5.2</td>
+  <td class="mono">#roadmap/dashboard</td><td>Prehľad</td><td>dashboard</td></tr><tr data-modul="roadmap" data-s="aura roadmap úlohy zoznam (6 riadkov) list">
+  <td><b>Aura Roadmap</b></td><td class="n">5.3</td>
+  <td class="mono">#roadmap/list</td><td>Úlohy</td><td>zoznam (6 riadkov)</td></tr><tr data-modul="roadmap" data-s="aura roadmap timeline timeline (5 riadkov) timeline">
+  <td><b>Aura Roadmap</b></td><td class="n">5.4</td>
+  <td class="mono">#roadmap/timeline</td><td>Timeline</td><td>timeline (5 riadkov)</td></tr><tr data-modul="roadmap" data-s="aura roadmap projekty tabuľka (6 riadkov) projekty">
+  <td><b>Aura Roadmap</b></td><td class="n">5.5</td>
+  <td class="mono">#roadmap/projekty</td><td>Projekty</td><td>tabuľka (6 riadkov)</td></tr><tr data-modul="roadmap" data-s="aura roadmap rozhodnutia tabuľka (5 riadkov) rozhodnutia">
+  <td><b>Aura Roadmap</b></td><td class="n">5.6</td>
+  <td class="mono">#roadmap/rozhodnutia</td><td>Rozhodnutia</td><td>tabuľka (5 riadkov)</td></tr><tr data-modul="roadmap" data-s="aura roadmap detail úlohy detail detail">
+  <td><b>Aura Roadmap</b></td><td class="n">5.7</td>
+  <td class="mono">#roadmap/detail</td><td>Detail úlohy</td><td>detail</td></tr><tr data-modul="roadmap" data-s="aura roadmap nastavenia nastavenia settings">
+  <td><b>Aura Roadmap</b></td><td class="n">5.8</td>
+  <td class="mono">#roadmap/settings</td><td>Nastavenia</td><td>nastavenia</td></tr><tr data-modul="trzby" data-s="aura tržby intro modulu intro intro">
+  <td><b>Aura Tržby</b></td><td class="n">6.1</td>
+  <td class="mono">#trzby/intro</td><td>Intro modulu</td><td>intro</td></tr><tr data-modul="trzby" data-s="aura tržby prehľad dashboard dashboard">
+  <td><b>Aura Tržby</b></td><td class="n">6.2</td>
+  <td class="mono">#trzby/dashboard</td><td>Prehľad</td><td>dashboard</td></tr><tr data-modul="trzby" data-s="aura tržby segmenty zoznam (6 riadkov) list">
+  <td><b>Aura Tržby</b></td><td class="n">6.3</td>
+  <td class="mono">#trzby/list</td><td>Segmenty</td><td>zoznam (6 riadkov)</td></tr><tr data-modul="trzby" data-s="aura tržby trhy tabuľka (6 riadkov) trhy">
+  <td><b>Aura Tržby</b></td><td class="n">6.4</td>
+  <td class="mono">#trzby/trhy</td><td>Trhy</td><td>tabuľka (6 riadkov)</td></tr><tr data-modul="trzby" data-s="aura tržby expedícia tabuľka (4 riadky) expedicia">
+  <td><b>Aura Tržby</b></td><td class="n">6.5</td>
+  <td class="mono">#trzby/expedicia</td><td>Expedícia</td><td>tabuľka (4 riadky)</td></tr><tr data-modul="trzby" data-s="aura tržby hodiny a dni grafy hodiny">
+  <td><b>Aura Tržby</b></td><td class="n">6.6</td>
+  <td class="mono">#trzby/hodiny</td><td>Hodiny a dni</td><td>grafy</td></tr><tr data-modul="trzby" data-s="aura tržby koše tabuľka (4 riadky) kose">
+  <td><b>Aura Tržby</b></td><td class="n">6.7</td>
+  <td class="mono">#trzby/kose</td><td>Koše</td><td>tabuľka (4 riadky)</td></tr><tr data-modul="trzby" data-s="aura tržby definície tabuľka (3 riadky) definicie">
+  <td><b>Aura Tržby</b></td><td class="n">6.8</td>
+  <td class="mono">#trzby/definicie</td><td>Definície</td><td>tabuľka (3 riadky)</td></tr><tr data-modul="trzby" data-s="aura tržby detail segmentu detail detail">
+  <td><b>Aura Tržby</b></td><td class="n">6.9</td>
+  <td class="mono">#trzby/detail</td><td>Detail segmentu</td><td>detail</td></tr><tr data-modul="trzby" data-s="aura tržby nastavenia nastavenia settings">
+  <td><b>Aura Tržby</b></td><td class="n">6.10</td>
+  <td class="mono">#trzby/settings</td><td>Nastavenia</td><td>nastavenia</td></tr><tr data-modul="global" data-s="rozcestník (hub) 6 kariet modulov s live metrikami a pásom alertov">
+  <td><b>Globálne</b></td><td class="n">0.1</td><td class="mono">#hub</td><td>Rozcestník (hub)</td><td>6 kariet modulov s live metrikami a pásom alertov</td></tr><tr data-modul="global" data-s="login vstupná obrazovka">
+  <td><b>Globálne</b></td><td class="n">0.2</td><td class="mono">#login</td><td>Login</td><td>vstupná obrazovka</td></tr><tr data-modul="global" data-s="workspace výber pracovného priestoru">
+  <td><b>Globálne</b></td><td class="n">0.3</td><td class="mono">#workspace</td><td>Workspace</td><td>výber pracovného priestoru</td></tr><tr data-modul="global" data-s="profil profilová stránka používateľa">
+  <td><b>Globálne</b></td><td class="n">0.4</td><td class="mono">#profile</td><td>Profil</td><td>profilová stránka používateľa</td></tr></tbody>
+  <tfoot><tr><td colspan="2">Spolu</td><td class="mono">50 modulových + 4 globálnych</td><td colspan="2">54 obrazoviek</td></tr></tfoot>
+  </table></div><div class="empty" id="emptyScr">Filtru nič nevyhovuje.</div></div>
+  </section>
+
+  <section class="sec" id="naklady">
+    <div class="goldline"></div>
+    <h2 class="sh">Náklady</h2>
+    <p class="sh-sub">Vlastné Aura appky nemajú licenčný náklad. Platíme za 8 externých SaaS aplikácií — spolu 1 240 € / mes.</p>
+    <div class="tw"><div class="tscroll"><table>
+  <thead><tr><th>Aplikácia</th><th>Účel</th><th>Vlastník</th><th>€ / mes.</th><th>Licencie</th><th>Stav</th></tr></thead>
+  <tbody><tr><td><b>Asana</b></td><td>Projekty a úlohy</td><td>Delaja</td>
+  <td class="n">280 €</td><td class="n">15</td>
+  <td><span class="badge ok">aktívna</span></td></tr><tr><td><b>Shoptet</b></td><td>E-shop platforma</td><td>Delaja</td>
+  <td class="n">240 €</td><td class="n">1</td>
+  <td><span class="badge ok">aktívna</span></td></tr><tr><td><b>Ahrefs</b></td><td>SEO analýza</td><td>Gabika</td>
+  <td class="n">220 €</td><td class="n">1</td>
+  <td><span class="badge ok">aktívna</span></td></tr><tr><td><b>Google Workspace</b></td><td>Maily a dokumenty</td><td>Daniel</td>
+  <td class="n">180 €</td><td class="n">90</td>
+  <td><span class="badge ok">aktívna</span></td></tr><tr><td><b>Adobe CC</b></td><td>Grafika a fotky</td><td>Ema</td>
+  <td class="n">120 €</td><td class="n">2</td>
+  <td><span class="badge cond">nevyužitá</span></td></tr><tr><td><b>Figma</b></td><td>Návrhy bannerov a UI</td><td>Ema</td>
+  <td class="n">90 €</td><td class="n">3</td>
+  <td><span class="badge ok">aktívna</span></td></tr><tr><td><b>Slack</b></td><td>Interná komunikácia</td><td>Daniel</td>
+  <td class="n">70 €</td><td class="n">12</td>
+  <td><span class="badge ok">aktívna</span></td></tr><tr><td><b>Canva Pro</b></td><td>Rýchla grafika CS</td><td>Hajnalka</td>
+  <td class="n">40 €</td><td class="n">2</td>
+  <td><span class="badge cond">nevyužitá</span></td></tr></tbody>
+  <tfoot><tr><td colspan="3">Spolu — externé SaaS (8)</td><td class="n">1 240 €</td><td colspan="2">z toho nevyužité 160 € → potenciál úspory ~13 %</td></tr></tfoot>
+  </table></div></div>
+<h3 style="font-size:16px;margin:26px 0 10px">Interné rozpočty a prevádzkové náklady</h3>
+<div class="tw"><div class="tscroll"><table>
+  <thead><tr><th>Položka</th><th>Popis</th><th>Vlastník</th><th>Suma</th><th>Obdobie</th><th>Poznámka</th></tr></thead>
+  <tbody><tr><td><b>AI budget — Marketing</b></td><td>Mesačný strop na generovanie bannerov; provider default mock, reálne čerpanie 0 €</td><td>Gabika</td>
+  <td class="n">300 €</td><td class="mono">strop / mes.</td><td><span class="badge q">ukážkové čerpanie 62 % = 186 €</span></td></tr><tr><td><b>Poštovné — Logistika</b></td><td>Prevádzkový náklad dopravy z e-shop dát, júl 2026</td><td>Daniel</td>
+  <td class="n">11 603 €</td><td class="mono">júl 2026</td><td><span class="badge q">z e-shop dát</span></td></tr></tbody></table></div></div>
+<div class="note">Register SaaS aplikácií je z obrazovky HR → Aplikácie; README aj obrazovka označujú sumy ako čiastočne ukážkové.<br>Adobe CC (120 €) a Canva Pro (40 €) sú v appke označené ako nevyužité → potenciál úspory 160 € / mes., t. j. ~13 % nákladov.<br>Vlastné Aura appky nemajú licenčný náklad — bežia na vlastnom hardware v Dockeri.</div>
+  </section>
+
+  <section class="sec" id="rizika">
+    <div class="goldline"></div>
+    <h2 class="sh">Riziká a otvorené body</h2>
+    <p class="sh-sub">16 zaznamenaných rizík, z toho 4 s vysokou závažnosťou. Vychádzajú z reconu rodiny appiek — v tomto repe ich nevidno.</p>
+    <div class="tw"><div class="tscroll"><table>
+  <thead><tr><th>Modul</th><th>Riziko / otvorený bod</th><th>Závažnosť</th><th>Stav</th><th>Kontext a zmiernenie</th><th>Zdroj</th></tr></thead>
+  <tbody><tr data-s="logistika fallback admin_password || &quot;admin123&quot; na appke publikovanej na 0.0.0.0:3020 ktokoľvek v sieti sa dostane do evidencie zásielok a reklamácií. vysoké otvorené hades · recon 3. 8. 2026 kpi to už odstránil commitom 6169eb0 a pridal fail-closed bootcheck — rovnaký postup treba zopakovať tu.">
+  <td><b>Logistika</b></td>
+  <td><b>Fallback ADMIN_PASSWORD || &quot;admin123&quot; na appke publikovanej na 0.0.0.0:3020</b><br><span style="color:var(--ink-3)">Ktokoľvek v sieti sa dostane do evidencie zásielok a reklamácií.</span></td>
+  <td><span class="badge no">vysoké</span></td>
+  <td><span class="badge q">otvorené</span></td>
+  <td>KPI to už odstránil commitom 6169eb0 a pridal fail-closed bootcheck — rovnaký postup treba zopakovať tu.</td>
+  <td class="mono" style="font-size:11.5px">Hades · recon 3. 8. 2026</td></tr><tr data-s="marketing produkcia sperky-ai sa nestavia z main kto spustí docker compose -f docker-compose.prod.yml up -d --build, prepne live dizajn zo zlatej na teal bez toho, aby sa dotkol jediného súboru — vyzerá to ako rutinný restart. vysoké otvorené hades · aura redizajn poistka existuje: image aura-web:gold-c6f4061 + záloha db aura_marketing_pre-teal-deploy_20260730.sql.">
+  <td><b>Marketing</b></td>
+  <td><b>Produkcia sperky-ai sa nestavia z main</b><br><span style="color:var(--ink-3)">Kto spustí docker compose -f docker-compose.prod.yml up -d --build, prepne live dizajn zo zlatej na teal bez toho, aby sa dotkol jediného súboru — vyzerá to ako rutinný restart.</span></td>
+  <td><span class="badge no">vysoké</span></td>
+  <td><span class="badge q">otvorené</span></td>
+  <td>Poistka existuje: image aura-web:gold-c6f4061 + záloha DB aura_marketing_pre-teal-deploy_20260730.sql.</td>
+  <td class="mono" style="font-size:11.5px">Hades · Aura redizajn</td></tr><tr data-s="tržby appka neexistuje — modul je len statický html report čísla sa nedajú aktualizovať bez ručného exportu; závisí na sperky-ai /api/orders/export, ktorý vznikne až s fázou f6. vysoké blokuje hades · aura hub + plán f2–f6 plán: vanilla spa port 3060, nightly sync 03:00.">
+  <td><b>Tržby</b></td>
+  <td><b>Appka neexistuje — modul je len statický HTML report</b><br><span style="color:var(--ink-3)">Čísla sa nedajú aktualizovať bez ručného exportu; závisí na sperky-ai /api/orders/export, ktorý vznikne až s fázou F6.</span></td>
+  <td><span class="badge no">vysoké</span></td>
+  <td><span class="badge q">blokuje</span></td>
+  <td>Plán: vanilla SPA port 3060, nightly sync 03:00.</td>
+  <td class="mono" style="font-size:11.5px">Hades · Aura Hub + plán F2–F6</td></tr><tr data-s="spoločné aura hub nemá vlastné prihlásenie (loopback-only + noindex) pri tunelovaní cez ngrok by boli hlavičkové čísla všetkých appiek verejné bez hesla. vysoké otvorené hades · aura hub pred tunelovaním pridať auth. plán gateway: caddy forward_auth na hub + hmac identity hlavičky.">
+  <td><b>Spoločné</b></td>
+  <td><b>Aura Hub nemá vlastné prihlásenie (loopback-only + noindex)</b><br><span style="color:var(--ink-3)">Pri tunelovaní cez ngrok by boli hlavičkové čísla všetkých appiek verejné bez hesla.</span></td>
+  <td><span class="badge no">vysoké</span></td>
+  <td><span class="badge q">otvorené</span></td>
+  <td>Pred tunelovaním pridať auth. Plán gateway: Caddy forward_auth na hub + HMAC identity hlavičky.</td>
+  <td class="mono" style="font-size:11.5px">Hades · Aura Hub</td></tr><tr data-s="marketing a11y: --on-accent #ffffff bez dark override biela na #05bcc4 ≈ 2,2 : 1 v dark režime (sperky-ai, ads-hierarchy, mindmap-orient); 4 vanilla appky token nemajú vôbec a hardcodujú color:#fff. stredné otvorené hades · aura redizajn správne to majú len aura-prototype a aura-roadmap.">
+  <td><b>Marketing</b></td>
+  <td><b>A11Y: --on-accent #ffffff bez dark override</b><br><span style="color:var(--ink-3)">Biela na #05bcc4 ≈ 2,2 : 1 v dark režime (sperky-ai, ads-hierarchy, mindmap-orient); 4 vanilla appky token nemajú vôbec a hardcodujú color:#fff.</span></td>
+  <td><span class="badge cond">stredné</span></td>
+  <td><span class="badge q">otvorené</span></td>
+  <td>Správne to majú len aura-prototype a aura-roadmap.</td>
+  <td class="mono" style="font-size:11.5px">Hades · Aura redizajn</td></tr><tr data-s="marketing sperky-ai: 0 ui i18n na ~233 000 riadkoch, 0 render testov na 52 komponentov, 5 760 inline style={{}} appku nie je možné prefarbiť zmenou tokenov ani preložiť bez samostatného projektu (odhad 3–5 m tokenov). stredné otvorené hades · recon 3. 8. 2026 vizuál je v jsx s hardcoded hodnotami — 5 760 inline style vs 3 829 classname.">
+  <td><b>Marketing</b></td>
+  <td><b>sperky-ai: 0 UI i18n na ~233 000 riadkoch, 0 render testov na 52 komponentov, 5 760 inline style={{}}</b><br><span style="color:var(--ink-3)">Appku nie je možné prefarbiť zmenou tokenov ani preložiť bez samostatného projektu (odhad 3–5 M tokenov).</span></td>
+  <td><span class="badge cond">stredné</span></td>
+  <td><span class="badge q">otvorené</span></td>
+  <td>Vizuál je v JSX s hardcoded hodnotami — 5 760 inline style vs 3 829 className.</td>
+  <td class="mono" style="font-size:11.5px">Hades · recon 3. 8. 2026</td></tr><tr data-s="kpi otvorené body po mvp: zmeniť admin_password, chýba read-only db user kpi_ro, chýba year_refs ui bez kpi_ro sa integrácie logistika + marketing robia ručne; bez year_refs sa yoy tržba a import tolerancia nedopočítajú. stredné otvorené hades · aura kpi plus exceljs padá na zakázaných znakoch v názvoch hárkov.">
+  <td><b>KPI</b></td>
+  <td><b>Otvorené body po MVP: zmeniť ADMIN_PASSWORD, chýba read-only DB user kpi_ro, chýba year_refs UI</b><br><span style="color:var(--ink-3)">Bez kpi_ro sa integrácie Logistika + Marketing robia ručne; bez year_refs sa YoY tržba a Import tolerancia nedopočítajú.</span></td>
+  <td><span class="badge cond">stredné</span></td>
+  <td><span class="badge q">otvorené</span></td>
+  <td>Plus exceljs padá na zakázaných znakoch v názvoch hárkov.</td>
+  <td class="mono" style="font-size:11.5px">Hades · Aura KPI</td></tr><tr data-s="roadmap chýba endpoint /api/summary pre aura hub karta roadmap na rozcestníku nemá živé dáta — hlási dôvod namiesto čísla. stredné otvorené hades · aura hub rozpracované necommitnuté zmeny zostali na branchi feat/suite-visuals (5 súborov vrátane env.ts a ratelimit.ts) — agenti spadli na session limit.">
+  <td><b>Roadmap</b></td>
+  <td><b>Chýba endpoint /api/summary pre Aura Hub</b><br><span style="color:var(--ink-3)">Karta Roadmap na rozcestníku nemá živé dáta — hlási dôvod namiesto čísla.</span></td>
+  <td><span class="badge cond">stredné</span></td>
+  <td><span class="badge q">otvorené</span></td>
+  <td>Rozpracované necommitnuté zmeny zostali na branchi feat/suite-visuals (5 súborov vrátane env.ts a rateLimit.ts) — agenti spadli na session limit.</td>
+  <td class="mono" style="font-size:11.5px">Hades · Aura Hub</td></tr><tr data-s="hr endpoint /api/summary neexistuje vôbec modul hr na rozcestníku nikdy nedá živé číslo. stredné otvorené hades · aura hub zároveň appka nemá v pamäti zaznamenaný port ani git repo.">
+  <td><b>HR</b></td>
+  <td><b>Endpoint /api/summary neexistuje vôbec</b><br><span style="color:var(--ink-3)">Modul HR na rozcestníku nikdy nedá živé číslo.</span></td>
+  <td><span class="badge cond">stredné</span></td>
+  <td><span class="badge q">otvorené</span></td>
+  <td>Zároveň appka nemá v pamäti zaznamenaný port ani git repo.</td>
+  <td class="mono" style="font-size:11.5px">Hades · Aura Hub</td></tr><tr data-s="tržby nesúlad rozhodnutia a mockupu: zisk a marža reálna appka ich má vynechať (nie sú nákupné ceny), mockup ich zobrazuje (zisk 126 541 €, marža 66,1 %). stredné na rozhodnutie hades · plán f2–f6 ak sa čísla majú zachovať, treba doplniť nákupné ceny do zdroja dát.">
+  <td><b>Tržby</b></td>
+  <td><b>Nesúlad rozhodnutia a mockupu: zisk a marža</b><br><span style="color:var(--ink-3)">Reálna appka ich má VYNECHAŤ (nie sú nákupné ceny), mockup ich zobrazuje (zisk 126 541 €, marža 66,1 %).</span></td>
+  <td><span class="badge cond">stredné</span></td>
+  <td><span class="badge q">na rozhodnutie</span></td>
+  <td>Ak sa čísla majú zachovať, treba doplniť nákupné ceny do zdroja dát.</td>
+  <td class="mono" style="font-size:11.5px">Hades · plán F2–F6</td></tr><tr data-s="logistika 0 testov a do 3. 8. 2026 žiadne verziovanie zmeny sa nedali vrátiť ani auditovať; regresie nikto nezachytí. stredné čiastočne vyriešené hades · recon 3. 8. 2026 baseline commit 41b7165 už existuje, testy stále chýbajú.">
+  <td><b>Logistika</b></td>
+  <td><b>0 testov a do 3. 8. 2026 žiadne verziovanie</b><br><span style="color:var(--ink-3)">Zmeny sa nedali vrátiť ani auditovať; regresie nikto nezachytí.</span></td>
+  <td><span class="badge cond">stredné</span></td>
+  <td><span class="badge q">čiastočne vyriešené</span></td>
+  <td>Baseline commit 41b7165 už existuje, testy stále chýbajú.</td>
+  <td class="mono" style="font-size:11.5px">Hades · recon 3. 8. 2026</td></tr><tr data-s="spoločné vetva a (vanilla spa) nemá csrf, rate-limit, lockfile ani testy štyri appky rodiny (hr, logistika, kpi, banner studio) zdieľajú tento základ vrátane fallback hesiel v kóde. stredné otvorené hades · aura-app family pravidlo pre nové appky: stavaj na vetve b (sperky-ai / aura-roadmap) — bezpečnostný a testovací základ sa dodatočne dopĺňa drahšie.">
+  <td><b>Spoločné</b></td>
+  <td><b>Vetva A (vanilla SPA) nemá CSRF, rate-limit, lockfile ani testy</b><br><span style="color:var(--ink-3)">Štyri appky rodiny (HR, Logistika, KPI, Banner Studio) zdieľajú tento základ vrátane fallback hesiel v kóde.</span></td>
+  <td><span class="badge cond">stredné</span></td>
+  <td><span class="badge q">otvorené</span></td>
+  <td>Pravidlo pre nové appky: stavaj na vetve B (sperky-ai / aura-roadmap) — bezpečnostný a testovací základ sa dodatočne dopĺňa drahšie.</td>
+  <td class="mono" style="font-size:11.5px">Hades · aura-app family</td></tr><tr data-s="marketing banner studio bez github remote a so zdieľaným prihlasovacím heslom kód existuje len lokálne; prístup nie je menný, nedá sa odobrať jednému človeku. stredné otvorené hades · banner studio gh cli nie je v prostredí nainštalované.">
+  <td><b>Marketing</b></td>
+  <td><b>Banner Studio bez GitHub remote a so zdieľaným prihlasovacím heslom</b><br><span style="color:var(--ink-3)">Kód existuje len lokálne; prístup nie je menný, nedá sa odobrať jednému človeku.</span></td>
+  <td><span class="badge cond">stredné</span></td>
+  <td><span class="badge q">otvorené</span></td>
+  <td>gh CLI nie je v prostredí nainštalované.</td>
+  <td class="mono" style="font-size:11.5px">Hades · Banner Studio</td></tr><tr data-s="roadmap bez github remote; compose zakazuje publikovať db port jediné nesplnené akceptačné kritérium portu. next dev nedosiahne db → appka nemá css iterační loop, každá vizuálna zmena ide cez rebuild image. nízke otvorené hades · aura roadmap chýba len git remote add + push.">
+  <td><b>Roadmap</b></td>
+  <td><b>Bez GitHub remote; compose zakazuje publikovať DB port</b><br><span style="color:var(--ink-3)">Jediné nesplnené akceptačné kritérium portu. Next dev nedosiahne DB → appka nemá CSS iterační loop, každá vizuálna zmena ide cez rebuild image.</span></td>
+  <td><span class="badge q">nízke</span></td>
+  <td><span class="badge q">otvorené</span></td>
+  <td>Chýba len git remote add + push.</td>
+  <td class="mono" style="font-size:11.5px">Hades · Aura Roadmap</td></tr><tr data-s="spoločné mockup: rozšírenia i1–i3 (55 % js) sú post-render dom patchery window.post + mutationobserver sa do next appiek preniesť nedajú — konektor, import, report a chat treba prepísať na komponenty. stredné na rozhodnutie hades · recon 3. 8. 2026 mockup má 706 r. css + 3 033 r. js, z toho 1 290 r. fixtures na zahodenie.">
+  <td><b>Spoločné</b></td>
+  <td><b>Mockup: rozšírenia I1–I3 (55 % JS) sú post-render DOM patchery</b><br><span style="color:var(--ink-3)">window.POST + MutationObserver sa do Next appiek preniesť nedajú — konektor, import, report a chat treba prepísať na komponenty.</span></td>
+  <td><span class="badge cond">stredné</span></td>
+  <td><span class="badge q">na rozhodnutie</span></td>
+  <td>Mockup má 706 r. CSS + 3 033 r. JS, z toho 1 290 r. fixtures na zahodenie.</td>
+  <td class="mono" style="font-size:11.5px">Hades · recon 3. 8. 2026</td></tr><tr data-s="spoločné repo aura-ai nemá ci workflow nič nekontroluje html ani screenshot pipeline pri push. nízke otvorené hades · hub náhľad verifikácia beží len ručne cez apps/build/shoot.mjs.">
+  <td><b>Spoločné</b></td>
+  <td><b>Repo Aura-ai nemá CI workflow</b><br><span style="color:var(--ink-3)">Nič nekontroluje HTML ani screenshot pipeline pri push.</span></td>
+  <td><span class="badge q">nízke</span></td>
+  <td><span class="badge q">otvorené</span></td>
+  <td>Verifikácia beží len ručne cez apps/build/shoot.mjs.</td>
+  <td class="mono" style="font-size:11.5px">Hades · hub náhľad</td></tr></tbody></table></div></div>
+  </section>
+
+  <section class="sec" id="legenda">
+    <div class="goldline"></div>
+    <h2 class="sh">Legenda a metodika</h2>
+    <p class="sh-sub">Ako čítať odznaky a odkiaľ ktorý údaj pochádza.</p>
+    <div class="leg">
+  <div class="box"><p class="lbl" style="font:600 11px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);margin:0 0 10px">Stupeň overenia</p><dl style="margin:0"><dt><span class="badge ok">overené</span></dt><dd>Je to v tomto repe — dá sa otvoriť a skontrolovať (HTML mockup, README, git história).</dd><dt><span class="badge cond">rekonštruované</span></dt><dd>Z Hades pamäte o reálnych appkách v C:\Aura. V tomto repe dôkaz nie je.</dd><dt><span class="badge q">ukážkové</span></dt><dd>Demo hodnota mockupu na predvedenie rozloženia — nie prevádzkový údaj.</dd></dl></div>
+  <div class="box"><p class="lbl" style="font:600 11px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);margin:0 0 10px">Stav aplikácie</p><dl style="margin:0"><dt>V prevádzke</dt><dd>Appka beží, používa sa.</dd><dt>MVP v prevádzke</dt><dd>Overená end-to-end, ale s otvorenými bodmi na ďalší sprint.</dd><dt>Neexistuje</dt><dd>Modul je zatiaľ len statický report alebo náhľad, appka nie je postavená.</dd></dl></div>
+  <div class="box"><p class="lbl" style="font:600 11px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);margin:0 0 10px">Vetvy rodiny appiek</p>
+    <dl style="margin:0">
+      <dt><span class="badge cond mono">vetva A</span></dt><dd>Vanilla SPA + Express: Node 20 + Express 4 + MariaDB + JWT, bez build stepu. Rýchla na postavenie, ale bez testov, CSRF, rate-limitu a lockfile. Línia aura-hr-mapa → aura-logistika → aura-kpi → Banner Studio.</dd>
+      <dt><span class="badge ok mono">vetva B</span></dt><dd>Next 16 + React 19 + TS: argon2id + jose + zod, defineRoute() pipeline, migrácie s ledgerom, testy vrátane e2e a axe, non-root kontajner. sperky-ai a aura-roadmap. Pravidlo: nové appky stavať tu.</dd>
+    </dl></div>
+  <div class="box"><p class="lbl" style="font:600 11px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);margin:0 0 10px">Zdroje</p>
+    <dl style="margin:0">
+      <dt class="mono">repo · hub</dt><dd>apps/aura-apps-hub.html — mockup 6 modulov, merge 817124f.</dd>
+      <dt class="mono">repo · README</dt><dd>apps/README.md — popis modulov, live vrstvy a ovládania.</dd>
+      <dt class="mono">Hades · …</dt><dd>Hades pamäť: recon rodiny appiek C:\Aura z 28. 7. – 3. 8. 2026. V tomto repe dôkaz nie je.</dd>
+    </dl></div>
+</div>
+  </section>
+
+  <footer>
+    <p><b>Pravidlo projektu:</b> neznáme výsledky sa nevymýšľajú. Každý riadok nesie zdroj a stupeň overenia; kde tvrdenie nemá dôkaz, je to napísané.</p>
+    <p>Zdroje: apps/aura-apps-hub.html · apps/README.md (merge 817124f) · Hades pamäť — recon rodiny appiek C:\Aura (28. 7. – 3. 8. 2026)</p>
+    <p>Generované z <span class="mono">apps/build/inventory-data.mjs</span> — dáta sa upravujú tam, nie v tomto HTML. Prestavba: <span class="mono">node apps/build/inventory-html.mjs</span>.</p>
+  </footer>
+</main>
+
+<script>
+(function(){
+  var st={q:'',modul:'all',kat:'all',over:'all'};
+  var cards=[].slice.call(document.querySelectorAll('#cards .mcard'));
+  var fnRows=[].slice.call(document.querySelectorAll('#tFn tbody tr'));
+  var scrRows=[].slice.call(document.querySelectorAll('#tScr tbody tr'));
+
+  function apply(){
+    var q=st.q.trim().toLowerCase();
+    var nm=0;
+    cards.forEach(function(c){
+      var ok=(st.modul==='all'||st.modul===c.dataset.modul) && (!q||c.dataset.s.indexOf(q)>-1);
+      c.style.display=ok?'':'none'; if(ok)nm++;
+    });
+    document.getElementById('emptyMod').classList.toggle('on',nm===0);
+    document.getElementById('cntMod').textContent=nm+' z '+cards.length+' modulov';
+
+    var nf=0;
+    fnRows.forEach(function(r){
+      var ok=(st.modul==='all'||st.modul===r.dataset.modul)
+        && (st.kat==='all'||st.kat===r.dataset.kat)
+        && (st.over==='all'||st.over===r.dataset.over)
+        && (!q||r.dataset.s.indexOf(q)>-1);
+      r.style.display=ok?'':'none'; if(ok)nf++;
+    });
+    document.getElementById('emptyFn').classList.toggle('on',nf===0);
+    document.getElementById('cntFn').textContent=nf+' z '+fnRows.length+' funkcií';
+
+    scrRows.forEach(function(r){
+      var ok=(st.modul==='all'||st.modul===r.dataset.modul||r.dataset.modul==='global'&&st.modul==='all')
+        && (!q||r.dataset.s.indexOf(q)>-1);
+      r.style.display=ok?'':'none';
+    });
+    var nScr=scrRows.filter(function(r){return r.style.display!=='none';}).length;
+    document.getElementById('emptyScr').classList.toggle('on',nScr===0);
+  }
+
+  document.getElementById('q').addEventListener('input',function(e){st.q=e.target.value;apply();});
+  [].slice.call(document.querySelectorAll('.chip')).forEach(function(b){
+    b.addEventListener('click',function(){
+      var f=b.dataset.f;
+      document.querySelectorAll('.chip[data-f="'+f+'"]').forEach(function(o){o.setAttribute('aria-pressed',String(o===b));});
+      st[f]=b.dataset.v; apply();
+    });
+  });
+
+  var root=document.documentElement, tl=document.getElementById('themeL');
+  document.getElementById('theme').addEventListener('click',function(){
+    var light=root.getAttribute('data-theme')==='light';
+    root.setAttribute('data-theme',light?'dark':'light');
+    tl.textContent=light?'Svetlý režim':'Tmavý režim';
+  });
+
+  document.addEventListener('keydown',function(e){
+    if(e.key==='/'&&e.target.tagName!=='INPUT'){e.preventDefault();document.getElementById('q').focus();}
+  });
+
+  apply();
+})();
+</script>
+</body>
+</html>
