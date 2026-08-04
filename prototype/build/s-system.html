@@ -103,7 +103,7 @@
         <button class="kpi tl" type="button" id="j-kpi-hit">
           <span class="kl">Recall hit@5</span>
           <b><span class="kv">86,7</span> <em>%</em></b>
-          <span class="kd">MRR 0,800 · 714 uzlov v pamäti</span>
+          <span class="kd">MRR 0,800 · <span class="js-total">715</span> uzlov v pamäti</span>
           <span class="spk" id="j-kpi-spk2"></span>
         </button>
         <button class="kpi" type="button" id="j-kpi-p50">
@@ -115,7 +115,7 @@
         <button class="kpi" type="button" id="j-kpi-ram">
           <span class="kl">RAM</span>
           <b><span class="kv">31,2</span> <em>/ 48 GB</em></b>
-          <span class="kd">65,0 % · limit upozornenia 44 GB</span>
+          <span class="kd" id="j-ram-kd">65,0 % · limit upozornenia 44 GB</span>
           <span class="spk" id="j-kpi-spk4"></span>
         </button>
       </div>
@@ -208,7 +208,7 @@
   </div>
 
   <p class="disc">Zdroj čísel: eval batéria 31. 7. 2026 (43 dopytov, 20 párov embeddingov) · RecallEngine 8–130 ms ·
-    <span class="mono">/api/search</span> p50 4,2 s · pamäť 714 uzlov v 5 oblastiach.
+    <span class="mono">/api/search</span> p50 4,2 s · pamäť <span class="js-total">715</span> uzlov v 5 oblastiach.
     Priebehy v čase sú dopočítané — história sa pred 31. 7. 2026 systematicky nemerala.</p>
 </section>
 
@@ -371,7 +371,7 @@
         <span class="kd">1 výpadok Ollamy</span></button>
     </div>
 
-  <div class="seg" id="ob-tabs" role="tablist" aria-label="Observabilita">
+  <div class="seg" id="ob-tabs" role="group" aria-label="Observabilita">
     <button type="button" data-t="upozornenia" aria-pressed="true">Upozornenia</button>
     <button type="button" data-t="logy" aria-pressed="false">Logy</button>
     <button type="button" data-t="dostupnost" aria-pressed="false">Dostupnosť</button>
@@ -588,7 +588,7 @@
               <option value="nomic-embed-text">nomic-embed-text — 768 dim · 0,3 GB</option>
               <option value="mxbai-embed-large">mxbai-embed-large — 1 024 dim · 0,7 GB</option>
             </select>
-            <p class="hint">bge-m3 má nameraný prekryv SK↔EN len 3/20. Zmena modelu vyžaduje preindexovanie 714 uzlov.</p>
+            <p class="hint">bge-m3 má nameraný prekryv SK↔EN len 3/20. Zmena modelu vyžaduje preindexovanie <span class="js-total">715</span> uzlov.</p>
           </div>
         </div>
         <div style="min-width:0">
@@ -677,7 +677,7 @@
           <option value="7d">týždenne v nedeľu</option>
           <option value="off">vypnuté</option>
         </select>
-        <p class="hint">Záloha je jeden súbor SQLite s 714 uzlami a ich vektormi (≈ 41 MB).</p>
+        <p class="hint">Záloha je jeden súbor SQLite s <span class="js-total">715</span> uzlami a ich vektormi (≈ 41 MB).</p>
       </div>
       <div class="field">
         <label for="st-lang">Jazyk rozhrania</label>

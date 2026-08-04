@@ -34,11 +34,11 @@
   </div>
 
   <!-- Hlavné taby -->
-  <div class="seg" id="pm-tabs" role="tablist" aria-label="Pohľad na pamäť" style="margin-bottom:12px">
-    <button role="tab" data-tab="graf" aria-pressed="true">Graf</button>
-    <button role="tab" data-tab="dnes" aria-pressed="false">Dnes</button>
-    <button role="tab" data-tab="hladanie" aria-pressed="false">Hľadanie</button>
-    <button role="tab" data-tab="cistenie" aria-pressed="false">Čistenie</button>
+  <div class="seg" id="pm-tabs" role="group" aria-label="Pohľad na pamäť" style="margin-bottom:12px">
+    <button data-tab="graf" aria-pressed="true">Graf</button>
+    <button data-tab="dnes" aria-pressed="false">Dnes</button>
+    <button data-tab="hladanie" aria-pressed="false">Hľadanie</button>
+    <button data-tab="cistenie" aria-pressed="false">Čistenie</button>
   </div>
 
   <!-- ===================== PANEL GRAF ===================== -->
@@ -82,6 +82,8 @@
           <input type="range" id="pm-f-str" min="0" max="100" step="5" value="0"></div>
         <div class="field" style="margin:0"><label for="pm-f-per">Vek uzla</label>
           <select id="pm-f-per"><option value="0">celá pamäť</option><option value="30">do 30 dní</option><option value="90">do 90 dní</option><option value="320">do 320 dní</option></select></div>
+        <div class="field" style="margin:0"><label for="pm-f-arch">Archív</label>
+          <select id="pm-f-arch"><option value="">aktívne uzly</option><option value="only">len archivované</option></select></div>
         <button class="btn ghost" id="pm-reset" style="align-self:end">Zrušiť filtre</button>
       </div>
 
@@ -127,6 +129,7 @@
         <button class="btn ghost" data-bulk="tag">Tag</button>
         <button class="btn ghost" data-bulk="pin">Chrániť</button>
         <button class="btn ghost" data-bulk="merge">Zlúčiť</button>
+        <button class="btn ghost" data-bulk="restore" hidden>Obnoviť z archívu</button>
         <button class="btn ghost" data-bulk="clear">Zrušiť výber</button>
       </div>
       <div class="tw" style="padding:12px 4px 0">
@@ -197,11 +200,11 @@
       <div class="ch"><h3>Sprievodca čistenia</h3><span class="tag" id="pm-cl-step">krok 1 zo 4</span>
         <span class="sp"></span><span class="badge mute" id="pm-cl-total">—</span></div>
       <p class="note">Pamäť rastie rýchlejšie, než sa dá prečítať. Sprievodca prejde štyri typy uzlov, ktoré sa oplatí zvážiť: slabé, dlho neaktívne, osamelé a duplicitné. Archivovanie je vratné — uzol sa presunie do archívu, nezmaže sa.</p>
-      <div class="seg" id="pm-cl-steps" role="tablist" aria-label="Kroky čistenia" style="margin:10px 0">
-        <button role="tab" data-s="weak" aria-pressed="true">Slabé</button>
-        <button role="tab" data-s="stale" aria-pressed="false">Dlho neaktívne</button>
-        <button role="tab" data-s="orphan" aria-pressed="false">Osamelé</button>
-        <button role="tab" data-s="dupes" aria-pressed="false">Duplikáty</button>
+      <div class="seg" id="pm-cl-steps" role="group" aria-label="Kroky čistenia" style="margin:10px 0">
+        <button data-s="weak" aria-pressed="true">Slabé</button>
+        <button data-s="stale" aria-pressed="false">Dlho neaktívne</button>
+        <button data-s="orphan" aria-pressed="false">Osamelé</button>
+        <button data-s="dupes" aria-pressed="false">Duplikáty</button>
       </div>
       <p class="lead" id="pm-cl-desc" style="margin-bottom:10px"></p>
       <div class="filt" style="margin-bottom:10px">

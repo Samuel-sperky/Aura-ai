@@ -58,7 +58,10 @@
     }
     return true;
   }
-  function filteredNodes() { return mem().nodes().filter(passFilter); }
+  /* zdroj riadkov zoznamu: buď živé uzly, alebo archív (sľub „dajú sa vrátiť") */
+  function filteredNodes() {
+    return (PM.archOnly ? mem().archived() : mem().nodes()).filter(passFilter);
+  }
 
 
   /* ============================================================
@@ -717,14 +720,16 @@
     var net = PM.net; if (!net || !net.bb) return;
     netFitTo(net.bb.x0, net.bb.y0, net.bb.x1, net.bb.y1, 14);
   }
-  /* fit na SKUTOČNÝ box (nie viewBox) — na výškovom telefóne by letterbox
-     zmenšil mapu na ~0,37×; cielime kresliacu mierku ≥ 1,15 a nechávame pan */
+  /* fit na SKUTOČNÝ box (nie viewBox): letterbox na výškovom telefóne inak necháva
+     polovicu plátna prázdnu. Vždy začíname prehľadom — celý obsah musí byť vidieť,
+     detail si používateľ priblíži štipkou (pan je clampnutý, nedá sa stratiť). */
   function netFitViewport() {
     var net = PM.net, host = $("#pm-net"); if (!net || !net.bb || !host) return;
     var r = host.getBoundingClientRect(); if (!r.width || !r.height) return;
     var base = Math.min(r.width / GW, r.height / GH);
-    var kFit = Math.min(GW / (net.bb.x1 - net.bb.x0 + 28), GH / (net.bb.y1 - net.bb.y0 + 28));
-    var k = clamp(Math.max(kFit, base > 0 ? 1.15 / base : 1), 0.8, 4);
+    if (!base) return;
+    var cw = (net.bb.x1 - net.bb.x0 + 40) * base, ch = (net.bb.y1 - net.bb.y0 + 40) * base;
+    var k = clamp(Math.min(r.width / cw, r.height / ch), 0.8, 4);
     net.cam.k = k;
     net.cam.tx = GW / 2 - (net.bb.x0 + net.bb.x1) / 2 * k;
     net.cam.ty = GH / 2 - (net.bb.y0 + net.bb.y1) / 2 * k;
@@ -810,13 +815,27 @@
     if (!cur || !net.byId[cur]) return;
     ev.preventDefault();
     var it = net.byId[cur], next = null;
-    function sib(list, id, dir) {
-      var i = list.indexOf(id);
-      return list[(i + dir + list.length) % list.length];
+    /* klávesnica sa smie pohybovať len po uzloch, ktoré sú aj viditeľné —
+       inak by Enter otvoril uzol odfiltrovaný alebo skrytý fokusom */
+    function navOk(id) {
+      var n2 = net.byId[id]; if (!n2) return false;
+      var el2 = net.el[id];
+      if (el2 && (el2.classList.contains("flt-out") || el2.classList.contains("ctx-out"))) return false;
+      return n2.kind !== "leaf" || passFilter(n2.node);
     }
+    function sib(list, id, dir) {
+      if (!list.length) return null;
+      var i = list.indexOf(id);
+      for (var s = 1; s <= list.length; s++) {
+        var c = list[(i + dir * s + list.length * s) % list.length];
+        if (navOk(c)) return c;
+      }
+      return null;
+    }
+    function firstOk(list) { for (var i = 0; i < list.length; i++) if (navOk(list[i])) return list[i]; return null; }
     if (ev.key === "ArrowDown") {
-      if (it.kind === "core") { var h0 = net.hubs.filter(function (h) { return h.area.k === it.area.k; })[0]; next = h0 && h0.id; }
-      else if (it.kind === "hub") { var l0 = net.leaves.filter(function (lf) { return lf.hub.id === it.id; })[0]; next = l0 && l0.id; }
+      if (it.kind === "core") next = firstOk(net.hubs.filter(function (h) { return h.area.k === it.area.k; }).map(function (h) { return h.id; }));
+      else if (it.kind === "hub") next = firstOk(net.leaves.filter(function (lf) { return lf.hub.id === it.id; }).map(function (lf) { return lf.id; }));
     } else if (ev.key === "ArrowUp") {
       if (it.kind === "leaf") next = it.hub.id;
       else if (it.kind === "hub") next = "core-" + it.area.k;
@@ -826,7 +845,18 @@
       else if (it.kind === "hub") next = sib(net.hubs.filter(function (h) { return h.area.k === it.area.k; }).map(function (h) { return h.id; }), it.id, dir);
       else next = sib(net.leaves.filter(function (lf) { return lf.hub === it.hub; }).map(function (lf) { return lf.id; }), it.id, dir);
     }
-    if (next && net.el[next]) net.el[next].focus();
+    if (!next || !net.el[next]) return;
+    net.el[next].focus();
+    /* kamera nasleduje fokus, ak uzol vypadol z viditeľnej časti plátna */
+    var host = $("#pm-net"), n3 = net.byId[next];
+    if (host && n3) {
+      var r = host.getBoundingClientRect(), c = net.cam;
+      var base = Math.min(r.width / GW, r.height / GH);
+      var ox = (r.width - GW * base) / 2, oy = (r.height - GH * base) / 2;
+      var px = ox + (n3.x * c.k + c.tx) * base, py = oy + (n3.y * c.k + c.ty) * base;
+      var m = 40;
+      if (px < m || py < m || px > r.width - m || py > r.height - m) netCenterOn(next);
+    }
   }
 
   /* ---------- breadcrumb — VŽDY derivovaný zo stavu, nikdy imperatívny ---------- */
@@ -1136,8 +1166,8 @@
     if (x === "layer" || x === "all") setLayer("all");
     if (x === "search" || x === "all") { PM.gq = ""; var i = $("#pm-gq"); if (i) i.value = ""; if (net) net.camBefore = null; netHits(); }
     if (x === "legend" || x === "all") { if (net) net.legendHot = null; legendRefresh(); }
+    if (x === "all" && net) { net.lobeFocus = null; net.deptFocus = null; net.camBefore = null; netFocusApply(); }
     if (x === "filters" || x === "all") { resetFilters(); return; }   /* resetFilters volá applyFilterUI */
-    if (x === "all" && net) { net.lobeFocus = null; net.deptFocus = null; netFocusApply(); }
     netStyle();
   }
 
@@ -1397,9 +1427,17 @@
     if (!ids.length) { bar.hidden = true; return; }
     bar.hidden = false;
     $("#pm-bulk-n").textContent = F(ids.length, 0) + " vybraných";
+    /* v archíve dávajú zmysel iné akcie než nad živými uzlami */
+    $$("#pm-bulk [data-bulk]").forEach(function (b) {
+      var k = b.getAttribute("data-bulk");
+      if (k === "restore") b.hidden = !PM.archOnly;
+      else if (k !== "clear") b.hidden = !!PM.archOnly;
+    });
   }
   function selectedNodes() {
-    return Object.keys(PM.sel).filter(function (k) { return PM.sel[k]; }).map(function (id) { return mem().byId(id); }).filter(Boolean);
+    return Object.keys(PM.sel).filter(function (k) { return PM.sel[k]; })
+      .map(function (id) { return mem().byId(id) || mem().archived().filter(function (n) { return n.id === id; })[0]; })
+      .filter(Boolean);
   }
   function zoznamRender(rows) {
     var tb = $("#pm-tbl tbody");
@@ -1463,8 +1501,8 @@
       { label: "Presunúť", kind: "", fn: function () {
         var a = mem().areaByKey($("#pm-mv-a").value);
         var d = a.deps.filter(function (x) { return x.slug === $("#pm-mv-d").value; })[0] || a.deps[0];
-        sel.forEach(function (n) { mem().update(n, { area: a, dep: d, type: d.type }); });
-        A.closeDetail(); PM.sel = {}; A.toast(F(sel.length, 0) + " uzlov presunutých do " + a.name, "ok");
+        PM.sel = {}; sel.forEach(function (n) { mem().update(n, { area: a, dep: d, type: d.type }); });
+        A.closeDetail(); A.toast(F(sel.length, 0) + " uzlov presunutých do " + a.name, "ok");
       } }
     ]);
     $("#pm-mv-a").addEventListener("change", function () { $("#pm-mv-d").innerHTML = depOpts(this.value); });
@@ -1475,26 +1513,34 @@
       '<div class="field"><label for="pm-tg">Tag</label><input id="pm-tg" placeholder="napr. revízia"></div><p class="note">Tag sa pridá všetkým vybraným uzlom.</p>',
       [{ label: "Pridať tag", kind: "", fn: function () {
         var t = ($("#pm-tg").value || "").trim(); if (!t) { A.toast("Zadaj tag", "warn"); return; }
-        sel.forEach(function (n) { mem().update(n, { tags: (n.tags || []).concat([t]) }); });
-        A.closeDetail(); PM.sel = {}; A.toast("Tag „" + t + "“ pridaný " + F(sel.length, 0) + " uzlom", "ok");
+        PM.sel = {}; sel.forEach(function (n) { mem().update(n, { tags: (n.tags || []).concat([t]) }); });
+        A.closeDetail(); A.toast("Tag „" + t + "“ pridaný " + F(sel.length, 0) + " uzlom", "ok");
       } }]);
   }
   function runBulk(kind) {
     var sel = selectedNodes(); if (!sel.length) return;
     if (kind === "clear") { PM.sel = {}; zoznamRender(A.applySort($("#pm-tbl"), zoznamRows())); return; }
+    if (kind === "restore") {
+      PM.sel = {};
+      sel.forEach(function (n) { mem().restore(n); });
+      A.toast(F(sel.length, 0) + " uzlov obnovených z archívu", "ok", { undo: function () { sel.forEach(function (n) { mem().archive(n); }); } });
+      return;
+    }
     if (kind === "archive") {
-      A.confirm("Archivovať " + F(sel.length, 0) + " uzlov?", "Presunú sa do archívu a zmiznú z grafu. Dajú sa obnoviť.", function () {
-        sel.forEach(function (n) { mem().archive(n); }); PM.sel = {}; A.toast(F(sel.length, 0) + " uzlov v archíve", "ok");
+      A.confirm("Archivovať " + F(sel.length, 0) + " uzlov?", "Presunú sa do archívu a zmiznú z grafu. Dajú sa obnoviť cez filter Archív alebo hneď cez Späť.", function () {
+        PM.sel = {};
+        sel.forEach(function (n) { mem().archive(n); });
+        A.toast(F(sel.length, 0) + " uzlov v archíve", "ok", { undo: function () { sel.forEach(function (n) { mem().restore(n); }); } });
       }, "Archivovať", true); return;
     }
-    if (kind === "pin") { sel.forEach(function (n) { if (!n.pinned) mem().togglePin(n); }); PM.sel = {}; A.toast(F(sel.length, 0) + " uzlov chránených (pripnuté)", "ok"); return; }
+    if (kind === "pin") { PM.sel = {}; sel.forEach(function (n) { if (!n.pinned) mem().togglePin(n); }); A.toast(F(sel.length, 0) + " uzlov chránených (pripnuté)", "ok"); return; }
     if (kind === "move") { bulkMove(); return; }
     if (kind === "tag") { bulkTag(); return; }
     if (kind === "merge") {
       if (sel.length < 2) { A.toast("Na zlúčenie vyber aspoň 2 uzly", "warn"); return; }
       var keep = sel[0], drop = sel.slice(1);
       A.confirm("Zlúčiť " + F(sel.length, 0) + " uzlov?", "„" + drop.map(function (n) { return n.name; }).join("“, „") + "“ sa zlúčia do „" + keep.name + "“ a zaniknú.", function () {
-        drop.forEach(function (n) { mem().merge(keep, n); }); PM.sel = {}; A.toast("Zlúčené do „" + keep.name + "“", "ok");
+        PM.sel = {}; drop.forEach(function (n) { mem().merge(keep, n); }); A.toast("Zlúčené do „" + keep.name + "“", "ok");
       }, "Zlúčiť", true); return;
     }
   }
@@ -1561,7 +1607,13 @@
     var res;
     if (PM.preset === "weak") res = mem().weak().filter(passFilterNoWeak).map(wrap);
     else if (PM.preset === "today") res = mem().today().filter(passFilterNoWeak).map(wrap);
-    else res = mem().search(PM.q, filt).filter(function (r) { return !PM.filter.per || r.node.age <= PM.filter.per; });
+    /* aj ranked hľadanie musí rešpektovať „len slabé" — inak chip sľubuje filter,
+       ktorý sa na tomto tabe neuplatňuje */
+    else res = mem().search(PM.q, filt).filter(function (r) {
+      if (PM.filter.per && r.node.age > PM.filter.per) return false;
+      if (PM.weakOnly && r.node.str >= 0.4) return false;
+      return true;
+    });
 
     if (!PM.q && !PM.preset) {
       $("#pm-hl-cnt").textContent = "zadajte dopyt";
@@ -1670,6 +1722,8 @@
   function switchTab(tab) {
     PM.tab = tab;
     $$("#pm-tabs button").forEach(function (b) { b.setAttribute("aria-pressed", String(b.getAttribute("data-tab") === tab)); });
+    /* filtračný chip platí pre Graf/Zoznam a Hľadanie; na tabe Dnes sa filter neuplatňuje */
+    var fc = $("#pm-fchip"); if (fc) fc.hidden = (tab === "dnes" || tab === "cistenie") || !PM.fchip;
     $("#pm-panel-graf").hidden = tab !== "graf";
     $("#pm-panel-dnes").hidden = tab !== "dnes";
     $("#pm-panel-hladanie").hidden = tab !== "hladanie";
@@ -1725,6 +1779,8 @@
 
   function showFchip(label) {
     var host = $("#pm-fchip");
+    if (label != null) PM.fchip = label;
+    else PM.fchip = null;
     if (!label) { host.innerHTML = ""; return; }
     host.innerHTML = '<div class="fchip">filtrované z <b>' + esc(label) + '</b> <button aria-label="Zrušiť filter">✕</button></div>';
     $("#pm-fchip button").addEventListener("click", function () { resetFilters(); });
@@ -1864,7 +1920,8 @@
       $("#pm-k4").addEventListener("click", function () { A.go("pamat", "dnes"); });
 
       /* domov */
-      function homeGo() { switchTab("hladanie"); runSearch($("#pm-home-q").value); }
+      /* každá zmena tabu ide cez router — hash musí sedieť s viditeľným panelom */
+      function homeGo() { PM.qPending = $("#pm-home-q").value; A.go("pamat", "hladanie"); }
       $("#pm-home-go").addEventListener("click", homeGo);
       $("#pm-home-q").addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); homeGo(); } });
       $("#pm-new").addEventListener("click", createNode);
@@ -1927,7 +1984,7 @@
         if (!x) return;
         var ghx = x.getAttribute("data-ghx");
         if (ghx === "clear") { $("#pm-gq").value = ""; netSearch(""); }
-        else if (ghx === "list") { switchTab("hladanie"); runSearch(PM.gq); }
+        else if (ghx === "list") { PM.qPending = PM.gq; A.go("pamat", "hladanie"); }
         else resetFilters();
       });
       $("#pm-gchips").addEventListener("click", function (e) {
@@ -1971,8 +2028,9 @@
 
       /* filtre */
       $("#pm-f-type").addEventListener("change", function () { PM.filter.type = this.value; applyFilterUI(); });
-      $("#pm-f-str").addEventListener("input", function () { PM.filter.strMin = +this.value / 100; $("#pm-f-strv").textContent = F(PM.filter.strMin, 2); netStyle(); redrawView(); if (PM.tab === "hladanie") hlResults(); });
+      $("#pm-f-str").addEventListener("input", function () { PM.filter.strMin = +this.value / 100; applyFilterUI(); });
       $("#pm-f-per").addEventListener("change", function () { PM.filter.per = +this.value; applyFilterUI(); });
+      $("#pm-f-arch").addEventListener("change", function () { PM.archOnly = this.value === "only"; PM.sel = {}; applyFilterUI(); });
       $("#pm-reset").addEventListener("click", resetFilters);
 
       /* charty — prepnutie na tabuľku */
@@ -2011,7 +2069,8 @@
          atribútov (sila, pin) je lacný restyle bez rebuildu */
       mem().onChange(function () {
         kpiRefresh(); recentRefresh();
-        if (PM.net && PM.net.sig !== netSig()) PM.net = null;
+        /* netBuild sám pozná podpis a prenáša fokus/legendu cez `prev` — nulovanie
+           PM.net by ten prenos zahodilo a vyhodilo používateľa z fokusu */
         legendRefresh();
         drawCharts();
         redrawView();
@@ -2044,7 +2103,11 @@
         return;
       }
       if (sub === "dnes" || sub === "today" || sub === "triage") { switchTab("dnes"); return; }
-      if (sub === "hladanie" || sub === "search") { switchTab("hladanie"); return; }
+      if (sub === "hladanie" || sub === "search") {
+        switchTab("hladanie");
+        if (PM.qPending != null) { var q0 = PM.qPending; PM.qPending = null; runSearch(q0); }
+        return;
+      }
       var a = mem().areaByKey(sub);
       if (a) { PM.filter.area = sub; showFchip(a.name); applyFilterUI(); switchTab("graf"); return; }
       /* inak: chápeme ako dopyt */

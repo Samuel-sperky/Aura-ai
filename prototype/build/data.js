@@ -236,12 +236,19 @@
       A.mem.remove(drop); emit("update", keep);
     },
     /* návrhy duplikátov (podobný názov v inom oddelení) */
+    /* duplikáty: prekryv obsahových tokenov ≥ 50 %, nie jediné spoločné slovo —
+       inak sprievodca čistenia ponúka zlúčenie úplne nesúvisiacich uzlov */
     dupes: function (nd) {
+      var STOP = { pred: 1, podla: 1, medzi: 1, ako: 1, alebo: 1, ktore: 1, tento: 1, prve: 1, bez: 1, pre: 1, cez: 1, nad: 1, pod: 1, plan: 1, novy: 1, nove: 1 };
+      function toks(s) {
+        return A.fold(s).split(/[^a-z0-9]+/).filter(function (t) { return t.length > 3 && !STOP[t]; });
+      }
+      var a = toks(nd.name); if (a.length < 2) return [];
       return _nodes.filter(function (m) {
-        if (m.id === nd.id || m.archived) return false;
-        var a = A.fold(nd.name).split(/\s+/), b = A.fold(m.name);
-        var hit = a.filter(function (t) { return t.length > 3 && b.indexOf(t) > -1; }).length;
-        return hit >= 1 && m.type === nd.type;
+        if (m.id === nd.id || m.archived || m.type !== nd.type) return false;
+        var b = toks(m.name); if (!b.length) return false;
+        var hit = a.filter(function (t) { return b.indexOf(t) > -1; }).length;
+        return hit / Math.min(a.length, b.length) >= 0.5;
       }).slice(0, 4);
     },
     link: addBack,
@@ -444,6 +451,10 @@
       { t: "pred 5 h", agent: "Newsletter — týždenný koncept", dep: "Newsletter", res: "čaká", tok: 0, min: 0, id: "A-02" }
     ],
     byId: function (id) { for (var i = 0; i < A.autos.rows.length; i++) if (A.autos.rows[i].id === id) return A.autos.rows[i]; return null; },
+    /* zmena stavu/behu → jeden broadcast (KPI, odznaky, donuty sa naň prihlásia) */
+    _subs: [],
+    onChange: function (fn) { A.autos._subs.push(fn); },
+    emit: function (kind, row) { A.autos._subs.forEach(function (fn) { try { fn(kind, row); } catch (e) { console.error(e); } }); },
     /* trace strom behu doplní obrazovka Práca (vlastní vykreslenie) */
     runDetail: null
   };
@@ -530,6 +541,7 @@
       });
       A.autos.hist.unshift({ t: "teraz", agent: (v ? "Appka pozastavená — " : "Appka obnovená — ") + app.name, dep: (app.deps || [])[0] || "—", res: v ? "pauza" : "obnovené", tok: 0, min: 0, id: "—" });
       if (A.autos.hist.length > 40) A.autos.hist.pop();
+      A.autos.emit("cascade", app);
       aemit("update", app);
     },
     /* jeden zdieľaný potvrdzovací tok pauzy (Q79) — používa detail appky aj Nastavenia */
@@ -581,6 +593,8 @@
     /* objem spracovaných položiek za n dní (deterministické) */
     vol: function (app, n) {
       var rows = A.apps.autos(app);
+      /* appka bez automatizácií reálne nespracuje nič — nulový rad, nie konštantná podlaha */
+      if (!rows.length) return new Array(n || 14).fill(0);
       var base = 8 + rows.length * 6 + Math.round((app.share || 0.1) * 60);
       return A.series(app.seed || 4100, n || 14, base, base * 0.45, 0.6)
         .map(function (v) { return Math.max(0, Math.round(v)); });

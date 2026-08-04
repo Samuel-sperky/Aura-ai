@@ -103,10 +103,16 @@
   var MCP_META = {
     "Asana": "#f06a6a", "Canva": "#00c4cc", "M365": "#d83b01", "Ahrefs": "#ff8800", "Zapier": "#ff4a00"
   };
+  /* text v značkovej dlaždici sa volí podľa jasu podkladu — biela na Canve mala 2,2:1 */
+  function mcpInk(hex) {
+    var m = /^#([0-9a-f]{6})$/i.exec(hex || ""); if (!m) return "var(--on-brand-light)";
+    var v = parseInt(m[1], 16), r = (v >> 16) & 255, g = (v >> 8) & 255, b2 = v & 255;
+    return (0.2126 * r + 0.7152 * g + 0.0722 * b2) > 150 ? "var(--on-brand-dark)" : "var(--on-brand-light)";
+  }
   function mcpIcon(name) {
     var col = MCP_META[name] || "var(--teal)", ini = (name || "?").slice(0, 1).toUpperCase();
-    return '<span class="num" title="' + esc(name) + '" aria-label="MCP nástroj ' + esc(name) + '" ' +
-      'style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:5px;font-size:var(--fs-label);font-weight:700;color:#fff;background:' + col + ';margin-right:3px;vertical-align:-3px">' + esc(ini) + "</span>";
+    return '<span class="num" role="img" title="' + esc(name) + '" aria-label="MCP nástroj ' + esc(name) + '" ' +
+      'style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:5px;font-size:var(--fs-label);font-weight:700;color:' + mcpInk(col) + ';background:' + col + ';margin-right:3px;vertical-align:-3px">' + esc(ini) + "</span>";
   }
   function mcpRow(list) { return (list || []).map(function (n) { return mcpIcon(n) + '<span style="font-size:var(--fs-label);margin-right:8px">' + esc(n) + "</span>"; }).join(""); }
 
@@ -192,7 +198,7 @@
     var rows = chConvList();
     $("#ch-convs").innerHTML = rows.length ? rows.map(function (c) {
       var on = c === CH.cur;
-      return '<div class="fi" data-conv="' + c.id + '" aria-current="' + on + '" style="cursor:pointer' + (on ? ";background:color-mix(in srgb,var(--teal) 10%,var(--card))" : "") + '">' +
+      return '<div class="fi" data-conv="' + c.id + '" tabindex="0" role="button" aria-current="' + on + '" aria-label="Otvoriť konverzáciu ' + esc(c.title) + '" style="cursor:pointer' + (on ? ";background:color-mix(in srgb,var(--teal) 10%,var(--card))" : "") + '">' +
         '<span class="fd' + (on ? "" : c.pinned ? " g" : "") + '"></span>' +
         '<span class="fx"><b style="font-size:var(--fs-sm)">' + (c.pinned ? "Pripnuté · " : "") + esc(c.title) + "</b><span>" + esc(c.when) + " · " + F(c.msgs.length, 0) + " správ · " + esc(ZONE_TXT[c.zone].b) + "</span></span>" +
         '<span class="ft" style="display:flex;gap:3px">' +
@@ -328,7 +334,7 @@
     var msg = { role: "ai", text: "", at: chNow(), streaming: true, done: false,
       meta: { model: viaMcp ? "claude cez MCP" : CH.model, ctx: 0, tps: 0, recallMs: Math.round(8 + Math.random() * 122), router: router, sources: sources } };
     CH.cur.msgs.push(msg);
-    chRenderConvs(); chRenderMsgs(); chSetBusy(true); chTpsChart(true);
+    chRenderConvs(); chRenderMsgs(); if (CH.grow) CH.grow(); chSetBusy(true); chTpsChart(true);
 
     var toks = ans.text.split(/(\s+)/), i = 0, t0 = Date.now(), acc = 0;
     CH.timer = setInterval(function () {
@@ -345,6 +351,7 @@
     var secs = Math.max(0.4, (Date.now() - t0) / 1000);
     msg.meta.tps = +((msg.text.length / 4) / secs).toFixed(1);
     chSetBusy(false); chRenderMsgs(); msg.meta.ctx = chCtxChart(); chRenderMsgs(); chTpsChart(false);
+    if (CH.grow) CH.grow();
   }
 
   function chVote(m, dir) {
@@ -391,7 +398,7 @@
     title: "Chat", group: "Práca",
     init: function () {
       var Ax = A();
-      chSeedConvs(); chRenderConvs(); chRenderMsgs(); chTpsChart(true); chCtxChart(); chSetZone("local");
+      chSeedConvs(); chRenderConvs(); chRenderMsgs(); if (CH.grow) CH.grow(); chTpsChart(true); chCtxChart(); chSetZone("local");
       bindCodeCopy($("#ch-msgs"));
       bindTableToggle("ch-tps-tbl", "ch-tps-t", function () {
         return mkTable(["Čas", "tok/s"], (CH.tpsData || []).map(function (v, i) { return [F(i * 0.4, 1) + " s", F(v, 1)]; }));
@@ -412,6 +419,7 @@
         $("#ch-warn").textContent = tot > 8192 ? "Prekročené kontextové okno o " + F(tot - 8192, 0) + " tokenov — najstaršie správy sa pri odoslaní odrežú." : tot > 7000 ? "Blížite sa k limitu 8 192 tokenov (zostáva " + F(8192 - tot, 0) + ")." : "";
       }
       ta.addEventListener("input", grow); grow();
+      CH.grow = grow;   /* token badge musí žiť aj po odpovedi a pri zmene konverzácie */
 
       function doSend() {
         var txt = ta.value.trim();
@@ -451,8 +459,10 @@
         Ax.detail("Príloha k správe", "<p>Rozhranie je náhľad bez sieťovej vrstvy, takže sa tu súbor reálne nenahráva. V ostrej verzii sa príloha spracuje lokálne: text sa rozdelí na úseky, zaembeduje cez bge-m3 a pripojí ku kontextu konverzácie.</p><dl><dt>Podporované</dt><dd>.txt · .md · .csv · .php · .js</dd><dt>Limit</dt><dd>2 MB na súbor, max 8 súborov</dd><dt>Zóna</dt><dd>dedí sa zo zóny konverzácie</dd></dl>", []);
       });
       $("#ch-new").addEventListener("click", function () {
+        CH.zone = Ax.getShared("zone", CH.zone);
         CH.cur = { id: "c" + (++CH.seq) + "n", title: "Nová konverzácia", when: chNow(), zone: CH.zone, pinned: false, msgs: [] };
-        CH.convs.unshift(CH.cur); chRenderConvs(); chRenderMsgs(); chTpsChart(true); chCtxChart();
+        chSetZone(CH.zone);
+        CH.convs.unshift(CH.cur); chRenderConvs(); chRenderMsgs(); if (CH.grow) CH.grow(); chTpsChart(true); chCtxChart();
       });
 
       $("#ch-search").addEventListener("input", function () { CH.search = this.value; chRenderConvs(); });
@@ -465,15 +475,21 @@
           Ax.confirm("Zmazať konverzáciu?", "„" + cc.title + "“ sa natrvalo odstráni z histórie.", function () {
             CH.convs = CH.convs.filter(function (x) { return x.id !== id; });
             if (CH.cur === cc) CH.cur = CH.convs[0] || null;
-            chRenderConvs(); chRenderMsgs(); chCtxChart(); Ax.toast("Konverzácia zmazaná", "ok");
+            chRenderConvs(); chRenderMsgs(); if (CH.grow) CH.grow(); chCtxChart(); Ax.toast("Konverzácia zmazaná", "ok");
           }, "Zmazať", true); return; }
         var row = e.target.closest("[data-conv]");
         if (!row) return;
         CH.cur = CH.convs.filter(function (c) { return c.id === row.getAttribute("data-conv"); })[0];
         if (CH.cur) chSetZone(CH.cur.zone);
-        chRenderConvs(); chRenderMsgs(); chCtxChart();
+        chRenderConvs(); chRenderMsgs(); if (CH.grow) CH.grow(); chCtxChart();
       });
-      $("#ch-convsel").addEventListener("change", function () { CH.cur = CH.convs.filter(function (c) { return c.id === this.value; }.bind(this))[0]; if (CH.cur) chSetZone(CH.cur.zone); chRenderConvs(); chRenderMsgs(); chCtxChart(); });
+      $("#ch-convs").addEventListener("keydown", function (e) {
+        if (e.key !== "Enter" && e.key !== " ") return;
+        var row = e.target.closest("[data-conv]");
+        if (!row || e.target.closest("button")) return;
+        e.preventDefault(); row.click();
+      });
+      $("#ch-convsel").addEventListener("change", function () { CH.cur = CH.convs.filter(function (c) { return c.id === this.value; }.bind(this))[0]; if (CH.cur) chSetZone(CH.cur.zone); chRenderConvs(); chRenderMsgs(); if (CH.grow) CH.grow(); chCtxChart(); });
 
       $("#ch-msgs").addEventListener("click", function (e) {
         var s = e.target.closest("button[data-src]");
@@ -633,6 +649,8 @@
       if (key) smLoadTpl(key);
       $("#sm-title").value = r.title; $("#sm-goal").value = r.goal;
     }
+    var tk = Object.keys(SM_TPL).filter(function (k) { return SM_TPL[k].name === r.tpl; })[0];
+    if (tk) { SM.tpl = tk; $$("#v-smernica .chz[data-tpl]").forEach(function (b) { b.setAttribute("aria-pressed", String(b.getAttribute("data-tpl") === tk)); }); }
     $("#sm-tplname").textContent = "šablóna: " + r.tpl;
     smRenderClaims(); smRenderLinked(); smPreview();
     A().toast("Smernica „" + r.title + "“ načítaná späť do formulára", "ok");
@@ -797,7 +815,8 @@
     var appDeps = AU.filter.app ? auAppDeps(AU.filter.app) : null;
     return AU.rows.filter(function (r) {
       return (!AU.filter.dep || r.dep === AU.filter.dep) && (!AU.filter.trig || r.trig === AU.filter.trig) &&
-        (!AU.filter.state || r.state === AU.filter.state) && (!appDeps || appDeps.indexOf(r.dep) > -1);
+        (!AU.filter.state || (AU.filter.state === "Pozastavená" ? r.state.indexOf("Pozastavená") === 0 : r.state === AU.filter.state)) &&
+        (!appDeps || appDeps.indexOf(r.dep) > -1);
     });
   }
   function auStateBadge(s) { return '<span class="badge ' + (s === "Aktívna" ? "ok" : s === "Chyba" ? "bad" : "warn") + '">' + esc(s) + "</span>"; }  /* „Pozastavená (appka)" padá do warn */
@@ -863,7 +882,7 @@
       (r.state === "Chyba" ? "<div class='alert bad' style='margin-top:12px'><span class='ai'></span><span><b>Posledný beh zlyhal</b>Export v Canve vrátil timeout. Automatizácia je pozastavená do zásahu.</span></div>" : "") +
       "<p class='note' style='margin-top:12px'>Poradie priorít: " + AU.prio.join(" › ") + ". Prevádzkové čísla sú ukážkové.</p>",
       [
-        { label: r.state === "Pozastavená" ? "Obnoviť" : "Pozastaviť", kind: "ghost", fn: function () { r.state = r.state === "Pozastavená" ? "Aktívna" : "Pozastavená"; auRender(); Ax.closeDetail(); Ax.toast(r.name + " · " + r.state.toLowerCase(), "ok"); } },
+        { label: r.state === "Pozastavená" ? "Obnoviť" : "Pozastaviť", kind: "ghost", fn: function () { r.state = r.state === "Pozastavená" ? "Aktívna" : "Pozastavená"; auChanged("state", r); Ax.closeDetail(); Ax.toast(r.name + " · " + r.state.toLowerCase(), "ok"); } },
         { label: "Detail behu (trace)", kind: "ghost", fn: function () { auRunDetail(r); } },
         { label: "Upraviť", kind: "ghost", fn: function () { auEditor(r); } },
         { label: "Spustiť teraz", fn: function () { Ax.closeDetail(); auRun(r); } }
@@ -910,7 +929,7 @@
       var ok = r.state !== "Chyba";
       AU_HIST.unshift({ t: "teraz", agent: r.name, dep: r.dep, res: ok ? "hotovo" : "chyba", tok: 800 + r.avg * 40, min: r.avg, id: r.id });
       if (AU_HIST.length > 40) AU_HIST.pop();
-      r.last = "teraz"; auRender();
+      r.last = "teraz"; auChanged("run", r);
       Ax.toast(r.name + (ok ? " · dokončené za " + F(r.avg, 0) + " min" : " · zlyhalo"), ok ? "ok" : "bad");
     }, 1400);
   }
@@ -925,7 +944,13 @@
       return;
     }
     tb.innerHTML = rows.map(function (r) {
-      var toggle = '<button class="pill' + (r.state !== "Pozastavená" ? " on" : "") + '" data-toggle="' + r.id + '" aria-pressed="' + (r.state !== "Pozastavená") + '" aria-label="' + (r.state === "Pozastavená" ? "Spustiť automatizáciu" : "Pozastaviť automatizáciu") + '" style="padding:2px 9px;font-size:var(--fs-label)">' + (r.state === "Pozastavená" ? "Spustiť" : "Pauza") + "</button>";
+      /* kaskádový stav „Pozastavená (appka)" je tiež pauza — prepínač musí hlásiť vypnuté
+         a byť zakázaný (obnoviť sa dá len spustením appky) */
+      var running = r.state === "Aktívna" || r.state === "Chyba";
+      var byApp = r.state.indexOf("(appka)") > -1;
+      var toggle = '<button class="pill' + (running ? " on" : "") + '" data-toggle="' + r.id + '"' + (byApp ? " disabled" : "") +
+        ' aria-pressed="' + running + '" aria-label="' + (byApp ? "Zastavená pozastavením appky — obnoviť v Appkách" : running ? "Pozastaviť automatizáciu" : "Spustiť automatizáciu") +
+        '" title="' + (byApp ? "Zastavená pozastavením appky" : "") + '" style="padding:2px 9px;font-size:var(--fs-label)">' + (running ? "Pauza" : "Spustiť") + "</button>";
       return '<tr data-row="' + r.id + '" tabindex="0"><td class="who" style="color:var(--ink);font-weight:500">' + esc(r.name) + " " + mcpRow(r.mcp) + "</td><td>" + esc(r.dep) + "</td><td>" + auTrigBadge(r.trig) + ' <span class="num" style="font-size:var(--fs-label);color:var(--ink-3)">' + esc(r.next) + '</span></td><td class="num" style="font-size:var(--fs-label)">' + esc(r.last) + '</td><td class="num">' + F(r.ok, 0) + ' %</td><td class="num">' + F(r.saved, 0) + " h</td><td>" + auStateBadge(r.state) + " " + toggle + "</td></tr>";
     }).join("");
     cards.innerHTML = rows.map(function (r) {
@@ -937,7 +962,7 @@
       b.addEventListener("click", function (e) {
         e.stopPropagation();
         var r = auById(b.getAttribute("data-toggle")); if (!r) return;
-        r.state = r.state === "Pozastavená" ? "Aktívna" : "Pozastavená"; auRender();
+        r.state = r.state === "Pozastavená" ? "Aktívna" : "Pozastavená"; auChanged("state", r);
         A().toast(r.name + " · " + r.state.toLowerCase(), "ok");
       });
     });
@@ -1000,6 +1025,8 @@
     auRenderHist();
     $("#au-cnt").textContent = auVisible().length + " z " + AU.rows.length;
   }
+  /* každá zmena stavu/behu = jeden broadcast; KPI, nav odznaky aj donuty sú prihlásené */
+  function auChanged(kind, r) { auRender(); A().autos.emit(kind || "update", r); }
 
   w.Aura.screens.automatizacie = {
     title: "Automatizácie", group: "Práca",
@@ -1040,6 +1067,8 @@
       }
       auKpi();
       Ax.apps.onChange(function () { auKpi(); auRender(); auFchip(); });
+      /* KPI musia žiť aj pri zmenách automatizácií samotných (pauza, beh, editor) */
+      Ax.autos.onChange(function () { auKpi(); auFchip(); });
 
       auRenderPrio();
       $("#au-prio-reset").addEventListener("click", function () { AU.prio = ["Rýchlosť", "Chyby", "Čas", "Náklady"]; auRenderPrio(); Ax.toast("Poradie priorít obnovené", "ok"); });
@@ -1095,7 +1124,7 @@
           { label: "cron", v: AU.rows.filter(function (r) { return r.trig === "cron"; }).length, color: "var(--gold)" },
           { label: "admin", v: AU.rows.filter(function (r) { return r.trig === "admin"; }).length, color: "var(--violet)" }
         ],
-        onSlice: function (it) { AU.filter = { dep: "", trig: it.label, state: "" }; $("#au-trig").value = it.label; auRender(); auFchip(); Ax.toast("Filter spúšťača: " + it.label, "ok"); }
+        onSlice: function (it) { AU.filter.trig = it.label; $("#au-trig").value = it.label; auRender(); auFchip(); Ax.toast("Filter spúšťača: " + it.label, "ok"); }
       });
 
       Ax.registerCmd([

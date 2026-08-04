@@ -20,6 +20,8 @@
   --neutral:#8fa8c4;                    /* neutrálne porovnávacie série (namiesto červenej) */
   /* kategorická paleta lalokov — rozostreté odtiene, odpojená od sémantických tokenov */
   --lobe-1:#2fc6b5; --lobe-2:#d9a54c; --lobe-3:#9b8cf0; --lobe-4:#57b06a; --lobe-5:#e2795e;
+  /* text na značkovej (MCP) farbe — volí sa podľa jasu podkladu, nezávisí od témy */
+  --on-brand-dark:#12191c; --on-brand-light:#ffffff;
   --on-teal:#0e1413; --on-teal-2:#ffffff; --accentText:var(--teal);
   --line-soft:color-mix(in srgb, var(--line) 45%, transparent); /* oddeľovače v obsahu */
   --edge:inset 0 1px 0 rgba(255,255,255,.05);                  /* hrana svetlom (dark) */
@@ -76,8 +78,9 @@
 
 *{box-sizing:border-box}
 [hidden]{display:none!important}
-html{scroll-behavior:smooth;overflow-x:hidden}
-body{margin:0;overflow-x:hidden;background:var(--paper);color:var(--ink);
+/* clip namiesto hidden: hidden na body robí z body scrollport a rozbíja position:sticky */
+html{scroll-behavior:smooth;overflow-x:clip}
+body{margin:0;overflow-x:clip;background:var(--paper);color:var(--ink);
   font-family:var(--body);font-size:var(--fs-md);line-height:var(--lh-body);
   -webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums;
   font-feature-settings:'tnum' 1}
@@ -86,7 +89,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 /* mono LEN tam, kde patrí: kód, identifikátory, časy */
 .mono,code,kbd,samp,pre{font-family:var(--mono)}
 .num{font-variant-numeric:tabular-nums}
-.skip{position:absolute;left:-9999px;top:0;z-index:200;background:var(--card);padding:var(--sp-3) var(--sp-4);
+.skip{position:absolute;left:-9999px;top:0;z-index:200;background:var(--card);color:var(--ink);padding:var(--sp-3) var(--sp-4);
   border:1px solid var(--teal);border-radius:0 0 var(--r-m) 0}
 .skip:focus{left:0}
 :where(a,button,input,select,textarea,[tabindex]):focus-visible,
@@ -160,8 +163,9 @@ button,input,select,textarea{font:inherit;color:inherit}
   width:34px;height:34px;display:grid;place-items:center;cursor:pointer}
 .bell svg{width:16px;height:16px;stroke:var(--ink-2);fill:none;stroke-width:1.7}
 .bell:hover{border-color:var(--teal-2)}
-.bell .cnt{position:absolute;top:-6px;right:-6px;background:var(--red);color:#fff;font-variant-numeric:tabular-nums;
-  font-size:12px;font-weight:600;border-radius:99px;padding:0 5px;line-height:1.4}
+/* tmavý text na červenej = 7,4:1 (biely na --red mal len 3,1:1) */
+.bell .cnt{position:absolute;top:-6px;right:-6px;background:var(--red);color:var(--paper);font-variant-numeric:tabular-nums;
+  font-size:12px;font-weight:700;border-radius:99px;padding:0 5px;line-height:1.4}
 :root[data-theme="light"] .bell .cnt{background:#8f1f18}
 
 /* ===================== OBSAH A SEKCIE ===================== */
@@ -337,7 +341,7 @@ mark{background:color-mix(in srgb,var(--gold) 42%,transparent);color:inherit;bor
   font-size:var(--fs-sm);color:var(--ink-3);line-height:var(--lh-long);max-width:76ch}
 
 /* panel detailu */
-.dp{position:fixed;top:0;right:0;bottom:0;width:min(440px,92vw);z-index:70;
+.dp{position:fixed;top:0;right:0;bottom:0;width:min(440px,92vw);z-index:90;
   background:var(--glass);backdrop-filter:blur(20px) saturate(1.3);-webkit-backdrop-filter:blur(20px) saturate(1.3);
   border-left:1px solid var(--line);border-radius:var(--r-l) 0 0 var(--r-l);
   transform:translateX(105%);transition:transform .24s;display:flex;flex-direction:column;box-shadow:var(--shadow-2)}
@@ -350,11 +354,13 @@ mark{background:color-mix(in srgb,var(--gold) 42%,transparent);color:inherit;bor
 .dp-b dt{font-size:var(--fs-label);font-weight:600;color:var(--ink-3)}
 .dp-b dd{margin:0;color:var(--ink-2)}
 .x{border:1px solid var(--line);background:var(--card-2);border-radius:var(--r-m);width:30px;height:30px;cursor:pointer;line-height:1}
-.scrim{position:fixed;inset:0;background:rgba(0,0,0,.42);z-index:65;display:none;backdrop-filter:blur(2px)}
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.42);z-index:88;display:none;backdrop-filter:blur(2px)}
 .scrim.on{display:block}
 
 /* toast */
-#toasts{position:fixed;right:var(--sp-5);bottom:var(--sp-5);z-index:120;display:flex;flex-direction:column;gap:var(--sp-2)}
+/* toasty nesmú prehltnúť klik do peeku pod nimi — klikateľné je len tlačidlo Späť */
+#toasts{position:fixed;right:var(--sp-5);bottom:var(--sp-5);z-index:120;display:flex;flex-direction:column;gap:var(--sp-2);pointer-events:none}
+#toasts .toast-undo{pointer-events:auto}
 .toast{background:var(--glass);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
   border:1px solid var(--line);border-left:3px solid var(--teal);border-radius:var(--r-m);
   padding:var(--sp-3) var(--sp-4);font-size:var(--fs-sm);box-shadow:var(--shadow-2);animation:tin .22s ease;max-width:42ch}
@@ -701,8 +707,10 @@ body{position:relative;z-index:0}
 .appcard .ac-h{display:flex;align-items:center;gap:var(--sp-2)}
 .appcard .ac-ico{display:inline-flex;color:var(--ac,var(--teal))}
 .appcard .ac-t{display:flex;flex-direction:column;min-width:0;flex:1}
-.appcard .ac-t b{font-size:var(--fs-h3);font-weight:600;line-height:var(--lh-head)}
-.appcard .ac-t span{font-size:var(--fs-label);color:var(--ink-3)}
+.appcard .ac-h .badge{flex:0 0 auto}
+.appcard .ac-t b{font-size:var(--fs-h3);font-weight:600;line-height:var(--lh-head);
+  min-width:0;overflow:hidden;text-overflow:ellipsis;overflow-wrap:anywhere}
+.appcard .ac-t span{font-size:var(--fs-label);color:var(--ink-3);min-width:0;overflow:hidden;text-overflow:ellipsis}
 .appcard .ac-spk{display:block;height:30px;margin:2px 0}
 .appcard .ac-g{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-2) var(--sp-3)}
 .appcard .ac-g>span{display:flex;flex-direction:column;min-width:0}
@@ -987,3 +995,22 @@ body{position:relative;z-index:0}
 @media print{.bnav{display:none}}
 
 @media(max-width:900px){.bnav{display:flex}}
+
+/* ===== finálne mobilné override-y (poradie: musia byť za základnými pravidlami) ===== */
+@media(max-width:900px){
+  /* „+ Nový" ako dolný hárok — základné .newpop pravidlo je v súbore neskôr, tu ho prebíjame */
+  .newpop{position:fixed;left:var(--sp-3);right:var(--sp-3);top:auto;
+    bottom:calc(var(--sp-3) + 66px + env(safe-area-inset-bottom));min-width:0;padding:var(--sp-3);
+    z-index:100;box-shadow:var(--shadow-3)}
+  /* chat: skladač sa musí zalomiť, textarea cez celú šírku */
+  #ch-in{flex:1 1 100%;min-width:0}
+  .chat-composer,.chat-composer>div{flex-wrap:wrap}
+  /* dotykové ciele: selecty, checkboxy, summary a undo v toaste */
+  select,input[type="checkbox"],input[type="radio"]{min-height:44px}
+  input[type="checkbox"],input[type="radio"]{width:22px;height:22px}
+  table.tbl input[type="checkbox"]{width:22px!important;height:22px!important}
+  summary{min-height:44px;display:flex;align-items:center}
+  .toast-undo{min-height:44px;padding:0 var(--sp-4)}
+  /* peek sheet: ťahanie za hlavičku nesmie prehltnúť prehliadač */
+  .dp-h{touch-action:none}
+}

@@ -209,10 +209,14 @@
     if (d && A.mem) { var n = A.mem.today().length; d.textContent = n ? "+" + n : ""; d.hidden = !n; }
     if (a && A.autos) a.textContent = A.autos.rows.filter(function (r) { return r.state === "Aktívna"; }).length;
     if (ap && A.apps) ap.textContent = A.apps.all().length;
+    var al = $("#nav-alerts");
+    if (al && A.alerts) { var na = A.alerts().length; al.textContent = na; al.hidden = !na; }
   }
   navBadges();
   if (A.mem) A.mem.onChange(navBadges);
   if (A.apps) A.apps.onChange(navBadges);
+  if (A.autos && A.autos.onChange) A.autos.onChange(navBadges);
+  A.navBadges = navBadges;
 
   /* spodná lišta (mobil, Q91): 4 sekcie + Viac otvorí plný strom v drawri */
   (function bnav() {
@@ -220,7 +224,7 @@
     host.addEventListener("click", function (e) {
       var b = e.target.closest("button[data-b]"); if (!b) return;
       var k = b.getAttribute("data-b");
-      if (k === "__more") { document.getElementById("side").classList.add("open"); document.getElementById("dp-scrim").classList.add("on"); return; }
+      if (k === "__more") { A.openSide(); return; }
       A.go(k);
     });
     function sync() {
@@ -314,7 +318,7 @@
       closeNew();
       var kind = b.getAttribute("data-new");
       if (kind === "node") {
-        if (A.mem) { var nd = A.mem.create({ name: "Nový uzol", desc: "" }); A.mem.inspect(nd); A.toast("Nový uzol — vyplň a ulož", "ok"); }
+        if (A.mem) { A.go("pamat"); A.mem.inspect(A.mem.newDraft()); }
       } else if (kind === "chat") { A.go("chat"); A.toast("Nová konverzácia", "ok"); }
       else if (kind === "smernica") { A.go("smernica"); }
       else if (kind === "automatizacia") { A.go("automatizacie", "new"); }
@@ -359,8 +363,6 @@
       return { label: n.name, hint: A.mem.zoneLabel(n.area) + " · " + n.type, run: function () { A.mem.inspect(n); } };
     }));
     A.registerCmd([
-      { label: "Nový uzol", hint: "vytvoriť pamäť", run: function () { var nd = A.mem.create({ name: "Nový uzol" }); A.mem.inspect(nd); } },
-      { label: "Slabé uzly", hint: "čistenie pamäte", run: function () { A.go("pamat", "slabe"); } },
       { label: "Triage — dnes pridané", hint: "prehodnotiť", run: function () { A.go("pamat", "dnes"); } },
       { label: "Spustiť eval", hint: "router · embed · recall", run: function () { A.go("jadro"); A.toast("Eval batéria spustená", "ok"); } },
       { label: "Prepnúť tému", hint: "svetlá / tmavá", run: function () { A.setTheme(A.state.theme === "light" ? "dark" : "light"); } }

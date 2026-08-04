@@ -148,8 +148,18 @@
       series: [{ key: "s", color: color, unit: unit, dec: dec, data: jit(seed, 30, base, amp, dec) }] });
   }
 
+  /* živé odvodené texty: veľkosť pamäte a prah RAM boli na 4 miestach napevno */
+  function sysLiveText() {
+    $$(".js-total").forEach(function (el) { el.textContent = nf(A.mem.TOTAL_ALL, 0); });
+    var kd = $("#j-ram-kd");
+    if (kd) {
+      var pct = A.mem ? (J.mach.ram / J.mach.ramMax) * 100 : 0;
+      kd.textContent = nf(pct, 1) + " % · limit upozornenia " + nf(SH.ramThr() / 100 * J.mach.ramMax, 0) + " GB";
+    }
+  }
   function jRenderMeters() {
     var m = J.mach;
+    sysLiveText();
     $("#j-meters").innerHTML =
       meterHtml("RAM", "48 GB celkom · limit " + nf(SH.ramThr(), 0) + " %", m.ram, m.ramMax, "GB", 1, "", SH.ramThr()) +
       meterHtml("CPU", "AMD 9900 · 12 jadier · inferencia na CPU", m.cpu, 100, "%", 0, "a") +
@@ -331,7 +341,7 @@
       btn.addEventListener("click", function () {
         if (host.hasAttribute("hidden")) {
           host.innerHTML = '<table class="tbl"><thead><tr><th>Appka</th><th class="num">Dopyty / mesiac</th><th class="num">Podiel %</th></tr></thead><tbody>' +
-            sp.map(function (r) { return '<tr><td class="k">' + esc(r.app.name) + '</td><td class="num">' + nf(r.c.q, 0) + '</td><td class="num">' + nf(r.c.share * 100, 1) + "</td></tr>"; }).join("") + "</tbody></table>";
+            appSplit().map(function (r) { return '<tr><td class="k">' + esc(r.app.name) + '</td><td class="num">' + nf(r.c.q, 0) + '</td><td class="num">' + nf(r.c.share * 100, 1) + "</td></tr>"; }).join("") + "</tbody></table>";
           host.removeAttribute("hidden"); btn.textContent = "Skryť tabuľku"; btn.setAttribute("aria-expanded", "true");
         } else { host.setAttribute("hidden", ""); btn.textContent = "Tabuľka"; btn.setAttribute("aria-expanded", "false"); }
       });
@@ -352,7 +362,7 @@
       btn.addEventListener("click", function () {
         if (host.hasAttribute("hidden")) {
           host.innerHTML = '<table class="tbl"><thead><tr><th>Appka</th><th class="num">kWh</th><th class="num">€ / mesiac</th><th class="num">Podiel %</th></tr></thead><tbody>' +
-            sp.map(function (r) { return '<tr><td class="k">' + esc(r.app.name) + '</td><td class="num">' + nf(r.c.kwh, 1) + '</td><td class="num">' + nf(r.c.eur, 2) + '</td><td class="num">' + nf(r.c.share * 100, 1) + "</td></tr>"; }).join("") + "</tbody></table>";
+            appSplit().map(function (r) { return '<tr><td class="k">' + esc(r.app.name) + '</td><td class="num">' + nf(r.c.kwh, 1) + '</td><td class="num">' + nf(r.c.eur, 2) + '</td><td class="num">' + nf(r.c.share * 100, 1) + "</td></tr>"; }).join("") + "</tbody></table>";
           host.removeAttribute("hidden"); btn.textContent = "Skryť tabuľku"; btn.setAttribute("aria-expanded", "true");
         } else { host.setAttribute("hidden", ""); btn.textContent = "Tabuľka"; btn.setAttribute("aria-expanded", "false"); }
       });
@@ -364,6 +374,9 @@
     init: function () {
       renderAppLoad();
       A.apps.onChange(renderAppLoad);
+      sysLiveText();
+      A.mem.onChange(sysLiveText);
+      A.onState("ramThr", sysLiveText);
       jSpark("#j-spk-qwen", 101, 0.42, 0.22, "var(--teal)", "s", 2);
       jSpark("#j-spk-bge", 102, 4.05, 0.6, "var(--gold)", "s", 2);
       jSpark("#j-kpi-spk1", 111, 95, 4, "var(--teal)", "%", 1);
@@ -753,7 +766,7 @@
   A.registerInbox && A.registerInbox("alerts", "Upozornenia observability", function () { return U.active.length; }, function () { A.go("observabilita"); });
   function uBell() {
     if (A.refreshBell) { A.refreshBell(); }
-    var b = document.getElementById("bellCount");
+    if (A.navBadges) A.navBadges();
     var n = U.active.length;
     var ab = $("#u-act-b");
     if (ab) { ab.textContent = n === 0 ? "žiadne" : (n + (n < 5 ? " aktívne" : " aktívnych")); ab.className = "badge " + (n === 0 ? "ok" : "warn"); }
@@ -947,9 +960,12 @@
     $$("#u-rules-c .rowcard").forEach(function (c2, i) { c2.addEventListener("click", function () { ruleDetail(src[i]); }); });
     uRulesBar();
   }
+  var U0 = null;
   function uRulesSave() {
+    if (!U0) U0 = cloneRules(U.rules);
     U.rules = cloneRules(U.draft);
-    U.draft.forEach(function (r) { if (r.shared) A.setShared(r.shared, r.thr); });
+    U.draft.forEach(function (r, i) { if (r.shared && (!U0[i] || U0[i].thr !== r.thr)) A.setShared(r.shared, r.thr); });
+    U0 = cloneRules(U.rules);
     uRulesBar();
     A.toast("Pravidlá uložené · prahy rozposlané do Jadra.", "ok");
   }
@@ -1118,7 +1134,7 @@
     L.q = ""; L.lvl = ""; L.zone = ""; L.src = ""; L.r0 = null; L.r1 = null; L.page = 0;
     $("#l-q").value = ""; $("#l-lvl").value = ""; $("#l-zone").value = ""; $("#l-src2").value = "";
     $("#l-range-n").textContent = "Ťahaním myšou po grafe vyberieš hodinový rozsah.";
-    $("#ob-fchip").innerHTML = "";
+    obSetApp("");
     lRender(); A.toast("Filtre zrušené.", "ok");
   }
   function lHist() {
@@ -1284,7 +1300,7 @@
     title: "Observabilita", group: "Systém",
     init: function () {
       /* taby */
-      $$("#ob-tabs button").forEach(function (b) { b.addEventListener("click", function () { obTab(b.getAttribute("data-t")); }); });
+      $$("#ob-tabs button").forEach(function (b) { b.addEventListener("click", function () { A.go("observabilita", b.getAttribute("data-t")); }); });
 
       /* filter appky — upozornenia aj logy (Q44) */
       function obFillApps() {
@@ -1484,7 +1500,8 @@
     A.setLeaveGuard(n > 0 ? function (proceed) {
       A.confirm("Máš " + n + " neuložen" + (n === 1 ? "ú zmenu" : (n < 5 ? "é zmeny" : "ých zmien")) + " v Nastaveniach",
         "Odchodom sa zahodia. Ulož ich lištou dole, alebo pokračuj bez uloženia.",
-        proceed, "Odísť bez uloženia", true);
+        function () { ST_FIELDS.forEach(function (f) { var el = document.getElementById(f); if (el && ST.saved[f] != null) el.value = ST.saved[f]; }); stDirty(); proceed(); },
+        "Odísť bez uloženia", true);
     } : null);
   }
   function stDirty() {
@@ -1635,6 +1652,7 @@
         var mdl = stVal("st-model");
         A.state.model = mdl; A.state.embed = stVal("st-embed"); A.state.ctx = +stVal("st-ctx");
         A.state.rate = +stVal("st-rate"); A.state.zone = stVal("st-zone"); A.state.lang = stVal("st-lang");
+        A.setShared("zone", stVal("st-zone"));   /* Chat berie predvolenú zónu odtiaľto */
         /* zdieľaný stav s prehrávaním — obrazovky Jadro/Náklady sa aktualizujú */
         A.setShared("model", mdl);
         A.setShared("embed", stVal("st-embed"));

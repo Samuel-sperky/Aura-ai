@@ -970,18 +970,31 @@ const mb = await p.evaluate(async () => {
   const camT = document.getElementById('pm-cam').getAttribute('transform');
   const kk = +(camT.match(/scale\(([\d.]+)/) || [0, 1])[1];
   const drawScale = Math.min(rr.width / 1160, rr.height / 620) * kk;
+  /* prehľad = žiadny uzol mimo plochy (predtým sme merali mierku, tá tlačila zoom dnu) */
+  const base = Math.min(rr.width / 1160, rr.height / 620);
+  const tm = camT.match(/translate\(([-\d.]+) ([-\d.]+)\)/) || [0, 0, 0];
+  const tx = +tm[1], ty = +tm[2];
+  const ox = (rr.width - 1160 * base) / 2, oy = (rr.height - 620 * base) / 2;
+  let offscreen = 0;
+  netEl.querySelectorAll('.nt-n').forEach(function (el) {
+    const bb = el.getBBox();
+    const cx2 = bb.x + bb.width / 2, cy2 = bb.y + bb.height / 2;
+    const px = ox + (cx2 * kk + tx) * base, py = oy + (cy2 * kk + ty) * base;
+    if (px < -2 || py < -2 || px > rr.width + 2 || py > rr.height + 2) offscreen++;
+  });
+  const allVisible = offscreen === 0;
   document.getElementById('pm-gfull').click(); await sleep(200);
   window.Aura.detail('Sheet test', '<p>x</p>', []); await sleep(400);
   const dp = document.getElementById('dp').getBoundingClientRect();
   const sheet = dp.width >= 380 && dp.bottom >= 830 && dp.top > 100;
   window.Aura.closeDetail();
-  return { bnavOn, svgHidden, listOn, fullOn, sheet, legendFilters, drawScale: +drawScale.toFixed(2) };
+  return { bnavOn, svgHidden, listOn, fullOn, sheet, legendFilters, drawScale: +drawScale.toFixed(2), offscreen, allVisible };
 });
 mb.bnavOn ? O('mobil: spodná navigačná lišta aktívna') : F('mobil: spodná lišta chýba');
 mb.svgHidden && mb.listOn ? O('mobil: graf = zoznam lalokov') : F('mobil: graf zoznam zlyhal ' + JSON.stringify(mb));
 mb.legendFilters ? O('mobil: legenda filtruje zoznam (chip = sekcia)') : F('mobil: legenda nefiltruje zoznam ' + JSON.stringify(mb));
 mb.fullOn ? O('mobil: „Celá obrazovka" ukáže interaktívny graf') : F('mobil: fullscreen graf zlyhal');
-mb.drawScale >= 1.1 ? O(`mobil: fullscreen auto-fit (mierka ${mb.drawScale})`) : F(`mobil: fullscreen mierka ${mb.drawScale} < 1,1`);
+mb.allVisible ? O(`mobil: fullscreen ukáže celú mapu (mierka ${mb.drawScale}, 0 uzlov mimo)`) : F(`mobil: ${mb.offscreen} uzlov mimo viditeľnej plochy po fullscreene`);
 mb.sheet ? O('mobil: peek = bottom sheet') : F('mobil: bottom sheet zlyhal ' + JSON.stringify(mb));
 await p.setViewportSize({ width: 1600, height: 1000 });
 
@@ -1004,6 +1017,205 @@ for (const f of ['s-pamat.html','s-praca.html','s-system.html','s-appky.html','s
 hexLeaks.length ? F('token lint: hardcoded hex — ' + hexLeaks.join(', ')) : O('token lint: 0 hardcoded hex v obrazovkách');
 
 /* --- výsledok --- */
+
+/* --- 19. v7.4 brány: opravy z 10-agentového auditu --- */
+await p.setViewportSize({ width: 1600, height: 1000 });
+await go('pamat');
+await p.waitForTimeout(700);
+
+// P0: posuvník sily oreže výber → hromadná akcia nikdy nesiahne na skryté riadky
+const h1 = await p.evaluate(async () => {
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  document.getElementById('pm-all').checked = true;
+  document.getElementById('pm-all').dispatchEvent(new Event('change', { bubbles: true }));
+  await sleep(260);
+  const selBefore = document.querySelectorAll('#pm-tbl .pm-cb:checked').length;
+  const sl = document.getElementById('pm-f-str');
+  sl.value = '70'; sl.dispatchEvent(new Event('input', { bubbles: true }));
+  await sleep(320);
+  const rows = document.querySelectorAll('#pm-tbl tbody tr').length;
+  const barTxt = document.getElementById('pm-bulk').hidden ? '0' : document.getElementById('pm-bulk-n').textContent;
+  const selAfter = +(barTxt.match(/\d+/) || [0])[0];
+  document.getElementById('pm-reset').click();
+  await sleep(240);
+  document.querySelectorAll('#pm-tbl .pm-cb:checked').forEach(cb => { cb.checked = false; cb.dispatchEvent(new Event('change', { bubbles: true })); });
+  await sleep(200);
+  return { selBefore, rows, selAfter };
+});
+(h1.selBefore > h1.rows && h1.selAfter <= h1.rows)
+  ? O(`bezpečnosť: posuvník sily oreže výber (${h1.selBefore} → ${h1.selAfter} ≤ ${h1.rows} viditeľných)`)
+  : F('bezpečnosť: hromadná akcia by siahla na skryté uzly ' + JSON.stringify(h1));
+
+// P1: archivovanie má undo, archív je dostupný cez filter
+const h2 = await p.evaluate(async () => {
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  const A = window.Aura, before = A.mem.nodes().length;
+  const nd = A.mem.nodes()[0];
+  A.mem.archive(nd);
+  await sleep(300);
+  const afterArch = A.mem.nodes().length;
+  const arch = document.getElementById('pm-f-arch');
+  arch.value = 'only'; arch.dispatchEvent(new Event('change', { bubbles: true }));
+  await sleep(320);
+  const archRows = document.querySelectorAll('#pm-tbl tbody tr').length;
+  arch.value = ''; arch.dispatchEvent(new Event('change', { bubbles: true }));
+  await sleep(240);
+  A.mem.restore(nd);
+  await sleep(300);
+  return { before, afterArch, archRows, restored: A.mem.nodes().length };
+});
+(h2.afterArch === h2.before - 1 && h2.archRows >= 1 && h2.restored === h2.before)
+  ? O(`archív: filter „len archivované" ukáže ${h2.archRows} uzlov a obnova ich vráti`)
+  : F('archív: filter/obnova nefunguje ' + JSON.stringify(h2));
+
+// P1: „Vyčistiť pohľad" naozaj vráti neutrálny stav vrátane kamery a fokusu
+const h3 = await p.evaluate(async () => {
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  const camK = () => +(document.getElementById('pm-cam').getAttribute('transform').match(/scale\(([\d.]+)/) || [0, 1])[1];
+  document.querySelector('#pm-net .nt-hub .nt-n').dispatchEvent(new MouseEvent('click', { bubbles: true }));
+  await sleep(420);
+  const zoomed = camK() > 1.3;
+  document.querySelector('#pm-layers [data-l="type"]').click();
+  await sleep(240);
+  const btn = [...document.querySelectorAll('#pm-gchips button')].find(b => b.textContent.includes('Vyčistiť'));
+  if (btn) btn.click();
+  await sleep(420);
+  return { zoomed, k: camK(), crumbHidden: document.getElementById('pm-gcrumb').hidden, chips: document.querySelectorAll('#pm-gchips .gchip').length };
+});
+(h3.zoomed && h3.k === 1 && h3.crumbHidden && h3.chips === 0)
+  ? O('graf: „Vyčistiť pohľad" zruší aj fokus a kameru')
+  : F('graf: vyčistenie pohľadu nechalo stav ' + JSON.stringify(h3));
+
+// P1: fokus prežije zmenu modelu (netBuild prenáša stav cez prev)
+const h4 = await p.evaluate(async () => {
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  const camK = () => +(document.getElementById('pm-cam').getAttribute('transform').match(/scale\(([\d.]+)/) || [0, 1])[1];
+  document.querySelector('#pm-net .nt-hub .nt-n').dispatchEvent(new MouseEvent('click', { bubbles: true }));
+  await sleep(420);
+  const crumb0 = document.getElementById('pm-gcrumb-t').textContent;
+  const dsg = window.Aura.mem.nodes().find(n => n.area.k === 'dsg');
+  window.Aura.mem.archive(dsg);
+  await sleep(600);
+  const kept = !document.getElementById('pm-gcrumb').hidden && camK() > 1.3 &&
+    document.getElementById('pm-gcrumb-t').textContent === crumb0;
+  window.Aura.mem.restore(dsg);
+  await sleep(400);
+  document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+  document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+  await sleep(300);
+  return { crumb0, kept };
+});
+h4.kept ? O(`graf: fokus „${h4.crumb0}" prežije archiváciu inde v modeli`) : F('graf: zmena modelu zhodila fokus');
+
+// P1: prechod na Hľadanie cez pásik zhôd píše hash (Back vráti na graf)
+const h5 = await p.evaluate(async () => {
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  const q = document.getElementById('pm-gq');
+  q.value = 'seo'; q.dispatchEvent(new Event('input', { bubbles: true }));
+  await sleep(320);
+  const btn = [...document.querySelectorAll('#pm-ghits button')].find(b => b.textContent.includes('zoznam'));
+  if (!btn) return { btn: false };
+  btn.click();
+  await sleep(360);
+  const hash = location.hash, hlq = document.getElementById('pm-hl-q').value;
+  window.Aura.go('pamat');
+  await sleep(300);
+  q.value = ''; q.dispatchEvent(new Event('input', { bubbles: true }));
+  await sleep(200);
+  return { btn: true, hash, hlq };
+});
+(h5.btn && h5.hash === '#/pamat/hladanie' && h5.hlq === 'seo')
+  ? O('router: prechod z grafu do Hľadania píše hash (#/pamat/hladanie)')
+  : F('router: prechod do Hľadania obchádza router ' + JSON.stringify(h5));
+
+// P0: KPI automatizácií žijú aj po zmene stavu (autos.onChange)
+await go('automatizacie');
+await p.waitForTimeout(500);
+const h6 = await p.evaluate(async () => {
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  const kpi = () => document.querySelector('#au-kpi .kpi b').textContent;
+  const before = kpi();
+  const tgl = document.querySelector('#au-tbl button[data-toggle]:not([disabled])');
+  tgl.click();
+  await sleep(400);
+  const after = kpi();
+  const navBefore = document.getElementById('nav-auto').textContent;
+  tgl2 = document.querySelector('#au-tbl button[data-toggle]:not([disabled])');
+  return { before, after, navBefore, changed: before !== after };
+});
+h6.changed ? O(`automatizácie: KPI reagujú na pauzu (${h6.before} → ${h6.after})`) : F('automatizácie: KPI zamrznuté po zmene stavu ' + JSON.stringify(h6));
+
+// P1: taby Observability píšu hash
+await go('observabilita');
+await p.waitForTimeout(400);
+const h7 = await p.evaluate(async () => {
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  document.querySelector('#ob-tabs [data-t="logy"]').click();
+  await sleep(320);
+  return { hash: location.hash };
+});
+h7.hash.indexOf('logy') > -1 ? O('observabilita: prepnutie tabu píše hash') : F('observabilita: tab nemení hash ' + JSON.stringify(h7));
+
+// P0: sticky lišta v Nastaveniach naozaj drží pri scrolle
+await go('nastavenia');
+await p.waitForTimeout(500);
+const h8 = await p.evaluate(async () => {
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  const inp = document.getElementById('st-ctx');
+  inp.value = '16384'; inp.dispatchEvent(new Event('input', { bubbles: true })); inp.dispatchEvent(new Event('change', { bubbles: true }));
+  await sleep(300);
+  const bar = document.getElementById('st-bar');
+  const visible0 = !bar.hidden;
+  window.scrollTo(0, document.body.scrollHeight);
+  await sleep(320);
+  const r = bar.getBoundingClientRect();
+  const onScreen = r.bottom > 0 && r.top < window.innerHeight;
+  window.scrollTo(0, 0);
+  await sleep(200);
+  const cancel = [...document.querySelectorAll('#st-bar button')].find(b => /Zahodiť|Zrušiť/.test(b.textContent));
+  if (cancel) cancel.click();
+  await sleep(300);
+  return { visible0, onScreen, sticky: getComputedStyle(bar).position };
+});
+(h8.visible0 && h8.onScreen)
+  ? O('nastavenia: lišta uloženia drží pri scrolle (sticky funguje)')
+  : F('nastavenia: sticky lišta odscrollovala ' + JSON.stringify(h8));
+
+// P1: odznak Observability v navigácii je živý
+const h9 = await p.evaluate(() => {
+  const el = document.getElementById('nav-alerts');
+  return { txt: el.textContent, real: String(window.Aura.alerts().length), hidden: el.hidden };
+});
+(h9.txt === h9.real && (h9.real === '0' ? h9.hidden : !h9.hidden))
+  ? O(`navigácia: odznak upozornení je derivovaný (${h9.real})`)
+  : F('navigácia: odznak upozornení nesedí ' + JSON.stringify(h9));
+
+// P0: peek na mobile je nad spodnou lištou (akcie klikateľné)
+await p.setViewportSize({ width: 390, height: 844 });
+await p.waitForTimeout(500);
+const h10 = await p.evaluate(async () => {
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  /* zvyšné overlaye z predchádzajúcich testov by inak sedeli nad peekom */
+  window.Aura.closeConfirm(); window.Aura.closeCmd(); window.Aura.closeSide();
+  await sleep(200);
+  window.Aura.detail('Z-index test', '<p>x</p>', [{ label: 'Akcia', fn: function () {} }]);
+  await sleep(420);
+  const act = document.querySelector('#dp-actions .btn');
+  const r = act.getBoundingClientRect();
+  const top = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+  const hit = !!(top && top.closest('#dp-actions'));   /* stačí, že bod patrí lište akcií peeku, nie spodnej navigácii */
+  const dpZ = +getComputedStyle(document.getElementById('dp')).zIndex;
+  const bnZ = +getComputedStyle(document.getElementById('bnav')).zIndex;
+  window.Aura.closeDetail();
+  await sleep(200);
+  return { hit, dpZ, bnZ };
+});
+(h10.hit && h10.dpZ > h10.bnZ)
+  ? O('mobil: akcie v peeku sú klikateľné nad spodnou lištou')
+  : F('mobil: spodná lišta prekrýva akcie peeku ' + JSON.stringify(h10));
+await p.setViewportSize({ width: 1600, height: 1000 });
+
+
 console.log('\n===== OK (' + ok.length + ') =====');
 ok.forEach(x => console.log('  ✔ ' + x));
 if (warn.length) { console.log('\n===== UPOZORNENIA (' + warn.length + ') ====='); warn.forEach(x => console.log('  ~ ' + x)); }

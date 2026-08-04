@@ -140,9 +140,25 @@
     yes.parentNode.replaceChild(clone, yes);
     clone.addEventListener("click", function () { m.classList.remove("on"); onYes && onYes(); });
     m.classList.add("on");
+    A._cfFocus = document.activeElement;
     clone.focus();
+    /* pasca fokusu: Tab cykluje medzi Zrušiť a potvrdením, nevypadne za dialóg */
+    m.__trap = function (e) {
+      if (e.key !== "Tab") return;
+      var f = [$("#confirm-no"), $("#confirm-yes")].filter(Boolean);
+      if (!f.length) return;
+      e.preventDefault();
+      var i = f.indexOf(document.activeElement);
+      f[(i + (e.shiftKey ? -1 : 1) + f.length) % f.length].focus();
+    };
+    m.addEventListener("keydown", m.__trap);
   };
-  A.closeConfirm = function () { $("#confirm").classList.remove("on"); };
+  A.closeConfirm = function () {
+    var m = $("#confirm");
+    m.classList.remove("on");
+    if (m.__trap) { m.removeEventListener("keydown", m.__trap); m.__trap = null; }
+    if (A._cfFocus && A._cfFocus.focus) { try { A._cfFocus.focus(); } catch (e) {} A._cfFocus = null; }
+  };
 
   /* ---------- detail panel ---------- */
   var lastFocus = null;
@@ -206,7 +222,12 @@
     A.state.screen = key;
     /* peek panel nesmie prežiť prechod obrazovky — inak nad novou obrazovkou
        visí detail zo starej (#/node/ deep-link si inšpektor otvorí až po show) */
-    if (A.state._lastScreen && A.state._lastScreen !== key) A.closeDetail();
+    if (A.state._lastScreen && A.state._lastScreen !== key) {
+      A.closeDetail();
+      /* stráž neuložených zmien patrí obrazovke, ktorú opúšťame — po Backu (ktorý
+         obchádza A.go) by inak vyskakovala nad cudzími obrazovkami */
+      A.state._leaveGuard = null;
+    }
     A.state._lastScreen = key;
     $$(".view").forEach(function (v) { v.classList.remove("on"); });
     var v = $("#v-" + key);
@@ -227,7 +248,7 @@
     var p = (location.hash || "").replace(/^#\/?/, "").split("/");
     /* #/node/<slug> — otvorí editovateľný inšpektor uzla nad domovskou obrazovkou */
     if (p[0] === "node" && p[1]) {
-      if (!A.state.screen) A.show(A.screens.pamat ? "pamat" : (A.screens.mapa ? "mapa" : Object.keys(A.screens)[0]));
+      A.show(A.screens.pamat ? "pamat" : (A.screens.mapa ? "mapa" : Object.keys(A.screens)[0]));
       if (A.mem && A.mem.inspect) A.mem.inspect(decodeURIComponent(p[1]));
       return;
     }
@@ -238,7 +259,25 @@
   w.addEventListener("hashchange", fromHash);
 
   /* ---------- bočný panel na mobile ---------- */
-  A.closeSide = function () { $("#side").classList.remove("open"); $("#dp-scrim").classList.remove("on"); };
+  A.closeSide = function () {
+    $("#side").classList.remove("open"); $("#dp-scrim").classList.remove("on");
+    A.syncSideInert();
+    if (A._sideFocus && A._sideFocus.focus) { try { A._sideFocus.focus(); } catch (e) {} A._sideFocus = null; }
+  };
+  /* mimo obrazovky = mimo tab poradia (inak drawer drží 14 skrytých zastávok) */
+  A.syncSideInert = function () {
+    var side = $("#side"); if (!side) return;
+    var mobile = w.matchMedia("(max-width:900px)").matches;
+    var open = side.classList.contains("open");
+    if (mobile && !open) side.setAttribute("inert", ""); else side.removeAttribute("inert");
+    var bn = $("#bnav"); if (bn) { if (mobile && open) bn.setAttribute("inert", ""); else bn.removeAttribute("inert"); }
+  };
+  A.openSide = function () {
+    A._sideFocus = document.activeElement;
+    $("#side").classList.add("open"); $("#dp-scrim").classList.add("on");
+    A.syncSideInert();
+    var first = $("#side").querySelector("button, a, input"); if (first) first.focus();
+  };
 
   /* ---------- triediteľné tabuľky ---------- */
   A.sortable = function (table, getRows, render) {
@@ -399,7 +438,7 @@
       var b = e.target.closest("button[data-v]");
       if (b) A.go(b.getAttribute("data-v"));
     });
-    $("#burger").addEventListener("click", function () { $("#side").classList.add("open"); $("#dp-scrim").classList.add("on"); });
+    $("#burger").addEventListener("click", A.openSide);
     $("#dp-scrim").addEventListener("click", function () { A.closeSide(); A.closeDetail(); });
     $("#dp-close").addEventListener("click", A.closeDetail);
     $("#themeBtn").addEventListener("click", function () { A.setTheme(A.state.theme === "light" ? "dark" : "light"); });
@@ -410,7 +449,8 @@
     document.addEventListener("keydown", function (e) {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") { e.preventDefault(); A.openCmd(); }
       else if (e.key === "Escape") {
-        if ($("#cmdk").classList.contains("on")) A.closeCmd();
+        if ($("#newPop") && $("#newPop").classList.contains("on")) { $("#newPop").classList.remove("on"); var nb = $("#newBtn"); if (nb) { nb.setAttribute("aria-expanded", "false"); nb.focus(); } }
+        else if ($("#cmdk").classList.contains("on")) A.closeCmd();
         else if ($("#confirm").classList.contains("on")) A.closeConfirm();
         else if ($("#dp").classList.contains("on")) A.closeDetail();
         else if ($("#side").classList.contains("open")) A.closeSide();

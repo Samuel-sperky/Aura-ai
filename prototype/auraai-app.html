@@ -68,6 +68,8 @@
   --neutral:#8fa8c4;                    /* neutrálne porovnávacie série (namiesto červenej) */
   /* kategorická paleta lalokov — rozostreté odtiene, odpojená od sémantických tokenov */
   --lobe-1:#2fc6b5; --lobe-2:#d9a54c; --lobe-3:#9b8cf0; --lobe-4:#57b06a; --lobe-5:#e2795e;
+  /* text na značkovej (MCP) farbe — volí sa podľa jasu podkladu, nezávisí od témy */
+  --on-brand-dark:#12191c; --on-brand-light:#ffffff;
   --on-teal:#0e1413; --on-teal-2:#ffffff; --accentText:var(--teal);
   --line-soft:color-mix(in srgb, var(--line) 45%, transparent); /* oddeľovače v obsahu */
   --edge:inset 0 1px 0 rgba(255,255,255,.05);                  /* hrana svetlom (dark) */
@@ -124,8 +126,9 @@
 
 *{box-sizing:border-box}
 [hidden]{display:none!important}
-html{scroll-behavior:smooth;overflow-x:hidden}
-body{margin:0;overflow-x:hidden;background:var(--paper);color:var(--ink);
+/* clip namiesto hidden: hidden na body robí z body scrollport a rozbíja position:sticky */
+html{scroll-behavior:smooth;overflow-x:clip}
+body{margin:0;overflow-x:clip;background:var(--paper);color:var(--ink);
   font-family:var(--body);font-size:var(--fs-md);line-height:var(--lh-body);
   -webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums;
   font-feature-settings:'tnum' 1}
@@ -134,7 +137,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 /* mono LEN tam, kde patrí: kód, identifikátory, časy */
 .mono,code,kbd,samp,pre{font-family:var(--mono)}
 .num{font-variant-numeric:tabular-nums}
-.skip{position:absolute;left:-9999px;top:0;z-index:200;background:var(--card);padding:var(--sp-3) var(--sp-4);
+.skip{position:absolute;left:-9999px;top:0;z-index:200;background:var(--card);color:var(--ink);padding:var(--sp-3) var(--sp-4);
   border:1px solid var(--teal);border-radius:0 0 var(--r-m) 0}
 .skip:focus{left:0}
 :where(a,button,input,select,textarea,[tabindex]):focus-visible,
@@ -208,8 +211,9 @@ button,input,select,textarea{font:inherit;color:inherit}
   width:34px;height:34px;display:grid;place-items:center;cursor:pointer}
 .bell svg{width:16px;height:16px;stroke:var(--ink-2);fill:none;stroke-width:1.7}
 .bell:hover{border-color:var(--teal-2)}
-.bell .cnt{position:absolute;top:-6px;right:-6px;background:var(--red);color:#fff;font-variant-numeric:tabular-nums;
-  font-size:12px;font-weight:600;border-radius:99px;padding:0 5px;line-height:1.4}
+/* tmavý text na červenej = 7,4:1 (biely na --red mal len 3,1:1) */
+.bell .cnt{position:absolute;top:-6px;right:-6px;background:var(--red);color:var(--paper);font-variant-numeric:tabular-nums;
+  font-size:12px;font-weight:700;border-radius:99px;padding:0 5px;line-height:1.4}
 :root[data-theme="light"] .bell .cnt{background:#8f1f18}
 
 /* ===================== OBSAH A SEKCIE ===================== */
@@ -385,7 +389,7 @@ mark{background:color-mix(in srgb,var(--gold) 42%,transparent);color:inherit;bor
   font-size:var(--fs-sm);color:var(--ink-3);line-height:var(--lh-long);max-width:76ch}
 
 /* panel detailu */
-.dp{position:fixed;top:0;right:0;bottom:0;width:min(440px,92vw);z-index:70;
+.dp{position:fixed;top:0;right:0;bottom:0;width:min(440px,92vw);z-index:90;
   background:var(--glass);backdrop-filter:blur(20px) saturate(1.3);-webkit-backdrop-filter:blur(20px) saturate(1.3);
   border-left:1px solid var(--line);border-radius:var(--r-l) 0 0 var(--r-l);
   transform:translateX(105%);transition:transform .24s;display:flex;flex-direction:column;box-shadow:var(--shadow-2)}
@@ -398,11 +402,13 @@ mark{background:color-mix(in srgb,var(--gold) 42%,transparent);color:inherit;bor
 .dp-b dt{font-size:var(--fs-label);font-weight:600;color:var(--ink-3)}
 .dp-b dd{margin:0;color:var(--ink-2)}
 .x{border:1px solid var(--line);background:var(--card-2);border-radius:var(--r-m);width:30px;height:30px;cursor:pointer;line-height:1}
-.scrim{position:fixed;inset:0;background:rgba(0,0,0,.42);z-index:65;display:none;backdrop-filter:blur(2px)}
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.42);z-index:88;display:none;backdrop-filter:blur(2px)}
 .scrim.on{display:block}
 
 /* toast */
-#toasts{position:fixed;right:var(--sp-5);bottom:var(--sp-5);z-index:120;display:flex;flex-direction:column;gap:var(--sp-2)}
+/* toasty nesmú prehltnúť klik do peeku pod nimi — klikateľné je len tlačidlo Späť */
+#toasts{position:fixed;right:var(--sp-5);bottom:var(--sp-5);z-index:120;display:flex;flex-direction:column;gap:var(--sp-2);pointer-events:none}
+#toasts .toast-undo{pointer-events:auto}
 .toast{background:var(--glass);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
   border:1px solid var(--line);border-left:3px solid var(--teal);border-radius:var(--r-m);
   padding:var(--sp-3) var(--sp-4);font-size:var(--fs-sm);box-shadow:var(--shadow-2);animation:tin .22s ease;max-width:42ch}
@@ -749,8 +755,10 @@ body{position:relative;z-index:0}
 .appcard .ac-h{display:flex;align-items:center;gap:var(--sp-2)}
 .appcard .ac-ico{display:inline-flex;color:var(--ac,var(--teal))}
 .appcard .ac-t{display:flex;flex-direction:column;min-width:0;flex:1}
-.appcard .ac-t b{font-size:var(--fs-h3);font-weight:600;line-height:var(--lh-head)}
-.appcard .ac-t span{font-size:var(--fs-label);color:var(--ink-3)}
+.appcard .ac-h .badge{flex:0 0 auto}
+.appcard .ac-t b{font-size:var(--fs-h3);font-weight:600;line-height:var(--lh-head);
+  min-width:0;overflow:hidden;text-overflow:ellipsis;overflow-wrap:anywhere}
+.appcard .ac-t span{font-size:var(--fs-label);color:var(--ink-3);min-width:0;overflow:hidden;text-overflow:ellipsis}
 .appcard .ac-spk{display:block;height:30px;margin:2px 0}
 .appcard .ac-g{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-2) var(--sp-3)}
 .appcard .ac-g>span{display:flex;flex-direction:column;min-width:0}
@@ -1035,6 +1043,25 @@ body{position:relative;z-index:0}
 @media print{.bnav{display:none}}
 
 @media(max-width:900px){.bnav{display:flex}}
+
+/* ===== finálne mobilné override-y (poradie: musia byť za základnými pravidlami) ===== */
+@media(max-width:900px){
+  /* „+ Nový" ako dolný hárok — základné .newpop pravidlo je v súbore neskôr, tu ho prebíjame */
+  .newpop{position:fixed;left:var(--sp-3);right:var(--sp-3);top:auto;
+    bottom:calc(var(--sp-3) + 66px + env(safe-area-inset-bottom));min-width:0;padding:var(--sp-3);
+    z-index:100;box-shadow:var(--shadow-3)}
+  /* chat: skladač sa musí zalomiť, textarea cez celú šírku */
+  #ch-in{flex:1 1 100%;min-width:0}
+  .chat-composer,.chat-composer>div{flex-wrap:wrap}
+  /* dotykové ciele: selecty, checkboxy, summary a undo v toaste */
+  select,input[type="checkbox"],input[type="radio"]{min-height:44px}
+  input[type="checkbox"],input[type="radio"]{width:22px;height:22px}
+  table.tbl input[type="checkbox"]{width:22px!important;height:22px!important}
+  summary{min-height:44px;display:flex;align-items:center}
+  .toast-undo{min-height:44px;padding:0 var(--sp-4)}
+  /* peek sheet: ťahanie za hlavičku nesmie prehltnúť prehliadač */
+  .dp-h{touch-action:none}
+}
 </style>
 </head>
 <body>
@@ -1070,7 +1097,7 @@ body{position:relative;z-index:0}
       <div class="nav" role="group" aria-labelledby="g-system">
         <button data-v="jadro" role="tab" aria-selected="false" aria-controls="v-jadro"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 2v2M15 2v2M9 20v2M15 20v2M2 9h2M2 15h2M20 9h2M20 15h2"/></svg>Jadro</button>
         <button data-v="naklady" role="tab" aria-selected="false" aria-controls="v-naklady"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17l5-6 4 3 5-7 4 5"/><path d="M3 21h18"/></svg>Náklady</button>
-        <button data-v="observabilita" role="tab" aria-selected="false" aria-controls="v-observabilita"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h4l2 6 4-14 2 8h6"/></svg>Observabilita<span class="bdg warn" id="nav-alerts">2</span></button>
+        <button data-v="observabilita" role="tab" aria-selected="false" aria-controls="v-observabilita"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h4l2 6 4-14 2 8h6"/></svg>Observabilita<span class="bdg warn" id="nav-alerts" hidden>0</span></button>
         <button data-v="nastavenia" role="tab" aria-selected="false" aria-controls="v-nastavenia"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 13a7.6 7.6 0 0 0 0-2l2-1.5-2-3.5-2.4 1a7.6 7.6 0 0 0-1.7-1L14.8 3H9.2l-.5 3a7.6 7.6 0 0 0-1.7 1l-2.4-1-2 3.5L4.6 11a7.6 7.6 0 0 0 0 2l-2 1.5 2 3.5 2.4-1a7.6 7.6 0 0 0 1.7 1l.5 3h5.6l.5-3a7.6 7.6 0 0 0 1.7-1l2.4 1 2-3.5z"/></svg>Nastavenia</button>
       </div>
     </nav>
@@ -1158,11 +1185,11 @@ body{position:relative;z-index:0}
   </div>
 
   <!-- Hlavné taby -->
-  <div class="seg" id="pm-tabs" role="tablist" aria-label="Pohľad na pamäť" style="margin-bottom:12px">
-    <button role="tab" data-tab="graf" aria-pressed="true">Graf</button>
-    <button role="tab" data-tab="dnes" aria-pressed="false">Dnes</button>
-    <button role="tab" data-tab="hladanie" aria-pressed="false">Hľadanie</button>
-    <button role="tab" data-tab="cistenie" aria-pressed="false">Čistenie</button>
+  <div class="seg" id="pm-tabs" role="group" aria-label="Pohľad na pamäť" style="margin-bottom:12px">
+    <button data-tab="graf" aria-pressed="true">Graf</button>
+    <button data-tab="dnes" aria-pressed="false">Dnes</button>
+    <button data-tab="hladanie" aria-pressed="false">Hľadanie</button>
+    <button data-tab="cistenie" aria-pressed="false">Čistenie</button>
   </div>
 
   <!-- ===================== PANEL GRAF ===================== -->
@@ -1206,6 +1233,8 @@ body{position:relative;z-index:0}
           <input type="range" id="pm-f-str" min="0" max="100" step="5" value="0"></div>
         <div class="field" style="margin:0"><label for="pm-f-per">Vek uzla</label>
           <select id="pm-f-per"><option value="0">celá pamäť</option><option value="30">do 30 dní</option><option value="90">do 90 dní</option><option value="320">do 320 dní</option></select></div>
+        <div class="field" style="margin:0"><label for="pm-f-arch">Archív</label>
+          <select id="pm-f-arch"><option value="">aktívne uzly</option><option value="only">len archivované</option></select></div>
         <button class="btn ghost" id="pm-reset" style="align-self:end">Zrušiť filtre</button>
       </div>
 
@@ -1251,6 +1280,7 @@ body{position:relative;z-index:0}
         <button class="btn ghost" data-bulk="tag">Tag</button>
         <button class="btn ghost" data-bulk="pin">Chrániť</button>
         <button class="btn ghost" data-bulk="merge">Zlúčiť</button>
+        <button class="btn ghost" data-bulk="restore" hidden>Obnoviť z archívu</button>
         <button class="btn ghost" data-bulk="clear">Zrušiť výber</button>
       </div>
       <div class="tw" style="padding:12px 4px 0">
@@ -1321,11 +1351,11 @@ body{position:relative;z-index:0}
       <div class="ch"><h3>Sprievodca čistenia</h3><span class="tag" id="pm-cl-step">krok 1 zo 4</span>
         <span class="sp"></span><span class="badge mute" id="pm-cl-total">—</span></div>
       <p class="note">Pamäť rastie rýchlejšie, než sa dá prečítať. Sprievodca prejde štyri typy uzlov, ktoré sa oplatí zvážiť: slabé, dlho neaktívne, osamelé a duplicitné. Archivovanie je vratné — uzol sa presunie do archívu, nezmaže sa.</p>
-      <div class="seg" id="pm-cl-steps" role="tablist" aria-label="Kroky čistenia" style="margin:10px 0">
-        <button role="tab" data-s="weak" aria-pressed="true">Slabé</button>
-        <button role="tab" data-s="stale" aria-pressed="false">Dlho neaktívne</button>
-        <button role="tab" data-s="orphan" aria-pressed="false">Osamelé</button>
-        <button role="tab" data-s="dupes" aria-pressed="false">Duplikáty</button>
+      <div class="seg" id="pm-cl-steps" role="group" aria-label="Kroky čistenia" style="margin:10px 0">
+        <button data-s="weak" aria-pressed="true">Slabé</button>
+        <button data-s="stale" aria-pressed="false">Dlho neaktívne</button>
+        <button data-s="orphan" aria-pressed="false">Osamelé</button>
+        <button data-s="dupes" aria-pressed="false">Duplikáty</button>
       </div>
       <p class="lead" id="pm-cl-desc" style="margin-bottom:10px"></p>
       <div class="filt" style="margin-bottom:10px">
@@ -1633,7 +1663,7 @@ body{position:relative;z-index:0}
       <select id="au-app" aria-label="Appka"><option value="">Všetky appky</option></select>
       <select id="au-dep" aria-label="Oddelenie"><option value="">Všetky oddelenia</option></select>
       <select id="au-trig" aria-label="Spúšťač"><option value="">Všetky spúšťače</option><option>cron</option><option>MCP</option><option>admin</option></select>
-      <select id="au-state" aria-label="Stav"><option value="">Všetky stavy</option><option>Aktívna</option><option>Pozastavená</option><option>Chyba</option></select>
+      <select id="au-state" aria-label="Stav"><option value="">Všetky stavy</option><option>Aktívna</option><option>Pozastavená</option><option>Pozastavená (appka)</option><option>Chyba</option></select>
     </div>
     <div class="tw">
       <table class="tbl" id="au-tbl">
@@ -1772,7 +1802,7 @@ body{position:relative;z-index:0}
         <button class="kpi tl" type="button" id="j-kpi-hit">
           <span class="kl">Recall hit@5</span>
           <b><span class="kv">86,7</span> <em>%</em></b>
-          <span class="kd">MRR 0,800 · 714 uzlov v pamäti</span>
+          <span class="kd">MRR 0,800 · <span class="js-total">715</span> uzlov v pamäti</span>
           <span class="spk" id="j-kpi-spk2"></span>
         </button>
         <button class="kpi" type="button" id="j-kpi-p50">
@@ -1784,7 +1814,7 @@ body{position:relative;z-index:0}
         <button class="kpi" type="button" id="j-kpi-ram">
           <span class="kl">RAM</span>
           <b><span class="kv">31,2</span> <em>/ 48 GB</em></b>
-          <span class="kd">65,0 % · limit upozornenia 44 GB</span>
+          <span class="kd" id="j-ram-kd">65,0 % · limit upozornenia 44 GB</span>
           <span class="spk" id="j-kpi-spk4"></span>
         </button>
       </div>
@@ -1877,7 +1907,7 @@ body{position:relative;z-index:0}
   </div>
 
   <p class="disc">Zdroj čísel: eval batéria 31. 7. 2026 (43 dopytov, 20 párov embeddingov) · RecallEngine 8–130 ms ·
-    <span class="mono">/api/search</span> p50 4,2 s · pamäť 714 uzlov v 5 oblastiach.
+    <span class="mono">/api/search</span> p50 4,2 s · pamäť <span class="js-total">715</span> uzlov v 5 oblastiach.
     Priebehy v čase sú dopočítané — história sa pred 31. 7. 2026 systematicky nemerala.</p>
 </section>
 
@@ -2040,7 +2070,7 @@ body{position:relative;z-index:0}
         <span class="kd">1 výpadok Ollamy</span></button>
     </div>
 
-  <div class="seg" id="ob-tabs" role="tablist" aria-label="Observabilita">
+  <div class="seg" id="ob-tabs" role="group" aria-label="Observabilita">
     <button type="button" data-t="upozornenia" aria-pressed="true">Upozornenia</button>
     <button type="button" data-t="logy" aria-pressed="false">Logy</button>
     <button type="button" data-t="dostupnost" aria-pressed="false">Dostupnosť</button>
@@ -2257,7 +2287,7 @@ body{position:relative;z-index:0}
               <option value="nomic-embed-text">nomic-embed-text — 768 dim · 0,3 GB</option>
               <option value="mxbai-embed-large">mxbai-embed-large — 1 024 dim · 0,7 GB</option>
             </select>
-            <p class="hint">bge-m3 má nameraný prekryv SK↔EN len 3/20. Zmena modelu vyžaduje preindexovanie 714 uzlov.</p>
+            <p class="hint">bge-m3 má nameraný prekryv SK↔EN len 3/20. Zmena modelu vyžaduje preindexovanie <span class="js-total">715</span> uzlov.</p>
           </div>
         </div>
         <div style="min-width:0">
@@ -2346,7 +2376,7 @@ body{position:relative;z-index:0}
           <option value="7d">týždenne v nedeľu</option>
           <option value="off">vypnuté</option>
         </select>
-        <p class="hint">Záloha je jeden súbor SQLite s 714 uzlami a ich vektormi (≈ 41 MB).</p>
+        <p class="hint">Záloha je jeden súbor SQLite s <span class="js-total">715</span> uzlami a ich vektormi (≈ 41 MB).</p>
       </div>
       <div class="field">
         <label for="st-lang">Jazyk rozhrania</label>
@@ -3246,9 +3276,25 @@ body{position:relative;z-index:0}
     yes.parentNode.replaceChild(clone, yes);
     clone.addEventListener("click", function () { m.classList.remove("on"); onYes && onYes(); });
     m.classList.add("on");
+    A._cfFocus = document.activeElement;
     clone.focus();
+    /* pasca fokusu: Tab cykluje medzi Zrušiť a potvrdením, nevypadne za dialóg */
+    m.__trap = function (e) {
+      if (e.key !== "Tab") return;
+      var f = [$("#confirm-no"), $("#confirm-yes")].filter(Boolean);
+      if (!f.length) return;
+      e.preventDefault();
+      var i = f.indexOf(document.activeElement);
+      f[(i + (e.shiftKey ? -1 : 1) + f.length) % f.length].focus();
+    };
+    m.addEventListener("keydown", m.__trap);
   };
-  A.closeConfirm = function () { $("#confirm").classList.remove("on"); };
+  A.closeConfirm = function () {
+    var m = $("#confirm");
+    m.classList.remove("on");
+    if (m.__trap) { m.removeEventListener("keydown", m.__trap); m.__trap = null; }
+    if (A._cfFocus && A._cfFocus.focus) { try { A._cfFocus.focus(); } catch (e) {} A._cfFocus = null; }
+  };
 
   /* ---------- detail panel ---------- */
   var lastFocus = null;
@@ -3312,7 +3358,12 @@ body{position:relative;z-index:0}
     A.state.screen = key;
     /* peek panel nesmie prežiť prechod obrazovky — inak nad novou obrazovkou
        visí detail zo starej (#/node/ deep-link si inšpektor otvorí až po show) */
-    if (A.state._lastScreen && A.state._lastScreen !== key) A.closeDetail();
+    if (A.state._lastScreen && A.state._lastScreen !== key) {
+      A.closeDetail();
+      /* stráž neuložených zmien patrí obrazovke, ktorú opúšťame — po Backu (ktorý
+         obchádza A.go) by inak vyskakovala nad cudzími obrazovkami */
+      A.state._leaveGuard = null;
+    }
     A.state._lastScreen = key;
     $$(".view").forEach(function (v) { v.classList.remove("on"); });
     var v = $("#v-" + key);
@@ -3333,7 +3384,7 @@ body{position:relative;z-index:0}
     var p = (location.hash || "").replace(/^#\/?/, "").split("/");
     /* #/node/<slug> — otvorí editovateľný inšpektor uzla nad domovskou obrazovkou */
     if (p[0] === "node" && p[1]) {
-      if (!A.state.screen) A.show(A.screens.pamat ? "pamat" : (A.screens.mapa ? "mapa" : Object.keys(A.screens)[0]));
+      A.show(A.screens.pamat ? "pamat" : (A.screens.mapa ? "mapa" : Object.keys(A.screens)[0]));
       if (A.mem && A.mem.inspect) A.mem.inspect(decodeURIComponent(p[1]));
       return;
     }
@@ -3344,7 +3395,25 @@ body{position:relative;z-index:0}
   w.addEventListener("hashchange", fromHash);
 
   /* ---------- bočný panel na mobile ---------- */
-  A.closeSide = function () { $("#side").classList.remove("open"); $("#dp-scrim").classList.remove("on"); };
+  A.closeSide = function () {
+    $("#side").classList.remove("open"); $("#dp-scrim").classList.remove("on");
+    A.syncSideInert();
+    if (A._sideFocus && A._sideFocus.focus) { try { A._sideFocus.focus(); } catch (e) {} A._sideFocus = null; }
+  };
+  /* mimo obrazovky = mimo tab poradia (inak drawer drží 14 skrytých zastávok) */
+  A.syncSideInert = function () {
+    var side = $("#side"); if (!side) return;
+    var mobile = w.matchMedia("(max-width:900px)").matches;
+    var open = side.classList.contains("open");
+    if (mobile && !open) side.setAttribute("inert", ""); else side.removeAttribute("inert");
+    var bn = $("#bnav"); if (bn) { if (mobile && open) bn.setAttribute("inert", ""); else bn.removeAttribute("inert"); }
+  };
+  A.openSide = function () {
+    A._sideFocus = document.activeElement;
+    $("#side").classList.add("open"); $("#dp-scrim").classList.add("on");
+    A.syncSideInert();
+    var first = $("#side").querySelector("button, a, input"); if (first) first.focus();
+  };
 
   /* ---------- triediteľné tabuľky ---------- */
   A.sortable = function (table, getRows, render) {
@@ -3505,7 +3574,7 @@ body{position:relative;z-index:0}
       var b = e.target.closest("button[data-v]");
       if (b) A.go(b.getAttribute("data-v"));
     });
-    $("#burger").addEventListener("click", function () { $("#side").classList.add("open"); $("#dp-scrim").classList.add("on"); });
+    $("#burger").addEventListener("click", A.openSide);
     $("#dp-scrim").addEventListener("click", function () { A.closeSide(); A.closeDetail(); });
     $("#dp-close").addEventListener("click", A.closeDetail);
     $("#themeBtn").addEventListener("click", function () { A.setTheme(A.state.theme === "light" ? "dark" : "light"); });
@@ -3516,7 +3585,8 @@ body{position:relative;z-index:0}
     document.addEventListener("keydown", function (e) {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") { e.preventDefault(); A.openCmd(); }
       else if (e.key === "Escape") {
-        if ($("#cmdk").classList.contains("on")) A.closeCmd();
+        if ($("#newPop") && $("#newPop").classList.contains("on")) { $("#newPop").classList.remove("on"); var nb = $("#newBtn"); if (nb) { nb.setAttribute("aria-expanded", "false"); nb.focus(); } }
+        else if ($("#cmdk").classList.contains("on")) A.closeCmd();
         else if ($("#confirm").classList.contains("on")) A.closeConfirm();
         else if ($("#dp").classList.contains("on")) A.closeDetail();
         else if ($("#side").classList.contains("open")) A.closeSide();
@@ -3795,12 +3865,19 @@ body{position:relative;z-index:0}
       A.mem.remove(drop); emit("update", keep);
     },
     /* návrhy duplikátov (podobný názov v inom oddelení) */
+    /* duplikáty: prekryv obsahových tokenov ≥ 50 %, nie jediné spoločné slovo —
+       inak sprievodca čistenia ponúka zlúčenie úplne nesúvisiacich uzlov */
     dupes: function (nd) {
+      var STOP = { pred: 1, podla: 1, medzi: 1, ako: 1, alebo: 1, ktore: 1, tento: 1, prve: 1, bez: 1, pre: 1, cez: 1, nad: 1, pod: 1, plan: 1, novy: 1, nove: 1 };
+      function toks(s) {
+        return A.fold(s).split(/[^a-z0-9]+/).filter(function (t) { return t.length > 3 && !STOP[t]; });
+      }
+      var a = toks(nd.name); if (a.length < 2) return [];
       return _nodes.filter(function (m) {
-        if (m.id === nd.id || m.archived) return false;
-        var a = A.fold(nd.name).split(/\s+/), b = A.fold(m.name);
-        var hit = a.filter(function (t) { return t.length > 3 && b.indexOf(t) > -1; }).length;
-        return hit >= 1 && m.type === nd.type;
+        if (m.id === nd.id || m.archived || m.type !== nd.type) return false;
+        var b = toks(m.name); if (!b.length) return false;
+        var hit = a.filter(function (t) { return b.indexOf(t) > -1; }).length;
+        return hit / Math.min(a.length, b.length) >= 0.5;
       }).slice(0, 4);
     },
     link: addBack,
@@ -4003,6 +4080,10 @@ body{position:relative;z-index:0}
       { t: "pred 5 h", agent: "Newsletter — týždenný koncept", dep: "Newsletter", res: "čaká", tok: 0, min: 0, id: "A-02" }
     ],
     byId: function (id) { for (var i = 0; i < A.autos.rows.length; i++) if (A.autos.rows[i].id === id) return A.autos.rows[i]; return null; },
+    /* zmena stavu/behu → jeden broadcast (KPI, odznaky, donuty sa naň prihlásia) */
+    _subs: [],
+    onChange: function (fn) { A.autos._subs.push(fn); },
+    emit: function (kind, row) { A.autos._subs.forEach(function (fn) { try { fn(kind, row); } catch (e) { console.error(e); } }); },
     /* trace strom behu doplní obrazovka Práca (vlastní vykreslenie) */
     runDetail: null
   };
@@ -4089,6 +4170,7 @@ body{position:relative;z-index:0}
       });
       A.autos.hist.unshift({ t: "teraz", agent: (v ? "Appka pozastavená — " : "Appka obnovená — ") + app.name, dep: (app.deps || [])[0] || "—", res: v ? "pauza" : "obnovené", tok: 0, min: 0, id: "—" });
       if (A.autos.hist.length > 40) A.autos.hist.pop();
+      A.autos.emit("cascade", app);
       aemit("update", app);
     },
     /* jeden zdieľaný potvrdzovací tok pauzy (Q79) — používa detail appky aj Nastavenia */
@@ -4140,6 +4222,8 @@ body{position:relative;z-index:0}
     /* objem spracovaných položiek za n dní (deterministické) */
     vol: function (app, n) {
       var rows = A.apps.autos(app);
+      /* appka bez automatizácií reálne nespracuje nič — nulový rad, nie konštantná podlaha */
+      if (!rows.length) return new Array(n || 14).fill(0);
       var base = 8 + rows.length * 6 + Math.round((app.share || 0.1) * 60);
       return A.series(app.seed || 4100, n || 14, base, base * 0.45, 0.6)
         .map(function (v) { return Math.max(0, Math.round(v)); });
@@ -4260,7 +4344,10 @@ body{position:relative;z-index:0}
     }
     return true;
   }
-  function filteredNodes() { return mem().nodes().filter(passFilter); }
+  /* zdroj riadkov zoznamu: buď živé uzly, alebo archív (sľub „dajú sa vrátiť") */
+  function filteredNodes() {
+    return (PM.archOnly ? mem().archived() : mem().nodes()).filter(passFilter);
+  }
 
 
   /* ============================================================
@@ -4919,14 +5006,16 @@ body{position:relative;z-index:0}
     var net = PM.net; if (!net || !net.bb) return;
     netFitTo(net.bb.x0, net.bb.y0, net.bb.x1, net.bb.y1, 14);
   }
-  /* fit na SKUTOČNÝ box (nie viewBox) — na výškovom telefóne by letterbox
-     zmenšil mapu na ~0,37×; cielime kresliacu mierku ≥ 1,15 a nechávame pan */
+  /* fit na SKUTOČNÝ box (nie viewBox): letterbox na výškovom telefóne inak necháva
+     polovicu plátna prázdnu. Vždy začíname prehľadom — celý obsah musí byť vidieť,
+     detail si používateľ priblíži štipkou (pan je clampnutý, nedá sa stratiť). */
   function netFitViewport() {
     var net = PM.net, host = $("#pm-net"); if (!net || !net.bb || !host) return;
     var r = host.getBoundingClientRect(); if (!r.width || !r.height) return;
     var base = Math.min(r.width / GW, r.height / GH);
-    var kFit = Math.min(GW / (net.bb.x1 - net.bb.x0 + 28), GH / (net.bb.y1 - net.bb.y0 + 28));
-    var k = clamp(Math.max(kFit, base > 0 ? 1.15 / base : 1), 0.8, 4);
+    if (!base) return;
+    var cw = (net.bb.x1 - net.bb.x0 + 40) * base, ch = (net.bb.y1 - net.bb.y0 + 40) * base;
+    var k = clamp(Math.min(r.width / cw, r.height / ch), 0.8, 4);
     net.cam.k = k;
     net.cam.tx = GW / 2 - (net.bb.x0 + net.bb.x1) / 2 * k;
     net.cam.ty = GH / 2 - (net.bb.y0 + net.bb.y1) / 2 * k;
@@ -5012,13 +5101,27 @@ body{position:relative;z-index:0}
     if (!cur || !net.byId[cur]) return;
     ev.preventDefault();
     var it = net.byId[cur], next = null;
-    function sib(list, id, dir) {
-      var i = list.indexOf(id);
-      return list[(i + dir + list.length) % list.length];
+    /* klávesnica sa smie pohybovať len po uzloch, ktoré sú aj viditeľné —
+       inak by Enter otvoril uzol odfiltrovaný alebo skrytý fokusom */
+    function navOk(id) {
+      var n2 = net.byId[id]; if (!n2) return false;
+      var el2 = net.el[id];
+      if (el2 && (el2.classList.contains("flt-out") || el2.classList.contains("ctx-out"))) return false;
+      return n2.kind !== "leaf" || passFilter(n2.node);
     }
+    function sib(list, id, dir) {
+      if (!list.length) return null;
+      var i = list.indexOf(id);
+      for (var s = 1; s <= list.length; s++) {
+        var c = list[(i + dir * s + list.length * s) % list.length];
+        if (navOk(c)) return c;
+      }
+      return null;
+    }
+    function firstOk(list) { for (var i = 0; i < list.length; i++) if (navOk(list[i])) return list[i]; return null; }
     if (ev.key === "ArrowDown") {
-      if (it.kind === "core") { var h0 = net.hubs.filter(function (h) { return h.area.k === it.area.k; })[0]; next = h0 && h0.id; }
-      else if (it.kind === "hub") { var l0 = net.leaves.filter(function (lf) { return lf.hub.id === it.id; })[0]; next = l0 && l0.id; }
+      if (it.kind === "core") next = firstOk(net.hubs.filter(function (h) { return h.area.k === it.area.k; }).map(function (h) { return h.id; }));
+      else if (it.kind === "hub") next = firstOk(net.leaves.filter(function (lf) { return lf.hub.id === it.id; }).map(function (lf) { return lf.id; }));
     } else if (ev.key === "ArrowUp") {
       if (it.kind === "leaf") next = it.hub.id;
       else if (it.kind === "hub") next = "core-" + it.area.k;
@@ -5028,7 +5131,18 @@ body{position:relative;z-index:0}
       else if (it.kind === "hub") next = sib(net.hubs.filter(function (h) { return h.area.k === it.area.k; }).map(function (h) { return h.id; }), it.id, dir);
       else next = sib(net.leaves.filter(function (lf) { return lf.hub === it.hub; }).map(function (lf) { return lf.id; }), it.id, dir);
     }
-    if (next && net.el[next]) net.el[next].focus();
+    if (!next || !net.el[next]) return;
+    net.el[next].focus();
+    /* kamera nasleduje fokus, ak uzol vypadol z viditeľnej časti plátna */
+    var host = $("#pm-net"), n3 = net.byId[next];
+    if (host && n3) {
+      var r = host.getBoundingClientRect(), c = net.cam;
+      var base = Math.min(r.width / GW, r.height / GH);
+      var ox = (r.width - GW * base) / 2, oy = (r.height - GH * base) / 2;
+      var px = ox + (n3.x * c.k + c.tx) * base, py = oy + (n3.y * c.k + c.ty) * base;
+      var m = 40;
+      if (px < m || py < m || px > r.width - m || py > r.height - m) netCenterOn(next);
+    }
   }
 
   /* ---------- breadcrumb — VŽDY derivovaný zo stavu, nikdy imperatívny ---------- */
@@ -5338,8 +5452,8 @@ body{position:relative;z-index:0}
     if (x === "layer" || x === "all") setLayer("all");
     if (x === "search" || x === "all") { PM.gq = ""; var i = $("#pm-gq"); if (i) i.value = ""; if (net) net.camBefore = null; netHits(); }
     if (x === "legend" || x === "all") { if (net) net.legendHot = null; legendRefresh(); }
+    if (x === "all" && net) { net.lobeFocus = null; net.deptFocus = null; net.camBefore = null; netFocusApply(); }
     if (x === "filters" || x === "all") { resetFilters(); return; }   /* resetFilters volá applyFilterUI */
-    if (x === "all" && net) { net.lobeFocus = null; net.deptFocus = null; netFocusApply(); }
     netStyle();
   }
 
@@ -5599,9 +5713,17 @@ body{position:relative;z-index:0}
     if (!ids.length) { bar.hidden = true; return; }
     bar.hidden = false;
     $("#pm-bulk-n").textContent = F(ids.length, 0) + " vybraných";
+    /* v archíve dávajú zmysel iné akcie než nad živými uzlami */
+    $$("#pm-bulk [data-bulk]").forEach(function (b) {
+      var k = b.getAttribute("data-bulk");
+      if (k === "restore") b.hidden = !PM.archOnly;
+      else if (k !== "clear") b.hidden = !!PM.archOnly;
+    });
   }
   function selectedNodes() {
-    return Object.keys(PM.sel).filter(function (k) { return PM.sel[k]; }).map(function (id) { return mem().byId(id); }).filter(Boolean);
+    return Object.keys(PM.sel).filter(function (k) { return PM.sel[k]; })
+      .map(function (id) { return mem().byId(id) || mem().archived().filter(function (n) { return n.id === id; })[0]; })
+      .filter(Boolean);
   }
   function zoznamRender(rows) {
     var tb = $("#pm-tbl tbody");
@@ -5665,8 +5787,8 @@ body{position:relative;z-index:0}
       { label: "Presunúť", kind: "", fn: function () {
         var a = mem().areaByKey($("#pm-mv-a").value);
         var d = a.deps.filter(function (x) { return x.slug === $("#pm-mv-d").value; })[0] || a.deps[0];
-        sel.forEach(function (n) { mem().update(n, { area: a, dep: d, type: d.type }); });
-        A.closeDetail(); PM.sel = {}; A.toast(F(sel.length, 0) + " uzlov presunutých do " + a.name, "ok");
+        PM.sel = {}; sel.forEach(function (n) { mem().update(n, { area: a, dep: d, type: d.type }); });
+        A.closeDetail(); A.toast(F(sel.length, 0) + " uzlov presunutých do " + a.name, "ok");
       } }
     ]);
     $("#pm-mv-a").addEventListener("change", function () { $("#pm-mv-d").innerHTML = depOpts(this.value); });
@@ -5677,26 +5799,34 @@ body{position:relative;z-index:0}
       '<div class="field"><label for="pm-tg">Tag</label><input id="pm-tg" placeholder="napr. revízia"></div><p class="note">Tag sa pridá všetkým vybraným uzlom.</p>',
       [{ label: "Pridať tag", kind: "", fn: function () {
         var t = ($("#pm-tg").value || "").trim(); if (!t) { A.toast("Zadaj tag", "warn"); return; }
-        sel.forEach(function (n) { mem().update(n, { tags: (n.tags || []).concat([t]) }); });
-        A.closeDetail(); PM.sel = {}; A.toast("Tag „" + t + "“ pridaný " + F(sel.length, 0) + " uzlom", "ok");
+        PM.sel = {}; sel.forEach(function (n) { mem().update(n, { tags: (n.tags || []).concat([t]) }); });
+        A.closeDetail(); A.toast("Tag „" + t + "“ pridaný " + F(sel.length, 0) + " uzlom", "ok");
       } }]);
   }
   function runBulk(kind) {
     var sel = selectedNodes(); if (!sel.length) return;
     if (kind === "clear") { PM.sel = {}; zoznamRender(A.applySort($("#pm-tbl"), zoznamRows())); return; }
+    if (kind === "restore") {
+      PM.sel = {};
+      sel.forEach(function (n) { mem().restore(n); });
+      A.toast(F(sel.length, 0) + " uzlov obnovených z archívu", "ok", { undo: function () { sel.forEach(function (n) { mem().archive(n); }); } });
+      return;
+    }
     if (kind === "archive") {
-      A.confirm("Archivovať " + F(sel.length, 0) + " uzlov?", "Presunú sa do archívu a zmiznú z grafu. Dajú sa obnoviť.", function () {
-        sel.forEach(function (n) { mem().archive(n); }); PM.sel = {}; A.toast(F(sel.length, 0) + " uzlov v archíve", "ok");
+      A.confirm("Archivovať " + F(sel.length, 0) + " uzlov?", "Presunú sa do archívu a zmiznú z grafu. Dajú sa obnoviť cez filter Archív alebo hneď cez Späť.", function () {
+        PM.sel = {};
+        sel.forEach(function (n) { mem().archive(n); });
+        A.toast(F(sel.length, 0) + " uzlov v archíve", "ok", { undo: function () { sel.forEach(function (n) { mem().restore(n); }); } });
       }, "Archivovať", true); return;
     }
-    if (kind === "pin") { sel.forEach(function (n) { if (!n.pinned) mem().togglePin(n); }); PM.sel = {}; A.toast(F(sel.length, 0) + " uzlov chránených (pripnuté)", "ok"); return; }
+    if (kind === "pin") { PM.sel = {}; sel.forEach(function (n) { if (!n.pinned) mem().togglePin(n); }); A.toast(F(sel.length, 0) + " uzlov chránených (pripnuté)", "ok"); return; }
     if (kind === "move") { bulkMove(); return; }
     if (kind === "tag") { bulkTag(); return; }
     if (kind === "merge") {
       if (sel.length < 2) { A.toast("Na zlúčenie vyber aspoň 2 uzly", "warn"); return; }
       var keep = sel[0], drop = sel.slice(1);
       A.confirm("Zlúčiť " + F(sel.length, 0) + " uzlov?", "„" + drop.map(function (n) { return n.name; }).join("“, „") + "“ sa zlúčia do „" + keep.name + "“ a zaniknú.", function () {
-        drop.forEach(function (n) { mem().merge(keep, n); }); PM.sel = {}; A.toast("Zlúčené do „" + keep.name + "“", "ok");
+        PM.sel = {}; drop.forEach(function (n) { mem().merge(keep, n); }); A.toast("Zlúčené do „" + keep.name + "“", "ok");
       }, "Zlúčiť", true); return;
     }
   }
@@ -5763,7 +5893,13 @@ body{position:relative;z-index:0}
     var res;
     if (PM.preset === "weak") res = mem().weak().filter(passFilterNoWeak).map(wrap);
     else if (PM.preset === "today") res = mem().today().filter(passFilterNoWeak).map(wrap);
-    else res = mem().search(PM.q, filt).filter(function (r) { return !PM.filter.per || r.node.age <= PM.filter.per; });
+    /* aj ranked hľadanie musí rešpektovať „len slabé" — inak chip sľubuje filter,
+       ktorý sa na tomto tabe neuplatňuje */
+    else res = mem().search(PM.q, filt).filter(function (r) {
+      if (PM.filter.per && r.node.age > PM.filter.per) return false;
+      if (PM.weakOnly && r.node.str >= 0.4) return false;
+      return true;
+    });
 
     if (!PM.q && !PM.preset) {
       $("#pm-hl-cnt").textContent = "zadajte dopyt";
@@ -5872,6 +6008,8 @@ body{position:relative;z-index:0}
   function switchTab(tab) {
     PM.tab = tab;
     $$("#pm-tabs button").forEach(function (b) { b.setAttribute("aria-pressed", String(b.getAttribute("data-tab") === tab)); });
+    /* filtračný chip platí pre Graf/Zoznam a Hľadanie; na tabe Dnes sa filter neuplatňuje */
+    var fc = $("#pm-fchip"); if (fc) fc.hidden = (tab === "dnes" || tab === "cistenie") || !PM.fchip;
     $("#pm-panel-graf").hidden = tab !== "graf";
     $("#pm-panel-dnes").hidden = tab !== "dnes";
     $("#pm-panel-hladanie").hidden = tab !== "hladanie";
@@ -5927,6 +6065,8 @@ body{position:relative;z-index:0}
 
   function showFchip(label) {
     var host = $("#pm-fchip");
+    if (label != null) PM.fchip = label;
+    else PM.fchip = null;
     if (!label) { host.innerHTML = ""; return; }
     host.innerHTML = '<div class="fchip">filtrované z <b>' + esc(label) + '</b> <button aria-label="Zrušiť filter">✕</button></div>';
     $("#pm-fchip button").addEventListener("click", function () { resetFilters(); });
@@ -6066,7 +6206,8 @@ body{position:relative;z-index:0}
       $("#pm-k4").addEventListener("click", function () { A.go("pamat", "dnes"); });
 
       /* domov */
-      function homeGo() { switchTab("hladanie"); runSearch($("#pm-home-q").value); }
+      /* každá zmena tabu ide cez router — hash musí sedieť s viditeľným panelom */
+      function homeGo() { PM.qPending = $("#pm-home-q").value; A.go("pamat", "hladanie"); }
       $("#pm-home-go").addEventListener("click", homeGo);
       $("#pm-home-q").addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); homeGo(); } });
       $("#pm-new").addEventListener("click", createNode);
@@ -6129,7 +6270,7 @@ body{position:relative;z-index:0}
         if (!x) return;
         var ghx = x.getAttribute("data-ghx");
         if (ghx === "clear") { $("#pm-gq").value = ""; netSearch(""); }
-        else if (ghx === "list") { switchTab("hladanie"); runSearch(PM.gq); }
+        else if (ghx === "list") { PM.qPending = PM.gq; A.go("pamat", "hladanie"); }
         else resetFilters();
       });
       $("#pm-gchips").addEventListener("click", function (e) {
@@ -6173,8 +6314,9 @@ body{position:relative;z-index:0}
 
       /* filtre */
       $("#pm-f-type").addEventListener("change", function () { PM.filter.type = this.value; applyFilterUI(); });
-      $("#pm-f-str").addEventListener("input", function () { PM.filter.strMin = +this.value / 100; $("#pm-f-strv").textContent = F(PM.filter.strMin, 2); netStyle(); redrawView(); if (PM.tab === "hladanie") hlResults(); });
+      $("#pm-f-str").addEventListener("input", function () { PM.filter.strMin = +this.value / 100; applyFilterUI(); });
       $("#pm-f-per").addEventListener("change", function () { PM.filter.per = +this.value; applyFilterUI(); });
+      $("#pm-f-arch").addEventListener("change", function () { PM.archOnly = this.value === "only"; PM.sel = {}; applyFilterUI(); });
       $("#pm-reset").addEventListener("click", resetFilters);
 
       /* charty — prepnutie na tabuľku */
@@ -6213,7 +6355,8 @@ body{position:relative;z-index:0}
          atribútov (sila, pin) je lacný restyle bez rebuildu */
       mem().onChange(function () {
         kpiRefresh(); recentRefresh();
-        if (PM.net && PM.net.sig !== netSig()) PM.net = null;
+        /* netBuild sám pozná podpis a prenáša fokus/legendu cez `prev` — nulovanie
+           PM.net by ten prenos zahodilo a vyhodilo používateľa z fokusu */
         legendRefresh();
         drawCharts();
         redrawView();
@@ -6246,7 +6389,11 @@ body{position:relative;z-index:0}
         return;
       }
       if (sub === "dnes" || sub === "today" || sub === "triage") { switchTab("dnes"); return; }
-      if (sub === "hladanie" || sub === "search") { switchTab("hladanie"); return; }
+      if (sub === "hladanie" || sub === "search") {
+        switchTab("hladanie");
+        if (PM.qPending != null) { var q0 = PM.qPending; PM.qPending = null; runSearch(q0); }
+        return;
+      }
       var a = mem().areaByKey(sub);
       if (a) { PM.filter.area = sub; showFchip(a.name); applyFilterUI(); switchTab("graf"); return; }
       /* inak: chápeme ako dopyt */
@@ -7038,10 +7185,16 @@ body{position:relative;z-index:0}
   var MCP_META = {
     "Asana": "#f06a6a", "Canva": "#00c4cc", "M365": "#d83b01", "Ahrefs": "#ff8800", "Zapier": "#ff4a00"
   };
+  /* text v značkovej dlaždici sa volí podľa jasu podkladu — biela na Canve mala 2,2:1 */
+  function mcpInk(hex) {
+    var m = /^#([0-9a-f]{6})$/i.exec(hex || ""); if (!m) return "var(--on-brand-light)";
+    var v = parseInt(m[1], 16), r = (v >> 16) & 255, g = (v >> 8) & 255, b2 = v & 255;
+    return (0.2126 * r + 0.7152 * g + 0.0722 * b2) > 150 ? "var(--on-brand-dark)" : "var(--on-brand-light)";
+  }
   function mcpIcon(name) {
     var col = MCP_META[name] || "var(--teal)", ini = (name || "?").slice(0, 1).toUpperCase();
-    return '<span class="num" title="' + esc(name) + '" aria-label="MCP nástroj ' + esc(name) + '" ' +
-      'style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:5px;font-size:var(--fs-label);font-weight:700;color:#fff;background:' + col + ';margin-right:3px;vertical-align:-3px">' + esc(ini) + "</span>";
+    return '<span class="num" role="img" title="' + esc(name) + '" aria-label="MCP nástroj ' + esc(name) + '" ' +
+      'style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:5px;font-size:var(--fs-label);font-weight:700;color:' + mcpInk(col) + ';background:' + col + ';margin-right:3px;vertical-align:-3px">' + esc(ini) + "</span>";
   }
   function mcpRow(list) { return (list || []).map(function (n) { return mcpIcon(n) + '<span style="font-size:var(--fs-label);margin-right:8px">' + esc(n) + "</span>"; }).join(""); }
 
@@ -7127,7 +7280,7 @@ body{position:relative;z-index:0}
     var rows = chConvList();
     $("#ch-convs").innerHTML = rows.length ? rows.map(function (c) {
       var on = c === CH.cur;
-      return '<div class="fi" data-conv="' + c.id + '" aria-current="' + on + '" style="cursor:pointer' + (on ? ";background:color-mix(in srgb,var(--teal) 10%,var(--card))" : "") + '">' +
+      return '<div class="fi" data-conv="' + c.id + '" tabindex="0" role="button" aria-current="' + on + '" aria-label="Otvoriť konverzáciu ' + esc(c.title) + '" style="cursor:pointer' + (on ? ";background:color-mix(in srgb,var(--teal) 10%,var(--card))" : "") + '">' +
         '<span class="fd' + (on ? "" : c.pinned ? " g" : "") + '"></span>' +
         '<span class="fx"><b style="font-size:var(--fs-sm)">' + (c.pinned ? "Pripnuté · " : "") + esc(c.title) + "</b><span>" + esc(c.when) + " · " + F(c.msgs.length, 0) + " správ · " + esc(ZONE_TXT[c.zone].b) + "</span></span>" +
         '<span class="ft" style="display:flex;gap:3px">' +
@@ -7263,7 +7416,7 @@ body{position:relative;z-index:0}
     var msg = { role: "ai", text: "", at: chNow(), streaming: true, done: false,
       meta: { model: viaMcp ? "claude cez MCP" : CH.model, ctx: 0, tps: 0, recallMs: Math.round(8 + Math.random() * 122), router: router, sources: sources } };
     CH.cur.msgs.push(msg);
-    chRenderConvs(); chRenderMsgs(); chSetBusy(true); chTpsChart(true);
+    chRenderConvs(); chRenderMsgs(); if (CH.grow) CH.grow(); chSetBusy(true); chTpsChart(true);
 
     var toks = ans.text.split(/(\s+)/), i = 0, t0 = Date.now(), acc = 0;
     CH.timer = setInterval(function () {
@@ -7280,6 +7433,7 @@ body{position:relative;z-index:0}
     var secs = Math.max(0.4, (Date.now() - t0) / 1000);
     msg.meta.tps = +((msg.text.length / 4) / secs).toFixed(1);
     chSetBusy(false); chRenderMsgs(); msg.meta.ctx = chCtxChart(); chRenderMsgs(); chTpsChart(false);
+    if (CH.grow) CH.grow();
   }
 
   function chVote(m, dir) {
@@ -7326,7 +7480,7 @@ body{position:relative;z-index:0}
     title: "Chat", group: "Práca",
     init: function () {
       var Ax = A();
-      chSeedConvs(); chRenderConvs(); chRenderMsgs(); chTpsChart(true); chCtxChart(); chSetZone("local");
+      chSeedConvs(); chRenderConvs(); chRenderMsgs(); if (CH.grow) CH.grow(); chTpsChart(true); chCtxChart(); chSetZone("local");
       bindCodeCopy($("#ch-msgs"));
       bindTableToggle("ch-tps-tbl", "ch-tps-t", function () {
         return mkTable(["Čas", "tok/s"], (CH.tpsData || []).map(function (v, i) { return [F(i * 0.4, 1) + " s", F(v, 1)]; }));
@@ -7347,6 +7501,7 @@ body{position:relative;z-index:0}
         $("#ch-warn").textContent = tot > 8192 ? "Prekročené kontextové okno o " + F(tot - 8192, 0) + " tokenov — najstaršie správy sa pri odoslaní odrežú." : tot > 7000 ? "Blížite sa k limitu 8 192 tokenov (zostáva " + F(8192 - tot, 0) + ")." : "";
       }
       ta.addEventListener("input", grow); grow();
+      CH.grow = grow;   /* token badge musí žiť aj po odpovedi a pri zmene konverzácie */
 
       function doSend() {
         var txt = ta.value.trim();
@@ -7386,8 +7541,10 @@ body{position:relative;z-index:0}
         Ax.detail("Príloha k správe", "<p>Rozhranie je náhľad bez sieťovej vrstvy, takže sa tu súbor reálne nenahráva. V ostrej verzii sa príloha spracuje lokálne: text sa rozdelí na úseky, zaembeduje cez bge-m3 a pripojí ku kontextu konverzácie.</p><dl><dt>Podporované</dt><dd>.txt · .md · .csv · .php · .js</dd><dt>Limit</dt><dd>2 MB na súbor, max 8 súborov</dd><dt>Zóna</dt><dd>dedí sa zo zóny konverzácie</dd></dl>", []);
       });
       $("#ch-new").addEventListener("click", function () {
+        CH.zone = Ax.getShared("zone", CH.zone);
         CH.cur = { id: "c" + (++CH.seq) + "n", title: "Nová konverzácia", when: chNow(), zone: CH.zone, pinned: false, msgs: [] };
-        CH.convs.unshift(CH.cur); chRenderConvs(); chRenderMsgs(); chTpsChart(true); chCtxChart();
+        chSetZone(CH.zone);
+        CH.convs.unshift(CH.cur); chRenderConvs(); chRenderMsgs(); if (CH.grow) CH.grow(); chTpsChart(true); chCtxChart();
       });
 
       $("#ch-search").addEventListener("input", function () { CH.search = this.value; chRenderConvs(); });
@@ -7400,15 +7557,21 @@ body{position:relative;z-index:0}
           Ax.confirm("Zmazať konverzáciu?", "„" + cc.title + "“ sa natrvalo odstráni z histórie.", function () {
             CH.convs = CH.convs.filter(function (x) { return x.id !== id; });
             if (CH.cur === cc) CH.cur = CH.convs[0] || null;
-            chRenderConvs(); chRenderMsgs(); chCtxChart(); Ax.toast("Konverzácia zmazaná", "ok");
+            chRenderConvs(); chRenderMsgs(); if (CH.grow) CH.grow(); chCtxChart(); Ax.toast("Konverzácia zmazaná", "ok");
           }, "Zmazať", true); return; }
         var row = e.target.closest("[data-conv]");
         if (!row) return;
         CH.cur = CH.convs.filter(function (c) { return c.id === row.getAttribute("data-conv"); })[0];
         if (CH.cur) chSetZone(CH.cur.zone);
-        chRenderConvs(); chRenderMsgs(); chCtxChart();
+        chRenderConvs(); chRenderMsgs(); if (CH.grow) CH.grow(); chCtxChart();
       });
-      $("#ch-convsel").addEventListener("change", function () { CH.cur = CH.convs.filter(function (c) { return c.id === this.value; }.bind(this))[0]; if (CH.cur) chSetZone(CH.cur.zone); chRenderConvs(); chRenderMsgs(); chCtxChart(); });
+      $("#ch-convs").addEventListener("keydown", function (e) {
+        if (e.key !== "Enter" && e.key !== " ") return;
+        var row = e.target.closest("[data-conv]");
+        if (!row || e.target.closest("button")) return;
+        e.preventDefault(); row.click();
+      });
+      $("#ch-convsel").addEventListener("change", function () { CH.cur = CH.convs.filter(function (c) { return c.id === this.value; }.bind(this))[0]; if (CH.cur) chSetZone(CH.cur.zone); chRenderConvs(); chRenderMsgs(); if (CH.grow) CH.grow(); chCtxChart(); });
 
       $("#ch-msgs").addEventListener("click", function (e) {
         var s = e.target.closest("button[data-src]");
@@ -7568,6 +7731,8 @@ body{position:relative;z-index:0}
       if (key) smLoadTpl(key);
       $("#sm-title").value = r.title; $("#sm-goal").value = r.goal;
     }
+    var tk = Object.keys(SM_TPL).filter(function (k) { return SM_TPL[k].name === r.tpl; })[0];
+    if (tk) { SM.tpl = tk; $$("#v-smernica .chz[data-tpl]").forEach(function (b) { b.setAttribute("aria-pressed", String(b.getAttribute("data-tpl") === tk)); }); }
     $("#sm-tplname").textContent = "šablóna: " + r.tpl;
     smRenderClaims(); smRenderLinked(); smPreview();
     A().toast("Smernica „" + r.title + "“ načítaná späť do formulára", "ok");
@@ -7732,7 +7897,8 @@ body{position:relative;z-index:0}
     var appDeps = AU.filter.app ? auAppDeps(AU.filter.app) : null;
     return AU.rows.filter(function (r) {
       return (!AU.filter.dep || r.dep === AU.filter.dep) && (!AU.filter.trig || r.trig === AU.filter.trig) &&
-        (!AU.filter.state || r.state === AU.filter.state) && (!appDeps || appDeps.indexOf(r.dep) > -1);
+        (!AU.filter.state || (AU.filter.state === "Pozastavená" ? r.state.indexOf("Pozastavená") === 0 : r.state === AU.filter.state)) &&
+        (!appDeps || appDeps.indexOf(r.dep) > -1);
     });
   }
   function auStateBadge(s) { return '<span class="badge ' + (s === "Aktívna" ? "ok" : s === "Chyba" ? "bad" : "warn") + '">' + esc(s) + "</span>"; }  /* „Pozastavená (appka)" padá do warn */
@@ -7798,7 +7964,7 @@ body{position:relative;z-index:0}
       (r.state === "Chyba" ? "<div class='alert bad' style='margin-top:12px'><span class='ai'></span><span><b>Posledný beh zlyhal</b>Export v Canve vrátil timeout. Automatizácia je pozastavená do zásahu.</span></div>" : "") +
       "<p class='note' style='margin-top:12px'>Poradie priorít: " + AU.prio.join(" › ") + ". Prevádzkové čísla sú ukážkové.</p>",
       [
-        { label: r.state === "Pozastavená" ? "Obnoviť" : "Pozastaviť", kind: "ghost", fn: function () { r.state = r.state === "Pozastavená" ? "Aktívna" : "Pozastavená"; auRender(); Ax.closeDetail(); Ax.toast(r.name + " · " + r.state.toLowerCase(), "ok"); } },
+        { label: r.state === "Pozastavená" ? "Obnoviť" : "Pozastaviť", kind: "ghost", fn: function () { r.state = r.state === "Pozastavená" ? "Aktívna" : "Pozastavená"; auChanged("state", r); Ax.closeDetail(); Ax.toast(r.name + " · " + r.state.toLowerCase(), "ok"); } },
         { label: "Detail behu (trace)", kind: "ghost", fn: function () { auRunDetail(r); } },
         { label: "Upraviť", kind: "ghost", fn: function () { auEditor(r); } },
         { label: "Spustiť teraz", fn: function () { Ax.closeDetail(); auRun(r); } }
@@ -7845,7 +8011,7 @@ body{position:relative;z-index:0}
       var ok = r.state !== "Chyba";
       AU_HIST.unshift({ t: "teraz", agent: r.name, dep: r.dep, res: ok ? "hotovo" : "chyba", tok: 800 + r.avg * 40, min: r.avg, id: r.id });
       if (AU_HIST.length > 40) AU_HIST.pop();
-      r.last = "teraz"; auRender();
+      r.last = "teraz"; auChanged("run", r);
       Ax.toast(r.name + (ok ? " · dokončené za " + F(r.avg, 0) + " min" : " · zlyhalo"), ok ? "ok" : "bad");
     }, 1400);
   }
@@ -7860,7 +8026,13 @@ body{position:relative;z-index:0}
       return;
     }
     tb.innerHTML = rows.map(function (r) {
-      var toggle = '<button class="pill' + (r.state !== "Pozastavená" ? " on" : "") + '" data-toggle="' + r.id + '" aria-pressed="' + (r.state !== "Pozastavená") + '" aria-label="' + (r.state === "Pozastavená" ? "Spustiť automatizáciu" : "Pozastaviť automatizáciu") + '" style="padding:2px 9px;font-size:var(--fs-label)">' + (r.state === "Pozastavená" ? "Spustiť" : "Pauza") + "</button>";
+      /* kaskádový stav „Pozastavená (appka)" je tiež pauza — prepínač musí hlásiť vypnuté
+         a byť zakázaný (obnoviť sa dá len spustením appky) */
+      var running = r.state === "Aktívna" || r.state === "Chyba";
+      var byApp = r.state.indexOf("(appka)") > -1;
+      var toggle = '<button class="pill' + (running ? " on" : "") + '" data-toggle="' + r.id + '"' + (byApp ? " disabled" : "") +
+        ' aria-pressed="' + running + '" aria-label="' + (byApp ? "Zastavená pozastavením appky — obnoviť v Appkách" : running ? "Pozastaviť automatizáciu" : "Spustiť automatizáciu") +
+        '" title="' + (byApp ? "Zastavená pozastavením appky" : "") + '" style="padding:2px 9px;font-size:var(--fs-label)">' + (running ? "Pauza" : "Spustiť") + "</button>";
       return '<tr data-row="' + r.id + '" tabindex="0"><td class="who" style="color:var(--ink);font-weight:500">' + esc(r.name) + " " + mcpRow(r.mcp) + "</td><td>" + esc(r.dep) + "</td><td>" + auTrigBadge(r.trig) + ' <span class="num" style="font-size:var(--fs-label);color:var(--ink-3)">' + esc(r.next) + '</span></td><td class="num" style="font-size:var(--fs-label)">' + esc(r.last) + '</td><td class="num">' + F(r.ok, 0) + ' %</td><td class="num">' + F(r.saved, 0) + " h</td><td>" + auStateBadge(r.state) + " " + toggle + "</td></tr>";
     }).join("");
     cards.innerHTML = rows.map(function (r) {
@@ -7872,7 +8044,7 @@ body{position:relative;z-index:0}
       b.addEventListener("click", function (e) {
         e.stopPropagation();
         var r = auById(b.getAttribute("data-toggle")); if (!r) return;
-        r.state = r.state === "Pozastavená" ? "Aktívna" : "Pozastavená"; auRender();
+        r.state = r.state === "Pozastavená" ? "Aktívna" : "Pozastavená"; auChanged("state", r);
         A().toast(r.name + " · " + r.state.toLowerCase(), "ok");
       });
     });
@@ -7935,6 +8107,8 @@ body{position:relative;z-index:0}
     auRenderHist();
     $("#au-cnt").textContent = auVisible().length + " z " + AU.rows.length;
   }
+  /* každá zmena stavu/behu = jeden broadcast; KPI, nav odznaky aj donuty sú prihlásené */
+  function auChanged(kind, r) { auRender(); A().autos.emit(kind || "update", r); }
 
   w.Aura.screens.automatizacie = {
     title: "Automatizácie", group: "Práca",
@@ -7975,6 +8149,8 @@ body{position:relative;z-index:0}
       }
       auKpi();
       Ax.apps.onChange(function () { auKpi(); auRender(); auFchip(); });
+      /* KPI musia žiť aj pri zmenách automatizácií samotných (pauza, beh, editor) */
+      Ax.autos.onChange(function () { auKpi(); auFchip(); });
 
       auRenderPrio();
       $("#au-prio-reset").addEventListener("click", function () { AU.prio = ["Rýchlosť", "Chyby", "Čas", "Náklady"]; auRenderPrio(); Ax.toast("Poradie priorít obnovené", "ok"); });
@@ -8030,7 +8206,7 @@ body{position:relative;z-index:0}
           { label: "cron", v: AU.rows.filter(function (r) { return r.trig === "cron"; }).length, color: "var(--gold)" },
           { label: "admin", v: AU.rows.filter(function (r) { return r.trig === "admin"; }).length, color: "var(--violet)" }
         ],
-        onSlice: function (it) { AU.filter = { dep: "", trig: it.label, state: "" }; $("#au-trig").value = it.label; auRender(); auFchip(); Ax.toast("Filter spúšťača: " + it.label, "ok"); }
+        onSlice: function (it) { AU.filter.trig = it.label; $("#au-trig").value = it.label; auRender(); auFchip(); Ax.toast("Filter spúšťača: " + it.label, "ok"); }
       });
 
       Ax.registerCmd([
@@ -8219,8 +8395,18 @@ body{position:relative;z-index:0}
       series: [{ key: "s", color: color, unit: unit, dec: dec, data: jit(seed, 30, base, amp, dec) }] });
   }
 
+  /* živé odvodené texty: veľkosť pamäte a prah RAM boli na 4 miestach napevno */
+  function sysLiveText() {
+    $$(".js-total").forEach(function (el) { el.textContent = nf(A.mem.TOTAL_ALL, 0); });
+    var kd = $("#j-ram-kd");
+    if (kd) {
+      var pct = A.mem ? (J.mach.ram / J.mach.ramMax) * 100 : 0;
+      kd.textContent = nf(pct, 1) + " % · limit upozornenia " + nf(SH.ramThr() / 100 * J.mach.ramMax, 0) + " GB";
+    }
+  }
   function jRenderMeters() {
     var m = J.mach;
+    sysLiveText();
     $("#j-meters").innerHTML =
       meterHtml("RAM", "48 GB celkom · limit " + nf(SH.ramThr(), 0) + " %", m.ram, m.ramMax, "GB", 1, "", SH.ramThr()) +
       meterHtml("CPU", "AMD 9900 · 12 jadier · inferencia na CPU", m.cpu, 100, "%", 0, "a") +
@@ -8402,7 +8588,7 @@ body{position:relative;z-index:0}
       btn.addEventListener("click", function () {
         if (host.hasAttribute("hidden")) {
           host.innerHTML = '<table class="tbl"><thead><tr><th>Appka</th><th class="num">Dopyty / mesiac</th><th class="num">Podiel %</th></tr></thead><tbody>' +
-            sp.map(function (r) { return '<tr><td class="k">' + esc(r.app.name) + '</td><td class="num">' + nf(r.c.q, 0) + '</td><td class="num">' + nf(r.c.share * 100, 1) + "</td></tr>"; }).join("") + "</tbody></table>";
+            appSplit().map(function (r) { return '<tr><td class="k">' + esc(r.app.name) + '</td><td class="num">' + nf(r.c.q, 0) + '</td><td class="num">' + nf(r.c.share * 100, 1) + "</td></tr>"; }).join("") + "</tbody></table>";
           host.removeAttribute("hidden"); btn.textContent = "Skryť tabuľku"; btn.setAttribute("aria-expanded", "true");
         } else { host.setAttribute("hidden", ""); btn.textContent = "Tabuľka"; btn.setAttribute("aria-expanded", "false"); }
       });
@@ -8423,7 +8609,7 @@ body{position:relative;z-index:0}
       btn.addEventListener("click", function () {
         if (host.hasAttribute("hidden")) {
           host.innerHTML = '<table class="tbl"><thead><tr><th>Appka</th><th class="num">kWh</th><th class="num">€ / mesiac</th><th class="num">Podiel %</th></tr></thead><tbody>' +
-            sp.map(function (r) { return '<tr><td class="k">' + esc(r.app.name) + '</td><td class="num">' + nf(r.c.kwh, 1) + '</td><td class="num">' + nf(r.c.eur, 2) + '</td><td class="num">' + nf(r.c.share * 100, 1) + "</td></tr>"; }).join("") + "</tbody></table>";
+            appSplit().map(function (r) { return '<tr><td class="k">' + esc(r.app.name) + '</td><td class="num">' + nf(r.c.kwh, 1) + '</td><td class="num">' + nf(r.c.eur, 2) + '</td><td class="num">' + nf(r.c.share * 100, 1) + "</td></tr>"; }).join("") + "</tbody></table>";
           host.removeAttribute("hidden"); btn.textContent = "Skryť tabuľku"; btn.setAttribute("aria-expanded", "true");
         } else { host.setAttribute("hidden", ""); btn.textContent = "Tabuľka"; btn.setAttribute("aria-expanded", "false"); }
       });
@@ -8435,6 +8621,9 @@ body{position:relative;z-index:0}
     init: function () {
       renderAppLoad();
       A.apps.onChange(renderAppLoad);
+      sysLiveText();
+      A.mem.onChange(sysLiveText);
+      A.onState("ramThr", sysLiveText);
       jSpark("#j-spk-qwen", 101, 0.42, 0.22, "var(--teal)", "s", 2);
       jSpark("#j-spk-bge", 102, 4.05, 0.6, "var(--gold)", "s", 2);
       jSpark("#j-kpi-spk1", 111, 95, 4, "var(--teal)", "%", 1);
@@ -8824,7 +9013,7 @@ body{position:relative;z-index:0}
   A.registerInbox && A.registerInbox("alerts", "Upozornenia observability", function () { return U.active.length; }, function () { A.go("observabilita"); });
   function uBell() {
     if (A.refreshBell) { A.refreshBell(); }
-    var b = document.getElementById("bellCount");
+    if (A.navBadges) A.navBadges();
     var n = U.active.length;
     var ab = $("#u-act-b");
     if (ab) { ab.textContent = n === 0 ? "žiadne" : (n + (n < 5 ? " aktívne" : " aktívnych")); ab.className = "badge " + (n === 0 ? "ok" : "warn"); }
@@ -9018,9 +9207,12 @@ body{position:relative;z-index:0}
     $$("#u-rules-c .rowcard").forEach(function (c2, i) { c2.addEventListener("click", function () { ruleDetail(src[i]); }); });
     uRulesBar();
   }
+  var U0 = null;
   function uRulesSave() {
+    if (!U0) U0 = cloneRules(U.rules);
     U.rules = cloneRules(U.draft);
-    U.draft.forEach(function (r) { if (r.shared) A.setShared(r.shared, r.thr); });
+    U.draft.forEach(function (r, i) { if (r.shared && (!U0[i] || U0[i].thr !== r.thr)) A.setShared(r.shared, r.thr); });
+    U0 = cloneRules(U.rules);
     uRulesBar();
     A.toast("Pravidlá uložené · prahy rozposlané do Jadra.", "ok");
   }
@@ -9189,7 +9381,7 @@ body{position:relative;z-index:0}
     L.q = ""; L.lvl = ""; L.zone = ""; L.src = ""; L.r0 = null; L.r1 = null; L.page = 0;
     $("#l-q").value = ""; $("#l-lvl").value = ""; $("#l-zone").value = ""; $("#l-src2").value = "";
     $("#l-range-n").textContent = "Ťahaním myšou po grafe vyberieš hodinový rozsah.";
-    $("#ob-fchip").innerHTML = "";
+    obSetApp("");
     lRender(); A.toast("Filtre zrušené.", "ok");
   }
   function lHist() {
@@ -9355,7 +9547,7 @@ body{position:relative;z-index:0}
     title: "Observabilita", group: "Systém",
     init: function () {
       /* taby */
-      $$("#ob-tabs button").forEach(function (b) { b.addEventListener("click", function () { obTab(b.getAttribute("data-t")); }); });
+      $$("#ob-tabs button").forEach(function (b) { b.addEventListener("click", function () { A.go("observabilita", b.getAttribute("data-t")); }); });
 
       /* filter appky — upozornenia aj logy (Q44) */
       function obFillApps() {
@@ -9555,7 +9747,8 @@ body{position:relative;z-index:0}
     A.setLeaveGuard(n > 0 ? function (proceed) {
       A.confirm("Máš " + n + " neuložen" + (n === 1 ? "ú zmenu" : (n < 5 ? "é zmeny" : "ých zmien")) + " v Nastaveniach",
         "Odchodom sa zahodia. Ulož ich lištou dole, alebo pokračuj bez uloženia.",
-        proceed, "Odísť bez uloženia", true);
+        function () { ST_FIELDS.forEach(function (f) { var el = document.getElementById(f); if (el && ST.saved[f] != null) el.value = ST.saved[f]; }); stDirty(); proceed(); },
+        "Odísť bez uloženia", true);
     } : null);
   }
   function stDirty() {
@@ -9706,6 +9899,7 @@ body{position:relative;z-index:0}
         var mdl = stVal("st-model");
         A.state.model = mdl; A.state.embed = stVal("st-embed"); A.state.ctx = +stVal("st-ctx");
         A.state.rate = +stVal("st-rate"); A.state.zone = stVal("st-zone"); A.state.lang = stVal("st-lang");
+        A.setShared("zone", stVal("st-zone"));   /* Chat berie predvolenú zónu odtiaľto */
         /* zdieľaný stav s prehrávaním — obrazovky Jadro/Náklady sa aktualizujú */
         A.setShared("model", mdl);
         A.setShared("embed", stVal("st-embed"));
@@ -10004,10 +10198,14 @@ body{position:relative;z-index:0}
     if (d && A.mem) { var n = A.mem.today().length; d.textContent = n ? "+" + n : ""; d.hidden = !n; }
     if (a && A.autos) a.textContent = A.autos.rows.filter(function (r) { return r.state === "Aktívna"; }).length;
     if (ap && A.apps) ap.textContent = A.apps.all().length;
+    var al = $("#nav-alerts");
+    if (al && A.alerts) { var na = A.alerts().length; al.textContent = na; al.hidden = !na; }
   }
   navBadges();
   if (A.mem) A.mem.onChange(navBadges);
   if (A.apps) A.apps.onChange(navBadges);
+  if (A.autos && A.autos.onChange) A.autos.onChange(navBadges);
+  A.navBadges = navBadges;
 
   /* spodná lišta (mobil, Q91): 4 sekcie + Viac otvorí plný strom v drawri */
   (function bnav() {
@@ -10015,7 +10213,7 @@ body{position:relative;z-index:0}
     host.addEventListener("click", function (e) {
       var b = e.target.closest("button[data-b]"); if (!b) return;
       var k = b.getAttribute("data-b");
-      if (k === "__more") { document.getElementById("side").classList.add("open"); document.getElementById("dp-scrim").classList.add("on"); return; }
+      if (k === "__more") { A.openSide(); return; }
       A.go(k);
     });
     function sync() {
@@ -10109,7 +10307,7 @@ body{position:relative;z-index:0}
       closeNew();
       var kind = b.getAttribute("data-new");
       if (kind === "node") {
-        if (A.mem) { var nd = A.mem.create({ name: "Nový uzol", desc: "" }); A.mem.inspect(nd); A.toast("Nový uzol — vyplň a ulož", "ok"); }
+        if (A.mem) { A.go("pamat"); A.mem.inspect(A.mem.newDraft()); }
       } else if (kind === "chat") { A.go("chat"); A.toast("Nová konverzácia", "ok"); }
       else if (kind === "smernica") { A.go("smernica"); }
       else if (kind === "automatizacia") { A.go("automatizacie", "new"); }
@@ -10154,8 +10352,6 @@ body{position:relative;z-index:0}
       return { label: n.name, hint: A.mem.zoneLabel(n.area) + " · " + n.type, run: function () { A.mem.inspect(n); } };
     }));
     A.registerCmd([
-      { label: "Nový uzol", hint: "vytvoriť pamäť", run: function () { var nd = A.mem.create({ name: "Nový uzol" }); A.mem.inspect(nd); } },
-      { label: "Slabé uzly", hint: "čistenie pamäte", run: function () { A.go("pamat", "slabe"); } },
       { label: "Triage — dnes pridané", hint: "prehodnotiť", run: function () { A.go("pamat", "dnes"); } },
       { label: "Spustiť eval", hint: "router · embed · recall", run: function () { A.go("jadro"); A.toast("Eval batéria spustená", "ok"); } },
       { label: "Prepnúť tému", hint: "svetlá / tmavá", run: function () { A.setTheme(A.state.theme === "light" ? "dark" : "light"); } }
