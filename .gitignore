@@ -7,3 +7,4 @@ Thumbs.db
 !.env.example
 apps/screens/_gallery.html
 apps/screens-aura-ai/_prehlad-*.html
+apps/aura-suite/_zip/

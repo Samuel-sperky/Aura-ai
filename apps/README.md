@@ -225,3 +225,74 @@ Overené čísla z pamäte Aura AI sú prenesené 1:1 a v poznámke označené a
 505 PHP testov, kontrakt `/api/summary`, porty, workflow stavy, blokujúce štandardy
 retuše). Všetko ostatné je ukážkové a označené. Konkrétne hodnoty fallback hesiel
 sú zámerne mimo náhľadu — otvorené bezpečnostné body sú pomenované bez tajomstiev.
+
+---
+
+# Aura Suite — kompletný balík 12 aplikácií (`aura-suite/`)
+
+Tretia a najväčšia vlna (4. 8. 2026): **všetkých 12 appiek rodiny, každá stránka
+z reálnej navigácie**, popriečinkované, s PNG v štyroch variantoch a ZIPom na appku.
+Podklady dodalo 14 agentov z pamäte Aura AI.
+
+```
+apps/aura-suite/
+  index.html            rozcestník 12 appiek (dve skupiny)
+  README.md
+  _screens/             4 zábery rozcestníka
+  <appka>/
+    index.html          self-contained appka (funguje aj offline)
+    README.md           čo appka je a čo v nej je
+    screens/            všetky obrazovky: dark · light · EN · mobil 390 px + interakčné stavy
+  _zip/                 aura-suite.zip (268 MB) + <appka>.zip (18–32 MB)   [negitované]
+```
+
+| # | Aplikácia | Port | Obrazovky |
+|---|---|---|---|
+| 01 | Aura Marketing | 3000 + 8091 | Prehľad · Kampane · Kampaň · Ads · Bannery · Modelky · Produkty · Manifesty · Znalostná báza · Čerpanie · Audit · Nastavenia |
+| 02 | Aura KPI | 3030 | Prehľad · Oddelenia · Oddelenie · Vyplniť mesiac · Analýza · Rok · Na doplnenie · Denníky · SEO porada · Integrácie · Audit · Nastavenia |
+| 03 | Aura Logistika | 3020 | Prehľad · Zásielky · Zásielka · Reklamácie · Reklamácia · Vývoj · Stavy · Prepravcovia · Krajiny · Import · Audit · Nastavenia |
+| 04 | Aura HR | interná evidencia | Prehľad · Ľudia · Človek · Pozície · Pozícia · Org-strom · Maily · Aplikácie · Náklady · Dokumenty · Audit · Nastavenia |
+| 05 | Aura Roadmap | 3040 | Prehľad · Timeline · Projekty · Projekt · Úlohy · Úloha · Šprinty · Checkpointy · Rozhodnutia · Riziká · Audit · Nastavenia |
+| 06 | Aura Tržby | report | Prehľad · Mesiac · Týždne · Objednávky · Trhy · Produkty · Koše · Hodiny · Expedícia · Doprava · Definície · Nastavenia |
+| 07 | Aura AI (mind) | 8082 | Dnes · Denník · Knižnica · Skill · Mapa siete · Spomienky · Projekty · Rozhodnutia · Recall · Model · MCP · Nastavenia |
+| 08 | AuraAI Chat | 8082 | 20 konverzácií (6 plných vlákien) · Projekty · História · Šablóny · Súbory · Spotreba · Stavy · Nástroje · Nastavenia |
+| 09 | Aura Banner Studio | 8091 | Prehľad · Kampane · Kampaň · Modelky · Produkty · Manifesty · Fronta · QA · KB · Exporty · Provider · Nastavenia |
+| 10 | Aura Retouch Studio | 8092 | Prehľad · Import · Fronta · Retuš · Fotka · Protokoly · Protokol · Kontrola · Chyby · Knižnica · Export · Nastavenia |
+| 11 | sperky-ai | 3000 | Prehľad · Produkty · Produkt · Objednávky · Objednávka · Zákazníci · Obsah · SEO · Feedy · Integrácie · Prevádzka · Nastavenia |
+| 12 | Aura Hub | 3050 | Prehľad · Pripojenia · Kontrakt · Alerty · Health · Prevádzka · Bezpečnosť · Tokeny · Audit · Nastavenia |
+
+## Interaktívna vrstva (v každej appke, kde ju reálna appka má)
+
+- **Shop API konektor** — LIVE pilulka v hlavičke, mikroglyf `● live` na KPI kartách,
+  synchronizácia s deterministickou odchýlkou, prepínač Simulovať výpadok, audit.
+- **Import wizard** — 4 kroky: reálne CSV cez FileReader (autodetekcia `;`/`,`, BOM),
+  auto-mapovanie podľa hlavičky, typová validácia s tabuľkou chýb, upsert do tabuľky
+  + pás s možnosťou Vrátiť a história.
+- **Report builder** — šablóny appky, obdobie, výber sekcií, živý náhľad, CSV, tlač,
+  zdieľateľný odkaz, plánovanie.
+- **AuraAI panel** (`⌘J`) — 3 navrhované otázky na **každú** obrazovku (spolu 430+)
+  s povinnou citáciou zdroja (`appka` / `import` / `pamäť` / `ukážka`) a akciami.
+- Triedenie tabuliek klikom na hlavičku, stránkovanie nad 12 riadkov, `⌘K` hľadanie,
+  SK/EN, dark/light, mobil 390 px, klávesnica `←`/`→`.
+
+## Ako to prestavať
+
+```bash
+node apps/build/aura-suite/assemble.mjs     # dáta + kit → aura-suite/**/index.html
+node apps/build/shoot-suite.mjs             # → 647 PNG (dark/light/EN/mobil + stavy)
+node apps/build/aura-suite/zip.mjs          # → _zip/<appka>.zip + aura-suite.zip
+```
+
+`index.html` súbory sú **generované** — zdroj je `apps/build/aura-suite/`
+(kit.js, kit2.js, kit.css, hubpage.js, data/suite-*.js). CSS základ sa preberá 1:1
+z `aura-apps-hub.html`, aby sa vizuál rodiny nemohol rozísť ručnou kópiou.
+
+## Dáta
+
+Overené čísla z pamäte Aura AI sú prenesené 1:1 a v poznámkach označené ako overené
+(plnenia KPI jún 2026, Team score 61,9 %, tržby júl 2026 217 016 €, marža 66,1 %,
+GLS minimum ~280/deň, doručenosť 94,1 %, router qwen3 95,3 %, recall hit@5 86,7 %,
+kontrakt `/api/summary`, workflow retuše, 43 migrácií sperky-ai, porty rodiny).
+Ostatné hodnoty sú ukážkové v reálnom objeme (tabuľky 20–40 riadkov, grafy 12 mesiacov
+alebo 12 ISO týždňov) a označené. Konkrétne hodnoty hesiel a tajomstiev sú zámerne
+mimo náhľadu — otvorené bezpečnostné body sú pomenované bez tajomstiev.
