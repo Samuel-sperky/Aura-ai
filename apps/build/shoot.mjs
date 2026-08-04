@@ -66,7 +66,10 @@ async function main(){
     ['logistika-vyvoj2','logistika/vyvoj'],['logistika-stavy','logistika/stavy'],['hr-maily','hr/maily'],
     ['hr-aplikacie','hr/aplikacie'],['hr-org','hr/org'],['roadmap-projekty','roadmap/projekty'],
     ['roadmap-rozhodnutia','roadmap/rozhodnutia'],['trzby-kose','trzby/kose'],['trzby-hodiny','trzby/hodiny'],
-    ['trzby-expedicia','trzby/expedicia'],['trzby-definicie','trzby/definicie']);
+    ['trzby-expedicia','trzby/expedicia'],['trzby-definicie','trzby/definicie'],
+    ['marketing-modelky','marketing/modelky'],['marketing-produkty','marketing/produkty'],
+    ['marketing-manifesty','marketing/manifesty'],['marketing-kb','marketing/kb'],
+    ['kpi-denniky','kpi/denniky']);
 
   console.log('\nFáza A — verifikácia');
   await page.goto(url, { waitUntil: 'networkidle' });
@@ -95,6 +98,8 @@ async function main(){
     ['state-report', 'trzby/dashboard', () => window.I2.openReport('trzby')],
     ['state-chat', 'trzby/dashboard', () => window.AI3.open()],
     ['state-fill', 'kpi/list', () => window.I2.openFill()],
+    ['state-manifest', 'marketing/manifesty', () => window.mfPick('marketing', 'manifesty', 6, 4)],
+    ['state-denniky', 'kpi/denniky', () => window.dnkPick('kpi', 'denniky', 1)],
   ];
   for (const [slug, hash, fn] of states){
     await page.evaluate(h => { location.hash = '#' + h; }, hash);
@@ -105,7 +110,8 @@ async function main(){
     await page.screenshot({ path: file, fullPage: true });
     shots.push(file); ok(`${slug}.png`);
     await page.evaluate(() => window.closeOverlay && window.closeOverlay());
-    await page.evaluate(() => { window.state.query = {}; });
+    await page.evaluate(() => { window.AI3 && window.AI3.close(); });
+    await page.evaluate(() => { window.state.query = {}; window.state.mfsel = [0, 0]; window.state.dnk = 0; });
   }
   // mobilná ukážka
   await page.setViewportSize({ width: 390, height: 844 });

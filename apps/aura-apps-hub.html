@@ -711,6 +711,55 @@ body.ai-open .ai-panel{display:flex}
 
 @media print{.ai-fab,.ai-panel{display:none!important}body.ai-open .main{margin-right:0}}
 
+/* ── W1: modelky (karty identity) ───────────────────────────── */
+.mdlg{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+@media(max-width:900px){.mdlg{grid-template-columns:1fr}}
+.mdl{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:flex;flex-direction:column;gap:12px;text-align:left;font:inherit;color:inherit;cursor:pointer}
+.mdl:hover{border-color:color-mix(in srgb,var(--acc) 40%,var(--line))}
+.mdl .mdh{display:flex;align-items:center;gap:12px}
+.mdl .av{width:44px;height:44px;border-radius:13px;display:grid;place-items:center;flex:none;font:700 15px var(--disp);color:var(--acc);background:color-mix(in srgb,var(--acc) 15%,transparent);border:1px solid color-mix(in srgb,var(--acc) 30%,var(--line))}
+.mdl .mdt{min-width:0;flex:1}
+.mdl .mdt b{display:block;font-size:14.5px}
+.mdl .mdt small{display:block;font:500 11px var(--mono);color:var(--ink-3)}
+.mdl .mdf{display:grid;gap:7px}
+.mdl .mdr{display:flex;align-items:baseline;gap:8px;font-size:12.5px}
+.mdl .mdr span{color:var(--ink-3);min-width:78px}
+.mdl .mdr b{color:var(--ink-2);font-weight:600}
+.mdl .mdc{display:flex;flex-wrap:wrap;gap:6px;margin-top:auto;padding-top:10px;border-top:1px solid var(--line)}
+.mdl .mdc i{font:600 10.5px var(--mono);font-style:normal;color:var(--ink-2);background:var(--card-2);border:1px solid var(--line);border-radius:20px;padding:3px 9px}
+
+/* ── W2: matica copy manifestov ──────────────────────────────── */
+.mfx{display:grid;gap:4px;overflow-x:auto}
+.mfx .mfr{display:grid;grid-template-columns:72px repeat(5,1fr);gap:4px;align-items:center;min-width:540px}
+.mfx .mfh{font:600 9.5px var(--mono);color:var(--ink-3);text-align:center;text-transform:uppercase;letter-spacing:.06em}
+.mfx .mfl{font:600 11.5px var(--mono);color:var(--ink-2)}
+.mfx .mfc{height:34px;border-radius:7px;border:1px solid transparent;display:grid;place-items:center;font:600 10px var(--mono);color:var(--ink);cursor:pointer;padding:0;background:var(--card-2)}
+.mfx .mfc.s2{background:color-mix(in srgb,var(--good) 26%,var(--card-2))}
+.mfx .mfc.s1{background:color-mix(in srgb,var(--amber) 26%,var(--card-2))}
+.mfx .mfc.s0{background:color-mix(in srgb,var(--ink-3) 14%,var(--card-2));color:var(--ink-3)}
+.mfx .mfc.on{border-color:var(--acc);box-shadow:0 0 0 2px color-mix(in srgb,var(--acc) 22%,transparent)}
+.mfe{display:grid;gap:12px}
+.mfe .mfrow{display:grid;gap:6px}
+.mfe label{font-size:12px;color:var(--ink-3);font-weight:500}
+.mfe input,.mfe .ro{width:100%;border:1px solid var(--line);background:var(--paper);border-radius:9px;padding:9px 12px;font:500 13.5px var(--body);color:var(--ink);outline:none}
+.mfe input:focus{border-color:var(--acc)}
+.mfe .ro{color:var(--ink-2);background:var(--card-2)}
+.mfe .cnt{font:500 10.5px var(--mono);color:var(--ink-3)}
+
+/* ── W3: znalostná báza ──────────────────────────────────────── */
+.kbg{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:900px){.kbg{grid-template-columns:1fr}}
+.kbc{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--tone);border-radius:var(--r);padding:15px 16px}
+.kbc .kbh{display:flex;align-items:center;gap:9px;margin-bottom:7px}
+.kbc .kbh b{font-size:13.5px}
+.kbc .kbh .cat{margin-left:auto;font:600 9.5px var(--mono);color:var(--ink-3);text-transform:uppercase;letter-spacing:.07em}
+.kbc p{font-size:12.5px;color:var(--ink-2);margin:0 0 9px;line-height:1.5}
+.kbc .kbm{display:flex;flex-wrap:wrap;gap:12px;font:500 10.5px var(--mono);color:var(--ink-3)}
+
+/* ── W4: denníky (taby) ──────────────────────────────────────── */
+.dnk-h{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.dnk-h .note{margin-left:auto;font:500 10.5px var(--mono);color:var(--ink-3)}
+
 </style>
 </head>
 <body>
@@ -1521,6 +1570,160 @@ PAGES.trzby.push({key:'definicie',icon:I.doc,title:L('Definície','Definitions')
     {id:'pozor',c:[L('Upozornenie','Caveat'),L('nezahŕňa marketing, mzdy ani réžiu','excludes marketing, payroll and overhead'),'—',
       ['no',L('NIE je čistý zisk','NOT net profit')]]}]});
 
+/* ══ VLNA W1-W4: Banner Studio (modelky · produkty · manifesty · KB) + KPI denníky ══ */
+
+/* W1 — modelky: 3 identity, campaign lock (svet + modelka) */
+PAGES.marketing.push({key:'modelky',icon:I.people,title:L('Modelky','Models'),type:'models',
+  sub:L('3 identity · vek a typ sa v rámci kampane nemenia (identity lock)','3 identities · age and type never change within a campaign (identity lock)'),
+  models:[
+    {n:'Adela',ini:'A',typ:L('mediteránska · teplý tón','Mediterranean · warm tone'),vek:'26–32',seed:'ad-7741',ban:'80',
+     svety:[L('Riviéra','Riviéra'),L('Botanika','Botanics')],kamp:['Summer Sale','New Gem'],
+     b:['info',L('Lock aktívny','Lock active')],go:'#marketing/detail/summer'},
+    {n:'Viktória',ini:'V',typ:L('severská · studený tón','Nordic · cool tone'),vek:'24–30',seed:'vk-3126',ban:'55',
+     svety:['Atelier','Studio'],kamp:[L('Svadobná sezóna','Wedding season'),L('Doprava zadarmo','Free shipping')],
+     b:['cond','QA'],go:'#marketing/detail/svadba'},
+    {n:'Nikola',ini:'N',typ:L('quiet luxury · neutrálny tón','quiet luxury · neutral tone'),vek:'28–34',seed:'nk-9052',ban:'35',
+     svety:['Quiet Luxury',L('Nočné mesto','Night city')],kamp:[L('Zlaté prstene','Gold rings'),'Black Friday'],
+     b:['cond','Render'],go:'#marketing/detail/zlate'}],
+  lock:{title:L('Priradenie modelka × kampaň','Model × campaign assignment'),
+    cols:[L('Kampaň','Campaign'),L('Modelka','Model'),L('Svet','World'),L('Zamknuté','Locked'),L('Bannery','Banners'),L('Stav','Status')],
+    rows:[
+      {id:'summer',c:['Summer Sale','Adela','Riviéra',['ok',L('áno','yes')],'40',['info',L('Lock aktívny','Lock active')]]},
+      {id:'svadba',c:[L('Svadobná sezóna','Wedding season'),'Viktória','Atelier',['ok',L('áno','yes')],'40',['cond','QA']]},
+      {id:'zlate',c:[L('Zlaté prstene','Gold rings'),'Nikola','Quiet Luxury',['ok',L('áno','yes')],'35',['cond','Render']]},
+      {id:'gem',c:['New Gem','Adela',L('Botanika','Botanics'),['ok',L('áno','yes')],'40',['ok','Export ZIP']]},
+      {id:'doprava',c:[L('Doprava zadarmo','Free shipping'),'Viktória','Studio',['ok',L('áno','yes')],'15',['ok',L('Hotová','Done')]]},
+      {id:'bf',c:['Black Friday','Nikola',L('Nočné mesto','Night city'),['q',L('nie — koncept','no — draft')],'—',['q',L('Návrh','Draft')]]}],
+    note:L('Po zamknutí sa modelka ani svet v kampani nemenia — zmena znamená novú kampaň (reálna logika Banner Studia).','Once locked, neither the model nor the world changes within a campaign — a change means a new campaign (real Banner Studio logic).')}});
+
+/* W2 — produkty: ceny pre cenový overlay bannerov */
+PAGES.marketing.push({key:'produkty',icon:I.coins,title:L('Produkty','Products'),type:'table',
+  sub:L('Ceny pre cenový overlay bannerov · zmena ceny → re-render dotknutých bannerov','Prices for the banner price overlay · a price change → re-render of affected banners'),
+  cols:[L('Produkt','Product'),L('Kód','SKU'),L('Cena','Price'),L('Akčná cena','Sale price'),L('V banneroch','In banners'),L('Stav','Status')],
+  rows:[
+    {id:'zlate',c:[L('Zlatý prsteň s briliantom','Gold ring with diamond'),'AU-R-118',cur(489),cur(439),int(12),['ok',L('cena overená','price verified')]]},
+    {id:'svadba',c:[L('Set svadobných obrúčok','Wedding band set'),'AU-W-201',cur(690),cur(621),int(10),['ok',L('cena overená','price verified')]]},
+    {id:'gem',c:[L('Náramok z bieleho zlata','White gold bracelet'),'AU-B-042',cur(259),'—',int(8),['cond',L('bez akcie','no promo')]]},
+    {id:'summer',c:[L('Strieborné náušnice','Silver earrings'),'AG-E-077',cur(39),cur(29),int(6),['ok',L('cena overená','price verified')]]},
+    {id:'zlate',c:[L('Retiazka zlatá 585','Gold chain 585'),'AU-N-014',cur(179),'—',int(4),['cond',L('cena sa mení denne','price changes daily')]]},
+    {id:'bf',c:[L('Prívesok srdce','Heart pendant'),'AG-P-033',cur(24),cur(19),'—',['q',L('bez banneru','no banner')]]}],
+  note:L('Banner preberá hotovú cenu v mene trhu (RO v RON, HU v HUF, BG v BGN) — prepočet rieši e-shop, nie render. Hodnoty ukážkové.','The banner takes the final price in the market currency (RO in RON, HU in HUF, BG in BGN) — conversion is handled by the shop, not the render. Values illustrative.')});
+
+/* W3 — copy manifesty: matica 8 jazykov × 5 rozmerov (40 buniek) */
+PAGES.marketing.push({key:'manifesty',icon:I.doc,title:L('Copy manifesty','Copy manifests'),type:'matrix',
+  sub:L('Summer Sale · 8 jazykov × 5 rozmerov = 40 buniek','Summer Sale · 8 languages × 5 sizes = 40 cells'),
+  langs:[{k:'SK',l:L('slovenčina','Slovak')},{k:'CZ',l:L('čeština','Czech')},{k:'HU',l:L('maďarčina','Hungarian')},
+         {k:'RO',l:L('rumunčina','Romanian')},{k:'PL',l:L('poľština','Polish')},{k:'SI',l:L('slovinčina','Slovenian')},
+         {k:'HR',l:L('chorvátčina','Croatian')},{k:'BG',l:L('bulharčina','Bulgarian')}],
+  sizes:['1080×1080','1080×1350','1080×1920','1200×628','970×250'],
+  limits:[48,48,40,38,28],
+  st:{SK:[2,2,2,2,2],CZ:[2,2,2,2,2],HU:[2,2,2,1,1],RO:[2,2,2,2,1],
+      PL:[2,2,1,1,0],SI:[2,2,2,1,0],HR:[2,1,1,0,0],BG:[2,2,1,1,0]},
+  texts:{
+    SK:{h:'Letná kolekcia až −30 %',s:'Zlato a striebro na leto — doprava zadarmo nad 60 €',c:'Kúpiť teraz',p:'od 39 €'},
+    CZ:{h:'Letní kolekce až −30 %',s:'Zlato a stříbro na léto — doprava zdarma nad 60 €',c:'Koupit nyní',p:'od 39 €'},
+    HU:{h:'Nyári kollekció −30%-ig',s:'Arany és ezüst a nyárra — ingyenes szállítás 25 000 Ft felett',c:'Vásárlás',p:'15 900 Ft-tól'},
+    RO:{h:'Colecția de vară până la −30%',s:'Aur și argint pentru vară — transport gratuit peste 300 RON',c:'Cumpără acum',p:'de la 195 RON'},
+    PL:{h:'Kolekcja letnia do −30%',s:'Złoto i srebro na lato — darmowa dostawa od 250 zł',c:'Kup teraz',p:'od 169 zł'},
+    SI:{h:'Poletna kolekcija do −30 %',s:'Zlato in srebro za poletje — brezplačna dostava nad 60 €',c:'Kupi zdaj',p:'od 39 €'},
+    HR:{h:'Ljetna kolekcija do −30 %',s:'Zlato i srebro za ljeto — besplatna dostava nad 60 €',c:'Kupi sada',p:'od 39 €'},
+    BG:{h:'Лятна колекция до −30%',s:'Злато и сребро за лятото — безплатна доставка над 120 лв.',c:'Купи сега',p:'от 79 лв.'}},
+  note:L('Klik na bunku otvorí manifest vpravo · subline sa pre 970×250 automaticky skracuje','Click a cell to open its manifest on the right · the subline is auto-shortened for 970×250'),
+  editNote:L('Editovateľný je headline vybranej bunky (ukážka mechaniky) — uloženie prepne bunku na „hotový“. Ostatné polia sú v náhľade len na čítanie.','Only the selected cell’s headline is editable (mechanic demo) — saving flips the cell to “done”. The other fields are read-only in this preview.')});
+
+/* W4 — znalostná báza: pravidlá z QA learning loopu */
+PAGES.marketing.push({key:'kb',icon:I.brain,title:L('Znalostná báza','Knowledge base'),type:'kb',
+  sub:L('Pravidlá renderu, ktoré sa učia z QA výsledkov (learning loop)','Render rules learned from QA results (learning loop)'),
+  stats:[{l:L('Pravidiel v KB','Rules in KB'),v:'18',sub:L('z toho 6 hard gates','6 of them hard gates')},
+         {l:L('Aplikované pri renderi','Applied on render'),v:'320',sub:L('všetky bannery','all banners')},
+         {l:'Learning loop',v:L('zapnutý','on'),sub:'QA → KB'},
+         {l:L('Zablokované rendery','Blocked renders'),v:'2',sub:L('major deviation','major deviation')}],
+  rules:[
+    {cat:L('Kompozícia','Composition'),tone:'var(--red)',b:['no','hard gate'],n:320,when:L('od 12. 5. 2026','since May 12, 2026'),
+     t:L('Logo minimálne 8 % šírky banneru','Logo at least 8% of banner width'),
+     d:L('Menšie logo blokuje export — kontroluje sa po renderi PNG na všetkých 5 rozmeroch.','A smaller logo blocks the export — checked after the PNG render across all 5 sizes.'),
+     src:L('QA gate','QA gate')},
+    {cat:L('Typografia','Typography'),tone:'var(--red)',b:['no','hard gate'],n:40,when:L('od 3. 7. 2026','since Jul 3, 2026'),
+     t:L('Headline max 28 znakov pre 970×250','Headline max 28 characters for 970×250'),
+     d:L('Pravidlo vzniklo zo 4 deviations, kde headline pretekal cez bezpečnú zónu banneru.','The rule came out of 4 deviations where the headline overflowed the banner safe area.'),
+     src:L('učenie z QA (4 deviations)','learned from QA (4 deviations)')},
+    {cat:L('Kontrast','Contrast'),tone:'var(--red)',b:['no','hard gate'],n:184,when:L('od 28. 5. 2026','since May 28, 2026'),
+     t:L('Text na fotke vždy s prekryvom 35 %','Text over a photo always needs a 35% overlay'),
+     d:L('Bez prekryvu nedosiahne text kontrast 4,5:1 — QA vracia banner na re-render.','Without the overlay the text misses the 4.5:1 contrast ratio — QA sends the banner back for a re-render.'),
+     src:L('QA gate (WCAG 4,5:1)','QA gate (WCAG 4.5:1)')},
+    {cat:L('Identita','Identity'),tone:'var(--violet)',b:['cond','soft rule'],n:6,when:L('od 14. 4. 2026','since Apr 14, 2026'),
+     t:L('Modelka a svet sa v kampani nemenia','Model and world stay fixed within a campaign'),
+     d:L('Campaign lock drží identitu naprieč 8 jazykmi aj 5 rozmermi; zmena = nová kampaň.','The campaign lock holds the identity across 8 languages and 5 sizes; a change means a new campaign.'),
+     src:L('rozhodnutie (campaign lock)','decision (campaign lock)')},
+    {cat:L('Ceny','Pricing'),tone:'var(--amber)',b:['cond','soft rule'],n:52,when:L('od 21. 6. 2026','since Jun 21, 2026'),
+     t:L('Cena v mene trhu, nie prepočet z EUR','Price in the market currency, not converted from EUR'),
+     d:L('Banner preberá hotovú cenu z e-shopu (HU v HUF, RO v RON, BG v BGN) — render neprepočítava.','The banner takes the final shop price (HU in HUF, RO in RON, BG in BGN) — the render does not convert.'),
+     src:L('učenie z QA (1 deviation)','learned from QA (1 deviation)')},
+    {cat:L('Bezpečná zóna','Safe area'),tone:'var(--b-mkt)',b:['cond','soft rule'],n:320,when:L('od 12. 5. 2026','since May 12, 2026'),
+     t:L('CTA minimálne 24 px od okraja','CTA at least 24px from the edge'),
+     d:L('Chráni CTA pred orezaním v náhľadoch sociálnych sietí; pri 970×250 platí 16 px.','Protects the CTA from cropping in social previews; 970×250 uses 16px instead.'),
+     src:L('QA gate','QA gate')}],
+  loop:{title:L('Learning loop — z deviation do pravidla','Learning loop — from deviation to rule'),
+    cols:[L('Deviation','Deviation'),L('Kampaň','Campaign'),L('Nové pravidlo','New rule'),L('Zápis','Recorded')],
+    rows:[
+      {id:'svadba',c:[L('Headline pretiekol (970×250)','Headline overflowed (970×250)'),L('Svadobná sezóna','Wedding season'),L('Limit 28 znakov','28-character limit'),['ok',L('zapísané do KB','written to KB')]]},
+      {id:'zlate',c:[L('Nízky kontrast textu na fotke','Low text contrast over photo'),L('Zlaté prstene','Gold rings'),L('Prekryv 35 %','35% overlay'),['ok',L('zapísané do KB','written to KB')]]},
+      {id:'summer',c:[L('Cena prepočítaná z EUR','Price converted from EUR'),'Summer Sale',L('Cena v mene trhu','Price in market currency'),['ok',L('zapísané do KB','written to KB')]]},
+      {id:'bf',c:[L('Logo pod 8 % šírky','Logo below 8% width'),'Black Friday',L('Minimum 8 % šírky','8% width minimum'),['cond',L('čaká na potvrdenie','awaiting confirmation')]]}],
+    note:L('Hard gates blokujú export, soft rules len upozornia. Learning loop sa vypína v Nastaveniach.','Hard gates block the export, soft rules only warn. The learning loop can be switched off in Settings.')}});
+
+/* W4 — KPI denníky: 3 taby (Sklad / Externistky / Projekty) */
+PAGES.kpi.push({key:'denniky',icon:I.cal,title:L('Denníky','Logs'),type:'tabs',
+  sub:L('Denné a týždenné zápisy oddelení — vstup pre mesačné plnenie','Daily and weekly department logs — the input for monthly attainment'),
+  tabs:[
+    {l:L('Sklad','Warehouse'),sub:L('týždeň W31 · 27.–31. 7. 2026','week W31 · Jul 27–31, 2026'),
+     kpis:[{l:L('Plnenie jún','June attainment'),v:L('76,8 %','76.8%'),sub:L('mesiac uzavretý','month closed')},
+           {l:L('Zápisov v júli','July entries'),v:'21/22',sub:L('1 deň chýba','1 day missing')},
+           {l:L('Inventúrny rozdiel','Inventory delta'),v:L('−4 ks','−4 pcs'),sub:L('kumulatívne za júl','cumulative for July')}],
+     chart:{title:L('Vyskladnené položky po dňoch (W31)','Items picked per day (W31)'),
+       data:[{l:L('Po','Mon'),v:412},{l:L('Ut','Tue'),v:388},{l:L('St','Wed'),v:441},{l:L('Št','Thu'),v:405},{l:L('Pi','Fri'),v:352}]},
+     cols:[L('Dátum','Date'),L('Prijaté','Received'),L('Vyskladnené','Picked'),L('Inventúra Δ','Inventory Δ'),L('Zapísal','Logged by'),L('Stav','Status')],
+     rows:[
+       {c:[L('Pi 31. 7.','Fri Jul 31'),int(310),int(352),'−1','Delaja',['ok',L('uzavretý','closed')]]},
+       {c:[L('Št 30. 7.','Thu Jul 30'),int(366),int(405),'0','Delaja',['ok',L('uzavretý','closed')]]},
+       {c:[L('St 29. 7.','Wed Jul 29'),int(428),int(441),'−2','Marek',['ok',L('uzavretý','closed')]]},
+       {c:[L('Ut 28. 7.','Tue Jul 28'),int(355),int(388),'0','Delaja',['ok',L('uzavretý','closed')]]},
+       {c:[L('Po 27. 7.','Mon Jul 27'),int(402),int(412),'−1','Marek',['ok',L('uzavretý','closed')]]}],
+     note:L('Δ = rozdiel fyzickej inventúry proti systému · plnenie 76,8 % za jún je reálne, denné hodnoty ukážkové','Δ = physical inventory vs system · the 76.8% June attainment is real, daily values illustrative')},
+    {l:L('Externistky','Externals'),sub:L('júl 2026 · 6 aktívnych','July 2026 · 6 active'),
+     kpis:[{l:L('Plnenie jún','June attainment'),v:L('79,4 %','79.4%'),sub:L('mesiac uzavretý','month closed')},
+           {l:L('Aktívne externistky','Active externals'),v:'6',sub:L('5 oblastí','5 areas')},
+           {l:L('Hodiny v júli','July hours'),v:L('214 h','214h'),sub:L('ukážka','sample')}],
+     chart:{title:L('Hodiny podľa externistky (júl)','Hours per external (July)'),
+       data:[{l:'Ivana',v:46},{l:'Lucia',v:41},{l:'Zuzana',v:38},{l:'Katarína',v:34},{l:'Petra',v:30},{l:'Monika',v:25}]},
+     cols:[L('Externistka','External'),L('Oblasť','Area'),L('Hodiny','Hours'),L('Výkon','Output'),L('Sadzba','Rate'),L('Stav','Status')],
+     rows:[
+       {c:['Ivana K.',L('Fotenie produktov','Product photography'),L('46 h','46h'),L('128 ks','128 pcs'),L('9 €/h','€9/h'),['ok',L('zapísané','logged')]]},
+       {c:['Lucia M.',L('Popisky produktov','Product copy'),L('41 h','41h'),L('96 popiskov','96 descriptions'),L('9 €/h','€9/h'),['ok',L('zapísané','logged')]]},
+       {c:['Zuzana B.',L('Retuš fotiek','Photo retouching'),L('38 h','38h'),L('240 fotiek','240 photos'),L('8,50 €/h','€8.50/h'),['ok',L('zapísané','logged')]]},
+       {c:['Katarína S.',L('Balenie zásielok','Parcel packing'),L('34 h','34h'),L('610 zásielok','610 parcels'),L('8 €/h','€8/h'),['ok',L('zapísané','logged')]]},
+       {c:['Petra D.',L('Nahrávanie na web','Web uploads'),L('30 h','30h'),L('78 produktov','78 products'),L('9 €/h','€9/h'),['cond',L('2 dni chýbajú','2 days missing')]]},
+       {c:['Monika R.',L('Sociálne siete','Social media'),L('25 h','25h'),L('18 postov','18 posts'),L('10 €/h','€10/h'),['ok',L('zapísané','logged')]]}],
+     note:L('Plnenie 79,4 % za jún je reálne · hodiny, sadzby a výkony sú ukážkové','The 79.4% June attainment is real · hours, rates and output are illustrative')},
+    {l:L('Projekty','Projects'),sub:L('5 projektov viazaných na oddelenia KPI','5 projects tied to KPI departments'),
+     kpis:[{l:L('Aktívne projekty','Active projects'),v:'5',sub:L('4 oddelenia','4 departments')},
+           {l:L('Po termíne','Overdue'),v:'1',sub:L('Import feedov','Feed import')},
+           {l:L('Ø plnenie','Avg progress'),v:L('68 %','68%'),sub:L('ukážka','sample')}],
+     cols:[L('Projekt','Project'),L('Oddelenie','Department'),L('Míľnik','Milestone'),L('Termín','Due'),L('Plnenie','Progress'),L('Stav','Status')],
+     rows:[
+       {id:'foto',c:[L('Fotobanka 2026','Photo bank 2026'),L('Fotografka','Photographer'),L('Prefotiť 1 200 produktov','Re-shoot 1,200 products'),dt('2026-09-30'),{pln:52},['cond',L('beží','running')]]},
+       {id:'it',c:[L('KPI rozšírenie','KPI extension'),'IT',L('Denníky + notifikácie','Logs + notifications'),dt('2026-08-15'),{pln:71},['cond',L('beží','running')]]},
+       {id:'imp',c:[L('Import feedov','Feed import'),'Import',L('Automatický import 3 dodávateľov','Automated import of 3 suppliers'),dt('2026-07-31'),{pln:88},['no',L('po termíne','overdue')]]},
+       {id:'news',c:[L('Automatizácia newslettera','Newsletter automation'),'Newsletter-AI',L('6 scenárov','6 scenarios'),dt('2026-10-31'),{pln:34},['cond',L('beží','running')]]},
+       {id:'sklad',c:[L('Sklad — mapa pozícií','Warehouse — location map'),L('Sklad','Warehouse'),L('Označiť 420 pozícií','Label 420 locations'),dt('2026-08-29'),{pln:95},['ok',L('pred dokončením','near completion')]]}],
+     note:L('Klik na riadok otvorí oddelenie v KPI · plnenia ukážkové','Click a row to open the department in KPI · progress values illustrative')}]});
+MOD.marketing.kpis[1].go={h:'#marketing/bannery'};
+
+/* Re-sync po všetkých úpravách PAGES — niektoré bloky PAGES.<modul> preradia novým
+   poľom (napr. filter pri Logistike), takže pôvodná referencia v moduloch by
+   zostala zastaraná a stránky pridané potom by boli nedostupné. */
+MODULES.forEach(mm=>{mm.pages=PAGES[mm.key]||[];});
+Object.values(MOD).forEach(mm=>{mm.pages=PAGES[mm.key]||[];});
 
 const SCREENS=['dashboard','list','detail','settings'];
 
@@ -1586,7 +1789,7 @@ function renderHub(){
         <h3>${m.name}</h3>
         <p>${tr(m.tag)}</p>
         ${m.live?`<div class="livebar"><span class="sdot ${m.live.tone}"></span><span>${tr(m.live.v)}</span>${sparkmini(m.live.spark,m.live.tone)}</div>`:''}
-        <div class="meta"><span>${state.lang==='sk'?(m.claims?'6 obrazoviek':'5 obrazoviek'):(m.claims?'6 screens':'5 screens')}</span>
+        <div class="meta"><span>${(screensFor(m).length+1)+(state.lang==='sk'?' obrazoviek':' screens')}</span>
           <span class="go">${state.lang==='sk'?'Otvoriť':'Open'} ${svg(I.arrow)}</span></div>
       </button>`).join('')}</div></div>`;
 }
@@ -1668,6 +1871,103 @@ function renderExtra(m,ex){
     <table class="mtbl">${ex.table.rows.map(r=>`<tr${r.go?` data-go="${r.go}" onclick="go(this.dataset.go)" style="cursor:pointer"`:''}>${r.c.map((c,i)=>Array.isArray(c)?`<td><span class="badge ${c[0]}">${tr(c[1])}</span></td>`:`<td${i===0?'':' class="n" style="font-family:var(--mono)"'}>${i===0?`<b>${tr(c)}</b>`:tr(c)}</td>`).join('')}</tr>`).join('')}</table>
     ${ex.table.note?`<div class="hm-note">${tr(ex.table.note)}</div>`:''}</div>`;
   return h;}
+/* ── W1 modelky: karty identity + priradenie ku kampaniam ───── */
+function renderModels(m,pg){
+  const cards=pg.models.map(md=>`<button class="mdl" onclick="go('${md.go}')" aria-label="${esc(md.n)}">
+    <div class="mdh"><span class="av">${md.ini}</span><div class="mdt"><b>${md.n}</b><small>${tr(md.typ)}</small></div>
+      <span class="badge ${md.b[0]}">${tr(md.b[1])}</span></div>
+    <div class="mdf">
+      <div class="mdr"><span>${state.lang==='sk'?'Vek':'Age'}</span><b>${md.vek}</b></div>
+      <div class="mdr"><span>${state.lang==='sk'?'Svety':'Worlds'}</span><b>${md.svety.map(s=>tr(s)).join(' · ')}</b></div>
+      <div class="mdr"><span>${state.lang==='sk'?'Identity seed':'Identity seed'}</span><b style="font-family:var(--mono)">${md.seed}</b></div>
+      <div class="mdr"><span>${state.lang==='sk'?'Bannery':'Banners'}</span><b style="font-family:var(--mono)">${md.ban}</b></div>
+    </div>
+    <div class="mdc">${md.kamp.map(k=>`<i>${tr(k)}</i>`).join('')}</div></button>`).join('');
+  return `<div class="mdlg">${cards}</div>
+    <div class="card" style="margin-top:16px"><div class="ch"><h3>${tr(pg.lock.title)}</h3><span class="sp">${state.lang==='sk'?'klik na riadok → kampaň':'click a row → campaign'}</span></div>
+      <div class="tbl-wrap" style="border:0;background:none"><table class="t" style="min-width:520px"><thead><tr>${pg.lock.cols.map(c=>`<th scope="col">${tr(c)}</th>`).join('')}</tr></thead>
+        <tbody>${pg.lock.rows.map(r=>`<tr onclick="go('#${m.key}/detail/${r.id}')">${r.c.map((cell,i)=>tcell(cell,i,m)).join('')}</tr>`).join('')}</tbody></table></div>
+      <div class="hm-note">${tr(pg.lock.note)}</div></div>`;
+}
+
+/* ── W2 copy manifesty: matica 8 jazykov × 5 rozmerov ───────── */
+const MFST=[L('chýba','missing'),L('koncept','draft'),L('hotový','done')];
+function mfTxt(pg,lk){return (state.mftxt&&state.mftxt[lk])||pg.texts[lk];}
+function mfSave(mk,pk){
+  const pg=(MOD[mk].pages||[]).find(p=>p.key===pk);if(!pg)return;
+  const sel=state.mfsel||[0,0];const lk=pg.langs[sel[0]].k;
+  const inp=document.getElementById('mfH');if(!inp)return;
+  const v=inp.value.trim();if(!v){toast(state.lang==='sk'?'Headline nemôže byť prázdny':'Headline cannot be empty');return;}
+  state.mftxt=state.mftxt||{};state.mftxt[lk]=Object.assign({},mfTxt(pg,lk),{h:v});
+  state.mfst=state.mfst||{};(state.mfst[lk]=state.mfst[lk]||{})[sel[1]]=2;
+  toast((state.lang==='sk'?'Manifest uložený: ':'Manifest saved: ')+lk+' · '+pg.sizes[sel[1]]);
+  renderPage(MOD[mk],pg);
+}
+function mfPick(mk,pk,li,si){state.mfsel=[li,si];const pg=(MOD[mk].pages||[]).find(p=>p.key===pk);if(pg)renderPage(MOD[mk],pg);}
+function mfCount(el,lim){const c=document.getElementById('mfCnt');if(!c)return;
+  const n=el.value.length;c.textContent=n+' / '+lim+(state.lang==='sk'?' znakov':' chars');
+  c.style.color=n>lim?'var(--red)':'var(--ink-3)';}
+function mfState(pg,lk,si){const ov=state.mfst&&state.mfst[lk]&&state.mfst[lk][si];return ov!==undefined?ov:pg.st[lk][si];}
+function renderMatrix(m,pg){
+  const sel=state.mfsel||[0,0];
+  const lang=pg.langs[sel[0]],size=pg.sizes[sel[1]],lim=pg.limits[sel[1]];
+  const txt=mfTxt(pg,lang.k);
+  const cnt=[0,0,0];pg.langs.forEach(l=>pg.sizes.forEach((s,si)=>cnt[mfState(pg,l.k,si)]++));
+  const head=`<div class="mfr"><span></span>${pg.sizes.map(s=>`<span class="mfh">${s}</span>`).join('')}</div>`;
+  const grid=pg.langs.map((l,li)=>`<div class="mfr"><span class="mfl" title="${esc(tr(l.l))}">${l.k}</span>${pg.sizes.map((s,si)=>{
+    const st=mfState(pg,l.k,si);const on=li===sel[0]&&si===sel[1];
+    return `<button class="mfc s${st}${on?' on':''}" onclick="mfPick('${m.key}','${pg.key}',${li},${si})" title="${esc(tr(l.l))} · ${s} · ${tr(MFST[st])}" ${on?'aria-current="true"':''}>${st===2?'✓':st===1?'~':'—'}</button>`;}).join('')}</div>`).join('');
+  const lgd=`<div class="lgd" style="flex-direction:row;flex-wrap:wrap;gap:14px;margin-top:12px">
+    <div class="lr" style="gap:6px"><i style="background:color-mix(in srgb,var(--good) 60%,transparent)"></i><span>${tr(MFST[2])} · ${cnt[2]}</span></div>
+    <div class="lr" style="gap:6px"><i style="background:color-mix(in srgb,var(--amber) 60%,transparent)"></i><span>${tr(MFST[1])} · ${cnt[1]}</span></div>
+    <div class="lr" style="gap:6px"><i style="background:var(--ink-3)"></i><span>${tr(MFST[0])} · ${cnt[0]}</span></div></div>`;
+  const over=txt.h.length>lim,ro=state.lang==='sk'?'len na čítanie':'read-only';
+  return `<div class="cols"><div class="card"><div class="ch"><h3>${state.lang==='sk'?'Matica manifestov':'Manifest matrix'}</h3><span class="sp">${cnt[2]}/${pg.langs.length*pg.sizes.length}</span></div>
+      <div class="mfx">${head}${grid}</div>${lgd}
+      <div class="hm-note">${tr(pg.note)}</div></div>
+    <div class="card"><div class="ch"><h3>${lang.k} · ${size}</h3><span class="badge ${mfState(pg,lang.k,sel[1])===2?'ok':mfState(pg,lang.k,sel[1])===1?'cond':'q'}">${tr(MFST[mfState(pg,lang.k,sel[1])])}</span></div>
+      <div class="mfe">
+        <div class="mfrow"><label for="mfH">Headline · ${tr(lang.l)}</label>
+          <input id="mfH" value="${esc(txt.h)}" maxlength="80" oninput="mfCount(this,${lim})" aria-describedby="mfCnt">
+          <span class="cnt" id="mfCnt" style="color:${over?'var(--red)':'var(--ink-3)'}">${txt.h.length} / ${lim}${state.lang==='sk'?' znakov':' chars'}</span></div>
+        <div class="mfrow"><label>Subline · ${ro}</label><div class="ro">${esc(txt.s)}</div></div>
+        <div class="mfrow"><label>CTA · ${ro}</label><div class="ro">${esc(txt.c)}</div></div>
+        <div class="mfrow"><label>${state.lang==='sk'?'Cenový overlay':'Price overlay'} · ${ro}</label><div class="ro">${esc(txt.p)}</div></div>
+        <div style="display:flex;gap:10px;justify-content:flex-end">
+          <button class="btn" onclick="toast('${state.lang==='sk'?'Náhľad banneru (demo)':'Banner preview (demo)'}')">${state.lang==='sk'?'Náhľad':'Preview'}</button>
+          <button class="btn pri" onclick="mfSave('${m.key}','${pg.key}')">${state.lang==='sk'?'Uložiť manifest':'Save manifest'}</button></div>
+      </div>
+      <div class="hm-note">${tr(pg.editNote)}</div></div></div>`;
+}
+
+/* ── W3 znalostná báza: pravidlá z QA learning loopu ─────────── */
+function renderKb(m,pg){
+  const stats=`<div class="kpis">${pg.stats.map(k=>kpiCard(k,-1)).join('')}</div>`;
+  const rules=pg.rules.map(r=>`<div class="kbc" style="--tone:${r.tone}">
+    <div class="kbh"><span class="badge ${r.b[0]}">${tr(r.b[1])}</span><span class="cat">${tr(r.cat)}</span></div>
+    <b style="display:block;font-size:13.5px;margin-bottom:6px">${tr(r.t)}</b>
+    <p>${tr(r.d)}</p>
+    <div class="kbm"><span>${state.lang==='sk'?'zdroj':'source'}: ${tr(r.src)}</span><span>${state.lang==='sk'?'aplikované':'applied'}: ${r.n}×</span><span>${tr(r.when)}</span></div></div>`).join('');
+  return `${stats}<div class="kbg" style="margin-top:16px">${rules}</div>
+    <div class="card" style="margin-top:16px"><div class="ch"><h3>${tr(pg.loop.title)}</h3><span class="sp">QA → KB</span></div>
+      <div class="tbl-wrap" style="border:0;background:none"><table class="t" style="min-width:560px"><thead><tr>${pg.loop.cols.map(c=>`<th scope="col">${tr(c)}</th>`).join('')}</tr></thead>
+        <tbody>${pg.loop.rows.map(r=>`<tr onclick="go('#${m.key}/detail/${r.id}')">${r.c.map((cell,i)=>tcell(cell,i,m)).join('')}</tr>`).join('')}</tbody></table></div>
+      <div class="hm-note">${tr(pg.loop.note)}</div></div>`;
+}
+
+/* ── W4 denníky: 3 taby (Sklad / Externistky / Projekty) ─────── */
+function dnkPick(mk,pk,i){state.dnk=i;const pg=(MOD[mk].pages||[]).find(p=>p.key===pk);if(pg)renderPage(MOD[mk],pg);}
+function renderTabs(m,pg){
+  const ti=Math.min(state.dnk||0,pg.tabs.length-1),t=pg.tabs[ti];
+  const chips=pg.tabs.map((tb,i)=>`<button class="chip ${i===ti?'on':''}" onclick="dnkPick('${m.key}','${pg.key}',${i})" ${i===ti?'aria-current="true"':''}>${tr(tb.l)}</button>`).join('');
+  const kpis=t.kpis?`<div class="kpis">${t.kpis.map(k=>kpiCard(k,-1)).join('')}</div>`:'';
+  const chart=t.chart?`<div class="card" style="margin-top:16px"><div class="ch"><h3>${tr(t.chart.title)}</h3></div>${bars(t.chart.data)}</div>`:'';
+  const tbl=`<div class="tbl-wrap" style="margin-top:16px"><table class="t"><thead><tr>${t.cols.map(c=>`<th scope="col">${tr(c)}</th>`).join('')}</tr></thead>
+    <tbody>${t.rows.map(r=>`<tr${r.id?` onclick="go('#${m.key}/detail/${r.id}')"`:' style="cursor:default"'}>${r.c.map((cell,i)=>tcell(cell,i,m)).join('')}</tr>`).join('')}</tbody></table></div>`;
+  return `<div class="dnk-h"><div class="chips">${chips}</div><span class="note">${tr(t.sub)}</span></div>
+    ${kpis}${chart}${tbl}${t.note?`<div class="hm-note" style="margin-top:10px">${tr(t.note)}</div>`:''}`;
+}
+
 function renderPage(m,pg){
   let body='';
   if(pg.type==='analyza'){
@@ -1732,6 +2032,14 @@ function renderPage(m,pg){
   }else if(pg.type==='table'){
     body=`<div class="tbl-wrap"><table class="t"><thead><tr>${pg.cols.map(c=>`<th scope="col">${tr(c)}</th>`).join('')}</tr></thead>
       <tbody>${pg.rows.map(r=>`<tr onclick="go('#${m.key}/detail/${r.id}')">${r.c.map((cell,i)=>tcell(cell,i,m)).join('')}</tr>`).join('')}</tbody></table></div>${pg.note?`<div class="hm-note" style="margin-top:10px">${tr(pg.note)}</div>`:''}${pg.extra?renderExtra(m,pg.extra):''}`;
+  }else if(pg.type==='models'){
+    body=renderModels(m,pg);
+  }else if(pg.type==='matrix'){
+    body=renderMatrix(m,pg);
+  }else if(pg.type==='kb'){
+    body=renderKb(m,pg);
+  }else if(pg.type==='tabs'){
+    body=renderTabs(m,pg);
   }
   const html=`<div class="phead"><h1>${tr(pg.title)}</h1><span class="sub">${pg.sub?tr(pg.sub):tr(m.name)+' \u00b7 '+(state.lang==='sk'?'uk\u00e1\u017eka':'sample')}</span>
     <div class="actions"><button class="btn" onclick="toast('XLSX (demo)')">${svg(I.doc)} XLSX</button></div></div>${body}`;
@@ -1979,6 +2287,7 @@ function openUser(){if(state.overlay==='user'){closeOverlay();return;}closeOverl
 function cmdkIndex(){const out=[];MODULES.forEach(m=>{
   out.push({cc:m.acc,ic:m.icon,t:m.name,s:tr(m.tag),kind:L('Modul','Module'),go:'#'+m.key});
   out.push({cc:m.acc,ic:I.grid,t:(state.lang==='sk'?'Preh\u013ead \u2014 ':'Overview \u2014 ')+m.name.replace('Aura ',''),s:'Dashboard',kind:L('Obrazovka','Screen'),go:'#'+m.key+'/dashboard'});
+  (m.pages||[]).forEach(pg=>out.push({cc:m.acc,ic:pg.icon,t:tr(pg.title)+' \u2014 '+m.name.replace('Aura ',''),s:pg.sub?tr(pg.sub):tr(m.name),kind:L('Obrazovka','Screen'),go:'#'+m.key+'/'+pg.key}));
   allRows(m).slice(0,2).forEach(r=>out.push({cc:m.acc,ic:m.icon,t:tr(r.c[0]),s:m.name,kind:tr(m.one),go:'#'+m.key+'/detail/'+r.id}));});
   return out;}
 function openCmdk(){closeOverlay();scrim();state.overlay='cmdk';
@@ -3104,6 +3413,46 @@ AQ(L('Ako funguje learning loop?','How does the learning loop work?'),
 AQ(L('Kde zmením budget strop?','Where do I change the budget cap?'),
    L('V skupine AI provider — riadok Budget strop s možnosťami 100/200/300 €. Pri prekročení sa generovanie zastaví.','In the AI provider group — the Budget cap row with €100/200/300 options. Generation halts once the cap is hit.'),
    ['strop','cap','limit','zmenim'],'demo')]},
+'marketing/modelky':{q:[
+AQ(L('Ktorá modelka má najviac bannerov?','Which model has the most banners?'),
+   L('Adela s 80 bannermi (Summer Sale + New Gem), Viktória 55 a Nikola 35 — Nikolin render Zlatých prsteňov ešte beží.','Adela with 80 banners (Summer Sale + New Gem), Viktória 55 and Nikola 35 — Nikola’s Gold rings render is still running.'),
+   ['modelka','najviac','banner','model'],'demo',G('#marketing/detail/summer')),
+AQ(L('Čo presne drží campaign lock?','What exactly does the campaign lock hold?'),
+   L('Svet + modelku (identity lock) naprieč 8 jazykmi a 5 rozmermi. Zamknutých je 5 kampaní zo 6 — Black Friday je ešte koncept.','The world + the model (identity lock) across 8 languages and 5 sizes. 5 of 6 campaigns are locked — Black Friday is still a draft.'),
+   ['lock','zamknut','identity','svet'],'demo'),
+AQ(L('Môžem zmeniť modelku v rozbehnutej kampani?','Can I change the model mid-campaign?'),
+   L('Nie — po zamknutí sa modelka ani svet nemenia; zmena znamená novú kampaň. Je to pravidlo v znalostnej báze (soft rule, 6 aplikácií).','No — once locked, neither the model nor the world changes; a change means a new campaign. It is a KB rule (soft rule, applied 6×).'),
+   ['zmenit','vymenit','change','mozem'],'demo',G('#marketing/kb'))]},
+'marketing/produkty':{q:[
+AQ(L('Ktoré produkty sú v akcii?','Which products are on sale?'),
+   L('Štyri: prsteň 489 → 439 €, obrúčky 690 → 621 €, náušnice 39 → 29 € a prívesok 24 → 19 € (ten zatiaľ bez banneru).','Four: ring €489 → €439, wedding bands €690 → €621, earrings €39 → €29 and the pendant €24 → €19 (the last one has no banner yet).'),
+   ['akcia','sale','zlava','akcn'],'api',F('#marketing/produkty',0)),
+AQ(L('Čo sa stane, keď zmením cenu?','What happens when I change a price?'),
+   L('Cenový overlay sa prekresľuje, takže dotknuté bannery idú na re-render — pri prsteni AU-R-118 je to 12 bannerov.','The price overlay is redrawn, so affected banners go for a re-render — for ring AU-R-118 that is 12 banners.'),
+   ['zmena ceny','re-render','overlay','cena'],'demo'),
+AQ(L('Prečo nie je cena prepočítaná z EUR?','Why is the price not converted from EUR?'),
+   L('Banner preberá hotovú cenu z e-shopu v mene trhu (HU v HUF, RO v RON, BG v BGN). Prepočet v renderi je zakázaný pravidlom KB.','The banner takes the final shop price in the market currency (HU in HUF, RO in RON, BG in BGN). Converting inside the render is forbidden by a KB rule.'),
+   ['mena','prepocet','eur','currency'],'demo',G('#marketing/kb'))]},
+'marketing/manifesty':{q:[
+AQ(L('Koľko manifestov je hotových?','How many manifests are done?'),
+   L('25 zo 40 buniek je hotových, 10 je v koncepte a 5 chýba — kompletné sú SK a CZ, najviac zaostáva HR (1 z 5).','25 of the 40 cells are done, 10 are drafts and 5 are missing — SK and CZ are complete, HR lags most (1 of 5).'),
+   ['hotov','kolko','manifest','done'],'demo'),
+AQ(L('Prečo má 970×250 kratší headline?','Why does 970×250 have a shorter headline?'),
+   L('Limit je 28 znakov — pravidlo vzniklo zo 4 QA deviations, kde headline pretiekol bezpečnú zónu banneru.','The limit is 28 characters — the rule came from 4 QA deviations where the headline overflowed the banner safe area.'),
+   ['970','kratsi','limit','znakov'],'demo',G('#marketing/kb')),
+AQ(L('Ktoré jazyky treba doplniť?','Which languages need filling in?'),
+   L('HR (2 chýbajú, 2 koncepty), potom PL, SI a BG — vždy v najmenších rozmeroch 1200×628 a 970×250.','HR (2 missing, 2 drafts), then PL, SI and BG — always in the smallest sizes, 1200×628 and 970×250.'),
+   ['doplnit','chyba','jazyk','missing'],'demo')]},
+'marketing/kb':{q:[
+AQ(L('Ktoré pravidlá blokujú export?','Which rules block the export?'),
+   L('Hard gates: logo min. 8 % šírky, headline max 28 znakov pre 970×250 a prekryv 35 % pod textom na fotke. Soft rules len upozornia.','Hard gates: logo at least 8% width, headline max 28 characters for 970×250 and a 35% overlay under text over photos. Soft rules only warn.'),
+   ['blokuj','hard gate','export','pravidl'],'demo'),
+AQ(L('Ako sa pravidlo dostane do KB?','How does a rule get into the KB?'),
+   L('Z QA deviation → návrh pravidla → zápis do KB. Tri pravidlá sú zapísané, štvrté (logo pod 8 %) čaká na potvrdenie.','From a QA deviation → a proposed rule → written into the KB. Three are recorded, the fourth (logo below 8%) awaits confirmation.'),
+   ['loop','ucenie','learning','dostane'],'demo'),
+AQ(L('Koľko pravidiel sa aplikuje pri renderi?','How many rules apply on render?'),
+   L('18 pravidiel, z toho 6 hard gates; pri poslednom renderi zablokovali 2 bannery s major deviation.','18 rules, 6 of them hard gates; on the last render they blocked 2 banners with a major deviation.'),
+   ['kolko pravidiel','aplikuj','render'],'demo',G('#marketing/detail/svadba'))]},
 
 /* ── KPI ───────────────────────────────────────────────────── */
 'kpi/dashboard':{q:[
@@ -3189,6 +3538,16 @@ AQ(L('Odkiaľ tečú automatické dáta?','Where does automatic data come from?'
 AQ(L('Ako sa počíta plnenie?','How is attainment computed?'),
    L('(skutočnosť − Min) / (Max − Min) s capom 100 % — spolu 16 metrík, 38 vstupov a 48 pásiem.','(actual − Min) / (Max − Min), capped at 100% — 16 metrics, 38 inputs and 48 bands in total.'),
    ['pocita','plnenie','vzorec','formula'],'demo')]},
+'kpi/denniky':{q:[
+AQ(L('Chýba niektorý zápis v sklade?','Is any warehouse entry missing?'),
+   L('Áno — v júli je 21 z 22 zápisov, chýba jeden deň. Inventúrny rozdiel je kumulatívne −4 ks a plnenie za jún 76,8 %.','Yes — 21 of 22 July entries are in, one day is missing. The cumulative inventory delta is −4 pcs and June attainment 76.8%.'),
+   ['chyba','zapis','sklad','inventur'],'import'),
+AQ(L('Koľko hodín odpracovali externistky?','How many hours did the externals log?'),
+   L('214 h v júli medzi 6 externistkami — najviac Ivana (46 h, fotenie). Petre D. chýbajú 2 dni.','214 hours in July across 6 externals — Ivana leads (46h, photography). Petra D. is missing 2 days.'),
+   ['hodin','externistk','odpracoval','external'],'import',G('#kpi/denniky')),
+AQ(L('Ktorý projekt je po termíne?','Which project is overdue?'),
+   L('Import feedov (automatický import 3 dodávateľov) — termín 31. 7. 2026, plnenie 88 %. Ostatné 4 projekty bežia.','Feed import (automated import of 3 suppliers) — due Jul 31, 2026 at 88%. The other 4 projects are running.'),
+   ['po termine','projekt','overdue','zmeska'],'demo',G('#kpi/detail/imp'))]},
 
 /* ── LOGISTIKA ─────────────────────────────────────────────── */
 'logistika/dashboard':{q:[

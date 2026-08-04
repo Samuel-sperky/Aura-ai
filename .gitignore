@@ -5,3 +5,4 @@ Thumbs.db
 .env
 .env.*
 !.env.example
+apps/screens/_gallery.html
