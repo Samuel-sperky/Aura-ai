@@ -26,6 +26,11 @@ import { fileURLToPath } from "node:url";
 
 const ROOT = fileURLToPath(new URL(".", import.meta.url));
 const PORT = Number(process.env.PORT || 3060);
+/* Loopback, nie 0.0.0.0. Proxy nemá žiadnu vlastnú autentifikáciu — kto sa naň
+   dostane, čita všetky objednávky. Na `0.0.0.0` je to teda neautentifikovaná
+   čítačka objednávok pre celú sieť, hoci samotný kľúč nikam neunikne.
+   Zmerané pred opravou: `http://<adresa-stroja>:3060/api/order` vrátilo 200. */
+const HOST = process.env.HOST || "127.0.0.1";
 const BASE_URL = String(process.env.SPERKY_BASE_URL || "https://sperky-eshop.sk").replace(/\/+$/, "");
 const API_KEY = process.env.SPERKY_API_KEY || "";
 const UPSTREAM_TIMEOUT_MS = 20000;
@@ -47,16 +52,18 @@ const ALLOWED_PARAMS = new Set([
   "date_from", "date_to", "country", "total_min", "total_max",
 ]);
 
+/* Zároveň allowlist toho, čo sa vôbec dá stiahnuť. Prípona mimo tejto mapy je
+   404, takže server nevydá ani `server.mjs`, ani `README.md`, ani nič, čo si
+   niekto do adresára pridá. Dôvod je konkrétny: `.env` s kľúčom sa odporúča
+   držať práve tu, a pred touto zmenou `GET /.env` vrátilo kľúč v plaintexte. */
 const MIME = {
   ".html": "text/html; charset=utf-8",
   ".css": "text/css; charset=utf-8",
   ".js": "text/javascript; charset=utf-8",
-  ".json": "application/json; charset=utf-8",
   ".svg": "image/svg+xml",
   ".ico": "image/x-icon",
   ".png": "image/png",
   ".woff2": "font/woff2",
-  ".md": "text/markdown; charset=utf-8",
 };
 
 function sendJson(res, status, payload) {
@@ -69,18 +76,42 @@ function sendJson(res, status, payload) {
   res.end(body);
 }
 
+function notFound(res) {
+  res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" }).end("not found");
+}
+
 async function serveStatic(req, res, pathname) {
   const wanted = pathname === "/" ? "/index.html" : pathname;
-  /* `normalize` + kontrola prefixu: bez toho `/../../etc/passwd` odíde von. */
-  const target = normalize(join(ROOT, decodeURIComponent(wanted)));
-  if (!target.startsWith(ROOT.endsWith(sep) ? ROOT : ROOT + sep)) {
-    res.writeHead(403).end("forbidden");
+  let decoded;
+  try {
+    decoded = decodeURIComponent(wanted);
+  } catch {
+    notFound(res);
     return;
   }
+
+  /* Bodkové súbory sú mimo hry — `.env` leží v tomto adresári. */
+  if (decoded.split("/").some((segment) => segment.startsWith("."))) {
+    notFound(res);
+    return;
+  }
+  /* Prípona musí byť v allowliste; `.env`, `.mjs`, `.md` ani bezprípony nič. */
+  const mime = MIME[extname(decoded)];
+  if (!mime) {
+    notFound(res);
+    return;
+  }
+  /* `normalize` + kontrola prefixu: bez toho `/../../etc/passwd` odíde von. */
+  const target = normalize(join(ROOT, decoded));
+  if (!target.startsWith(ROOT.endsWith(sep) ? ROOT : ROOT + sep)) {
+    notFound(res);
+    return;
+  }
+
   try {
     const file = await readFile(target);
     res.writeHead(200, {
-      "Content-Type": MIME[extname(target)] || "application/octet-stream",
+      "Content-Type": mime,
       "Content-Length": file.length,
       /* Appka je statická a mení sa pri každom builde ručne — no-cache drží
          prehliadač pri pravde bez cache-bustingu v URL. */
@@ -90,7 +121,7 @@ async function serveStatic(req, res, pathname) {
     });
     res.end(file);
   } catch {
-    res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" }).end("not found");
+    notFound(res);
   }
 }
 
@@ -134,6 +165,10 @@ async function proxy(req, res, pathname, search) {
       "Content-Type": upstream.headers.get("content-type") || "application/json; charset=utf-8",
       "Content-Length": Buffer.byteLength(body),
       "Cache-Control": "no-store",
+      /* Odpoveď eshopu je dáta, nie dokument — keby prišla s text/html, nech ju
+         prehliadač na tomto origine nevykreslí. Žiadne Access-Control-* hlavičky
+         tu zámerne nie sú: cudzia stránka si túto odpoveď nesmie prečítať. */
+      "X-Content-Type-Options": "nosniff",
     });
     res.end(body);
   } catch (err) {
@@ -158,9 +193,17 @@ const server = createServer((req, res) => {
   serveStatic(req, res, url.pathname);
 });
 
-server.listen(PORT, () => {
-  console.log("Šperky API klient beží na http://localhost:%d", PORT);
+server.listen(PORT, HOST, () => {
+  console.log("Šperky API klient beží na http://%s:%d", HOST === "0.0.0.0" ? "localhost" : HOST, PORT);
   console.log("Upstream: %s", BASE_URL);
   console.log("Kľúč pre objednávky: %s", API_KEY ? "nastavený (SPERKY_API_KEY)" : "CHÝBA — objednávky vrátia forbidden");
+  if (HOST !== "127.0.0.1" && HOST !== "localhost" && HOST !== "::1") {
+    console.warn(
+      "POZOR: server počúva na %s, nie na loopbacku. Proxy nemá vlastnú autentifikáciu,\n" +
+      "       takže každý, kto sa naň dostane, čita všetky objednávky. Ak to je zámer,\n" +
+      "       daj pred neho reverzný proxy s prihlásením.",
+      HOST,
+    );
+  }
   console.log("V appke prepni Nastavenia → Zdroj dát → Cez proxy.");
 });

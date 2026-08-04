@@ -48,10 +48,19 @@ Server vie:
 | `SPERKY_API_KEY` | — | kľúč pre `/api/order*`; bez neho vrátia `forbidden` |
 | `SPERKY_BASE_URL` | `https://sperky-eshop.sk` | upstream |
 | `PORT` | `3060` | port |
+| `HOST` | `127.0.0.1` | rozhranie; mimo loopbacku server varuje |
 
 Proxy má **allowlist ciest aj parametrov** — prepustí len štyri dokumentované
 cesty a len dokumentované query parametre. Otvorený proxy s produkčným kľúčom v
 hlavičke je presne to, čo sa nesmie stať.
+
+Počúva **len na loopbacku** a nemá vlastnú autentifikáciu: kto sa naň dostane,
+čita všetky objednávky. `HOST=0.0.0.0` to zapne pre celú sieť — vtedy pred neho
+patrí reverzný proxy s prihlásením a server to pri starte povie.
+
+Statický server vydá **len prípony appky** (`.html`, `.css`, `.js`, `.svg`,
+`.ico`, `.png`, `.woff2`) a nič, čoho segment začína bodkou. Preto sa `.env`,
+ktorý sa odporúča držať práve v tomto adresári, nedá stiahnuť.
 
 ### 3. Priamo z prehliadača
 
@@ -115,7 +124,31 @@ Sú prevzaté z `CLAUDE.md` rodiny a v kóde sú označené komentárom:
 - **Fonty Geist a Playfair Display** sa ťahajú z Google Fonts. Bez siete appka
   spadne na systémový font, inak je nedotknutá.
 
-## Bezpečnosť kľúča
+## Bezpečnosť kľúča — čo je odmerané
+
+Zmerané cez podvrhnutý „eshop", ktorý loguje každú prijatú hlavičku, plus
+prehliadač, ktorý zaznamenáva každý odchádzajúci request:
+
+| Otázka | Výsledok |
+|---|---|
+| Je kľúč v repozitári alebo v git histórii? | nie — prehľadané všetky blob objekty všetkých commitov |
+| Je kľúč natvrdo v zdrojákoch appky? | nie, žiadny reťazec tvaru tajomstva |
+| Dostane sa serverový kľúč v proxy režime do prehliadača? | nie — 0 requestov a 0 odpovedí ho nesie, `localStorage` obsahuje len `sperky.mode` |
+| Posiela sa kľúč na verejné produkty? | nie, `/api/products*` ide bez hlavičky v oboch režimoch |
+| Cestuje kľúč v URL alebo v `Referer`? | nie, výhradne v hlavičke; `Referrer-Policy: same-origin`, takže Google Fonts nedostane ani cestu |
+| Vypisuje ho log požiadaviek v UI? | nie, log má len cestu, stav a trvanie |
+| Vracia ho server niekde v tele odpovede? | nie |
+| Dá sa stiahnuť `/.env`, `/server.mjs`, `/README.md`? | nie, 404 (pred opravou `/.env` vrátilo kľúč) |
+| Je proxy dosiahnuteľný zo siete? | nie, loopback (pred opravou `http://<ip>:3060/api/order` vrátilo 200) |
+| Môže odpoveď proxy prečítať cudzia stránka? | nie, žiadne `Access-Control-*` hlavičky |
+
+V **direct** režime kľúč v prehliadači **je** — v `localStorage` a v hlavičke
+requestu. To nie je chyba, to je cena toho režimu a appka ju hovorí nahlas.
+Zaujímavé zistenie z merania: proti eshopu bez CORS hlavičiek sa reálny request
+ani nevyšle — prehliadač skončí na preflighte, takže kľúč fyzicky neopustí
+stroj a appka to ohlási ako nedostupné API.
+
+## Rotácia kľúča
 
 Kľúč vypísaný v dokumentácii `SPERKY_API.md` je **platný produkčný kľúč** s scope
 `orders:read`. Je v Markdown dokumente, teda pravdepodobne aj v gite a v histórii
