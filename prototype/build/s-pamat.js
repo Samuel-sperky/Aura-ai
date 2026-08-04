@@ -1073,6 +1073,7 @@
         return '<button class="ghit" data-ghit="' + esc(id) + '"><span class="fd" style="background:' + it.area.color + '"></span>' + esc(it.name) + "</button>";
       }).join("");
       if (n > 8) html += '<span class="note" style="margin:0">+ ' + F(n - 8, 0) + " ďalších</span>";
+      if (n > 0) html += '<button class="btn ghost sm" data-ghx="list">Zobraziť ako zoznam →</button>';
       if (sh.hidden) html += '<button class="btn ghost sm" data-ghx="filters">' + F(sh.hidden, 0) + " " + plural(sh.hidden, "zhoda skrytá", "zhody skryté", "zhôd skrytých") + " filtrom — zrušiť filtre</button>";
     }
     strip.hidden = false;
@@ -1924,7 +1925,9 @@
         if (h) { var id = h.getAttribute("data-ghit"); netCenterOn(id, Math.max(PM.net.cam.k, 1.8)); mem().inspect(id); return; }
         var x = e.target.closest("button[data-ghx]");
         if (!x) return;
-        if (x.getAttribute("data-ghx") === "clear") { $("#pm-gq").value = ""; netSearch(""); }
+        var ghx = x.getAttribute("data-ghx");
+        if (ghx === "clear") { $("#pm-gq").value = ""; netSearch(""); }
+        else if (ghx === "list") { switchTab("hladanie"); runSearch(PM.gq); }
         else resetFilters();
       });
       $("#pm-gchips").addEventListener("click", function (e) {

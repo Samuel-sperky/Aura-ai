@@ -865,6 +865,28 @@ const g13 = await p.evaluate(async () => {
 });
 g13.selN <= g13.rows ? O(`zoznam v7.1: výber orezaný na viditeľné (${g13.selN} ≤ ${g13.rows})`) : F('zoznam v7.1: výber prežil filter ' + JSON.stringify(g13));
 
+// most vyhľadávaní: graf search → „Zobraziť ako zoznam" → ranked výsledky (F16)
+const g14 = await p.evaluate(async () => {
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  const q = document.getElementById('pm-gq');
+  q.value = 'ollama'; q.dispatchEvent(new Event('input', { bubbles: true }));
+  await sleep(300);
+  const btn = [...document.querySelectorAll('#pm-ghits button')].find(b => b.textContent.includes('zoznam'));
+  if (!btn) return { btn: false };
+  btn.click();
+  await sleep(300);
+  const tab = document.querySelector('#pm-tabs [data-tab="hladanie"]').getAttribute('aria-pressed') === 'true';
+  const hlq = document.getElementById('pm-hl-q').value;
+  const res = document.querySelectorAll('#pm-hl-res .pm-r').length;
+  document.querySelector('#pm-tabs [data-tab="graf"]').click();
+  q.value = ''; q.dispatchEvent(new Event('input', { bubbles: true }));
+  await sleep(240);
+  return { btn: true, tab, hlq, res };
+});
+(g14.btn && g14.tab && g14.hlq === 'ollama' && g14.res > 0)
+  ? O(`graf v7.3: „Zobraziť ako zoznam" prepne na ranked výsledky (${g14.res})`)
+  : F('graf v7.3: most vyhľadávaní zlyhal ' + JSON.stringify(g14));
+
 // staged create: počet uzlov sa pred potvrdením nemení (Q81)
 const staged = await p.evaluate(async () => {
   const sleep = ms => new Promise(r => setTimeout(r, ms));
