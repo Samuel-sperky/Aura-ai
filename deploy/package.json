@@ -1,0 +1,14 @@
+{
+  "name": "aura-deploy",
+  "private": true,
+  "type": "module",
+  "description": "Cloudflare Pages nasadenie: prezentacia Aura AI + Aura Suite hub, chranene Basic Auth",
+  "scripts": {
+    "build": "node build.mjs",
+    "preview": "node build.mjs && wrangler pages dev",
+    "deploy": "node build.mjs && wrangler pages deploy"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  }
+}

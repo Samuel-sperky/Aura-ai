@@ -5,3 +5,7 @@ Thumbs.db
 .env
 .env.*
 !.env.example
+
+# generovaný web pre Cloudflare Pages
+deploy/site/
+.wrangler/

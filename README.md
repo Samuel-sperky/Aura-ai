@@ -22,6 +22,16 @@ presentation/
     asana.json INDEX.md do-asany.md      dáta pre Asana projekt a mapa PNG → task
 ```
 
+## Zverejnenie chránené heslom
+
+`deploy/` obsahuje nasadenie na Cloudflare Pages — jeden odkaz s rozcestníkom na
+prezentáciu (`/prezentacia/`) aj Aura Suite hub (`/hub/`), celé za HTTP Basic Auth.
+Meno a heslo sú Cloudflare secrets, nie sú v repe. Postup: [`deploy/README.md`](deploy/README.md).
+
+```bash
+cd deploy && npm install && npm run deploy
+```
+
 ## Prezentácia
 
 Jeden self-contained HTML súbor. Jediná externá závislosť sú Google Fonts
