@@ -1,0 +1,24 @@
+<header class="gbar">
+  <button class="hamb" id="hambBtn" aria-label="Menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+  <button class="brand" onclick="go('#hub')" aria-label="Aura AI — domov">
+    <svg class="crown" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 8l4 4 5-7 5 7 4-4-2 12H5L3 8z"/></svg>
+    <span class="w"><b>Aura</b> AI</span>
+  </button>
+  <span class="demo-tag">Demo · ukážkové dáta</span>
+  <div class="gspace"></div>
+  <div class="ctl">
+    <div class="seg" id="langseg" role="group" aria-label="Jazyk">
+      <button data-lang="sk" class="on" aria-pressed="true">SK</button>
+      <button data-lang="en" aria-pressed="false">EN</button>
+    </div>
+    <button class="icon-btn" id="themebtn" aria-pressed="false" aria-label="Prepnúť tému">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"/></svg>
+    </button>
+  </div>
+</header>
+<div class="view" id="view"></div>
+<div class="toasts" id="toasts"></div>
+<noscript><div style="padding:60px 26px;max-width:640px;margin:0 auto;font-family:system-ui">
+  <h1>Náhľad potrebuje JavaScript</h1>
+  <p>Obrazovky sa vykresľujú na klientovi — bez JavaScriptu sa nezobrazí nič. Statické PNG všetkých obrazoviek sú v priečinku <code>apps/screens-aura-ai/</code>.</p>
+</div></noscript>

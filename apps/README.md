@@ -153,3 +153,75 @@ node shoot.mjs                       # ../aura-apps-hub.html → ../screens + ..
 V súlade s pravidlom projektu **„neznáme výsledky sa nevymýšľajú"** sú všetky čísla
 na obrazovkách označené ako demo (odznak *Demo · ukážkové dáta* v hlavičke) a slúžia
 výhradne na predvedenie rozloženia a tokov. Nie sú to reálne prevádzkové údaje.
+
+---
+
+# Aura AI · chat a zvyšné aplikácie (`aura-ai.html`)
+
+Druhý náhľad v tomto priečinku — **appky rodiny, ktoré v hube nie sú**, vrátane
+chatového okna. Postavené 5 agentmi (4. 8. 2026) z pamäte Aura AI.
+
+```
+apps/
+  aura-ai.html            ← generovaný súbor: 6 appiek, 51 rout (247 kB)
+  screens-aura-ai/        71 PNG + _prehlad.png (kontaktný list všetkých obrazoviek)
+  build/
+    shoot-aura-ai.mjs     Playwright: verifikácia + PNG + kontaktný list
+    aura-ai/              ZDROJ — časti, z ktorých sa aura-ai.html zlepí
+      assemble.mjs        build (CSS základ berie 1:1 z aura-apps-hub.html)
+      extra.css           chat + bloky, ktoré hub nemá
+      body.html  core.js  chat.js
+      data-mind.js  data-chat.js  data-studios.js  data-shophub.js
+```
+
+**`aura-ai.html` sa needituje priamo** — je generovaný. Uprav časť v `build/aura-ai/`
+a spusti `node apps/build/aura-ai/assemble.mjs`. CSS základ sa preberá zo hubu, takže
+vizuálna identita rodiny sa nemôže rozísť ručnou kópiou.
+
+| # | Appka | Port | Obrazovky |
+|---|---|---|---|
+| 01 | **Aura AI** (mind, refaktor Hadesa) | 8082 | Dnes · Denník · Knižnica · Mapa siete · Spomienky · Projekty · Rozhodnutia · Recall · Model a runtime · Nastavenia |
+| 02 | **AuraAI Chat** | 8082 | prázdny štart · 12 konverzácií (3 plné vlákna) · Projekty · História · Šablóny · Súbory · Spotreba · Stavy · Nastavenia · zdieľané zobrazenie |
+| 03 | **Aura Banner Studio** | 8091 | Prehľad · Render fronta · QA gates · Exporty · AI provider · Nastavenia |
+| 04 | **Aura Retouch Studio** | 8092 | Prehľad · Retuš · Protokoly · Kontrola · Knižnica · Export |
+| 05 | **sperky-ai** | 3000 | Prehľad · Produkty · Objednávky · Obsah · Nastavenia |
+| 06 | **Aura Hub** | 3050 | Prehľad · Pripojenia · Prevádzka |
+
+## Chatové UX (jadro zadania)
+
+Rozhranie na úrovni Claude/ChatGPT, ale s pravidlami rodiny:
+
+- **Povinná citácia zdroja** pod každou odpoveďou (`pamäť` / `appka + endpoint` /
+  `súbor` / `web` / `ukážka`) — číslo bez zdroja sa nezobrazuje.
+- **Volania nástrojov** (`mind_recall`, `kpi_summary`, `logistika_shipments`,
+  `banner_render`, `web_search`) ako zbaliteľný blok so vstupom, výstupom a trvaním.
+- **Artefakty** v pravom paneli (SQL, JSON, tabuľka, dokument) s kopírovaním a exportom.
+- **Projekty** s vlastnou — viditeľnou, nie skrytou — instrukciou a súbormi.
+- **Stavy**: prázdny, streamovanie (kurzor + Zastaviť), beží nástroj, chyba,
+  vyčerpaný strop, lokálny model nebeží (cloud fallback), dlhý kontext (zhrnutie
+  staršej časti), zdieľané read-only zobrazenie bez kompozéra.
+- **Spotreba** proti stropu 300 €/mes.; lokálny beh (qwen3:4b, bge-m3) je bez ceny.
+- Kompozér s prílohami, šablónami a prepínačom modelu; `Enter` odoslať,
+  `Shift+Enter` nový riadok, `⌘K` hľadanie, `1`–`6` skok na appku, `←`/`→` obrazovky.
+
+## Akcenty nových appiek
+
+`--b-mind` `#6a7de8` · `--b-chat` `#c9457a` · `--b-ban` `#4fa8e0` ·
+`--b-ret` `#c97fd8` · `--b-shop` `#9bb84a` · `--b-hub` `#8a6a3a`.
+Nekolidujú s akcentmi hubu a držia pravidlo *akcent = v ktorej appke som,
+stavová farba = či je číslo dobré*.
+
+## Prestavba
+
+```bash
+node apps/build/aura-ai/assemble.mjs      # časti → apps/aura-ai.html
+cd apps/build && node shoot-aura-ai.mjs   # → ../screens-aura-ai/*.png
+```
+
+## Dáta
+
+Overené čísla z pamäte Aura AI sú prenesené 1:1 a v poznámke označené ako overené
+(router qwen3 95,3 %, recall hit@5 86,7 %, MRR 0,800, `/api/search` p50 4,2 s,
+505 PHP testov, kontrakt `/api/summary`, porty, workflow stavy, blokujúce štandardy
+retuše). Všetko ostatné je ukážkové a označené. Konkrétne hodnoty fallback hesiel
+sú zámerne mimo náhľadu — otvorené bezpečnostné body sú pomenované bez tajomstiev.
