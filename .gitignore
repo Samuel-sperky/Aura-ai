@@ -9,3 +9,4 @@ Thumbs.db
 # generovaný web pre Cloudflare Pages
 deploy/site/
 .wrangler/
+deploy/artifact/

@@ -6,7 +6,8 @@
   "scripts": {
     "build": "node build.mjs",
     "preview": "node build.mjs && wrangler pages dev",
-    "deploy": "node build.mjs && wrangler pages deploy"
+    "deploy": "node build.mjs && wrangler pages deploy",
+    "artifact": "node artifact.mjs"
   },
   "devDependencies": {
     "wrangler": "^4.0.0"

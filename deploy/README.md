@@ -66,6 +66,22 @@ npx wrangler pages secret put AURA_PASS --project-name aura-suite
 Zmena platí okamžite, bez nasadzovania. Prehliadač si Basic Auth pamätá do zatvorenia
 okna — po zmene hesla treba zavrieť a znova otvoriť okno.
 
+## Alternatíva bez Cloudflare: Claude artifact
+
+`artifact.mjs` preloží obe stránky do podoby, ktorú znesie prostredie artifactu:
+odstráni `<!doctype>/<html>/<head>/<body>` (artifact ich dodáva sám) a **vloží
+Google Fonts ako `data:` URI** — CSP artifactu blokuje externé hostiteľské servery,
+takže odkaz na CDN by ticho spadol na systémový fallback.
+
+```bash
+cd deploy
+node artifact.mjs        # → deploy/artifact/*.html (negitované, generované)
+```
+
+Výstup sa publikuje cez artifact nástroj. Odkaz je súkromný, zdieľa sa cez menu
+na stránke — **nemá vlastné meno a heslo**, prístup riadi zdieľanie odkazu.
+Pre skutočnú ochranu heslom používaj nasadenie na Cloudflare vyššie.
+
 ## Poznámky
 
 - Heslo drž v ASCII. Basic Auth posiela údaje cez `atob`/base64 a diakritika sa
