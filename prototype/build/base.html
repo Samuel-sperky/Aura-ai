@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="sk" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AuraAI · Rozhranie</title>
+<meta name="description" content="AuraAI — návrh rozhrania lokálneho AI jadra (Hades refactor). Beží offline, bez CDN.">
+<style>/*__FONTS__*/</style>
+<style>/*__SHELL_CSS__*/</style>
+</head>
+<body>
+<a class="skip" href="#main-content">Preskočiť na obsah</a>
+
+<div class="app">
+  <!-- ============ BOČNÝ PANEL ============ -->
+  <aside class="side" id="side" aria-label="Hlavná navigácia">
+    <div class="brand">
+      <span class="cr" aria-hidden="true">♛</span>
+      <span><b>Aura<em>AI</em></b><small>lokálne jadro · 48 GB RAM</small></span>
+    </div>
+
+    <nav id="nav" role="tablist" aria-label="Obrazovky">
+      <div class="navg" id="g-pamat">Pamäť</div>
+      <div class="nav" role="group" aria-labelledby="g-pamat">
+        <button data-v="pamat" role="tab" aria-selected="true" aria-controls="v-pamat"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="7" cy="8" r="2"/><circle cx="17" cy="7" r="2"/><circle cx="12" cy="13" r="2.4"/><circle cx="6" cy="17" r="2"/><circle cx="18" cy="16" r="2"/><path d="M8.6 9 10 11.5M15.4 8.2 13.6 11.4M10.2 14.4 7.4 15.8M13.8 14.2l3 1.4M8 16l2.6-2"/></svg>Pamäť<span class="bdg" id="nav-dnes">+17</span></button>
+      </div>
+
+      <div class="navg" id="g-appky">Appky</div>
+      <div class="nav" role="group" aria-labelledby="g-appky">
+        <button data-v="appky" role="tab" aria-selected="false" aria-controls="v-appky"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Appky<span class="bdg" id="nav-appky">4</span></button>
+      </div>
+
+      <div class="navg" id="g-praca">Práca</div>
+      <div class="nav" role="group" aria-labelledby="g-praca">
+        <button data-v="chat" role="tab" aria-selected="false" aria-controls="v-chat"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-11.9 7.6L3 21l1.9-6.1A8.4 8.4 0 1 1 21 11.5z"/></svg>Chat</button>
+        <button data-v="smernica" role="tab" aria-selected="false" aria-controls="v-smernica"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg>Smernica</button>
+        <button data-v="automatizacie" role="tab" aria-selected="false" aria-controls="v-automatizacie"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/></svg>Automatizácie<span class="bdg" id="nav-auto">6</span></button>
+      </div>
+
+      <div class="navg" id="g-system">Systém</div>
+      <div class="nav" role="group" aria-labelledby="g-system">
+        <button data-v="jadro" role="tab" aria-selected="false" aria-controls="v-jadro"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 2v2M15 2v2M9 20v2M15 20v2M2 9h2M2 15h2M20 9h2M20 15h2"/></svg>Jadro</button>
+        <button data-v="naklady" role="tab" aria-selected="false" aria-controls="v-naklady"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17l5-6 4 3 5-7 4 5"/><path d="M3 21h18"/></svg>Náklady</button>
+        <button data-v="observabilita" role="tab" aria-selected="false" aria-controls="v-observabilita"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h4l2 6 4-14 2 8h6"/></svg>Observabilita<span class="bdg warn" id="nav-alerts" hidden>0</span></button>
+        <button data-v="nastavenia" role="tab" aria-selected="false" aria-controls="v-nastavenia"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 13a7.6 7.6 0 0 0 0-2l2-1.5-2-3.5-2.4 1a7.6 7.6 0 0 0-1.7-1L14.8 3H9.2l-.5 3a7.6 7.6 0 0 0-1.7 1l-2.4-1-2 3.5L4.6 11a7.6 7.6 0 0 0 0 2l-2 1.5 2 3.5 2.4-1a7.6 7.6 0 0 0 1.7 1l.5 3h5.6l.5-3a7.6 7.6 0 0 0 1.7-1l2.4 1 2-3.5z"/></svg>Nastavenia</button>
+      </div>
+    </nav>
+
+    <div class="side-foot">
+      <div class="qa">
+        <button type="button" id="qa-chat">Nový chat</button>
+        <button type="button" id="qa-eval">Spustiť eval</button>
+        <button type="button" id="qa-search">Hľadať ⌘K</button>
+        <button type="button" id="qa-pause">Pauza jadra</button>
+      </div>
+      <div class="mini" aria-label="Stav stroja">
+        <h4>Stroj</h4>
+        <div class="mrow"><span class="lbl">RAM</span><span class="spk" id="mini-ram"></span><span class="val" id="mini-ram-v">65 %</span></div>
+        <div class="mrow"><span class="lbl">CPU</span><span class="spk" id="mini-cpu"></span><span class="val" id="mini-cpu-v">71 %</span></div>
+      </div>
+      <div class="running" id="running">
+        <div class="rh"><span class="dot"></span>Práve beží</div>
+        <div id="running-t">Recall — „rozhodnutia o hardvéri"</div>
+      </div>
+      <div class="host"><span class="d"></span><span><b>aura-core-01</b><span>localhost:8082 · CPU · offline</span></span></div>
+    </div>
+  </aside>
+
+  <!-- ============ HLAVNÁ ČASŤ ============ -->
+  <div class="main">
+    <header class="top">
+      <button class="burger" id="burger" aria-label="Otvoriť menu"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+      <div class="ttl">
+        <div class="crumb" id="crumb">Pamäť</div>
+        <h1 id="title">Pamäť</h1>
+      </div>
+      <span class="sp"></span>
+      <div class="newmenu">
+        <button class="pill accent" id="newBtn" aria-haspopup="true" aria-expanded="false" aria-label="Vytvoriť nový">+&nbsp;<span class="tlab">Nový</span></button>
+        <div class="newpop" id="newPop" role="menu" aria-label="Vytvoriť">
+          <button role="menuitem" data-new="node">Uzol pamäte</button>
+          <button role="menuitem" data-new="chat">Chat</button>
+          <button role="menuitem" data-new="smernica">Smernica</button>
+          <button role="menuitem" data-new="automatizacia">Automatizácia</button>
+        </div>
+      </div>
+      <button class="pill" id="cmdBtn" aria-label="Otvoriť príkazovú paletu"><span class="tlab">Hľadať&nbsp;</span><span class="mono">⌘K</span></button>
+      <button class="pill on" id="autoBtn" aria-pressed="true" aria-label="Automatické obnovovanie"><span class="d"></span>Live</button>
+      <span class="upd" id="upd" aria-live="off">aktualizované —</span>
+      <button class="bell" id="bellBtn" aria-label="Upozornenia"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 1 0-12 0c0 6-3 8-3 8h18s-3-2-3-8"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg><span class="cnt" id="bellCount">2</span></button>
+      <button class="pill" id="themeBtn">Svetlá</button>
+      <div class="av" aria-hidden="true">A</div>
+    </header>
+
+    <main class="content" id="main-content">
+      <!--__SCREENS__-->
+      <p class="disc" id="global-disc"></p>
+    </main>
+  </div>
+</div>
+
+<!-- spodná navigačná lišta (mobil) -->
+<nav class="bnav" id="bnav" aria-label="Rýchla navigácia">
+  <button data-b="pamat"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="7" cy="8" r="2"/><circle cx="17" cy="7" r="2"/><circle cx="12" cy="13" r="2.4"/><circle cx="6" cy="17" r="2"/><circle cx="18" cy="16" r="2"/></svg>Pamäť</button>
+  <button data-b="appky"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Appky</button>
+  <button data-b="chat"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-11.9 7.6L3 21l1.9-6.1A8.4 8.4 0 1 1 21 11.5z"/></svg>Chat</button>
+  <button data-b="jadro"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/></svg>Systém</button>
+  <button data-b="__more" aria-haspopup="true"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>Viac</button>
+</nav>
+
+<!-- panel detailu -->
+<div class="scrim" id="dp-scrim"></div>
+<aside class="dp" id="dp" role="dialog" aria-modal="false" aria-labelledby="dp-title">
+  <div class="dp-h">
+    <h3 id="dp-title">Detail</h3>
+    <button class="x" id="dp-close" aria-label="Zavrieť detail">✕</button>
+  </div>
+  <div class="dp-b" id="dp-body"></div>
+  <div class="dp-h" id="dp-actions" style="border-top:1px solid var(--line);border-bottom:0;justify-content:flex-end"></div>
+</aside>
+
+<!-- potvrdenie -->
+<div class="modal" id="confirm" role="dialog" aria-modal="true" aria-labelledby="confirm-t">
+  <div class="box">
+    <h3 id="confirm-t">Potvrdenie</h3>
+    <p id="confirm-p"></p>
+    <div class="acts">
+      <button class="btn ghost" id="confirm-no">Zrušiť</button>
+      <button class="btn" id="confirm-yes">Potvrdiť</button>
+    </div>
+  </div>
+</div>
+
+<!-- príkazová paleta -->
+<div class="modal" id="cmdk" role="dialog" aria-modal="true" aria-label="Príkazová paleta">
+  <div class="box">
+    <label for="cmdk-i" class="skip">Hľadať v AuraAI</label>
+    <input id="cmdk-i" type="text" placeholder="Hľadať v pamäti, príkazy, obrazovky…" autocomplete="off">
+    <div class="res" id="cmdk-res" role="listbox" aria-label="Výsledky"></div>
+  </div>
+</div>
+
+<div id="toasts" aria-live="polite" aria-atomic="false"></div>
+<noscript><p style="padding:26px;color:#e0554e">AuraAI potrebuje zapnutý JavaScript.</p></noscript>
+
+<script>/*__ENGINE_JS__*/</script>
+<script>/*__SHELL_JS__*/</script>
+<script>/*__DATA_JS__*/</script>
+<script>/*__S_PAMAT_JS__*/</script>
+<script>/*__S_APPKY_JS__*/</script>
+<script>/*__S_PRACA_JS__*/</script>
+<script>/*__S_SYSTEM_JS__*/</script>
+<script>/*__BOOT_JS__*/</script>
+</body>
+</html>

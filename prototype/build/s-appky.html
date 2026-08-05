@@ -1,0 +1,29 @@
+<!-- ==================== APPKY ==================== -->
+<section class="view" id="v-appky">
+
+  <!-- ---------- zoznam appiek ---------- -->
+  <div id="ap-list">
+    <p class="eyet">Nasadenia · čo na jadre reálne beží</p>
+    <p class="lead">Appky sú nasadenia postavené nad tým istým lokálnym jadrom. Každá má vlastné oddelenia, vlastné automatizácie a vlastný kus pamäte. Toto je jediné miesto, kde vidno, čo appka spravila, čo to stálo a z čoho čerpala.</p>
+
+    <div class="row g4" id="ap-kpi"></div>
+
+    <div class="sech"><span class="n">01</span><h2>Porovnanie appiek</h2><p>Kto ťahá záťaž a kam idú peniaze za elektrinu.</p></div>
+    <div class="row g2">
+      <div class="card"><div class="ch"><h3>Objem podľa appky</h3><span class="srcbadge sim">simulované</span><span class="sp"></span><button class="btn ghost sm" id="ap-vol-tbl" aria-expanded="false">Tabuľka</button></div><div id="ap-ch-vol"></div><div class="tw" id="ap-vol-t" hidden></div></div>
+      <div class="card"><div class="ch"><h3>Náklady podľa appky</h3><span class="srcbadge meas">merané</span><span class="sp"></span><button class="btn ghost sm" id="ap-cost-tbl" aria-expanded="false">Tabuľka</button></div><div id="ap-ch-cost"></div><div class="tw" id="ap-cost-t" hidden></div></div>
+    </div>
+
+    <div class="sech"><span class="n">02</span><h2>Appky</h2><p>Problémové sú hore. Klik na kartu otvorí dashboard appky.</p><span class="sp" style="flex:1"></span><button class="btn" id="ap-new">+ Nová appka</button></div>
+    <div class="card p0" id="ap-formcard" hidden><div id="ap-form"></div></div>
+    <div class="row g4" id="ap-cards"></div>
+  </div>
+
+  <!-- ---------- detail appky ---------- -->
+  <div id="ap-detail" hidden>
+    <div class="apphead" id="ap-head"></div>
+    <div id="ap-alert"></div>
+    <div id="ap-body"></div>
+  </div>
+
+</section>

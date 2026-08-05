@@ -1,0 +1,734 @@
+<!-- ============================================================
+     D · skupina „Systém" — jadro · naklady · observabilita · nastavenia
+     Iba <section class="view" id="v-*"> bloky. Bez <style>/<script>/<head>.
+     ============================================================ -->
+
+<!-- ===================== 1) JADRO ===================== -->
+<section class="view" id="v-jadro">
+  <p class="eyet">Systém · jadro</p>
+  <p class="lead">Dva modely bežia lokálne cez Ollamu na procesore (AMD 9900, iGPU, 48 GB RAM, 1 TB Samsung).
+    Žiadna grafická karta, žiadny cloud — všetko nižšie sa počíta na tomto stroji.
+    Jadro je <b>jediný vlastník eval kvality</b>; ostatné obrazovky sem len odkazujú.</p>
+
+  <!-- modely -->
+  <div class="row g2">
+    <div class="card">
+      <div class="ch">
+        <h3>qwen3:4b</h3><span class="tag">ROUTER</span>
+        <span class="sp"></span><span class="badge ok" id="j-qwen-b">AKTÍVNY</span>
+      </div>
+      <p class="lead">Rozhoduje, ktorý nástroj a ktorá oblasť pamäte má odpovedať. Samotný model trafí 87,5 %,
+        s regex vrstvou nad ním 95,3 % (41 zo 43 dopytov).</p>
+      <div class="mtr">
+        <div class="mn"><b>Stopa v RAM</b><span>Q4_K_M · 8 192 tok. kontext</span></div>
+        <div class="mt"><div class="trk"><i style="width:5.4%"></i></div></div>
+        <div class="mv">2,6 GB</div>
+      </div>
+      <div class="mtr">
+        <div class="mn"><b>Kvalita smerovania</b><span>eval batéria 31. 7. 2026</span></div>
+        <div class="mt"><div class="trk"><i style="width:95.3%"></i></div></div>
+        <div class="mv">95,3 %</div>
+      </div>
+      <div class="mtr">
+        <div class="mn"><b>Rýchlosť</b><span>generovanie na CPU</span></div>
+        <div class="mt"><div class="trk"><i class="g" style="width:36%"></i></div></div>
+        <div class="mv">18 tok/s</div>
+      </div>
+      <div class="spk" id="j-spk-qwen"></div>
+      <p class="note">Odozva routera za posledných 24 h <span class="srcbadge sim">simulovaný priebeh</span></p>
+      <div class="filt" style="margin:11px 0 0">
+        <button class="btn ghost" type="button" id="j-md-qwen">Detail modelu</button>
+        <button class="btn ghost" type="button" id="j-md-qwen-sw">Prepnúť model</button>
+        <button class="btn ghost" type="button" id="j-md-qwen-log">Logy modelu</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="ch">
+        <h3>bge-m3</h3><span class="tag">EMBEDDINGS</span>
+        <span class="sp"></span><span class="badge ok" id="j-bge-b">AKTÍVNY</span>
+      </div>
+      <p class="lead">Prevádza text na vektory pre RecallEngine. Živé embedovanie dopytu na CPU je hlavná
+        príčina latencie a otvorený problém s prekryvom SK↔EN (3 z 20 párov).</p>
+      <div class="mtr">
+        <div class="mn"><b>Stopa v RAM</b><span>1 024 dim. · multilingválny</span></div>
+        <div class="mt"><div class="trk"><i class="g" style="width:2.5%"></i></div></div>
+        <div class="mv">1,2 GB</div>
+      </div>
+      <div class="mtr">
+        <div class="mn"><b>Kvalita recallu · hit@5</b><span>MRR 0,800</span></div>
+        <div class="mt"><div class="trk"><i class="g" style="width:86.7%"></i></div></div>
+        <div class="mv">86,7 %</div>
+      </div>
+      <div class="mtr">
+        <div class="mn"><b>Rýchlosť</b><span>čas embedovania dopytu</span></div>
+        <div class="mt"><div class="trk"><i class="a" style="width:81%"></i></div></div>
+        <div class="mv">4,05 s</div>
+      </div>
+      <div class="spk" id="j-spk-bge"></div>
+      <p class="note">Čas embedovania dopytu za posledných 24 h <span class="srcbadge sim">simulovaný priebeh</span></p>
+      <div class="filt" style="margin:11px 0 0">
+        <button class="btn ghost" type="button" id="j-md-bge">Detail modelu</button>
+        <button class="btn ghost" type="button" id="j-md-bge-test">Test prekryvu</button>
+        <button class="btn ghost" type="button" id="j-md-bge-log">Logy modelu</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- stavová veta (stav cez engine, nie demo tlačidlo) -->
+  <div class="row">
+    <div class="alert" id="j-status">
+      <span class="ai"></span>
+      <div><b>Všetko beží · 0 problémov za 24 h</b>
+        <span id="j-status-t">Ollama odpovedá, oba modely zavedené v pamäti, fronta prázdna.
+          Otvorený je jeden kvalitatívny problém (prekryv embeddingov), nie výpadok.</span></div>
+      <span class="sp"></span>
+      <span class="badge ok" id="j-status-b">OK</span>
+    </div>
+  </div>
+
+  <!-- KPI — jediný vlastník eval kvality -->
+  <div class="row">
+    <div class="card">
+      <div class="ch"><h3>Kvalita a výkon</h3>
+        <span class="tag">eval batéria 31. 7. 2026</span>
+        <span class="sp"></span><span class="srcbadge meas">merané</span></div>
+      <div class="row g4" style="margin:0">
+        <button class="kpi tl" type="button" id="j-kpi-router">
+          <span class="kl">Router · úspešnosť</span>
+          <b><span class="kv">95,3</span> <em>%</em></b>
+          <span class="kd up">41 zo 43 dopytov · bez regexu 87,5 %</span>
+          <span class="spk" id="j-kpi-spk1"></span>
+        </button>
+        <button class="kpi tl" type="button" id="j-kpi-hit">
+          <span class="kl">Recall hit@5</span>
+          <b><span class="kv">86,7</span> <em>%</em></b>
+          <span class="kd">MRR 0,800 · <span class="js-total">715</span> uzlov v pamäti</span>
+          <span class="spk" id="j-kpi-spk2"></span>
+        </button>
+        <button class="kpi" type="button" id="j-kpi-p50">
+          <span class="kl">/api/search · p50</span>
+          <b><span class="kv">4,2</span> <em>s</em></b>
+          <span class="kd dn">cieľ 1 s · nad cieľom o 3,2 s</span>
+          <span class="spk" id="j-kpi-spk3"></span>
+        </button>
+        <button class="kpi" type="button" id="j-kpi-ram">
+          <span class="kl">RAM</span>
+          <b><span class="kv">31,2</span> <em>/ 48 GB</em></b>
+          <span class="kd" id="j-ram-kd">65,0 % · limit upozornenia 44 GB</span>
+          <span class="spk" id="j-kpi-spk4"></span>
+        </button>
+      </div>
+      <p class="note" style="margin-top:10px">Otvorený problém: prekryv embeddingov SK↔EN <b>3 z 20 párov</b>
+        (najhorší zhodný pár 0,460, najlepší nezhodný 0,502).
+        <button class="btn ghost" type="button" id="j-pairs-open" style="margin-left:6px">Zobraziť krajné páry</button></p>
+    </div>
+  </div>
+
+  <!-- latencia -->
+  <div class="row g2">
+    <div class="card">
+      <div class="ch"><h3>Rozklad latencie <span class="mono">/api/search</span></h3>
+        <span class="sp"></span><span class="badge warn" id="j-break-b">embedovanie 97,1 %</span>
+        <span class="srcbadge sim">simulovaný priebeh</span></div>
+      <div id="j-lat-break"></div>
+      <p class="note" id="j-break-n"></p>
+    </div>
+    <div class="card">
+      <div class="ch"><h3>Latencia <span class="mono">/api/search</span> v čase</h3>
+        <span class="sp"></span><span class="srcbadge sim">simulovaný priebeh</span></div>
+      <div id="j-lat-time"></div>
+      <p class="note">Cieľ 1 s je produktový cieľ, nie nameraná hodnota. Červené pásmo = nad cieľom.
+        Meraný je posledný bod (p50 4,2 s).</p>
+    </div>
+  </div>
+
+  <!-- kvalita v čase -->
+  <div class="row g2">
+    <div class="card">
+      <div class="ch"><h3>Úspešnosť routera v čase</h3><span class="tag">qwen3:4b</span>
+        <span class="sp"></span><span class="srcbadge sim">simulovaný priebeh</span></div>
+      <div id="j-router"></div>
+      <p class="note">Rozdiel medzi krivkami je prínos regex vrstvy nad modelom (+7,8 p. b.).</p>
+    </div>
+    <div class="card">
+      <div class="ch"><h3>hit@5 a MRR</h3><span class="tag">RecallEngine</span>
+        <span class="sp"></span><span class="srcbadge sim">simulovaný priebeh</span></div>
+      <div id="j-hit"></div>
+      <p class="note">Dve jednotky, dve osi: hit@5 v percentách vľavo, MRR v rozsahu 0–1 vpravo.</p>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="card">
+      <div class="ch"><h3>Záťaž podľa appky</h3><span class="tag">podiel na dopytoch</span>
+        <span class="sp"></span><span class="srcbadge meas">merané</span>
+        <button class="btn ghost sm" type="button" id="j-app-tbl" aria-expanded="false">Tabuľka</button></div>
+      <div id="j-app"></div>
+      <div class="tw" id="j-app-t" hidden></div>
+      <p class="note">Ktoré nasadenia zaťažujú model najviac. Klik na stĺpec otvorí dashboard appky.</p>
+    </div>
+  </div>
+
+  <!-- RAM + stroj -->
+  <div class="row g2">
+    <div class="card">
+      <div class="ch"><h3>Využitie RAM</h3><span class="tag">48 GB celkom</span>
+        <span class="sp"></span><span class="badge ok" id="j-ram-b">31,2 GB</span>
+        <span class="srcbadge sim">simulovaný priebeh</span></div>
+      <div id="j-ram"></div>
+      <p class="note">Z toho modely 3,8 GB (qwen3:4b 2,6 + bge-m3 1,2), zvyšok Laravel, Postgres, index a systém.</p>
+    </div>
+    <div class="card">
+      <div class="ch"><h3>Stroj</h3><span class="tag">AMD 9900 · iGPU · CPU inferencia</span>
+        <span class="sp"></span><span class="srcbadge demo">prevádzka</span></div>
+      <p class="lead">Inferencia beží na procesore. Stroj nemá dedikovanú grafickú kartu, takže položka VRAM
+        v tomto prehľade zámerne chýba.</p>
+      <div id="j-meters" aria-live="polite"></div>
+    </div>
+  </div>
+
+  <!-- ovládanie -->
+  <div class="row">
+    <div class="card">
+      <div class="ch"><h3>Ovládanie jadra</h3><span class="tag">akcie zasahujú do behu</span>
+        <span class="sp"></span>
+        <button class="btn ghost" type="button" id="j-mods-open">Nároky modelov na RAM</button></div>
+      <p class="note" style="margin:0 0 10px">Model routera sa mení v Nastaveniach cez Uložiť — tu bežia iba runtime operácie.</p>
+      <div class="filt">
+        <button class="btn" type="button" id="j-eval">Spustiť eval batériu</button>
+        <button class="btn ghost" type="button" id="j-offline">Spustiť offline test</button>
+        <button class="btn ghost" type="button" id="j-backup">Spustiť zálohu</button>
+        <button class="btn ghost" type="button" id="j-queue">Vyprázdniť frontu</button>
+        <button class="btn danger" type="button" id="j-restart">Reštart jadra</button>
+      </div>
+      <div class="trk" id="j-prog" hidden><i id="j-prog-i" style="width:0%"></i></div>
+      <p class="note" id="j-prog-t" aria-live="polite" style="margin-top:7px">Pripravené. Žiadna operácia nebeží.</p>
+    </div>
+  </div>
+
+  <p class="disc">Zdroj čísel: eval batéria 31. 7. 2026 (43 dopytov, 20 párov embeddingov) · RecallEngine 8–130 ms ·
+    <span class="mono">/api/search</span> p50 4,2 s · pamäť <span class="js-total">715</span> uzlov v 5 oblastiach.
+    Priebehy v čase sú dopočítané — história sa pred 31. 7. 2026 systematicky nemerala.</p>
+</section>
+
+
+<!-- ===================== 2) NÁKLADY ===================== -->
+<section class="view" id="v-naklady">
+  <p class="eyet">Systém · náklady</p>
+  <p class="lead">V popredí sú <b>merané</b> veličiny: objem tokenov, spotreba kWh a cena za dopyt.
+    Porovnanie s cloudom je jeden <b>odhad</b> — sadzba sa needituje tu, žije v Nastaveniach.</p>
+
+  <!-- merané KPI -->
+  <div class="row">
+    <div class="card">
+      <div class="ch"><h3>Merané za posledných 30 dní</h3>
+        <span class="tag">objem, spotreba, cena za dopyt</span>
+        <span class="sp"></span><span class="srcbadge meas">merané</span></div>
+      <div class="row g3" style="margin:0">
+        <button class="kpi tl" type="button" id="n-kpi-tok">
+          <span class="kl">Tokeny / deň</span>
+          <b><span class="kv">1,75</span> <em>M tok.</em></b>
+          <span class="kd">52,4 M za 30 dní · vstup 42,8 + výstup 9,6</span>
+          <span class="spk" id="n-spk-tok"></span>
+        </button>
+        <button class="kpi" type="button" id="n-kpi-kwh">
+          <span class="kl">Spotreba</span>
+          <b><span class="kv">68,4</span> <em>kWh</em></b>
+          <span class="kd">≈ 95 W v priemere · 30 dní</span>
+          <span class="spk" id="n-spk-kwh"></span>
+        </button>
+        <button class="kpi" type="button" id="n-kpi-q">
+          <span class="kl">Cena za dopyt · lokálne</span>
+          <b><span class="kv">0,0018</span> <em>€</em></b>
+          <span class="kd" id="n-kpi-q-d">8 420 dopytov · elektrina / dopyt</span>
+          <span class="spk" id="n-spk-q"></span>
+        </button>
+        <button class="kpi" type="button" id="n-kpi-proj">
+          <span class="kl">Projekcia mesiaca</span>
+          <b><span class="kv" id="n-proj-v">—</span> <em>kWh</em></b>
+          <span class="kd" id="n-proj-d">odhad z priebehu augusta</span>
+          <span class="spk" id="n-spk-proj"></span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- odhad úspory oproti cloudu -->
+  <div class="row">
+    <div class="card">
+      <div class="ch"><h3>Úspora oproti cloudu</h3><span class="tag">kalkulačka</span>
+        <span class="sp"></span><span class="srcbadge demo">odhad</span></div>
+      <div class="row g3" style="margin:0;align-items:center">
+        <div class="s2" style="min-width:0">
+          <div class="hero-num" id="n-hero">—</div>
+          <p class="lead" style="margin-top:8px" id="n-hero-sub">—</p>
+        </div>
+        <div style="min-width:0">
+          <div class="mtr">
+            <div class="mn"><b>Sadzba externého modelu</b><span>vlastník: Nastavenia</span></div>
+            <div class="mt"><div class="trk"><i class="g" style="width:40%"></i></div></div>
+            <div class="mv" id="n-rate-v">— € / 1M</div>
+          </div>
+          <div class="mtr">
+            <div class="mn"><b>Cena elektriny</b><span>fakturovaná položka</span></div>
+            <div class="mt"><div class="trk"><i class="v" style="width:22%"></i></div></div>
+            <div class="mv">0,22 € / kWh</div>
+          </div>
+          <div class="filt" style="margin:10px 0 0">
+            <button class="btn ghost" type="button" id="n-torates">Upraviť sadzbu v Nastaveniach</button>
+          </div>
+        </div>
+      </div>
+      <p class="note" style="margin-top:10px">Cena cloudu je prepočet objemu tokenov cez sadzbu, ktorú spravuješ v Nastaveniach.
+        Nie je to faktúra — je to odpoveď na „koľko by to stálo, keby". Hardvér sa v čísle neamortizuje.</p>
+    </div>
+  </div>
+
+  <!-- merané grafy -->
+  <div class="row g2">
+    <div class="card">
+      <div class="ch"><h3>Tokeny za deň</h3><span class="tag">vstup + výstup</span>
+        <span class="sp"></span><span class="srcbadge sim">simulovaný priebeh</span></div>
+      <div id="n-tok"></div>
+      <p class="note">Mesačný súčet je meraný, denné delenie dopočítané. Klikni na stĺpec pre rozpad dňa.</p>
+    </div>
+    <div class="card">
+      <div class="ch"><h3>Spotreba elektriny</h3><span class="tag">kWh a €</span>
+        <span class="sp"></span><span class="srcbadge sim">simulovaný priebeh</span></div>
+      <div id="n-elec"></div>
+      <p class="note">Dve jednotky, dve osi: kWh vľavo, € vpravo (kWh × cena elektriny).</p>
+    </div>
+  </div>
+
+  <div class="row g2">
+    <div class="card">
+      <div class="ch"><h3>Podľa appky</h3><span class="tag">mesačná spotreba</span>
+        <span class="sp"></span><span class="srcbadge meas">merané</span>
+        <button class="btn ghost sm" type="button" id="n-app-tbl" aria-expanded="false">Tabuľka</button></div>
+      <div id="n-app"></div>
+      <div class="tw" id="n-app-t" hidden></div>
+      <p class="note">Klik na výsek otvorí dashboard danej appky. Rozpad je podiel appky na spotrebe stroja.</p>
+    </div>
+    <div class="card">
+      <div class="ch"><h3>Náklad na jeden dopyt</h3><span class="tag">lokálne vs cloud (odhad)</span>
+        <span class="sp"></span><span class="srcbadge sim">simulovaný priebeh</span></div>
+      <div id="n-perq"></div>
+      <p class="note">Obe krivky sú v eurách, preto zdieľajú jednu os. Lokálna je blízko nuly, nie však nulová.
+        Cloudová krivka je odhad podľa sadzby z Nastavení.</p>
+    </div>
+  </div>
+
+  <!-- mesiace -->
+  <div class="row">
+    <div class="card">
+      <div class="ch"><h3>Mesiace</h3><span class="tag">klikni na riadok pre detail</span>
+        <span class="sp"></span>
+        <button class="btn ghost" type="button" id="n-csv">Export CSV</button></div>
+      <div class="tw">
+        <table class="tbl" id="n-months">
+          <thead><tr>
+            <th data-sort="m">Mesiac</th>
+            <th data-sort="q" class="num">Dopyty</th>
+            <th data-sort="tin" class="num">Vstup (M tok.)</th>
+            <th data-sort="tout" class="num">Výstup (M tok.)</th>
+            <th data-sort="kwh" class="num">kWh</th>
+            <th data-sort="cloud" class="num">Cloud (€)</th>
+            <th data-sort="local" class="num">Lokálne (€)</th>
+            <th data-sort="save" class="num">Úspora (€)</th>
+          </tr></thead>
+          <tbody id="n-months-b"></tbody>
+        </table>
+      </div>
+      <div class="cards-only" id="n-months-c"></div>
+    </div>
+  </div>
+
+  <p class="disc">Merané: objem tokenov, počet dopytov, spotreba kWh. Odhadované: cena cloudu (sadzba v Nastaveniach),
+    príkon stroja 95 W v priemere. Priebeh po dňoch je dopočítaný z mesačných súčtov — denná história sa
+    pred 1. 7. 2026 neukladala.</p>
+</section>
+
+
+<!-- ===================== 3) OBSERVABILITA ===================== -->
+<section class="view" id="v-observabilita">
+  <p class="eyet">Systém · observabilita</p>
+  <p class="lead">Upozornenia, logy a dostupnosť na jednom mieste. Prepni sa medzi tabmi;
+    hlboké odkazy z iných obrazoviek predvyplnia filter logov.</p>
+
+    <div class="row g4">
+      <button class="kpi" type="button" id="u-kpi-new">
+        <span class="kl">Vzniknuté · 30 dní</span><b><span class="kv" id="u-s-new">—</span></b>
+        <span class="kd">všetky závažnosti</span></button>
+      <button class="kpi" type="button" id="u-kpi-done">
+        <span class="kl">Vyriešené · 30 dní</span><b><span class="kv" id="u-s-done">—</span></b>
+        <span class="kd">vrátane stlmených</span></button>
+      <button class="kpi" type="button" id="u-kpi-mttr">
+        <span class="kl">Medián času do vyriešenia</span><b><span class="kv" id="u-s-mttr">—</span></b>
+        <span class="kd">od vzniku po zavretie</span></button>
+      <button class="kpi tl" type="button" id="u-kpi-up">
+        <span class="kl">Dostupnosť · 90 dní</span><b><span class="kv" id="u-s-up">—</span></b>
+        <span class="kd">1 výpadok Ollamy</span></button>
+    </div>
+
+  <div class="seg" id="ob-tabs" role="group" aria-label="Observabilita">
+    <button type="button" data-t="upozornenia" aria-pressed="true">Upozornenia</button>
+    <button type="button" data-t="logy" aria-pressed="false">Logy</button>
+    <button type="button" data-t="dostupnost" aria-pressed="false">Dostupnosť</button>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:10px 0 4px">
+    <label for="ob-app" style="font-size:var(--fs-label);color:var(--ink-3)">Appka</label>
+    <select id="ob-app"><option value="">Všetky appky</option></select>
+    <span class="note" style="margin:0">Filter platí na upozornenia aj logy.</span>
+  </div>
+  <div id="ob-fchip" aria-live="polite"></div>
+
+  <!-- ---------- TAB: UPOZORNENIA ---------- -->
+  <div class="ob-tab" id="ob-upozornenia">
+    <div class="row">
+      <div class="card">
+        <div class="ch"><h3>Aktívne</h3>
+          <span class="sp"></span><span class="badge warn" id="u-act-b">—</span></div>
+        <div id="u-active"></div>
+      </div>
+    </div>
+
+    <div class="row g2">
+      <div class="card">
+        <div class="ch"><h3>Časová os incidentov</h3><span class="tag">posledných 7 dní</span>
+          <span class="sp"></span><span class="srcbadge sim">simulované</span></div>
+        <div id="u-tl"></div>
+        <p class="note">Šírka pruhu = trvanie incidentu. Klikni na pruh pre detail.</p>
+      </div>
+      <div class="card">
+        <div class="ch"><h3>Počet upozornení v čase</h3><span class="tag">14 dní</span>
+          <span class="sp"></span><span class="srcbadge sim">simulované</span></div>
+        <div id="u-bars"></div>
+        <p class="note">Klikni na stĺpec pre súčet daného dňa.</p>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="card">
+        <div class="ch"><h3>Pravidlá upozornení</h3><span class="tag">prah + zap/vyp inline</span>
+          <span class="sp"></span><span class="badge info" id="u-rules-b">—</span></div>
+        <div id="u-rules-bar" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:11px">
+          <span class="badge mute" id="u-rules-dirty" aria-live="polite">Žiadne neuložené zmeny</span>
+          <span class="sp" style="flex:1"></span>
+          <button class="btn ghost" type="button" id="u-rules-cancel" disabled>Zrušiť</button>
+          <button class="btn" type="button" id="u-rules-save" disabled>Uložiť</button>
+        </div>
+        <div class="tw">
+          <table class="tbl" id="u-rules">
+            <thead><tr>
+              <th data-sort="name">Pravidlo</th>
+              <th data-sort="cond">Podmienka</th>
+              <th data-sort="lvl">Závažnosť</th>
+              <th data-sort="thr" class="num">Prah</th>
+              <th data-sort="on">Zapnuté</th>
+            </tr></thead>
+            <tbody id="u-rules-b2"></tbody>
+          </table>
+        </div>
+        <div class="cards-only" id="u-rules-c"></div>
+        <p class="note" style="margin-top:9px">Zmeny prahu a zap/vyp sú <b>rozpracované</b> — platia až po Uložiť.
+          Prahy RAM, latencie a kvality sa rozpošlú do Jadra.</p>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="card">
+        <div class="ch"><h3>História</h3><span class="tag">vyriešené</span>
+          <span class="sp"></span>
+          <button class="btn ghost" type="button" id="u-hist-clear">Vyčistiť históriu</button></div>
+        <div id="u-hist"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ---------- TAB: LOGY ---------- -->
+  <div class="ob-tab" id="ob-logy" hidden>
+    <div class="row g3">
+      <div class="card s2">
+        <div class="ch"><h3>Objem logov po úrovniach</h3><span class="tag">24 h · 1 stĺpec = 1 h</span>
+          <span class="sp"></span><span class="srcbadge sim">simulované</span>
+          <button class="btn ghost" type="button" id="l-range-clear">Zrušiť výber rozsahu</button></div>
+        <div id="l-hist"></div>
+        <p class="note" id="l-range-n" aria-live="polite">Ťahaním myšou po grafe vyberieš hodinový rozsah.</p>
+      </div>
+      <div class="card">
+        <div class="ch"><h3>Chyby podľa zdroja</h3><span class="tag">warn + error + critical</span>
+          <span class="sp"></span><span class="srcbadge demo">prevádzka</span></div>
+        <div id="l-src"></div>
+        <p class="note">Klikni na stĺpec pre filtrovanie podľa zdroja.</p>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="card">
+        <div class="ch"><h3>Záznamy</h3>
+          <span class="sp"></span>
+          <span class="badge mute" id="l-count">—</span>
+          <button class="pill off" type="button" id="l-tail" aria-pressed="false">
+            <span class="d"></span>Live tail</button>
+        </div>
+
+        <div class="filt">
+          <label class="note" for="l-q">Hľadať</label>
+          <input id="l-q" type="search" placeholder="všetky stĺpce, bez ohľadu na diakritiku…">
+          <label class="note" for="l-lvl">Úroveň</label>
+          <select id="l-lvl">
+            <option value="">všetky úrovne</option>
+            <option value="debug">debug</option>
+            <option value="info">info</option>
+            <option value="warn">warn</option>
+            <option value="error">error</option>
+            <option value="critical">critical</option>
+          </select>
+          <label class="note" for="l-zone">Zóna</label>
+          <select id="l-zone"><option value="">všetky zóny</option></select>
+          <label class="note" for="l-src2">Zdroj</label>
+          <select id="l-src2"><option value="">všetky zdroje</option></select>
+          <button class="btn ghost" type="button" id="l-clear">Zrušiť filtre</button>
+          <span class="sp"></span>
+          <button class="btn ghost" type="button" id="l-csv">Export CSV</button>
+          <button class="btn ghost" type="button" id="l-json">Export JSON</button>
+        </div>
+
+        <div class="tw">
+          <table class="tbl" id="l-tbl">
+            <thead><tr>
+              <th data-sort="t">Čas</th>
+              <th data-sort="lvl">Úroveň</th>
+              <th data-sort="src">Zdroj</th>
+              <th data-sort="zone">Zóna</th>
+              <th data-sort="msg">Správa</th>
+              <th data-sort="ms" class="num">Trvanie</th>
+            </tr></thead>
+            <tbody id="l-tbody"></tbody>
+          </table>
+        </div>
+        <div class="cards-only" id="l-cards"></div>
+        <div id="l-empty"></div>
+
+        <div class="filt" style="margin:12px 0 0">
+          <button class="btn ghost" type="button" id="l-prev">Predchádzajúca</button>
+          <span class="note" id="l-page" aria-live="polite">—</span>
+          <button class="btn ghost" type="button" id="l-next">Ďalšia</button>
+        </div>
+      </div>
+    </div>
+
+    <p class="disc">Logy sú reálne tvarované záznamy z Laravelu, Ollamy, RecallEngine, MCP vrstvy a plánovača.
+      Riadky pribúdajúce cez Live tail sú generované pre ukážku správania.</p>
+  </div>
+
+  <!-- ---------- TAB: DOSTUPNOSŤ ---------- -->
+  <div class="ob-tab" id="ob-dostupnost" hidden>
+
+
+    <div class="row">
+      <div class="card">
+        <div class="ch"><h3>Dostupnosť za 90 dní</h3><span class="tag">1 dlaždica = 1 deň</span>
+          <span class="sp"></span><span class="badge ok" id="u-up-b">—</span>
+          <span class="srcbadge sim">simulované</span></div>
+        <div id="u-up"></div>
+        <p class="note">Zelená = bez incidentu, oranžová = degradácia, červená = výpadok Ollamy.</p>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="card">
+        <div class="ch"><h3>Čas do vyriešenia (MTTR)</h3><span class="tag">minúty</span>
+          <span class="sp"></span><span class="srcbadge sim">simulované</span></div>
+        <div id="u-mttr"></div>
+        <p class="note">Prerušovaná čiara je priemer za zobrazené obdobie.</p>
+      </div>
+    </div>
+
+    <p class="disc">Denná história incidentov, dostupnosti a MTTR je simulovaná — evidencia sa začala viesť
+      až s touto obrazovkou. Aktívne upozornenia vychádzajú z nameraných hodnôt z 31. 7. 2026.</p>
+  </div>
+</section>
+
+
+<!-- ===================== 4) NASTAVENIA ===================== -->
+<section class="view" id="v-nastavenia">
+  <p class="eyet">Systém · nastavenia</p>
+  <p class="lead">Jediný vlastník modelu, prahov a sadzby. Model sa mení <b>vždy cez Uložiť</b> — nič sa neprepne
+    naživo. Po uložení sa zmeny rozpošlú do ostatných obrazoviek. Nič sa neukladá do prehliadača.</p>
+
+  <div id="st-bar" style="position:sticky;top:var(--top);z-index:20;display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--card);border:1px solid var(--line);border-radius:var(--r-m);padding:10px 14px;margin-bottom:13px">
+    <span class="badge mute" id="st-dirty" aria-live="polite">Žiadne neuložené zmeny</span>
+    <span class="sp" style="flex:1"></span>
+    <button class="btn ghost" type="button" id="st-cancel" disabled>Zrušiť zmeny</button>
+    <button class="btn" type="button" id="st-save" disabled>Uložiť</button>
+  </div>
+
+  <div class="row g3">
+    <div class="card s2" style="min-width:0">
+      <div class="ch"><h3>Modely a runtime</h3><span class="tag">Ollama · localhost:11434</span></div>
+      <div class="row g2" style="margin-bottom:0">
+        <div style="min-width:0">
+          <div class="field">
+            <label for="st-model">Model routera</label>
+            <select id="st-model">
+              <option value="qwen3:4b">qwen3:4b — 2,6 GB · 18 tok/s</option>
+              <option value="qwen3:8b">qwen3:8b — 5,2 GB · 9 tok/s</option>
+              <option value="llama3.1:8b">llama3.1:8b — 4,9 GB · 10 tok/s</option>
+              <option value="qwen3:14b">qwen3:14b — 9,3 GB · 5 tok/s</option>
+              <option value="qwen3:32b">qwen3:32b — 20,1 GB · 2 tok/s</option>
+            </select>
+            <p class="hint">Zmena sa uplatní až po Uložiť — vtedy Ollama uvoľní starý a zavedie nový model. Nameraná úspešnosť qwen3:4b je 95,3 % s regex vrstvou, 87,5 % bez nej.</p>
+          </div>
+          <div class="field">
+            <label for="st-embed">Model embeddingu</label>
+            <select id="st-embed">
+              <option value="bge-m3">bge-m3 — 1 024 dim · 1,2 GB</option>
+              <option value="nomic-embed-text">nomic-embed-text — 768 dim · 0,3 GB</option>
+              <option value="mxbai-embed-large">mxbai-embed-large — 1 024 dim · 0,7 GB</option>
+            </select>
+            <p class="hint">bge-m3 má nameraný prekryv SK↔EN len 3/20. Zmena modelu vyžaduje preindexovanie <span class="js-total">715</span> uzlov.</p>
+          </div>
+        </div>
+        <div style="min-width:0">
+          <div class="field">
+            <label for="st-ctx">Veľkosť kontextu (tokenov)</label>
+            <input type="number" id="st-ctx" min="512" max="32768" step="256" value="8192">
+            <p class="hint">Povolený rozsah 512 – 32 768 tokenov.</p>
+            <p class="err" id="st-ctx-err" style="display:none"></p>
+          </div>
+          <div class="field">
+            <label for="st-threads">Vlákien CPU</label>
+            <input type="number" id="st-threads" min="1" max="24" step="1" value="12">
+            <p class="hint">AMD 9900 · 12 fyzických jadier. Nad 12 vlákien výkon klesá.</p>
+          </div>
+          <div class="field" style="margin-bottom:0">
+            <label for="st-keep">Držať model v RAM (minút)</label>
+            <input type="number" id="st-keep" min="0" max="1440" step="5" value="30">
+            <p class="hint">0 = uvoľniť ihneď po odpovedi. Prvé načítanie qwen3:4b trvá 6–9 s.</p>
+          </div>
+        </div>
+      </div>
+      <div id="st-ram-alert" style="margin-top:12px"></div>
+      <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+        <button class="btn ghost" type="button" id="st-test">Test spojenia s Ollamou</button>
+        <span class="badge mute" id="st-test-b" aria-live="polite">netestované</span>
+      </div>
+      <div id="st-test-out" style="margin-top:10px"></div>
+    </div>
+
+    <div class="card" style="min-width:0">
+      <div class="ch"><h3>Odhad využitia RAM</h3><span class="tag">z 48 GB</span>
+        <span class="sp"></span><span class="srcbadge demo">odhad</span></div>
+      <div id="st-ch-ram"></div>
+      <div id="st-ch-models" style="margin-top:10px"></div>
+    </div>
+  </div>
+
+  <div class="row g2">
+    <div class="card">
+      <div class="ch"><h3>Prahy a upozornenia</h3><span class="tag">kedy sa ozve zvonček</span></div>
+      <div class="field">
+        <label for="st-ram">Prah RAM (%)</label>
+        <input type="number" id="st-ram" min="10" max="99" step="1" value="85">
+        <p class="hint">Nad túto hranicu sa vytvorí upozornenie úrovne warn.</p>
+      </div>
+      <div class="field">
+        <label for="st-lat">Prah latencie /api/search (s)</label>
+        <input type="number" id="st-lat" min="0.1" max="30" step="0.1" value="1">
+        <p class="hint">Aktuálne nameraná p50 je 4,2 s — prah 1 s je zámerne pod realitou, aby regresia nezapadla.</p>
+      </div>
+      <div class="field" style="margin-bottom:0">
+        <label for="st-qual">Prah kvality recallu hit@5 (%)</label>
+        <input type="number" id="st-qual" min="10" max="100" step="1" value="80">
+        <p class="hint">Aktuálne 86,7 %. Pod prahom sa spustí re-eval batéria.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="ch"><h3>Zóny a klasifikačný filter</h3><span class="tag">čo smie von cez MCP</span></div>
+      <p class="note" style="margin-bottom:11px">Filter beží pred každým odchodom dát z počítača. Zadržané útržky sa nahradia zástupkou a zostávajú v Hadesovi.</p>
+      <div class="feed" id="st-rules"></div>
+      <div class="field" style="margin-top:12px;margin-bottom:0">
+        <label for="st-zone">Predvolená zóna nových konverzácií</label>
+        <select id="st-zone">
+          <option value="local">lokálna — nič neopúšťa stroj</option>
+          <option value="work">pracovná — projekty a kód</option>
+          <option value="public">verejná — bez osobných údajov</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g2">
+    <div class="card">
+      <div class="ch"><h3>Ceny, zálohy, jazyk a téma</h3><span class="tag">profil</span></div>
+      <div class="field">
+        <label for="st-rate">Sadzba externého modelu (€ za 1 mil. tokenov)</label>
+        <input type="number" id="st-rate" min="0" max="200" step="0.1" value="14">
+        <p class="hint">Jediný vlastník sadzby. Používa sa na obrazovke Náklady pri porovnaní lokálneho behu s cloudom.</p>
+      </div>
+      <div class="field">
+        <label for="st-backup">Plán záloh pamäte</label>
+        <select id="st-backup">
+          <option value="6h">každých 6 hodín</option>
+          <option value="24h">raz denne o 03:00</option>
+          <option value="7d">týždenne v nedeľu</option>
+          <option value="off">vypnuté</option>
+        </select>
+        <p class="hint">Záloha je jeden súbor SQLite s <span class="js-total">715</span> uzlami a ich vektormi (≈ 41 MB).</p>
+      </div>
+      <div class="field">
+        <label for="st-lang">Jazyk rozhrania</label>
+        <select id="st-lang"><option value="sk">slovenčina</option><option value="en">english</option></select>
+      </div>
+      <div class="field" style="margin-bottom:0">
+        <label for="set-theme">Téma</label>
+        <select id="set-theme"><option value="dark">tmavá</option><option value="light">svetlá</option></select>
+        <p class="hint">Téma sa mení okamžite a je zosynchronizovaná s prepínačom v hornej lište.</p>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button class="btn ghost" type="button" id="st-tonaklady">Otvoriť Náklady</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="ch"><h3>Správa appiek</h3><span class="tag">nasadenia nad jadrom</span><span class="sp"></span>
+        <button class="btn ghost" type="button" id="st-app-new">Nová appka</button></div>
+      <div class="tw">
+        <table class="tbl" id="st-apps">
+          <thead><tr>
+            <th data-sort="name">Appka</th>
+            <th data-sort="kind">Typ</th>
+            <th data-sort="deps">Oddelenia</th>
+            <th data-sort="mcp">MCP</th>
+            <th data-sort="state">Stav</th>
+            <th>Akcia</th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="cards-only" id="st-apps-c"></div>
+      <p class="note">Premenovanie, oddelenia a MCP sa ukladajú cez Uložiť v paneli. Odstránenie appky zruší len jej dashboard — automatizácie a uzly pamäte ostávajú.</p>
+    </div>
+
+    <div class="card">
+      <div class="ch"><h3>MCP nástroje</h3><span class="tag">alias mind_* → aura_*</span><span class="sp"></span><button class="btn ghost" type="button" id="st-alias">Prepnúť všetky aliasy</button></div>
+      <div class="tw">
+        <table class="tbl" id="st-tbl">
+          <thead><tr>
+            <th data-sort="old">Pôvodný názov</th>
+            <th data-sort="neu">Nový názov</th>
+            <th data-sort="calls" class="num">Volaní / 30 dní</th>
+            <th data-sort="alias">Alias</th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="cards-only" id="st-cards"></div>
+      <p class="note" style="margin-top:10px">Kým je alias zapnutý, oba názvy fungujú. Vypnutie aliasu je <b>deštruktívne</b>:
+        starý názov prestane existovať a staršie relácie ho už nenájdu.</p>
+    </div>
+  </div>
+</section>
