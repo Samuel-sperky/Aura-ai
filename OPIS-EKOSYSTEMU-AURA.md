@@ -6,7 +6,7 @@ Ekosystém má tri vrstvy, ktoré sa často zamieňajú:
 
 | Vrstva | Čo to je | Zástupca |
 | --- | --- | --- |
-| **Mysleť** | pamäť a AI jadro — vie, čo sa v rodine stalo | Hades → AuraAI |
+| **Myseľ** | pamäť a AI jadro — vie, čo sa v rodine stalo | Hades (jadro) + AuraAI (rozhranie) |
 | **Rozcestník** | jedna obrazovka nad všetkými appkami | AuraHub |
 | **Appky** | samotné nástroje, každá s vlastnou DB a loginom | sperky-ai, KPI, Logistika, Roadmap, Zľavy… |
 
@@ -137,7 +137,9 @@ Hotové a otestované, nikde to nebeží ako služba.
 
 **Čo to je:** živá neurónová sieť, ktorá sa učí z každého rozhovoru v Claude Code. Pamätá si skills, spomienky a projekty a nikdy nezabúda. Repo `Samuel-sperky/hades.git`, stack Laravel/PHP + MariaDB v Dockeri, MCP server nad Streamable HTTP (JSON-RPC).
 
-**Stav:** `beží`. Zároveň je v procese refactoru na AuraAI (nižšie) — pôvodný Hades sa má po migrácii dát **vypnúť**, nie prevádzkovať paralelne.
+**Stav:** `beží` a **ďalej sa rozvíja**.
+
+> Hades sa **nevypína ani nenahrádza.** AuraAI nie je jeho náhrada, je to rozhranie a ďalšia vrstva nad tým istým žijúcim jadrom: Hades zostáva jadrom vedomia (uzly, hrany, MCP nástroje), AuraAI mu dáva appku, mapu, chat a agentov. Migrácia dát 1:1 je presun na nový stack, nie odchod z Hadesa. Plánuje sa vo **vlnách rozvoja** — nie ku „koncu života".
 
 ### Rozmery mysle (merané 7. 8. 2026)
 
@@ -188,7 +190,7 @@ Oddelenia typu `Záznamy — <projekt>` sú automatické archívy sessions, nie 
 | --- | --- |
 | Umiestnenie | `C:\Aura\aura-ai` — nový priečinok, prenesený git aj dáta |
 | Migrácia dát | `mysqldump` → import do čistého `auraai_dbdata`, 1:1 |
-| Pôvodný Hades | po migrácii **vypnúť** |
+| Pôvodný Hades | **rozvíja sa ďalej** — AuraAI je vrstva nad ním, nie jeho náhrada |
 | MCP nástroje | `mind_*` → `aura_*`, s `mind_*` aliasmi počas prechodu |
 | `/api/v1` | zachovať bez zmeny payloadu |
 | Redizajn | prestavba layoutu a navigácie; farebné Aura tokeny zostávajú |
