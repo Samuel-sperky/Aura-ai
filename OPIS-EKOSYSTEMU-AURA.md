@@ -20,6 +20,8 @@ Legenda stavov, používaná v celom dokumente:
 | `plán` | rozhodnuté, nezačaté |
 | `neexistuje` | spomínané v mockupe, reálne nič nie je |
 
+Porovnanie nasadeného a nenasadeného stavu je v samostatnej sekcii nižšie — tam sú tie isté artefakty zoradené podľa **stupňa nasadenia A–D**, nie podľa appky.
+
 ---
 
 ## Prehľad portov
@@ -41,6 +43,93 @@ Jediná tabuľka, ktorú treba pozerať pred štartom novej appky — kolízia p
 | 8095 | Caddy pred AuraAI | `caddy` | `beží` |
 
 > Pozor: kontrakt Aura Zliav hovoril port 3050, ten však bol už obsadený AuraHubom → appka reálne beží na **3070**. Kontrakt v tomto bode neplatí.
+
+---
+
+# Nasadené vs nenasadené
+
+Toto je jadro dokumentu. „Hotové" a „nasadené" nie je to isté a v tejto rodine sa to rozchádza na štyroch miestach naraz — appka môže bežať a byť nepoužiteľná, alebo byť dokončená a nikde nebežať.
+
+Rozlišujem preto **štyri stupne**, nie dva:
+
+| Stupeň | Znamená | Koľko artefaktov |
+| --- | --- | --- |
+| **A — nasadené a funkčné** | beží v Dockeri, používa sa, robí to, na čo je | 6 |
+| **B — nasadené, nedokončené** | beží, ale kus funkcie chýba alebo je vypnutý | 3 |
+| **C — postavené, nenasadené** | kód existuje a je otestovaný, nikde nebeží | 4 |
+| **D — nenasadené vôbec** | plán, rozpracované alebo neexistuje | 6 |
+
+## Matica nasadenia
+
+Päť dimenzií, na ktorých sa „nasadené" reálne meria. Prázdna bunka = nie.
+
+| Artefakt | Beží v Dockeri | Git remote | Testy | Verejne dostupné | V AuraHube |
+| --- | --- | --- | --- | --- | --- |
+| sperky-ai | ✅ `:3000` | ✅ `aura-web` | ✅ 105 + 3 | | ⚠️ endpoint rozpracovaný |
+| Aura KPI | ✅ `:3030` | ❌ len lokálny git | ❌ 0 | | ✅ živé dáta |
+| Aura Logistika | ✅ `:3020` | ❌ baseline `41b7165` bez remote | ❌ 0 | | ✅ živé dáta |
+| Aura Roadmap | ✅ `:3040` | ❌ `gh` chýbalo → nepushnuté | ✅ 535 + 47 | | ⚠️ endpoint rozpracovaný |
+| Aura Banner Studio | ✅ `:8091` | ❌ repo + push otvorené | ❌ 0 | | |
+| AuraAI | ✅ `:8082` | ⚠️ commit `f5f9840` **bez pushu** | ✅ 505 | ✅ CF tunnel za basic-auth | — |
+| AuraHub | ✅ `:3050` | ❌ commit `95dcccf` bez remote | ✅ 37 | ❌ loopback only, zámerne | — |
+| Aura Zľavy | ✅ `:3070` | ✅ `Samuel-sperky/ovl-da-zliav` | ✅ 866 + 30 | ❌ 127.0.0.1, žiadny tunel | |
+| aura-design | ➖ nie je služba | ❌ `main` bez remote | ✅ 30 | — | — |
+| Aura Suite (mockup) | ➖ HTML | ✅ PR #1 `817124f` | ➖ | | — |
+| Aura Takt | ➖ HTML | ➖ | ➖ | | — |
+| Northstar V3 | ✅ `:3010` | ➖ archív | ❌ 1 súbor | | — |
+
+**Čo z matice vypadne na prvý pohľad:** verejne dostupná je **jedna jediná** appka z jedenástich (AuraAI, a to za basic-auth). A **šesť artefaktov nemá git remote** — beží kód, ktorý existuje v jedinej kópii na jednom PC.
+
+## A — nasadené a funkčné (6)
+
+| Artefakt | Kde | Odkedy |
+| --- | --- | --- |
+| sperky-ai | `:3000` | produkčná, najstaršia |
+| Aura KPI | `:3030` | 23. 7. 2026 |
+| Aura Logistika | `:3020` | pred KPI |
+| Aura Roadmap | `:3040` | 29. 7. 2026, doladené 30. 7. |
+| Aura Banner Studio | `:8091` | Pipeline 1 naživo |
+| Northstar V3 | `:3010` | archív, zámerne nedotknutý |
+
+## B — nasadené, ale nedokončené (3)
+
+Tie najzradnejšie. Appka odpovedá na `/api/health`, takže monitoring je zelený, ale funkciu nemá.
+
+| Artefakt | Čo beží | Čo chýba | Dôsledok |
+| --- | --- | --- | --- |
+| **AuraHub** `:3050` | shell, 6 kariet, keš, kontrakt, 37 testov | `/api/summary` v Roadmape, sperky-ai a HR | **4 zo 6 kariet nemá dáta.** Hub korektne hlási dôvod namiesto čísla, takže to nevyzerá ako porucha — ale rozcestník bez čísel neplní účel |
+| **Aura Zľavy** `:3070` | celý stack + Caddy, `boot_ok`, `db:true` | seed admina (chce reálne TTY) a onboarding v UI; `WRITES_ENABLED=false` | **Nasadené a nepoužiteľné.** Bez účtu sa nedá prihlásiť, bez kľúča appka nič nezapíše. Presne toto sa už raz stalo: `users=0` → všetky API volania `401` → UI plné červených chýb, hoci appka bola zdravá |
+| **AuraAI** `:8082` | mapa mysle (W1), agent centre (W0), chat, tunel | W4 (hover-card uzla, timeline scrubber, search), lokálny LLM, embeddings | Mapa sa dá prezerať, ale nedá sa v nej **hľadať** — pri 800 uzloch je to citeľné |
+
+## C — postavené, ale nenasadené (4)
+
+Hotové a otestované, nikde to nebeží ako služba.
+
+| Artefakt | Prečo nie je nasadené | Čo by nasadenie znamenalo |
+| --- | --- | --- |
+| **aura-design** | zámerne — nie je to služba ani npm balík, distribuuje sa **kopírovaním** cez `sync.mjs` | „nasadené" = skopírované do appky; overené je to len pre bridge vrstvy, do ktorých appiek reálne dorazilo, **som nemeral** |
+| **Aura Suite** (mockup) | je to predloha, nie appka — svoju úlohu splnil a AuraHub z neho vznikol | nič, je to zámer |
+| **Aura Takt** | jednosúborový HTML bez servera | otvoriť súbor; perzistencia je cez export/import JSON, nie DB |
+| **`/api/summary` pre Roadmap + sperky-ai** | agenti spadli na session limit, zmeny zostali **necommitnuté** na `feat/suite-visuals` (5 + 3 súbory) | odblokuje 2 zo 4 mŕtvych kariet hubu — **jediná položka v tejto tabuľke, ktorá reálne blokuje inú appku** |
+
+## D — nenasadené vôbec (6)
+
+| Vec | Stupeň | Poznámka |
+| --- | --- | --- |
+| **Tržby appka** | neexistuje | existuje len karta v mockupe a report za júl 2026 (217 016 €) |
+| **HR `/api/summary`** | neexistuje | HR karta v hube nemá čo čítať; `aura-hr-mapa` je predloha rodiny, nie appka s endpointom |
+| **Auth pred AuraHub** | plán | **blokuje expozíciu hubu** — bez neho by boli čísla všetkých appiek verejné bez hesla |
+| **Read-only DB users** `kpi_ro`, `roadmap_ro` | plán | dovtedy sa integrácie medzi appkami robia ručne |
+| **i18n v sperky-ai** | vyňaté rozhodnutím | 5 760 inline `style={{}}`, 0 UI i18n na 233 000 riadkoch → samostatný projekt 3–5 M tokenov |
+| **SMTP e-maily, Admin-Evidencia** (KPI) | vynechané | nahradené in-app badge |
+
+## Tri vzory, ktoré z porovnania vyšli
+
+**1. Nasadené ≠ použiteľné.** Dva z troch prípadov stupňa B by prešli akýmkoľvek healthcheckom. Zľavy to už raz predvedli naostro: Samuel videl appku plnú červených chýb a príčina nebola chyba v kóde, ale **chýbajúci admin účet** — a appka mu to nepovedala. Akceptačné kritérium „beží" musí znamenať „prihlásim sa a spravím jednu reálnu operáciu", nie „`/api/health` vráti 200".
+
+**2. Bez remote znamená jediná kópia.** Šesť artefaktov beží z kódu, ktorý nie je nikde inde než na tom PC — vrátane AuraAI, kde je posledný commit s tunelom (`f5f9840`) **nepushnutý**, a vrátane Roadmapu, kde je chýbajúci `git remote add + push` zapísaný ako **jediné nesplnené akceptačné kritérium** celého kontraktu. Dôvod je zhodný a banálny: `gh` nebolo v prostredí nainštalované. Je to najlacnejšia otvorená položka v celom zozname a zároveň tá s najhoršou stratou pri poruche disku.
+
+**3. Rozpracované na branchi je horšie než nezačaté.** `/api/summary` pre Roadmap a sperky-ai je napísané, ale necommitnuté na `feat/suite-visuals`. Vyzerá to ako „takmer hotové", takže sa to neplánuje znova — ale nikto nevie, či to funguje, a nikto to nedokončí, kým to niekto neotvorí. Nezačatá práca je aspoň v zozname.
 
 ---
 
